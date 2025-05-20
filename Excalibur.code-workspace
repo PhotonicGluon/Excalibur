@@ -1,8 +1,17 @@
 {
     "folders": [
         {
-            "path": ".",
+            "name": "App",
+            "path": "app",
         },
+        {
+            "name": "Server",
+            "path": "server",
+        },
+        {
+            "name": "Root",
+            "path": "."
+        }
     ],
     "settings": {
         "editor.quickSuggestions": {
