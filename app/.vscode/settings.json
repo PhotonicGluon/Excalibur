@@ -1,21 +1,10 @@
 {
     "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/CVS": true,
-        "**/.DS_Store": true,
-        "**/Thumbs.db": true,
         "node_modules": true
     },
-    "editor.formatOnSave": true,
-    "cSpell.language": "en-GB",
-    "cSpell.words": ["asar"],
-    "files.insertFinalNewline": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "[markdown]": {
-        "editor.defaultFormatter": "yzhang.markdown-all-in-one"
-    },
+    "cSpell.words": [
+        "asar"
+    ],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     }

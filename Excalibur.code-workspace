@@ -2,11 +2,11 @@
     "folders": [
         {
             "name": "App",
-            "path": "app",
+            "path": "app"
         },
         {
             "name": "Server",
-            "path": "server",
+            "path": "server"
         },
         {
             "name": "Root",
@@ -14,11 +14,27 @@
         }
     ],
     "settings": {
+        "cSpell.language": "en-GB",
+        "editor.formatOnSave": true,
         "editor.quickSuggestions": {
-            "strings": "on",
+            "strings": "on"
         },
         "files.associations": {
-            "*.css": "tailwindcss",
+            "*.css": "tailwindcss"
+        },
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "app": true,
+            "server": true
+        },
+        "files.insertFinalNewline": true,
+        "[markdown]": {
+            "editor.defaultFormatter": "yzhang.markdown-all-in-one"
         },
     },
     "extensions": {
@@ -28,7 +44,7 @@
             "yzhang.markdown-all-in-one",
             "github.vscode-github-actions",
             "Ionic.ionic",
-            "bradlc.vscode-tailwindcss",
-        ],
-    },
+            "bradlc.vscode-tailwindcss"
+        ]
+    }
 }
