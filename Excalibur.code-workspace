@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "path": ".",
+        },
+    ],
+    "settings": {
+        "editor.quickSuggestions": {
+            "strings": "on",
+        },
+        "files.associations": {
+            "*.css": "tailwindcss",
+        },
+    },
+    "extensions": {
+        "recommendations": [
+            "esbenp.prettier-vscode",
+            "streetsidesoftware.code-spell-checker",
+            "yzhang.markdown-all-in-one",
+            "github.vscode-github-actions",
+            "Ionic.ionic",
+            "bradlc.vscode-tailwindcss",
+        ],
+    },
+}
