@@ -1,7 +1,7 @@
 {
-  "name": "Excalibur",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "react-vite"
+    "name": "Excalibur",
+    "integrations": {
+        "capacitor": {}
+    },
+    "type": "react-vite"
 }

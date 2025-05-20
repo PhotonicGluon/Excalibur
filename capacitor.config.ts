@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'Excalibur',
-  webDir: 'dist'
+    appId: "com.excalibur.app",
+    appName: "Excalibur",
+    webDir: "dist",
 };
 
 export default config;

@@ -1,14 +1,37 @@
 /// <reference types="vitest" />
 
+import fs from "fs";
+import path from "path";
 import { defineConfig } from "vite";
 
 import react from "@vitejs/plugin-react";
 import legacy from "@vitejs/plugin-legacy";
 import tailwindcss from "@tailwindcss/vite";
 
+/**
+ * Get aliases from tsconfig.json. This is done by reading the paths section of the tsconfig.json
+ * and replacing the '*' with the path resolved from the current working directory.
+ *
+ * @returns A dictionary of aliases
+ */
+function getAliasesFromTSConfig() {
+    const tsconfigStr = fs.readFileSync("./tsconfig.json", "utf-8").replace(/\/\/.*$/gm, ""); // Removing comments
+    const tsconfig = JSON.parse(tsconfigStr);
+    const aliases = {};
+    for (const [key, value] of Object.entries(tsconfig.compilerOptions.paths)) {
+        const find = key.replace(/\/\*/g, "");
+        const replace = value[0].replace(/\/\*/g, "");
+        aliases[find] = path.resolve(__dirname, replace);
+    }
+    return aliases;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react(), legacy(), tailwindcss()],
+    resolve: {
+        alias: getAliasesFromTSConfig(),
+    },
     test: {
         globals: true,
         environment: "jsdom",
