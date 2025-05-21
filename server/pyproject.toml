@@ -8,9 +8,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.115.12"
 
+fastapi = "^0.115.12"
+pycryptodome = "^3.23.0"
+python-multipart = "^0.0.20"
+uvicorn = { extras = ["standard"], version = "^0.34.2" }
+typer = "^0.15.4"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+excalibur = "excalibur_server.cli:app"
