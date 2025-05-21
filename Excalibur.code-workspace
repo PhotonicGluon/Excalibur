@@ -44,7 +44,9 @@
             "yzhang.markdown-all-in-one",
             "github.vscode-github-actions",
             "Ionic.ionic",
-            "bradlc.vscode-tailwindcss"
+            "bradlc.vscode-tailwindcss",
+            "ms-python.black-formatter",
+            "ms-python.isort"
         ]
     }
 }

@@ -5,5 +5,8 @@
     },
     "cSpell.words": [
         "fastapi"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
