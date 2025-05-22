@@ -1,4 +1,7 @@
+from base64 import b64decode
+import os
 from enum import Enum
+from pathlib import Path
 from typing import Literal
 
 from Crypto.Hash import SHA1, SHA3_256
@@ -44,7 +47,19 @@ class SRPGroup(Enum):
         self.multiplier = bytes_to_long(digest)
 
 
-SRP_GROUP = SRPGroup.SMALL
+def get_verifier(verifier_file: Path) -> int:
+    """
+    Gets the verifier value from a file.
+
+    :param verifier_file: path to verifier file
+    :return: the verifier
+    """
+
+    if os.environ["EXCALIBUR_SERVER_DEBUG"] == "1":
+        return bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
+
+    with open(verifier_file, "rb") as f:
+        return bytes_to_long(f.read())
 
 
 def compute_server_public_value(group: SRPGroup, verifier: int, private_value: int | None = None) -> tuple[int, int]:

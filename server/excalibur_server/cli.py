@@ -21,9 +21,9 @@ def start_api_server(
         warnings.warn("Debug mode is enabled.", RuntimeWarning)
         os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
 
-    import uvicorn
+    from excalibur_server.main import start_server
 
-    uvicorn.run("excalibur_server.api.app:app", host=host, port=port, reload=debug)
+    start_server(host, port, debug)
 
 
 @app.command(name="test")
