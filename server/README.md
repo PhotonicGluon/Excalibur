@@ -2,10 +2,31 @@
 
 An encrypted file server.
 
-## Development
-
+## Installation
 First install [Poetry 2.x](https://python-poetry.org/). Then install dependencies by running
 
 ```bash
 poetry install
+```
+
+## Running the API Server
+
+Run
+
+```bash
+poetry run excalibur start
+```
+
+If using debug mode, run
+
+```bash
+poetry run excalibur start --debug
+```
+
+## Development
+
+Install the test dependencies using
+
+```bash
+poetry install --with test
 ```

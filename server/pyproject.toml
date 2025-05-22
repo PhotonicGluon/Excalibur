@@ -16,6 +16,10 @@ python-multipart = "^0.0.20"
 uvicorn = { extras = ["standard"], version = "^0.34.2" }
 typer = "^0.15.4"
 
+[tool.poetry.group.test.dependencies]
+httpx = "^0.28.1"
+pytest = "^8.3.5"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

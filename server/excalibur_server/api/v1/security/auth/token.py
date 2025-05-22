@@ -4,10 +4,13 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 
-# TODO: Re-enable
-# KEYSIZE = 256  # In bits
-# KEY = get_random_bytes(KEYSIZE // 8)
-KEY = "test"
+from excalibur_server.api.misc import is_debug
+
+KEYSIZE = 256  # In bits
+if is_debug():
+    KEY = "test_key"
+else:
+    KEY = get_random_bytes(KEYSIZE // 8)
 
 API_TOKEN_HEADER = HTTPBearer(auto_error=False)
 CREDENTIALS_EXCEPTION = HTTPException(
