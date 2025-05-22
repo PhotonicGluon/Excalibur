@@ -17,4 +17,4 @@ def start_api_server(
 
     import uvicorn
 
-    uvicorn.run("excalibur_server.app:app", host=host, port=port, reload=debug)
+    uvicorn.run("excalibur_server.api.app:app", host=host, port=port, reload=debug)

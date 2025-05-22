@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from excalibur_server.security.auth import check_api_token
+from excalibur_server.api.v1.security.auth import check_api_token
 
 router = APIRouter(tags=["security"], dependencies=[Depends(check_api_token)])  # TODO: Update
 

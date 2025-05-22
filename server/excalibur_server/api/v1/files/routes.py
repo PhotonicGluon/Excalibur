@@ -1,4 +1,4 @@
-from excalibur_server.files import router
+from excalibur_server.api.v1.files import router
 
 # TODO: Add
 

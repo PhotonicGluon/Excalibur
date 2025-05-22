@@ -3,7 +3,7 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 from jwt.exceptions import InvalidTokenError
 
-from excalibur_server.security.consts import KEY
+from excalibur_server.api.v1.security.consts import KEY
 
 api_token_header = APIKeyHeader(name="X-API-Token")
 

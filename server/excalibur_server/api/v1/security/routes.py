@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Body
 import jwt
 
-from excalibur_server.security import router
-from excalibur_server.security.consts import KEY
+from excalibur_server.api.v1.security import router
+from excalibur_server.api.v1.security.consts import KEY
 
 
 # TODO: Perform checks before giving tokens
