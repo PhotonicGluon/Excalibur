@@ -1,6 +1,6 @@
 import os
-from typing import Annotated
 import warnings
+from typing import Annotated
 
 import typer
 

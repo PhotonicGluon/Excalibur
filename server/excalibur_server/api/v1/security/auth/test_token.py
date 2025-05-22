@@ -1,6 +1,6 @@
 import pytest
 
-from .token import KEY, check_token, generate_token
+from .token import KEY, decode_token, generate_token
 
 if KEY != "test_key":
     pytest.skip("Skipping token tests as key is wrong", allow_module_level=True)
@@ -15,9 +15,9 @@ def test_generate_token():
 
 
 def test_check_token():
-    assert check_token(SAMPLE_TOKEN)
+    assert decode_token(SAMPLE_TOKEN)
 
     wrong_token = list(SAMPLE_TOKEN)
     wrong_token[123] = "A"
     wrong_token = "".join(wrong_token)
-    assert not check_token(wrong_token)
+    assert not decode_token(wrong_token)

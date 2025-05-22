@@ -31,22 +31,18 @@ def generate_token(data: dict) -> str:
     return jwt.encode(data, KEY, algorithm="HS256")
 
 
-def check_token(token: str) -> bool:
+def decode_token(token: str) -> bool:
     """
-    Checks the validity of the token.
+    Decodes the given token.
 
     :param token: serialized JWT
-    :return: whether the provided token is valid
+    :return: the decoded payload
     """
 
     try:
-        jwt.decode(token, KEY, algorithms=["HS256"])
+        return jwt.decode(token, KEY, algorithms=["HS256"])
     except InvalidTokenError:
-        return False
-
-    # TODO: More checks
-
-    return True
+        return None
 
 
 def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:
@@ -61,7 +57,7 @@ def check_credentials(credentials: HTTPAuthorizationCredentials | None = Securit
     if not credentials:
         raise CREDENTIALS_EXCEPTION
 
-    if check_token(credentials.credentials):
+    if decode_token(credentials.credentials) is not None:
         return True
 
     raise CREDENTIALS_EXCEPTION

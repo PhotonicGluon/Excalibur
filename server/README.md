@@ -25,8 +25,8 @@ poetry run excalibur start --debug
 
 ## Development
 
-Install the test dependencies using
+Install the development dependencies using
 
 ```bash
-poetry install --with test
+poetry install --with dev,test
 ```
