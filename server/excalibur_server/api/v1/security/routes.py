@@ -1,14 +1,13 @@
 from typing import Annotated
 
 from fastapi import Body
-import jwt
 
 from excalibur_server.api.v1.security import router
-from excalibur_server.api.v1.security.consts import KEY
+from excalibur_server.api.v1.security.auth import generate_token
 
 
-# TODO: Perform checks before giving tokens
 @router.post("/generate-token")
-def generate_token(data: Annotated[dict, Body(description="Data to encode")]):
-    encoded_jwt = jwt.encode(data, KEY, algorithm="HS256")
-    return encoded_jwt
+def generate_token_endpoint(data: Annotated[dict, Body(description="Data to encode")]):
+    # TODO: Perform checks before giving tokens
+
+    return generate_token(data)
