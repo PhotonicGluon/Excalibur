@@ -5,7 +5,6 @@ from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long
 from fastapi import Body, HTTPException, status
 
-from excalibur_server.api.v1.security import router
 from excalibur_server.api.v1.security.auth import (
     compute_premaster_secret,
     compute_u,
@@ -17,6 +16,7 @@ from excalibur_server.api.v1.security.auth import (
 from excalibur_server.api.v1.security.auth.srp import get_verifier
 from excalibur_server.api.v1.security.auth.token import KEY, generate_token
 from excalibur_server.api.v1.security.consts import SRP_GROUP, VERIFIER_FILE
+from excalibur_server.api.v1.security.routes import router
 
 
 @router.post(

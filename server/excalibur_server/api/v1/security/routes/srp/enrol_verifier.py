@@ -4,8 +4,8 @@ from typing import Annotated
 
 from fastapi import Body, HTTPException, status
 
-from excalibur_server.api.v1.security import router
 from excalibur_server.api.v1.security.consts import VERIFIER_FILE
+from excalibur_server.api.v1.security.routes.srp import router
 
 
 @router.post(

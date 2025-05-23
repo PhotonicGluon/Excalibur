@@ -1,5 +1,5 @@
-from base64 import b64decode, b64encode
 import os
+from base64 import b64decode, b64encode
 from typing import Annotated
 
 from Crypto.Cipher import AES
@@ -7,10 +7,10 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import Body, HTTPException, status
 
-from excalibur_server.api.v1.security import router
 from excalibur_server.api.v1.security.auth import compute_server_public_value, generate_token, get_verifier
 from excalibur_server.api.v1.security.auth.token import KEY
 from excalibur_server.api.v1.security.consts import SRP_GROUP, SRP_HANDSHAKE_TIME, VERIFIER_FILE
+from excalibur_server.api.v1.security.routes.srp import router
 
 
 @router.post(

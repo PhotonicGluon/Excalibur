@@ -53,14 +53,14 @@ os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"] = b64encode(long_to_bytes(B_PRIV)).de
 
 
 def test_group_establishment():
-    response = client.get("/api/v1/security/group-size")
+    response = client.get("/api/v1/security/srp/group-size")
     response.raise_for_status()
     response = response.json()
     assert response == SRP_GROUP.bits
 
 
 def test_srp_negotiation():
-    response = client.post("/api/v1/security/handshake", json=b64encode(long_to_bytes(A_PUB)).decode("UTF-8"))
+    response = client.post("/api/v1/security/srp/handshake", json=b64encode(long_to_bytes(A_PUB)).decode("UTF-8"))
     response.raise_for_status()
     response = response.json()
     assert response["server_public_value"] == b64encode(long_to_bytes(B_PUB)).decode("UTF-8")
