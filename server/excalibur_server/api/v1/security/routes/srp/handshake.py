@@ -1,8 +1,9 @@
+import binascii
 import os
 from base64 import b64decode, b64encode
 from typing import Annotated
-from uuid import uuid4
 
+from Crypto.Random import get_random_bytes
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import Body, HTTPException, status
 from pydantic import BaseModel
@@ -31,7 +32,11 @@ def srp_handshake_endpoint(
     client_public_value: Annotated[str, Body(description="Client public value, A, as a base64 encoded string.")],
 ):
     # Check client's public value
-    a_pub = bytes_to_long(b64decode(client_public_value))
+    try:
+        a_pub = bytes_to_long(b64decode(client_public_value))
+    except binascii.Error:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid base64 string for value")
+
     if a_pub % SRP_GROUP.prime == 0:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Client public value is illegal: A mod N cannot be 0"
@@ -45,7 +50,7 @@ def srp_handshake_endpoint(
     b_priv, b_pub = compute_server_public_value(SRP_GROUP, get_verifier(VERIFIER_FILE), private_value=b_priv)
 
     # Save the details in the handshake cache
-    handshake_uuid = uuid4().hex
+    handshake_uuid = get_random_bytes(16).hex()
     HANDSHAKE_CACHE[handshake_uuid] = b64encode(long_to_bytes(b_priv)).decode("UTF-8")
 
     # Return server's public value

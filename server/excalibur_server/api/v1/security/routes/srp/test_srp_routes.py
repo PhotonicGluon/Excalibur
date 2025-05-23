@@ -90,3 +90,60 @@ def test_srp_negotiation():
     # Check that the client can generate tokens now
     response = client.post("/api/v1/security/generate-token", json=handshake_uuid)
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_srp_handshake_abort():
+    # Should abort on invalid base64
+    response = client.post("/api/v1/security/srp/handshake", json="ABC")
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    # Should abort on A = 0 mod N
+    response = client.post("/api/v1/security/srp/handshake", json=b64encode(b"\x00").decode("UTF-8"))
+    assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE
+    response = client.post("/api/v1/security/srp/handshake", json=b64encode(long_to_bytes(GROUP.prime)).decode("UTF-8"))
+    assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE
+
+
+def test_srp_validity_check_abort():
+    # Should abort on invalid base64
+    response = client.post(
+        "/api/v1/security/srp/check-validity",
+        json={
+            "handshake_uuid": "ABCD",
+            "salt": "nah",
+            "client_public_value": "ABCD",
+            "server_public_value": "ABCD",
+            "m1": "ABCD",
+        },
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    # Should abort on invalid handshake UUID
+    response = client.post(
+        "/api/v1/security/srp/check-validity",
+        json={
+            "handshake_uuid": "ThisDoesNotExist",
+            "salt": "ABCD",
+            "client_public_value": "ABCD",
+            "server_public_value": "ABCD",
+            "m1": "ABCD",
+        },
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # Should abort on M1 mismatch
+    handshake_response = client.post(
+        "/api/v1/security/srp/handshake", json=b64encode(long_to_bytes(A_PUB)).decode("UTF-8")
+    )
+    valid_uuid = handshake_response.json()["handshake_uuid"]
+    response = client.post(
+        "/api/v1/security/srp/check-validity",
+        json={
+            "handshake_uuid": valid_uuid,
+            "salt": "ABCD",
+            "client_public_value": "ABCD",
+            "server_public_value": "ABCD",
+            "m1": "ABCD",
+        },
+    )
+    assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE

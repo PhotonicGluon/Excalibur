@@ -1,3 +1,4 @@
+import binascii
 from base64 import b64decode, b64encode
 from typing import Annotated
 
@@ -44,10 +45,13 @@ def check_srp_validity_endpoint(
     """
 
     # Decode incoming values
-    salt = b64decode(salt)
-    a_pub = bytes_to_long(b64decode(client_public_value))
-    b_pub = bytes_to_long(b64decode(server_public_value))
-    m1 = b64decode(m1)
+    try:
+        salt = b64decode(salt)
+        a_pub = bytes_to_long(b64decode(client_public_value))  # Don't need to check because handshake already checked
+        b_pub = bytes_to_long(b64decode(server_public_value))
+        m1 = b64decode(m1)
+    except binascii.Error:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid base64 string for value")
 
     # Retrieve server private value
     try:
@@ -69,7 +73,5 @@ def check_srp_validity_endpoint(
     # Update server-side cache of valid UUIDs
     VALID_UUIDS_CACHE[handshake_uuid] = master
 
-    # Generate server-side M2
-    m2_server = generate_m2(a_pub, m1_server, master)
-
-    return SRPValidityResponse(m2=b64encode(m2_server).decode("UTF-8"))
+    # Generate server-side M2s
+    return SRPValidityResponse(m2=b64encode(generate_m2(a_pub, m1_server, master)).decode("UTF-8"))
