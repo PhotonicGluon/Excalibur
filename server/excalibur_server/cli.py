@@ -26,6 +26,17 @@ def start_api_server(
     start_server(host, port, debug)
 
 
+@app.command(name="reset")
+def reset_api_server():
+    """
+    Resets the API server.
+    """
+
+    from excalibur_server.main import reset_server
+
+    reset_server()
+
+
 @app.command(name="test")
 def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verbosity level.", count=True)] = 0):
     import importlib.util

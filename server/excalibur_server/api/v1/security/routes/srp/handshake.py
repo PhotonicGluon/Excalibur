@@ -31,6 +31,10 @@ class SRPHandshakeResponse(BaseModel):
 def srp_handshake_endpoint(
     client_public_value: Annotated[str, Body(description="Client public value, A, as a base64 encoded string.")],
 ):
+    """
+    Endpoint that starts the SRP handshake.
+    """
+
     # Check client's public value
     try:
         a_pub = bytes_to_long(b64decode(client_public_value))

@@ -22,3 +22,12 @@ def start_server(host: str, port: int, debug: bool):
         reload_dirs=[os.path.dirname(__file__)],
         reload_excludes=["examples/*"],
     )
+
+
+def reset_server():
+    """
+    Resets the API server.
+    """
+
+    # Remove the files folder
+    os.rmdir(FILES_FOLDER)
