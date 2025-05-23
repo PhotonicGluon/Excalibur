@@ -30,6 +30,7 @@ class SRPValidityResponse(BaseModel):
         status.HTTP_404_NOT_FOUND: {"description": "Handshake UUID not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Client public value is illegal"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string for value"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Verifier not found"},
     },
     response_model=SRPValidityResponse,
 )
@@ -43,6 +44,12 @@ def check_srp_validity_endpoint(
     """
     Checks the validity of the client's computed M1 value, replying with the server's M2 value if correct.
     """
+
+    # Get verifier
+    try:
+        verifier = get_verifier(VERIFIER_FILE)
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Verifier not found")
 
     # Decode incoming values
     try:
@@ -62,7 +69,7 @@ def check_srp_validity_endpoint(
 
     # Compute server-side master
     u = compute_u(SRP_GROUP, a_pub, b_pub)
-    master = premaster_to_master(compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, get_verifier(VERIFIER_FILE)))
+    master = premaster_to_master(compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier))
 
     # Generate server-side M1
     m1_server = generate_m1(SRP_GROUP, salt, a_pub, b_pub, master)

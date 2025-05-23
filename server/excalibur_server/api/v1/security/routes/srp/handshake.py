@@ -25,6 +25,7 @@ class SRPHandshakeResponse(BaseModel):
     responses={
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Client public value is illegal"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string for verifier"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Verifier not found"},
     },
     response_model=SRPHandshakeResponse,
 )
@@ -34,6 +35,12 @@ def srp_handshake_endpoint(
     """
     Endpoint that starts the SRP handshake.
     """
+
+    # Get verifier
+    try:
+        verifier = get_verifier(VERIFIER_FILE)
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Verifier not found")
 
     # Check client's public value
     try:
@@ -50,7 +57,7 @@ def srp_handshake_endpoint(
     b_priv = None
     if os.environ.get("EXCALIBUR_SERVER_DEBUG") == "1" and os.environ.get("EXCALIBUR_SERVER_TEST_B_PRIV") is not None:
         b_priv = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"]))
-    b_priv, b_pub = compute_server_public_value(SRP_GROUP, get_verifier(VERIFIER_FILE), private_value=b_priv)
+    b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier, private_value=b_priv)
 
     # Save the details in the handshake cache
     handshake_uuid = get_random_bytes(16).hex()

@@ -59,7 +59,10 @@ response = requests.post(
     f"{URL}/security/srp/handshake",
     json="YdXkkPbxt5VHsHBMQ29SPdDlYPDGQRW7clV+xENS6JAyEcBGkictiy0aU1iizxtuC/z5n5IVMOyOOTVheerkXkK6kq6s7YJRceHoua9tnAPhMn9Evgh+8GUw5p9mYVJh7vVAc8oRz1hY8O39/hXv6rNJ7112mIo2cvrEewdpRHs=",
 )
-response.raise_for_status()
+try:
+    response.raise_for_status()
+except requests.exceptions.HTTPError as e:
+    raise requests.exceptions.HTTPError(f"{e} ({response.text})") from e
 handshake_response = response.json()
 
 # Verify

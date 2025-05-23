@@ -55,7 +55,10 @@ def get_verifier(verifier_file: Path) -> int:
     :return: the verifier
     """
 
-    if os.environ["EXCALIBUR_SERVER_DEBUG"] == "1" and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None:
+    if (
+        os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
+        and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None
+    ):
         return bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
 
     with open(verifier_file, "rb") as f:
