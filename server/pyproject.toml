@@ -16,6 +16,7 @@ pyjwt = "^2.10.1"
 python-multipart = "^0.0.20"
 uvicorn = { extras = ["standard"], version = "^0.34.2" }
 typer = "^0.15.4"
+cachetools = "^5.5.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.2.0"

@@ -1,0 +1,6 @@
+from cachetools import TTLCache
+
+from excalibur_server.api.v1.security.consts import SRP_HANDSHAKE_CACHE_SIZE, SRP_HANDSHAKE_TIME, VALIDITY_TIME
+
+HANDSHAKE_CACHE = TTLCache(maxsize=SRP_HANDSHAKE_CACHE_SIZE, ttl=SRP_HANDSHAKE_TIME)
+VALID_UUIDS_CACHE = TTLCache(maxsize=SRP_HANDSHAKE_CACHE_SIZE, ttl=VALIDITY_TIME)

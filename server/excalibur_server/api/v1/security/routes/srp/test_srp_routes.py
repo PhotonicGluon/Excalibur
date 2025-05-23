@@ -1,12 +1,17 @@
 import os
 from base64 import b64encode
 
+import pytest
 from Crypto.Util.number import long_to_bytes
+from fastapi import status
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.api.v1.security.auth.srp import SRPGroup
 from excalibur_server.api.v1.security.consts import SRP_GROUP
+
+if SRP_GROUP != SRPGroup.SMALL:
+    pytest.skip("Skipping SRP tests as group is different", allow_module_level=True)
 
 # Values from RFC5054, Appendix B
 GROUP = SRPGroup.SMALL
@@ -60,23 +65,28 @@ def test_group_establishment():
 
 
 def test_srp_negotiation():
+    # Initiate SRP handshake
     response = client.post("/api/v1/security/srp/handshake", json=b64encode(long_to_bytes(A_PUB)).decode("UTF-8"))
     response.raise_for_status()
     response = response.json()
     assert response["server_public_value"] == b64encode(long_to_bytes(B_PUB)).decode("UTF-8")
+    handshake_uuid = response["handshake_uuid"]
 
+    # Check that the server accepts the client
     response = client.post(
-        "/api/v1/security/generate-token",
+        "/api/v1/security/srp/check-validity",
         json={
+            "handshake_uuid": handshake_uuid,
             "salt": b64encode(long_to_bytes(S)).decode("UTF-8"),
             "client_public_value": b64encode(long_to_bytes(A_PUB)).decode("UTF-8"),
             "server_public_value": b64encode(long_to_bytes(B_PUB)).decode("UTF-8"),
             "m1": b64encode(long_to_bytes(M1)).decode("UTF-8"),
-            "handshake": response["handshake"],
         },
     )
     response.raise_for_status()
     response = response.json()
-
     assert response["m2"] == b64encode(long_to_bytes(M2)).decode("UTF-8")
-    assert response["token"]
+
+    # Check that the client can generate tokens now
+    response = client.post("/api/v1/security/generate-token", json=handshake_uuid)
+    assert response.status_code == status.HTTP_200_OK
