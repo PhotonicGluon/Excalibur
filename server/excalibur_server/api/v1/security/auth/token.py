@@ -1,18 +1,11 @@
 from datetime import datetime, timedelta
 
 import jwt
-from Crypto.Random import get_random_bytes
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 
-from excalibur_server.api.misc import is_debug
-
-KEYSIZE = 256  # In bits
-if is_debug():
-    KEY = b"one demo 16B key"
-else:
-    KEY = get_random_bytes(KEYSIZE // 8)
+from excalibur_server.api.v1.security.auth.consts import KEY
 
 API_TOKEN_HEADER = HTTPBearer(auto_error=False)
 CREDENTIALS_EXCEPTION = HTTPException(

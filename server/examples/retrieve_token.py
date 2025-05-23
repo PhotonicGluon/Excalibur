@@ -1,3 +1,4 @@
+import json
 from base64 import b64decode, b64encode
 
 import requests
@@ -9,7 +10,7 @@ from excalibur_server.api.v1.security.auth.srp import generate_m1, premaster_to_
 from excalibur_server.api.v1.security.consts import SRP_GROUP
 
 HOST = "localhost"
-PORT = 8001
+PORT = 8000
 URL = f"http://{HOST}:{PORT}/api/v1"
 
 N = 167609434410335061345139523764350090260135525329813904557420930309800865859473551531551523800013916573891864789934747039010546328480848979516637673776605610374669426214776197828492691384519453218253702788022233205683635831626913357154941914129985489522629902540768368409482248290641036967659389658897350067939
@@ -78,7 +79,11 @@ response = requests.post(
     json=handshake_response["handshake_uuid"],
 )
 response.raise_for_status()
-token_enc, nonce = response.json()["token_enc"], response.json()["nonce"]
-print("Encoded Token:", token_enc)
-token = AES.new(gMasterSecret, AES.MODE_GCM, nonce=b64decode(nonce)).decrypt(b64decode(token_enc)).decode("UTF-8")
+ciphertext, nonce, tag = response.json()["ciphertext"], response.json()["nonce"], response.json()["tag"]
+print("Encoded Token:", ciphertext)
+token = json.loads(
+    AES.new(gMasterSecret, AES.MODE_GCM, nonce=b64decode(nonce))
+    .decrypt_and_verify(b64decode(ciphertext), b64decode(tag))
+    .decode("UTF-8")
+)["token"]
 print("Decoded Token:", token)

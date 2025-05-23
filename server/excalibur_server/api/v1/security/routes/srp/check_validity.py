@@ -54,7 +54,6 @@ def check_srp_validity_endpoint(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid base64 string for value")
 
     # Retrieve server private value
-    print(HANDSHAKE_CACHE)
     b_priv_b64 = HANDSHAKE_CACHE.get(handshake_uuid)
     if b_priv_b64 is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handshake UUID not found")
