@@ -54,10 +54,12 @@ def check_srp_validity_endpoint(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid base64 string for value")
 
     # Retrieve server private value
-    try:
-        b_priv = bytes_to_long(b64decode(HANDSHAKE_CACHE[handshake_uuid]))
-    except KeyError:
+    print(HANDSHAKE_CACHE)
+    b_priv_b64 = HANDSHAKE_CACHE.get(handshake_uuid)
+    if b_priv_b64 is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handshake UUID not found")
+
+    b_priv = bytes_to_long(b64decode(b_priv_b64))
 
     # Compute server-side master
     u = compute_u(SRP_GROUP, a_pub, b_pub)

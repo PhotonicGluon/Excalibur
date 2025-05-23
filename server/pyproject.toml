@@ -20,6 +20,7 @@ cachetools = "^5.5.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.2.0"
+requests = "^2.32.3"
 
 [tool.poetry.group.test.dependencies]
 httpx = "^0.28.1"

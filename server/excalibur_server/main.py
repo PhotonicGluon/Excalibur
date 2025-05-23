@@ -14,4 +14,11 @@ def start_server(host: str, port: int, debug: bool):
     os.makedirs(FILES_FOLDER, exist_ok=True)
 
     # Start server
-    uvicorn.run("excalibur_server.api.app:app", host=host, port=port, reload=debug)
+    uvicorn.run(
+        "excalibur_server.api.app:app",
+        host=host,
+        port=port,
+        reload=debug,
+        reload_dirs=[os.path.dirname(__file__)],
+        reload_excludes=["examples/*"],
+    )
