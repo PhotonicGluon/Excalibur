@@ -8,9 +8,29 @@ from excalibur_server.api.v1.security.consts import VERIFIER_FILE
 from excalibur_server.api.v1.security.routes.srp import router
 
 
+@router.head(
+    "/verifier",
+    summary="Check Verifier",
+    responses={
+        status.HTTP_200_OK: {"description": "Verifier exists"},
+        status.HTTP_404_NOT_FOUND: {"description": "Verifier not found"},
+    },
+)
+def check_verifier_endpoint():
+    """
+    Endpoint that checks if the verifier is enrolled.
+    """
+
+    if not VERIFIER_FILE.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Verifier not found")
+
+    return
+
+
 @router.post(
-    "/enrol-verifier",
+    "/verifier",
     summary="Enrol Verifier",
+    status_code=status.HTTP_201_CREATED,
     response_model=str,
     responses={
         status.HTTP_409_CONFLICT: {"description": "Verifier already exists"},
