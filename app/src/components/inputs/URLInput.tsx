@@ -6,19 +6,23 @@ import { validateURL } from "@lib/validators";
 interface ContainerProps {
     label: string;
     class?: string;
+    value?: string;
 }
 
 const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
+    const [inputValue, setInputValue] = useState(props.value || "");
+
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
 
     function validate(event: Event) {
         const value = (event.target as HTMLInputElement).value;
+        setInputValue(value);
 
         setIsValid(undefined);
-
-        if (value === "") return;
-
+        if (value === "") {
+            return;
+        }
         validateURL(value) ? setIsValid(true) : setIsValid(false);
     }
 
@@ -36,6 +40,7 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
             errorText="Invalid URL"
             onIonInput={(event) => validate(event)}
             onIonBlur={() => markTouched()}
+            value={inputValue}
         ></IonInput>
     );
 };
