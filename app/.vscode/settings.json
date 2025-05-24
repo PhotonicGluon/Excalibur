@@ -3,7 +3,8 @@
         "node_modules": true
     },
     "cSpell.words": [
-        "asar"
+        "asar",
+        "powmod"
     ],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"

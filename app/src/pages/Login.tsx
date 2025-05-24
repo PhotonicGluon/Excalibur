@@ -1,12 +1,22 @@
-import { IonContent, IonPage, IonInput, IonInputPasswordToggle, IonButton, useIonAlert } from "@ionic/react";
+import {
+    IonContent,
+    IonPage,
+    IonInput,
+    IonInputPasswordToggle,
+    IonButton,
+    useIonAlert,
+    useIonToast,
+} from "@ionic/react";
 
 import URLInput from "@components/inputs/URLInput";
 import { validateURL } from "@lib/validators";
 import { checkConnection } from "@lib/network";
+import { checkVerifier } from "@lib/security/verifier";
 
 const Login: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
 
     // Functions
     function getAllValues() {
@@ -50,12 +60,42 @@ const Login: React.FC = () => {
         }
 
         // Check connectivity to the server
-        // FIXME: Check connectivity
         if (!(await checkConnection(values.server))) {
             presentAlert({
                 header: "Connection Failure",
                 message: `Could not connect to ${values.server}.`,
                 buttons: ["OK"],
+            });
+            return;
+        }
+
+        const apiURL = `${values.server}/api/v1`;
+
+        // Check whether verifier has been set up
+        if (!(await checkVerifier(apiURL))) {
+            presentAlert({
+                header: "Verifier Not Set Up",
+                message: "Verifier has not been set up. Would you like to set it up now?",
+                buttons: [
+                    {
+                        text: "No",
+                        role: "cancel",
+                        handler: () => {
+                            presentToast({
+                                message: "Verifier setup cancelled",
+                                duration: 3000,
+                            });
+                        },
+                    },
+                    {
+                        text: "Yes",
+                        role: "confirm",
+                        handler: async () => {
+                            // TODO: Set up verifier
+                            await onLoginButtonClick();
+                        },
+                    },
+                ],
             });
             return;
         }
