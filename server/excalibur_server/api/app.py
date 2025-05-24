@@ -1,4 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from excalibur_server.api.cors import ALLOW_ORIGINS
 
 # Define app
 from .meta import TITLE, SUMMARY, VERSION
@@ -15,6 +18,15 @@ app = FastAPI(
 from excalibur_server.api.v1.app import app as api_v1
 
 app.mount("/v1", api_v1)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOW_ORIGINS,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
+)
 
 
 # Define other routes
