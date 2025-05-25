@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import legacy from "@vitejs/plugin-legacy";
 import tailwindcss from "@tailwindcss/vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 /**
  * Get aliases from tsconfig.json. This is done by reading the paths section of the tsconfig.json
@@ -28,7 +29,7 @@ function getAliasesFromTSConfig() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), legacy(), tailwindcss()],
+    plugins: [react(), legacy(), tailwindcss(), nodePolyfills({ include: ["crypto", "stream", "util", "vm"] })],
     resolve: {
         alias: getAliasesFromTSConfig(),
     },
