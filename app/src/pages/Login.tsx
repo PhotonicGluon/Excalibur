@@ -90,7 +90,8 @@ const Login: React.FC = () => {
         console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
         // Generate the key
-        const salt = randomBytes(32); // TODO: Check if this is ok
+        // const salt = randomBytes(32); // TODO: Get the salt from the server instead
+        const salt = Buffer.from("deadbeef", "hex");
         const key = generateKey(values.password, salt);
         console.log(`Generated key '${key.toString("hex")}' with salt '${salt.toString("hex")}'`);
 
@@ -144,7 +145,7 @@ const Login: React.FC = () => {
 
             clientPriv = priv;
             clientPub = pub;
-            serverPub = handshakeResponse.serverPub;
+            serverPub = handshakeResponse.serverPub; // FIXME: Validate response by server
             handshakeUUID = handshakeResponse.handshakeUUID;
             break;
         }
@@ -164,7 +165,6 @@ const Login: React.FC = () => {
             key,
             srpGroup.computeU(clientPub, serverPub),
         );
-        console.debug("Premaster: " + premaster.toString(16));
         const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
         console.log("Master key: " + masterKey.toString("hex"));
 
@@ -183,7 +183,7 @@ const Login: React.FC = () => {
         console.debug("Verifying M2...");
         const m2Server = validityResponse.m2!;
         const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
-        if (m2Client !== m2Server) {
+        if (!m2Client.equals(m2Server)) {
             presentAlert({
                 header: "Server Verification Failed",
                 message: "Client failed to verify server.",

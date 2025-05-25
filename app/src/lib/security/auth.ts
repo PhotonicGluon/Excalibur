@@ -129,7 +129,6 @@ export async function checkValidity(
             m1: m1.toString("base64"),
         }),
     });
-    console.debug(await response.text());
     switch (response.status) {
         case 404:
             return { success: false, error: "Handshake UUID not found" };
