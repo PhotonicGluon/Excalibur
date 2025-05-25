@@ -53,10 +53,10 @@ def check_srp_validity_endpoint(
 
     # Decode incoming values
     try:
-        salt = b64decode(salt)
-        a_pub = bytes_to_long(b64decode(client_public_value))  # Don't need to check because handshake already checked
-        b_pub = bytes_to_long(b64decode(server_public_value))
-        m1 = b64decode(m1)
+        salt: bytes = b64decode(salt)
+        a_pub: int = bytes_to_long(b64decode(client_public_value))  # No need to check because handshake already checked
+        b_pub: int = bytes_to_long(b64decode(server_public_value))
+        m1: bytes = b64decode(m1)
     except binascii.Error:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid base64 string for value")
 

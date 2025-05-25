@@ -5,7 +5,8 @@
  * @returns The buffer representing the number.
  */
 export function numberToBuffer(n: bigint): Buffer {
-    return Buffer.from(n.toString(16), "hex");
+    const string = n.toString(16);
+    return Buffer.from(n < 16n ? `0${string}` : string, "hex");
 }
 
 /**

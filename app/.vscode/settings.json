@@ -4,7 +4,9 @@
     },
     "cSpell.words": [
         "asar",
-        "powmod"
+        "powmod",
+        "priv",
+        "randbits"
     ],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"

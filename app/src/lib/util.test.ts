@@ -1,6 +1,7 @@
 import { bufferToNumber, numberToBuffer, padBuffer } from "./util";
 
 test("numberToBuffer", () => {
+    expect(numberToBuffer(3n)).toEqual(Buffer.from("03", "hex"));
     expect(numberToBuffer(BigInt("0xdeadbeef"))).toEqual(Buffer.from("deadbeef", "hex"));
     expect(
         numberToBuffer(
@@ -17,6 +18,7 @@ test("numberToBuffer", () => {
 });
 
 test("bufferToNumber", () => {
+    expect(bufferToNumber(Buffer.from("03", "hex"))).toEqual(3n);
     expect(bufferToNumber(Buffer.from("deadbeef", "hex"))).toEqual(BigInt("0xdeadbeef"));
     expect(
         bufferToNumber(

@@ -1,19 +1,21 @@
 import {
+    IonButton,
     IonContent,
-    IonPage,
     IonInput,
     IonInputPasswordToggle,
-    IonButton,
+    IonPage,
     useIonAlert,
     useIonToast,
 } from "@ionic/react";
+import { randomBytes } from "crypto";
+
+import { checkConnection } from "@lib/network";
+import { checkValidity, checkVerifier, getGroup, handshake, setUpVerifier } from "@lib/security/auth";
+import { generateKey } from "@lib/security/keygen";
+import { randbits } from "@lib/security/util";
+import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
-import { validateURL } from "@lib/validators";
-import { checkConnection } from "@lib/network";
-import { generateKey } from "@lib/security/keygen";
-import { checkVerifier } from "@lib/security/verifier";
-import { getGroup, setUpVerifier } from "@lib/security/auth";
 
 const Login: React.FC = () => {
     // States
@@ -75,10 +77,11 @@ const Login: React.FC = () => {
         const apiURL = `${values.server}/api/v1`;
 
         // Get SRP group used for communication
-        const { group: srpGroup, error } = await getGroup(apiURL);
+        const groupResponse = await getGroup(apiURL);
+        const srpGroup = groupResponse.group;
         if (!srpGroup) {
             presentToast({
-                message: `Unable to determine server's SRP group: ${error}`,
+                message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
                 duration: 3000,
             });
             return;
@@ -87,8 +90,9 @@ const Login: React.FC = () => {
         console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
         // Generate the key
-        const key = generateKey(values.password);
-        console.log(`Generated key: ${key.toString("hex")}`);
+        const salt = randomBytes(32); // TODO: Check if this is ok
+        const key = generateKey(values.password, salt);
+        console.log(`Generated key '${key.toString("hex")}' with salt '${salt.toString("hex")}'`);
 
         // Check whether verifier has been set up
         if (!(await checkVerifier(apiURL))) {
@@ -127,7 +131,70 @@ const Login: React.FC = () => {
             return;
         }
 
-        // TODO: Continue
+        // TODO: Add progress meter for connections
+        console.debug("Handshake...");
+        let clientPriv, clientPub, serverPub, handshakeUUID;
+        for (let tryCount = 0; tryCount < 3; tryCount++) {
+            let { priv, pub } = srpGroup.generateClientValues();
+            const handshakeResponse = await handshake(apiURL, pub);
+            if (!handshakeResponse.success) {
+                console.debug(`Handshake failed: ${handshakeResponse.error} (try count: ${tryCount})`);
+                continue;
+            }
+
+            clientPriv = priv;
+            clientPub = pub;
+            serverPub = handshakeResponse.serverPub;
+            handshakeUUID = handshakeResponse.handshakeUUID;
+            break;
+        }
+        if (!clientPriv || !clientPub || !serverPub || !handshakeUUID) {
+            presentAlert({
+                header: "Handshake Failed",
+                message: "Could not complete handshake. Please try again.",
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        console.debug("Calculating master...");
+        const premaster = srpGroup.computePremasterSecret(
+            clientPriv,
+            serverPub,
+            key,
+            srpGroup.computeU(clientPub, serverPub),
+        );
+        console.debug("Premaster: " + premaster.toString(16));
+        const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
+        console.log("Master key: " + masterKey.toString("hex"));
+
+        console.debug("Verifying M1...");
+        const m1 = srpGroup.generateM1(salt, clientPub, serverPub, masterKey);
+        const validityResponse = await checkValidity(apiURL, handshakeUUID, salt, clientPub, serverPub, m1);
+        if (!validityResponse.success) {
+            presentAlert({
+                header: "Client Verification Failed",
+                message: `Server failed to verify client: ${validityResponse.error!}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        console.debug("Verifying M2...");
+        const m2Server = validityResponse.m2!;
+        const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
+        if (m2Client !== m2Server) {
+            presentAlert({
+                header: "Server Verification Failed",
+                message: "Client failed to verify server.",
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        console.debug("Retrieving token...");
+        // TODO: Continue with token retrieval
+
         presentAlert({
             header: "Connected",
             buttons: ["OK"],
