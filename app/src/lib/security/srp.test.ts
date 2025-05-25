@@ -67,7 +67,6 @@ test("computeU", () => {
 });
 
 test("computePremasterSecret", () => {
-    // FIXME: Failing
     expect(
         SRPGroup.SMALL.computePremasterSecret(bufferToNumber(A_PRIV), bufferToNumber(B_PUB), X, bufferToNumber(U)),
     ).toEqual(bufferToNumber(PREMASTER_SECRET));

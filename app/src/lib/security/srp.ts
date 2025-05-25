@@ -84,11 +84,9 @@ export class _SRPGroup {
      * @returns The computed pre-master secret as a bigint.
      */
     computePremasterSecret(clientPriv: bigint, serverPub: bigint, key: Buffer, u: bigint): bigint {
-        // FIXME: There's an issue here
         const x = bufferToNumber(key);
         const gx = powmod(this.generator, x, this.prime);
-        const kgx = (this.multiplier * gx) % this.prime;
-        const base = (serverPub - kgx) % this.prime;
+        const base = (serverPub - this.multiplier * gx) % this.prime;
         const power = clientPriv + u * x;
         return powmod(base, power, this.prime);
     }
