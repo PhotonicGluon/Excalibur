@@ -114,8 +114,7 @@ def compute_premaster_secret(
     """
 
     vu = pow(verifier, u, group.prime)
-    avu = client_public_value * vu % group.prime
-    return pow(avu, server_private_value, group.prime)
+    return pow(client_public_value * vu % group.prime, server_private_value, group.prime)
 
 
 def premaster_to_master(premaster_secret: int) -> bytes:

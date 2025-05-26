@@ -8,5 +8,5 @@ test("randbits", () => {
     const rand2 = randbits(0);
     expect(rand2).toBe(0n);
 
-    expect(() => randbits(5)).toThrow();
+    expect(randbits(5)).toBeLessThan(32n);
 });

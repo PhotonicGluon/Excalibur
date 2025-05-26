@@ -29,7 +29,7 @@ class SRPValidityResponse(BaseModel):
     summary="Check Validity of Client",
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Handshake UUID not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Client public value is illegal"},
+        status.HTTP_406_NOT_ACCEPTABLE: {"description": "M1 values do not match"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string for value"},
         status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Verifier not found"},
     },
@@ -70,7 +70,8 @@ def check_srp_validity_endpoint(
 
     # Compute server-side master
     u = compute_u(SRP_GROUP, a_pub, b_pub)
-    master = premaster_to_master(compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier))
+    premaster = compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier)
+    master = premaster_to_master(premaster)
 
     # Generate server-side M1
     m1_server = generate_m1(SRP_GROUP, salt, a_pub, b_pub, master)

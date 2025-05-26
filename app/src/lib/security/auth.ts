@@ -1,5 +1,5 @@
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
-import { bufferToNumber, numberToBuffer } from "@lib/util";
+import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util";
 
 /**
  * Fetches the SRP group size from the server, and returns the corresponding
@@ -105,9 +105,10 @@ export async function handshake(
     apiURL: string,
     clientPub: bigint,
 ): Promise<{ success: boolean; error?: string; handshakeUUID?: string; serverPub?: bigint }> {
+    const clientPubBuff = padBuffer(numberToBuffer(clientPub), 128);
     const response = await fetch(`${apiURL}/security/srp/handshake`, {
         method: "POST",
-        body: numberToBuffer(clientPub).toString("base64"),
+        body: clientPubBuff.toString("base64"),
     });
     switch (response.status) {
         case 406:
@@ -165,7 +166,7 @@ export async function checkValidity(
         case 404:
             return { success: false, error: "Handshake UUID not found" };
         case 406:
-            return { success: false, error: "Client public value is illegal" };
+            return { success: false, error: "M1 values do not match" };
         case 422:
             return { success: false, error: "Invalid base64 string for value" };
         case 503:

@@ -56,9 +56,12 @@ def srp_handshake_endpoint(
 
     # Generate server's public (and private) value
     b_priv = None
+    b_pub = 0
     if os.environ.get("EXCALIBUR_SERVER_DEBUG") == "1" and os.environ.get("EXCALIBUR_SERVER_TEST_B_PRIV") is not None:
         b_priv = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"]))
-    b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier, private_value=b_priv)
+
+    while b_pub % SRP_GROUP.prime == 0:
+        b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier, private_value=b_priv)
 
     # Save the details in the handshake cache
     handshake_uuid = get_random_bytes(16).hex()

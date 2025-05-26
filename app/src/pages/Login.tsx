@@ -59,6 +59,8 @@ const Login: React.FC = () => {
     }
 
     async function onLoginButtonClick() {
+        console.log("----- Login -----");
+
         // Check values
         const values = getAllValues();
         if (!validateValues(values)) {
@@ -191,12 +193,14 @@ const Login: React.FC = () => {
         }
 
         console.debug("Calculating master...");
+        // FIXME: Somehow this disagrees with server sometimes
         const premaster = srpGroup.computePremasterSecret(
             clientPriv,
             serverPub,
             key,
             srpGroup.computeU(clientPub, serverPub),
         );
+        console.debug("Premaster: " + premaster.toString(16));
         const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
         console.log("Master key: " + masterKey.toString("hex"));
 

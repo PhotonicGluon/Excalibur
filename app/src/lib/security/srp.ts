@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { sha3_256 } from "js-sha3";
 
-import { powmod } from "@lib/math";
+import { modulo, powmod } from "@lib/math";
 import { randbits } from "@lib/security/util";
 import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util";
 
@@ -85,9 +85,9 @@ export class _SRPGroup {
      */
     computePremasterSecret(clientPriv: bigint, serverPub: bigint, key: Buffer, u: bigint): bigint {
         const x = bufferToNumber(key);
-        const gx = powmod(this.generator, x, this.prime);
-        const base = (serverPub - this.multiplier * gx) % this.prime;
-        const power = clientPriv + u * x;
+        const verifier = powmod(this.generator, x, this.prime);
+        const base = modulo(serverPub - this.multiplier * verifier, this.prime);
+        const power = (clientPriv + u * x) % (this.prime - 1n); // prime - 1 = Euler phi of prime
         return powmod(base, power, this.prime);
     }
 

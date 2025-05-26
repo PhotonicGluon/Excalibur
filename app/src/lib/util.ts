@@ -30,9 +30,8 @@ export function bufferToNumber(buffer: Buffer): bigint {
  */
 export function padBuffer(buffer: Buffer, n: number): Buffer {
     if (buffer.length > n) {
-        throw new Error("Buffer too long");
+        throw new Error(`Buffer too long to pad (${buffer.length} > ${n})`);
     }
-
     const padding = Buffer.alloc(n - buffer.length);
     return Buffer.concat([padding, buffer]);
 }
