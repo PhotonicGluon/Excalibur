@@ -20,16 +20,15 @@ export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; err
 }
 
 /**
- * Checks if the verifier is enrolled on the server.
+ * Checks if the security details is set up on the server.
  *
  * @param apiURL The URL of the Excalibur API.
- * @returns Whether the verifier is enrolled.
+ * @returns Whether the security details is set up.
  */
-export async function checkVerifier(apiURL: string) {
+export async function checkSecurityDetails(apiURL: string) {
     const response = await fetch(`${apiURL}/security/details`, {
         method: "HEAD",
     });
-
     if (response.status === 404) {
         return false;
     }
@@ -37,27 +36,60 @@ export async function checkVerifier(apiURL: string) {
     return true;
 }
 
+export async function getSecurityDetails(apiURL: string): Promise<{
+    success: boolean;
+    aukSalt?: Buffer;
+    srpSalt?: Buffer;
+    error?: string;
+}> {
+    const response = await fetch(`${apiURL}/security/details`, {
+        method: "GET",
+    });
+    if (response.status === 404) {
+        return { success: false, error: "Security details file not found" };
+    }
+
+    const data = await response.json();
+    return {
+        success: true,
+        aukSalt: Buffer.from(data["auk_salt"], "base64"),
+        srpSalt: Buffer.from(data["srp_salt"], "base64"),
+    };
+}
+
 /**
- * Sets up the SRP verifier on the server.
+ * Sets up the security details on the server.
  *
  * @param apiURL The URL of the API server to query.
+ * @param aukSalt The account unlock key (AUK) salt to set up.
+ * @param srpSalt The SRP handshake salt to set up.
  * @param verifier The SRP verifier to set up.
  * @returns A promise which resolves to an object with a success boolean and optionally an error message.
  */
-export async function setUpVerifier(apiURL: string, verifier: bigint): Promise<{ success: boolean; error?: string }> {
+export async function setUpSecurityDetails(
+    apiURL: string,
+    aukSalt: Buffer,
+    srpSalt: Buffer,
+    verifier: bigint,
+): Promise<{ success: boolean; error?: string }> {
     const response = await fetch(`${apiURL}/security/details`, {
         method: "POST",
-        body: numberToBuffer(verifier).toString("base64"),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            auk_salt: aukSalt.toString("base64"),
+            srp_salt: srpSalt.toString("base64"),
+            verifier: numberToBuffer(verifier).toString("base64"),
+        }),
     });
-
-    if (response.status === 409) {
-        return { success: false, error: "Verifier already exists" };
-    } else if (response.status === 422) {
-        return { success: false, error: "Invalid base64 string for verifier" };
-    } else if (response.status === 201) {
-        return { success: true };
-    } else {
-        return { success: false, error: "Unknown error" };
+    switch (response.status) {
+        case 409:
+            return { success: false, error: "Security details file already exists" };
+        case 422:
+            return { success: false, error: "Invalid base64 string" };
+        case 201:
+            return { success: true };
+        default:
+            return { success: false, error: "Unknown error" };
     }
 }
 

@@ -8,6 +8,7 @@ from excalibur_server.api.v1.security.routes import router
 from excalibur_server.api.v1.security.security_details import (
     SECURITY_DETAILS_FILE,
     SecurityDetails,
+    SecurityDetailsWithVerifier,
     get_security_details,
     set_security_details,
 )
@@ -35,14 +36,26 @@ def check_security_details_endpoint():
 @router.get(
     "/details",
     summary="Get Security Details",
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Security details file not found"},
+    },
     response_model=SecurityDetails,
 )
 def get_security_details_endpoint():
     """
     Endpoint that returns the security details.
+
+    This does not return the verifier for the SRP handshake.
     """
 
-    return get_security_details()
+    if not SECURITY_DETAILS_FILE.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security details file not found")
+
+    # Get raw security details
+    security_details_with_verifier = get_security_details()
+
+    # Return instance without the verifier
+    return SecurityDetails.model_validate(security_details_with_verifier)
 
 
 @router.post(
@@ -52,10 +65,12 @@ def get_security_details_endpoint():
     response_model=str,
     responses={
         status.HTTP_409_CONFLICT: {"description": "Security details file already exists"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string for verifier"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
     },
 )
 def set_security_details_endpoint(
+    auk_salt: Annotated[str, Body(description="Base64 string of the account unlock key (AUK) salt.")],
+    srp_salt: Annotated[str, Body(description="Base64 string of the SRP handshake salt.")],
     verifier: Annotated[str, Body(description="Base64 string of the verifier to enrol.")],
 ):
     """
@@ -66,11 +81,11 @@ def set_security_details_endpoint(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Security details file already exists")
 
     try:
+        auk_salt = b64decode(auk_salt)
+        srp_salt = b64decode(srp_salt)
         verifier = b64decode(verifier)
     except binascii.Error as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string for verifier: {e}"
-        )
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 
-    set_security_details(SecurityDetails(verifier=verifier))
+    set_security_details(SecurityDetailsWithVerifier(auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier))
     return "Verifier enrolled"

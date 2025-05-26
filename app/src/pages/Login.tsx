@@ -10,7 +10,14 @@ import {
 import { randomBytes } from "crypto";
 
 import { checkConnection } from "@lib/network";
-import { checkValidity, checkVerifier, getGroup, handshake, setUpVerifier } from "@lib/security/auth";
+import {
+    checkSecurityDetails,
+    checkValidity,
+    getGroup,
+    getSecurityDetails,
+    handshake,
+    setUpSecurityDetails,
+} from "@lib/security/auth";
 import { generateKey } from "@lib/security/keygen";
 import { randbits } from "@lib/security/util";
 import { validateURL } from "@lib/validators";
@@ -89,14 +96,8 @@ const Login: React.FC = () => {
 
         console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
-        // Generate the key
-        // const salt = randomBytes(32); // TODO: Get the salt from the server instead
-        const salt = Buffer.from("deadbeef", "hex");
-        const key = generateKey(values.password, salt);
-        console.log(`Generated key '${key.toString("hex")}' with salt '${salt.toString("hex")}'`);
-
         // Check whether verifier has been set up
-        if (!(await checkVerifier(apiURL))) {
+        if (!(await checkSecurityDetails(apiURL))) {
             presentAlert({
                 header: "Verifier Not Set Up",
                 message: "Verifier has not been set up. Would you like to set it up now with your entered password?",
@@ -116,13 +117,24 @@ const Login: React.FC = () => {
                         text: "Yes",
                         role: "confirm",
                         handler: async () => {
-                            // Set up verifier
+                            // Set up security details
+                            const aukSalt = randomBytes(32);
+                            const srpSalt = randomBytes(32);
+
+                            console.debug(
+                                `Created salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
+                            );
+                            const key = generateKey(values.password, srpSalt);
+                            console.log(
+                                `Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
+                            );
+
                             const verifier = srpGroup.generateVerifier(key);
-                            console.debug(`Generated verifier: ${verifier.toString(16)}`);
-                            await setUpVerifier(apiURL, verifier);
-                            console.debug("Verifier set up");
+
+                            await setUpSecurityDetails(apiURL, aukSalt, srpSalt, verifier);
+                            console.debug("Security details set up");
                             presentToast({
-                                message: "Verifier set up. Please log in again.",
+                                message: "Security details set up. Please log in again.",
                                 duration: 5000,
                             });
                         },
@@ -131,6 +143,26 @@ const Login: React.FC = () => {
             });
             return;
         }
+
+        // Get security details
+        const securityDetailsResponse = await getSecurityDetails(apiURL);
+        if (!securityDetailsResponse.success) {
+            presentAlert({
+                header: "Security Details Not Found",
+                message: securityDetailsResponse.error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        const aukSalt = securityDetailsResponse.aukSalt!;
+        const srpSalt = securityDetailsResponse.srpSalt!;
+        console.debug(
+            `Loaded security details with salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
+        );
+
+        // Generate key
+        const key = generateKey(values.password, srpSalt);
+        console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
         // TODO: Add progress meter for connections
         console.debug("Handshake...");
@@ -169,8 +201,8 @@ const Login: React.FC = () => {
         console.log("Master key: " + masterKey.toString("hex"));
 
         console.debug("Verifying M1...");
-        const m1 = srpGroup.generateM1(salt, clientPub, serverPub, masterKey);
-        const validityResponse = await checkValidity(apiURL, handshakeUUID, salt, clientPub, serverPub, m1);
+        const m1 = srpGroup.generateM1(srpSalt, clientPub, serverPub, masterKey);
+        const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
         if (!validityResponse.success) {
             presentAlert({
                 header: "Client Verification Failed",
