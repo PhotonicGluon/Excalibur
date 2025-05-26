@@ -10,8 +10,9 @@ from pydantic import BaseModel
 
 from excalibur_server.api.v1.security.auth import compute_server_public_value, get_verifier
 from excalibur_server.api.v1.security.cache import HANDSHAKE_CACHE
-from excalibur_server.api.v1.security.consts import SRP_GROUP, VERIFIER_FILE
+from excalibur_server.api.v1.security.consts import SRP_GROUP
 from excalibur_server.api.v1.security.routes.srp import router
+from excalibur_server.api.v1.security.security_details import SECURITY_DETAILS_FILE
 
 
 class SRPHandshakeResponse(BaseModel):
@@ -38,7 +39,7 @@ def srp_handshake_endpoint(
 
     # Get verifier
     try:
-        verifier = get_verifier(VERIFIER_FILE)
+        verifier = get_verifier(SECURITY_DETAILS_FILE)
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Verifier not found")
 

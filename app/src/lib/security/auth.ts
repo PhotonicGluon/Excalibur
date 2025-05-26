@@ -26,7 +26,7 @@ export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; err
  * @returns Whether the verifier is enrolled.
  */
 export async function checkVerifier(apiURL: string) {
-    const response = await fetch(`${apiURL}/security/srp/verifier`, {
+    const response = await fetch(`${apiURL}/security/details`, {
         method: "HEAD",
     });
 
@@ -45,7 +45,7 @@ export async function checkVerifier(apiURL: string) {
  * @returns A promise which resolves to an object with a success boolean and optionally an error message.
  */
 export async function setUpVerifier(apiURL: string, verifier: bigint): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${apiURL}/security/srp/verifier`, {
+    const response = await fetch(`${apiURL}/security/details`, {
         method: "POST",
         body: numberToBuffer(verifier).toString("base64"),
     });

@@ -15,8 +15,9 @@ from excalibur_server.api.v1.security.auth import (
 )
 from excalibur_server.api.v1.security.auth.srp import get_verifier
 from excalibur_server.api.v1.security.cache import HANDSHAKE_CACHE, VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.consts import SRP_GROUP, VERIFIER_FILE
+from excalibur_server.api.v1.security.consts import SRP_GROUP
 from excalibur_server.api.v1.security.routes.srp import router
+from excalibur_server.api.v1.security.security_details import SECURITY_DETAILS_FILE
 
 
 class SRPValidityResponse(BaseModel):
@@ -47,7 +48,7 @@ def check_srp_validity_endpoint(
 
     # Get verifier
     try:
-        verifier = get_verifier(VERIFIER_FILE)
+        verifier = get_verifier(SECURITY_DETAILS_FILE)
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Verifier not found")
 
