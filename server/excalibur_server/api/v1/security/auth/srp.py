@@ -117,18 +117,19 @@ def compute_premaster_secret(
     return pow(client_public_value * vu % group.prime, server_private_value, group.prime)
 
 
-def premaster_to_master(premaster_secret: int) -> bytes:
+def premaster_to_master(group: SRPGroup, premaster_secret: int) -> bytes:
     """
     Computes the master secret from the pre-master secret.
 
     RFC2945 allows the use of other hash algorithms other than the SHA1-Interleave. We adopt
     SHA3-256.
 
+    :param group: SRP group
     :param premaster_secret: pre-master secret
     :return: the master secret
     """
 
-    return SHA3_256.new(long_to_bytes(premaster_secret)).digest()
+    return SHA3_256.new(long_to_bytes(premaster_secret, group.bits // 8)).digest()
 
 
 def generate_m1(

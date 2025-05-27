@@ -41,6 +41,10 @@ const PREMASTER_SECRET = Buffer.from(
 );
 
 // Verification values, self-computed
+const MASTER_SECRET = Buffer.from(
+    "573C0D40 FABF905D 72B44716 380D2E54 C5A48FD4 3B40D345 A3619881 D3E8632B".replaceAll(" ", ""),
+    "hex",
+);
 const M1 = Buffer.from(
     "D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replaceAll(" ", ""),
     "hex",
@@ -70,6 +74,33 @@ test("computePremasterSecret", () => {
     expect(
         SRPGroup.SMALL.computePremasterSecret(bufferToNumber(A_PRIV), bufferToNumber(B_PUB), X, bufferToNumber(U)),
     ).toEqual(bufferToNumber(PREMASTER_SECRET));
+});
+
+test("premasterToMaster", () => {
+    expect(SRPGroup.SMALL.premasterToMaster(bufferToNumber(PREMASTER_SECRET))).toEqual(MASTER_SECRET);
+
+    // Edge cases of premaster being less than required number of bits
+    expect(SRPGroup.SMALL.premasterToMaster(0n).toString("hex")).toEqual(
+        "040689c9dbffcf94620acdeec5686d8c35d1c85f8f3c1a70b988d58ed33ea148",
+    );
+    expect(SRPGroup.SMALL.premasterToMaster(1n).toString("hex")).toEqual(
+        "51a54a0e5a2bc61493b51cee861c8834e05303c0e1212c5728e5dad227a787b1",
+    );
+    expect(SRPGroup.SMALL.premasterToMaster(16n).toString("hex")).toEqual(
+        "284275fd923e817376bd2da1f948d15a19a8d08625d28a76be93d12648f4c251",
+    );
+    expect(SRPGroup.SMALL.premasterToMaster(bufferToNumber(Buffer.from("TEST"))).toString("hex")).toEqual(
+        "fbae899ee2dbef77f824b06cbd0cb0f92e7c9108a5f9e072a596f4ea550d2d32",
+    );
+    expect(
+        SRPGroup.SMALL.premasterToMaster(
+            bufferToNumber(
+                Buffer.from(
+                    "\x01\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11",
+                ),
+            ),
+        ).toString("hex"),
+    ).toEqual("0604da4fcae78f8e6aeaa51ddabb300a45cf540e61f1f344246405c1f7df5741");
 });
 
 test("generateM1", () => {

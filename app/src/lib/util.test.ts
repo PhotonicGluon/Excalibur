@@ -15,6 +15,9 @@ test("numberToBuffer", () => {
             "hex",
         ),
     );
+
+    expect(numberToBuffer(0n)).toEqual(Buffer.from("00", "hex"));
+    expect(numberToBuffer(0x11111n)).toEqual(Buffer.from("011111", "hex"));
 });
 
 test("bufferToNumber", () => {
@@ -32,6 +35,16 @@ test("bufferToNumber", () => {
             "0x9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef",
         ),
     );
+
+    expect(bufferToNumber(Buffer.from("00", "hex"))).toEqual(0n);
+});
+
+test("bufferToNumber and numberToBuffer inverses", () => {
+    expect(bufferToNumber(numberToBuffer(3n))).toEqual(3n);
+    expect(numberToBuffer(bufferToNumber(Buffer.from("\x03")))).toEqual(Buffer.from("03", "hex"));
+
+    expect(bufferToNumber(numberToBuffer(0x11111n))).toEqual(0x11111n);
+    expect(numberToBuffer(bufferToNumber(Buffer.from("\x01\x11\x11")))).toEqual(Buffer.from("\x01\x11\x11"));
 });
 
 test("padBuffer", () => {

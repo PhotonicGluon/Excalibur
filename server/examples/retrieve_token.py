@@ -43,7 +43,7 @@ def form_verify_request(handshake_response):
     premaster_secret = bytes_to_long(b_pub) - K * pow(G, X, N)
     premaster_secret = pow(premaster_secret, A_PRIV + u * X, N)
 
-    gMasterSecret = premaster_to_master(premaster_secret)
+    gMasterSecret = premaster_to_master(SRP_GROUP, premaster_secret)
     m1 = generate_m1(SRP_GROUP, long_to_bytes(S), bytes_to_long(a_pub), bytes_to_long(b_pub), gMasterSecret)
 
     RESPONSE_FORMAT["handshake_uuid"] = handshake_response["handshake_uuid"]

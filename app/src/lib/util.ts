@@ -6,7 +6,7 @@
  */
 export function numberToBuffer(n: bigint): Buffer {
     const string = n.toString(16);
-    return Buffer.from(n < 16n ? `0${string}` : string, "hex");
+    return Buffer.from(string.length % 2 ? `0${string}` : string, "hex");
 }
 
 /**
@@ -16,7 +16,10 @@ export function numberToBuffer(n: bigint): Buffer {
  * @returns The number represented by the buffer.
  */
 export function bufferToNumber(buffer: Buffer): bigint {
-    const hex = buffer.toString("hex");
+    let hex = buffer.toString("hex");
+    if (hex === "") {
+        hex = "0";
+    }
     return BigInt("0x" + hex);
 }
 

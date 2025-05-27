@@ -101,7 +101,7 @@ export class _SRPGroup {
      * @returns The master secret as a Buffer.
      */
     premasterToMaster(premaster: bigint): Buffer {
-        return Buffer.from(sha3_256.arrayBuffer(numberToBuffer(premaster)));
+        return Buffer.from(sha3_256.arrayBuffer(padBuffer(numberToBuffer(premaster), this.bits / 8)));
     }
 
     /**

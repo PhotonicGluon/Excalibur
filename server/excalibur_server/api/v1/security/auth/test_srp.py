@@ -1,4 +1,4 @@
-from Crypto.Util.number import long_to_bytes
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 from .srp import (
     SRPGroup,
@@ -44,6 +44,7 @@ PREMASTER_SECRET = int(
 )
 
 # Verification values, self-computed
+MASTER_SECRET = int("573C0D40 FABF905D 72B44716 380D2E54 C5A48FD4 3B40D345 A3619881 D3E8632B".replace(" ", ""), 16)
 M1 = int("D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replace(" ", ""), 16)
 M2 = int("53EEEE88 4F3309A0 6645299F F457AAD0 FB724151 B872B44F 2382F52D C0D0E820".replace(" ", ""), 16)
 
@@ -70,11 +71,43 @@ def test_compute_premaster_secret():
     assert premaster_secret == PREMASTER_SECRET
 
 
+def test_premaster_to_master():
+    master_secret = premaster_to_master(GROUP, PREMASTER_SECRET)
+    assert master_secret == long_to_bytes(MASTER_SECRET)
+
+    assert (
+        premaster_to_master(
+            GROUP,
+            0x27A46FA771529CA3E8B757E54A32762B937752D18301AACB8D0393223B822F0FAE0E202D70B0B5FCB6C171DDE8A6D06FE1EC380BB7F22C78881379345FB59DF3FBC5CBC8163DE42D67B6072AF2BCFA96EE4C19CAC79AE3A4208AA086588B925EDE89510B8A89B3B1B8B6A95E57E8D6D9EB95F9817D3EDDD09F8C8D2A0190E18,
+        ).hex()
+        == "d369ace03853d18034a54282ee1b7b18d3b52bf390531b758d3bd568889284cb"
+    )
+
+    assert (
+        premaster_to_master(
+            GROUP,
+            bytes_to_long(
+                b"\x01\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"
+            ),
+        ).hex()
+        == "0604da4fcae78f8e6aeaa51ddabb300a45cf540e61f1f344246405c1f7df5741"
+    )
+
+    # Edge cases of premaster being less than required number of bits
+    assert premaster_to_master(GROUP, 0).hex() == "040689c9dbffcf94620acdeec5686d8c35d1c85f8f3c1a70b988d58ed33ea148"
+    assert premaster_to_master(GROUP, 1).hex() == "51a54a0e5a2bc61493b51cee861c8834e05303c0e1212c5728e5dad227a787b1"
+    assert premaster_to_master(GROUP, 16).hex() == "284275fd923e817376bd2da1f948d15a19a8d08625d28a76be93d12648f4c251"
+    assert (
+        premaster_to_master(GROUP, bytes_to_long(b"TEST")).hex()
+        == "fbae899ee2dbef77f824b06cbd0cb0f92e7c9108a5f9e072a596f4ea550d2d32"
+    )
+
+
 def test_generate_m1():
-    m1 = generate_m1(GROUP, long_to_bytes(S), A_PUB, B_PUB, premaster_to_master(PREMASTER_SECRET))
+    m1 = generate_m1(GROUP, long_to_bytes(S), A_PUB, B_PUB, premaster_to_master(GROUP, PREMASTER_SECRET))
     assert m1 == long_to_bytes(M1)
 
 
 def test_generate_m2():
-    m2 = generate_m2(A_PUB, long_to_bytes(M1), premaster_to_master(PREMASTER_SECRET))
+    m2 = generate_m2(A_PUB, long_to_bytes(M1), premaster_to_master(GROUP, PREMASTER_SECRET))
     assert m2 == long_to_bytes(M2)

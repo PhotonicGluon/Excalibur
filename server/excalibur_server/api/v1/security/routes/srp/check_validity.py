@@ -71,7 +71,7 @@ def check_srp_validity_endpoint(
     # Compute server-side master
     u = compute_u(SRP_GROUP, a_pub, b_pub)
     premaster = compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier)
-    master = premaster_to_master(premaster)
+    master = premaster_to_master(SRP_GROUP, premaster)
 
     # Generate server-side M1
     m1_server = generate_m1(SRP_GROUP, salt, a_pub, b_pub, master)
