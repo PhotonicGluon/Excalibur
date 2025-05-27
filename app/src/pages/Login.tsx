@@ -244,6 +244,8 @@ const Login: React.FC = () => {
             return;
         }
 
+        console.log(`Bilateral authentication complete; handshake UUID is ${handshakeUUID}`);
+
         // Get token for continued authentication
         console.debug("Retrieving token...");
         // TODO: Continue with token retrieval
