@@ -5,6 +5,7 @@ import {
     IonInputPasswordToggle,
     IonPage,
     useIonAlert,
+    useIonLoading,
     useIonToast,
 } from "@ionic/react";
 import { randomBytes } from "crypto";
@@ -19,7 +20,6 @@ import {
     setUpSecurityDetails,
 } from "@lib/security/auth";
 import { generateKey } from "@lib/security/keygen";
-import { randbits } from "@lib/security/util";
 import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
@@ -28,6 +28,7 @@ const Login: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
+    const [presentLoading, dismissLoading] = useIonLoading();
 
     // Functions
     function getAllValues() {
@@ -73,8 +74,14 @@ const Login: React.FC = () => {
         }
         console.debug(`Received values: ${JSON.stringify(values)}`);
 
+        // Show loading spinner
+        presentLoading({
+            message: "Logging in...",
+        });
+
         // Check connectivity to the server
         if (!(await checkConnection(values.server))) {
+            dismissLoading();
             presentAlert({
                 header: "Connection Failure",
                 message: `Could not connect to ${values.server}.`,
@@ -89,6 +96,7 @@ const Login: React.FC = () => {
         const groupResponse = await getGroup(apiURL);
         const srpGroup = groupResponse.group;
         if (!srpGroup) {
+            dismissLoading();
             presentToast({
                 message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
                 duration: 3000,
@@ -100,6 +108,7 @@ const Login: React.FC = () => {
 
         // Check whether verifier has been set up
         if (!(await checkSecurityDetails(apiURL))) {
+            dismissLoading();
             presentAlert({
                 header: "Verifier Not Set Up",
                 message: "Verifier has not been set up. Would you like to set it up now with your entered password?",
@@ -149,6 +158,7 @@ const Login: React.FC = () => {
         // Get security details
         const securityDetailsResponse = await getSecurityDetails(apiURL);
         if (!securityDetailsResponse.success) {
+            dismissLoading();
             presentAlert({
                 header: "Security Details Not Found",
                 message: securityDetailsResponse.error,
@@ -166,9 +176,9 @@ const Login: React.FC = () => {
         const key = generateKey(values.password, srpSalt);
         console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
-        // TODO: Add progress meter for connections
+        // Perform SRP handshake
         console.debug("Handshake...");
-        let clientPriv, clientPub, serverPub, handshakeUUID;
+        let clientPriv, clientPub, serverPub, sharedU, handshakeUUID;
         for (let tryCount = 0; tryCount < 3; tryCount++) {
             let { priv, pub } = srpGroup.generateClientValues();
             const handshakeResponse = await handshake(apiURL, pub);
@@ -179,11 +189,21 @@ const Login: React.FC = () => {
 
             clientPriv = priv;
             clientPub = pub;
-            serverPub = handshakeResponse.serverPub; // FIXME: Validate response by server
+            serverPub = handshakeResponse.serverPub!;
+            if (serverPub % srpGroup.prime === 0n) {
+                console.debug(`Server sent invalid public value, retrying (try count: ${tryCount})`);
+                continue;
+            }
+            sharedU = srpGroup.computeU(clientPub, serverPub);
+            if (sharedU === 0n) {
+                console.debug(`Computed U is zero, retrying (try count: ${tryCount})`);
+                continue;
+            }
             handshakeUUID = handshakeResponse.handshakeUUID;
             break;
         }
-        if (!clientPriv || !clientPub || !serverPub || !handshakeUUID) {
+        if (!clientPriv || !clientPub || !serverPub || !sharedU || !handshakeUUID) {
+            dismissLoading();
             presentAlert({
                 header: "Handshake Failed",
                 message: "Could not complete handshake. Please try again.",
@@ -193,13 +213,7 @@ const Login: React.FC = () => {
         }
 
         console.debug("Calculating master...");
-        // FIXME: Somehow this disagrees with server sometimes
-        const premaster = srpGroup.computePremasterSecret(
-            clientPriv,
-            serverPub,
-            key,
-            srpGroup.computeU(clientPub, serverPub),
-        );
+        const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, key, sharedU);
         console.debug("Premaster: " + premaster.toString(16));
         const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
         console.log("Master key: " + masterKey.toString("hex"));
@@ -208,6 +222,7 @@ const Login: React.FC = () => {
         const m1 = srpGroup.generateM1(srpSalt, clientPub, serverPub, masterKey);
         const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
         if (!validityResponse.success) {
+            dismissLoading();
             presentAlert({
                 header: "Client Verification Failed",
                 message: `Server failed to verify client: ${validityResponse.error!}`,
@@ -220,6 +235,7 @@ const Login: React.FC = () => {
         const m2Server = validityResponse.m2!;
         const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
         if (!m2Client.equals(m2Server)) {
+            dismissLoading();
             presentAlert({
                 header: "Server Verification Failed",
                 message: "Client failed to verify server.",
@@ -228,9 +244,11 @@ const Login: React.FC = () => {
             return;
         }
 
+        // Get token for continued authentication
         console.debug("Retrieving token...");
         // TODO: Continue with token retrieval
 
+        dismissLoading();
         presentAlert({
             header: "Connected",
             buttons: ["OK"],
