@@ -21,6 +21,7 @@ class AuthTokenResponse(BaseModel):
     },
     response_model=AuthTokenResponse,
     dependencies=[Depends(EncryptResponse(excluded_statuses=[status.HTTP_404_NOT_FOUND]))],
+    tags=["encrypted"],
 )
 def generate_token_endpoint(
     handshake_uuid: Annotated[str, Body(description="Handshake UUID given by the server during the handshake.")],
@@ -28,6 +29,8 @@ def generate_token_endpoint(
 ):
     """
     Generates a token for continued authentication.
+
+    Note that this is an **encrypted** endpoint. See the documentation under "encrypted" endpoints to learn how to decode the response.
     """
 
     # Get master key associated with handshake UUID
