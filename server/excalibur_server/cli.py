@@ -1,5 +1,4 @@
 import os
-import warnings
 from typing import Annotated
 
 import typer
@@ -12,18 +11,27 @@ def start_api_server(
     host: Annotated[str, typer.Option(help="Host for the server to listen on.")] = "0.0.0.0",
     port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 8000,
     debug: Annotated[bool, typer.Option(help="Whether to run the server in debug mode.")] = False,
+    encrypt_responses: Annotated[
+        bool,
+        typer.Option(
+            "-e/-E",
+            "--encrypt-responses/--no-encrypt-responses",
+            help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
+        ),
+    ] = True,
+    delay_responses_duration: Annotated[
+        float, typer.Option("-d", "--delay-responses-duration", help="Duration to delay responses, in seconds.")
+    ] = 0,
 ):
     """
     Starts the API server.
     """
 
-    if debug:
-        warnings.warn("Debug mode is enabled.", RuntimeWarning)
-        os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
-
     from excalibur_server.main import start_server
 
-    start_server(host, port, debug)
+    start_server(
+        host, port, debug, encrypt_responses=encrypt_responses, delay_responses_duration=delay_responses_duration
+    )
 
 
 @app.command(name="reset")
