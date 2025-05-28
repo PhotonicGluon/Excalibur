@@ -3,12 +3,13 @@ import {
     IonContent,
     IonInput,
     IonInputPasswordToggle,
+    IonLoading,
     IonPage,
     useIonAlert,
-    useIonLoading,
     useIonToast,
 } from "@ionic/react";
 import { randomBytes } from "crypto";
+import { useState } from "react";
 
 import { checkConnection } from "@lib/network";
 import {
@@ -29,7 +30,9 @@ const Login: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
-    const [presentLoading, dismissLoading] = useIonLoading();
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingState, setLoadingState] = useState("Logging in...");
 
     // Functions
     function getAllValues() {
@@ -76,13 +79,12 @@ const Login: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(values)}`);
 
         // Show loading spinner
-        presentLoading({
-            message: "Logging in...",
-        });
+        setIsLoading(true);
 
         // Check connectivity to the server
+        setLoadingState("Checking connectivity...");
         if (!(await checkConnection(values.server))) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
                 message: `Could not connect to ${values.server}.`,
@@ -94,10 +96,11 @@ const Login: React.FC = () => {
         const apiURL = `${values.server}/api/v1`;
 
         // Get SRP group used for communication
+        setLoadingState("Determining SRP group...");
         const groupResponse = await getGroup(apiURL);
         const srpGroup = groupResponse.group;
         if (!srpGroup) {
-            dismissLoading();
+            setIsLoading(false);
             presentToast({
                 message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
                 duration: 3000,
@@ -107,20 +110,22 @@ const Login: React.FC = () => {
 
         console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
-        // Check whether verifier has been set up
+        // Check whether security details has been set up
+        setLoadingState("Finding security details...");
         if (!(await checkSecurityDetails(apiURL))) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
-                header: "Verifier Not Set Up",
-                message: "Verifier has not been set up. Would you like to set it up now with your entered password?",
+                header: "Security Details Not Set Up",
+                message:
+                    "Security details has not been set up. Would you like to set it up now with your entered password?",
                 buttons: [
                     {
                         text: "No",
                         role: "cancel",
                         handler: () => {
-                            console.debug("Verifier setup cancelled.");
+                            console.debug("Security details setup cancelled.");
                             presentToast({
-                                message: "Verifier setup cancelled",
+                                message: "Security details setup cancelled",
                                 duration: 3000,
                             });
                         },
@@ -157,9 +162,10 @@ const Login: React.FC = () => {
         }
 
         // Get security details
+        setLoadingState("Loading security details...");
         const securityDetailsResponse = await getSecurityDetails(apiURL);
         if (!securityDetailsResponse.success) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Found",
                 message: securityDetailsResponse.error,
@@ -174,10 +180,12 @@ const Login: React.FC = () => {
         );
 
         // Generate key
+        setLoadingState("Generating key...");
         const key = generateKey(values.password, srpSalt);
         console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
         // Perform SRP handshake
+        setLoadingState("Performing handshake...");
         console.debug("Handshake...");
         let clientPriv, clientPub, serverPub, sharedU, handshakeUUID;
         for (let tryCount = 0; tryCount < 3; tryCount++) {
@@ -204,7 +212,7 @@ const Login: React.FC = () => {
             break;
         }
         if (!clientPriv || !clientPub || !serverPub || !sharedU || !handshakeUUID) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Handshake Failed",
                 message: "Could not complete handshake. Please try again.",
@@ -213,17 +221,19 @@ const Login: React.FC = () => {
             return;
         }
 
+        setLoadingState("Calculating master...");
         console.debug("Calculating master...");
         const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, key, sharedU);
         console.debug("Premaster: " + premaster.toString(16));
         const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
         console.log("Master key: " + masterKey.toString("hex"));
 
+        setLoadingState("Authentication...");
         console.debug("Verifying M1...");
         const m1 = srpGroup.generateM1(srpSalt, clientPub, serverPub, masterKey);
         const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
         if (!validityResponse.success) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Client Verification Failed",
                 message: `Server failed to verify client: ${validityResponse.error!}`,
@@ -236,7 +246,7 @@ const Login: React.FC = () => {
         const m2Server = validityResponse.m2!;
         const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
         if (!m2Client.equals(m2Server)) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Server Verification Failed",
                 message: "Client failed to verify server.",
@@ -248,10 +258,11 @@ const Login: React.FC = () => {
         console.log(`Bilateral authentication complete; handshake UUID is ${handshakeUUID}`);
 
         // Get token for continued authentication
+        setLoadingState("Retrieving token...");
         console.debug("Retrieving token...");
         const tokenResponse = await getToken(apiURL, handshakeUUID, masterKey);
         if (!tokenResponse.success) {
-            dismissLoading();
+            setIsLoading(false);
             presentAlert({
                 header: "Token Retrieval Failed",
                 message: tokenResponse.error,
@@ -263,7 +274,7 @@ const Login: React.FC = () => {
         console.log(`Got token: ${token}`);
         // TODO: Continue with token retrieval
 
-        dismissLoading();
+        setIsLoading(false);
         presentAlert({
             header: "Connected",
             buttons: ["OK"],
@@ -301,6 +312,11 @@ const Login: React.FC = () => {
                         </IonButton>
                     </form>
                 </div>
+                <IonLoading
+                    className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
+                    isOpen={isLoading}
+                    message={loadingState}
+                ></IonLoading>
             </IonContent>
         </IonPage>
     );
