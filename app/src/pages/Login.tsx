@@ -1,3 +1,6 @@
+import { randomBytes } from "crypto";
+import { useState } from "react";
+
 import {
     IonButton,
     IonContent,
@@ -8,19 +11,10 @@ import {
     useIonAlert,
     useIonToast,
 } from "@ionic/react";
-import { randomBytes } from "crypto";
-import { useState } from "react";
 
 import { checkConnection } from "@lib/network";
-import {
-    checkSecurityDetails,
-    checkValidity,
-    getGroup,
-    getSecurityDetails,
-    getToken,
-    handshake,
-    setUpSecurityDetails,
-} from "@lib/security/auth";
+import { checkSecurityDetails, getGroup, getToken, setUpSecurityDetails } from "@lib/security/auth";
+import { e2e as e2ee } from "@lib/security/e2ee";
 import { generateKey } from "@lib/security/keygen";
 import { validateURL } from "@lib/validators";
 
@@ -95,21 +89,6 @@ const Login: React.FC = () => {
 
         const apiURL = `${values.server}/api/v1`;
 
-        // Get SRP group used for communication
-        setLoadingState("Determining SRP group...");
-        const groupResponse = await getGroup(apiURL);
-        const srpGroup = groupResponse.group;
-        if (!srpGroup) {
-            setIsLoading(false);
-            presentToast({
-                message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
-                duration: 3000,
-            });
-            return;
-        }
-
-        console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
-
         // Check whether security details has been set up
         setLoadingState("Finding security details...");
         if (!(await checkSecurityDetails(apiURL))) {
@@ -134,6 +113,21 @@ const Login: React.FC = () => {
                         text: "Yes",
                         role: "confirm",
                         handler: async () => {
+                            // Get SRP group used for communication
+                            setLoadingState("Determining SRP group...");
+                            const groupResponse = await getGroup(apiURL);
+                            const srpGroup = groupResponse.group;
+                            if (!srpGroup) {
+                                setIsLoading(false);
+                                presentToast({
+                                    message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
+                                    duration: 3000,
+                                });
+                                return;
+                            }
+
+                            console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
+
                             // Set up security details
                             const aukSalt = randomBytes(32);
                             const srpSalt = randomBytes(32);
@@ -161,101 +155,24 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Get security details
-        setLoadingState("Loading security details...");
-        const securityDetailsResponse = await getSecurityDetails(apiURL);
-        if (!securityDetailsResponse.success) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Security Details Not Found",
-                message: securityDetailsResponse.error,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        const aukSalt = securityDetailsResponse.aukSalt!;
-        const srpSalt = securityDetailsResponse.srpSalt!;
-        console.debug(
-            `Loaded security details with salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
+        // Set up End-to-End Encryption (E2EE)
+        const e2eeResponse = await e2ee(
+            apiURL,
+            values.password,
+            () => setIsLoading(false),
+            setLoadingState,
+            (header, msg) => {
+                presentAlert({ header: header, message: msg, buttons: ["OK"] });
+            },
+            (msg) => {
+                presentToast({ message: msg, duration: 3000 });
+            },
         );
-
-        // Generate key
-        setLoadingState("Generating key...");
-        const key = generateKey(values.password, srpSalt);
-        console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
-
-        // Perform SRP handshake
-        setLoadingState("Performing handshake...");
-        console.debug("Handshake...");
-        let clientPriv, clientPub, serverPub, sharedU, handshakeUUID;
-        for (let tryCount = 0; tryCount < 3; tryCount++) {
-            let { priv, pub } = srpGroup.generateClientValues();
-            const handshakeResponse = await handshake(apiURL, pub);
-            if (!handshakeResponse.success) {
-                console.debug(`Handshake failed: ${handshakeResponse.error} (try count: ${tryCount})`);
-                continue;
-            }
-
-            clientPriv = priv;
-            clientPub = pub;
-            serverPub = handshakeResponse.serverPub!;
-            if (serverPub % srpGroup.prime === 0n) {
-                console.debug(`Server sent invalid public value, retrying (try count: ${tryCount})`);
-                continue;
-            }
-            sharedU = srpGroup.computeU(clientPub, serverPub);
-            if (sharedU === 0n) {
-                console.debug(`Computed U is zero, retrying (try count: ${tryCount})`);
-                continue;
-            }
-            handshakeUUID = handshakeResponse.handshakeUUID;
-            break;
-        }
-        if (!clientPriv || !clientPub || !serverPub || !sharedU || !handshakeUUID) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Handshake Failed",
-                message: "Could not complete handshake. Please try again.",
-                buttons: ["OK"],
-            });
+        if (!e2eeResponse) {
+            // Errors already handled in `e2ee()`
             return;
         }
-
-        setLoadingState("Calculating master...");
-        console.debug("Calculating master...");
-        const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, key, sharedU);
-        console.debug("Premaster: " + premaster.toString(16));
-        const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
-        console.log("Master key: " + masterKey.toString("hex"));
-
-        setLoadingState("Authentication...");
-        console.debug("Verifying M1...");
-        const m1 = srpGroup.generateM1(srpSalt, clientPub, serverPub, masterKey);
-        const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
-        if (!validityResponse.success) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Client Verification Failed",
-                message: `Server failed to verify client: ${validityResponse.error!}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-
-        console.debug("Verifying M2...");
-        const m2Server = validityResponse.m2!;
-        const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
-        if (!m2Client.equals(m2Server)) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Server Verification Failed",
-                message: "Client failed to verify server.",
-                buttons: ["OK"],
-            });
-            return;
-        }
-
-        console.log(`Bilateral authentication complete; handshake UUID is ${handshakeUUID}`);
+        const { uuid: handshakeUUID, key: masterKey } = e2eeResponse;
 
         // Get token for continued authentication
         setLoadingState("Retrieving token...");
@@ -272,8 +189,8 @@ const Login: React.FC = () => {
         }
         const token = tokenResponse.token!;
         console.log(`Got token: ${token}`);
-        // TODO: Continue with token retrieval
 
+        // TODO: Continue with files retrieval
         setIsLoading(false);
         presentAlert({
             header: "Connected",

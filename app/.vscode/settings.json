@@ -6,7 +6,8 @@
         "asar",
         "powmod",
         "priv",
-        "randbits"
+        "randbits",
+        "updaters"
     ],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
