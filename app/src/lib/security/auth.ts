@@ -1,3 +1,4 @@
+import { decryptJSON } from "@lib/crypto";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
 import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util";
 
@@ -179,4 +180,38 @@ export async function checkValidity(
 
     const data = await response.json();
     return { success: true, m2: Buffer.from(data["m2"], "base64") };
+}
+
+/**
+ * Generates a token for continued authentication.
+ *
+ * @param apiURL The URL of the Excalibur API.
+ * @param handshakeUUID The UUID for the handshake.
+ * @param masterKey The master key to use for encrypting the token.
+ * @returns A promise which resolves to an object with a success boolean, an optional error message,
+ *      and optionally the token.
+ */
+export async function getToken(
+    apiURL: string,
+    handshakeUUID: string,
+    masterKey: Buffer,
+): Promise<{ success: boolean; error?: string; token?: string }> {
+    const response = await fetch(`${apiURL}/security/generate-token`, {
+        method: "POST",
+        body: handshakeUUID,
+    });
+    switch (response.status) {
+        case 404:
+            return { success: false, error: "Handshake UUID not found or has expired" };
+        case 200:
+            break; // Continue with normal flow
+        default:
+            return { success: false, error: "Unknown error" };
+    }
+
+    const data = decryptJSON(await response.json(), masterKey);
+    return {
+        success: true,
+        token: data["token"],
+    };
 }

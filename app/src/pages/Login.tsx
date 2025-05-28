@@ -16,6 +16,7 @@ import {
     checkValidity,
     getGroup,
     getSecurityDetails,
+    getToken,
     handshake,
     setUpSecurityDetails,
 } from "@lib/security/auth";
@@ -248,6 +249,18 @@ const Login: React.FC = () => {
 
         // Get token for continued authentication
         console.debug("Retrieving token...");
+        const tokenResponse = await getToken(apiURL, handshakeUUID, masterKey);
+        if (!tokenResponse.success) {
+            dismissLoading();
+            presentAlert({
+                header: "Token Retrieval Failed",
+                message: tokenResponse.error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        const token = tokenResponse.token!;
+        console.log(`Got token: ${token}`);
         // TODO: Continue with token retrieval
 
         dismissLoading();
