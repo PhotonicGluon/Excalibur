@@ -3,7 +3,7 @@ import warnings
 
 import uvicorn
 
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
 
 
 def start_server(host: str, port: int, debug: bool, encrypt_responses: bool = True, delay_responses_duration: int = 0):
@@ -32,7 +32,8 @@ def start_server(host: str, port: int, debug: bool, encrypt_responses: bool = Tr
 
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = str(delay_responses_duration)
 
-    # Make the files folder
+    # Make the folders
+    os.makedirs(ROOT_FOLDER, exist_ok=True)
     os.makedirs(FILES_FOLDER, exist_ok=True)
 
     # Start server
@@ -52,4 +53,4 @@ def reset_server():
     """
 
     # Remove the files folder
-    os.rmdir(FILES_FOLDER)
+    os.rmdir(ROOT_FOLDER)

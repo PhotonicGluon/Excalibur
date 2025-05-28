@@ -4,9 +4,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, field_serializer
 
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.consts import ROOT_FOLDER
 
-SECURITY_DETAILS_FILE = Path(FILES_FOLDER, "security_details.json")
+SECURITY_DETAILS_FILE = Path(ROOT_FOLDER, "security_details.json")
 
 
 def serialize_bytes(a_bytes: bytes) -> str:

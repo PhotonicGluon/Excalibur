@@ -8,4 +8,4 @@ router = APIRouter(
     responses={status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"}},
 )
 
-from .index import files_index
+from .listdir import listdir_endpoint
