@@ -14,7 +14,7 @@ import {
 
 import { checkConnection } from "@lib/network";
 import { checkSecurityDetails, getGroup, getToken, setUpSecurityDetails } from "@lib/security/auth";
-import { e2e as e2ee } from "@lib/security/e2ee";
+import { e2ee } from "@lib/security/e2ee";
 import { generateKey } from "@lib/security/keygen";
 import { validateURL } from "@lib/validators";
 

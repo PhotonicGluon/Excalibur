@@ -13,7 +13,7 @@ import { generateKey } from "@lib/security/keygen";
  * @returns A promise which resolves to an object with a UUID for the handshake and the master key
  *      used to encrypt communications, or undefined if the handshake could not be completed
  */
-export async function e2e(
+export async function e2ee(
     apiURL: string,
     password: string,
     stopLoading?: () => void,
