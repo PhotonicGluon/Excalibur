@@ -7,7 +7,14 @@ const config = {
     tabWidth: 4,
     printWidth: 120,
     // Import ordering
-    importOrder: ["^@ionic/(.*)$", "^@lib/(.*)$", "^@components/(.*)$", "^@pages/(.*)$", "^[./]"],
+    importOrder: [
+        "^(?:@ionic|ionicons)/(.*)$",
+        "^@lib/(.*)$",
+        "^@components/(.*)$",
+        "^@pages/(.*)$",
+        "^@theme/(.*)$",
+        "^[./]",
+    ],
     importOrderSeparation: true,
     importOrderSortSpecifiers: true,
 };
