@@ -1,6 +1,8 @@
 import { useParams } from "react-router";
 
+import { IonBreadcrumb, IonBreadcrumbs, IonIcon } from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
+import { home } from "ionicons/icons";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
@@ -11,20 +13,32 @@ const FileExplorer: React.FC = () => {
 
     // TODO: Request files list from server
 
-    const pageTitle = requestedPath === "." ? "Home" : requestedPath;
+    const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>{pageTitle}</IonTitle>
+                    <IonTitle>Files</IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen>
                 <IonHeader collapse="condense">
                     <IonToolbar>
-                        <IonTitle size="large">{pageTitle}</IonTitle>
+                        <IonTitle size="large">Files</IonTitle>
                     </IonToolbar>
                 </IonHeader>
+                {/* Breadcrumb */}
+                <IonBreadcrumbs maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+                    <IonBreadcrumb routerLink="/files/">
+                        <IonIcon slot="start" icon={home}></IonIcon>
+                        Home
+                    </IonBreadcrumb>
+                    {breadcrumbPaths.map((fragment, idx) => (
+                        <IonBreadcrumb key={idx} routerLink={`/files/${breadcrumbPaths.slice(0, idx + 1).join("/")}`}>
+                            {fragment}
+                        </IonBreadcrumb>
+                    ))}
+                </IonBreadcrumbs>
                 {/* Files list */}
                 <IonList lines="none">
                     {/* TODO: Add */}
