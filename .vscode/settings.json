@@ -1,6 +1,7 @@
 {
     "files.exclude": {
         "app": true,
+        "docs": true,
         "server": true
     }
 }
