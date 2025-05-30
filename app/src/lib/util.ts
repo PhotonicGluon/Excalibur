@@ -38,3 +38,24 @@ export function padBuffer(buffer: Buffer, n: number): Buffer {
     const padding = Buffer.alloc(n - buffer.length);
     return Buffer.concat([padding, buffer]);
 }
+
+/**
+ * Compute the element-wise XOR of two buffers.
+ *
+ * @param a The first buffer.
+ * @param b The second buffer.
+ * @returns A new buffer with the same length as `a` and `b`, where each element is the XOR of the
+ *          corresponding elements in `a` and `b`.
+ * @throws Error if `a.length != b.length`.
+ */
+export function xorBuffer(a: Buffer, b: Buffer): Buffer {
+    if (a.length !== b.length) {
+        throw new Error(`Buffers must be the same length (${a.length} != ${b.length})`);
+    }
+
+    const result = Buffer.alloc(a.length);
+    for (let i = 0; i < a.length; i++) {
+        result[i] = a[i] ^ b[i];
+    }
+    return result;
+}

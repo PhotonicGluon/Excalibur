@@ -6,6 +6,7 @@ import { generateKey } from "@lib/security/keygen";
  *
  * @param apiURL The URL of the API server to query
  * @param password The password to use for key generation
+ * @param secretString The secret string to use for key generation
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -16,6 +17,7 @@ import { generateKey } from "@lib/security/keygen";
 export async function e2ee(
     apiURL: string,
     password: string,
+    secretString: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, message: string | undefined) => void,
@@ -45,9 +47,9 @@ export async function e2ee(
     const srpSalt = securityDetailsResponse.srpSalt!;
     console.debug(`Loaded security details with salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`);
 
-    // Generate key
-    setLoadingState?.("Generating key...");
-    const key = generateKey(password, srpSalt);
+    // Generate SRP key
+    setLoadingState?.("Generating SRP key...");
+    const key = await generateKey(password, secretString, srpSalt);
     console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
     // Perform SRP handshake

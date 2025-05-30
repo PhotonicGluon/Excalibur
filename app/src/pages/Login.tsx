@@ -2,12 +2,17 @@ import { randomBytes } from "crypto";
 import { useState } from "react";
 
 import {
+    IonAccordion,
+    IonAccordionGroup,
     IonButton,
     IonContent,
     IonInput,
     IonInputPasswordToggle,
+    IonItem,
+    IonLabel,
     IonLoading,
     IonPage,
+    IonText,
     useIonAlert,
     useIonToast,
 } from "@ionic/react";
@@ -20,6 +25,15 @@ import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
 
+interface LoginValues {
+    /** URL to the server */
+    server: string;
+    /** Password to the server */
+    password: string;
+    /** Secret string used for authentication */
+    secretString: string;
+}
+
 const Login: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
@@ -29,7 +43,7 @@ const Login: React.FC = () => {
     const [loadingState, setLoadingState] = useState("Logging in...");
 
     // Functions
-    function getAllValues() {
+    function getAllValues(): LoginValues {
         // Get raw inputs
         const inputs = document.querySelectorAll("ion-input");
 
@@ -37,15 +51,16 @@ const Login: React.FC = () => {
         let server = inputs[0].value! as string;
         server = server.replace(/\/$/, ""); // Remove trailing slash
 
-        let password = inputs[1].value! as string;
+        const password = inputs[1].value! as string;
+        const secretKey = inputs[2].value! as string;
 
         // Form values
-        return { server: server, password: password };
+        return { server: server, password: password, secretString: secretKey };
     }
 
-    function validateValues({ server, password }: { server: string; password: string }) {
+    function validateValues({ server, password, secretString: secretKey }: LoginValues) {
         // Check all filled
-        if (server === "" || password === "") {
+        if (server === "" || password === "" || secretKey === "") {
             return false;
         }
 
@@ -135,7 +150,7 @@ const Login: React.FC = () => {
                             console.debug(
                                 `Created salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
                             );
-                            const key = generateKey(values.password, srpSalt);
+                            const key = await generateKey(values.password, values.secretString, srpSalt);
                             console.log(
                                 `Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
                             );
@@ -159,6 +174,7 @@ const Login: React.FC = () => {
         const e2eeResponse = await e2ee(
             apiURL,
             values.password,
+            values.secretString,
             () => setIsLoading(false),
             setLoadingState,
             (header, msg) => {
@@ -205,12 +221,12 @@ const Login: React.FC = () => {
                 <div className="mx-auto flex w-4/5 flex-col pt-4">
                     <h1>Login</h1>
                     <form>
-                        <div className="grid auto-rows-fr grid-rows-2 gap-4 *:h-18">
-                            <div>
-                                <URLInput label="Server URL" value="http://localhost:8000/" />{" "}
+                        <div className="flex flex-col gap-3">
+                            <div className="h-18">
                                 {/* TODO: Remove value */}
+                                <URLInput label="Server URL" value="http://localhost:8000/" />
                             </div>
-                            <div>
+                            <div className="h-18">
                                 {/* TODO: Remove default value */}
                                 <IonInput
                                     label="Password"
@@ -222,9 +238,31 @@ const Login: React.FC = () => {
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
                             </div>
+                            <div>
+                                <IonAccordionGroup>
+                                    <IonAccordion>
+                                        <IonItem slot="header" color="light">
+                                            <IonLabel>Secret String</IonLabel>
+                                        </IonItem>
+                                        <div className="ion-padding" slot="content">
+                                            <IonText className="pb-1 inline-block">
+                                                The secret string is an additional value used for authentication. It
+                                                should be treated the same as the actual password.
+                                            </IonText>
+                                            {/* TODO: Remove default value; get this value from storage */}
+                                            <IonInput
+                                                label="Secret String"
+                                                labelPlacement="stacked"
+                                                fill="solid"
+                                                value="abcdabcd-1234-1234-5678-0123456789ab"
+                                            />
+                                        </div>
+                                    </IonAccordion>
+                                </IonAccordionGroup>
+                            </div>
                         </div>
 
-                        <IonButton className="mx-auto pt-2" onClick={onLoginButtonClick}>
+                        <IonButton className="mx-auto pt-4" onClick={onLoginButtonClick}>
                             Log In
                         </IonButton>
                     </form>

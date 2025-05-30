@@ -1,4 +1,4 @@
-import { bufferToNumber, numberToBuffer, padBuffer } from "./util";
+import { bufferToNumber, numberToBuffer, padBuffer, xorBuffer } from "./util";
 
 test("numberToBuffer", () => {
     expect(numberToBuffer(3n)).toEqual(Buffer.from("03", "hex"));
@@ -51,4 +51,13 @@ test("padBuffer", () => {
     expect(padBuffer(Buffer.from("deadbeef", "hex"), 12)).toEqual(Buffer.from("0000000000000000deadbeef", "hex"));
     expect(padBuffer(Buffer.from("deadbeef", "hex"), 4)).toEqual(Buffer.from("deadbeef", "hex"));
     expect(() => padBuffer(Buffer.from("deadbeef", "hex"), 3)).toThrow();
+});
+
+test("xorBuffer", () => {
+    expect(xorBuffer(Buffer.from("deadbeef", "hex"), Buffer.from("facedead", "hex"))).toEqual(
+        Buffer.from("24636042", "hex"),
+    );
+    expect(xorBuffer(Buffer.from("deadbeef", "hex"), Buffer.from("deadbeef", "hex"))).toEqual(
+        Buffer.from("00000000", "hex"),
+    );
 });

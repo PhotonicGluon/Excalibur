@@ -18,7 +18,5 @@ export function bytesToHumanReadable(bytes: number, use1024Units?: boolean): str
     }
 
     const unit = `${prefixes[unitIndex]}${origBytes >= multiple && use1024Units ? "i" : ""}B`;
-
-    console.log(bytes.toFixed(2));
     return `${origBytes < multiple ? bytes : bytes.toFixed(2)} ${unit}`;
 }
