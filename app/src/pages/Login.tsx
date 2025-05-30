@@ -2,17 +2,12 @@ import { randomBytes } from "crypto";
 import { useState } from "react";
 
 import {
-    IonAccordion,
-    IonAccordionGroup,
     IonButton,
     IonContent,
     IonInput,
     IonInputPasswordToggle,
-    IonItem,
-    IonLabel,
     IonLoading,
     IonPage,
-    IonText,
     useIonAlert,
     useIonToast,
 } from "@ionic/react";
@@ -20,7 +15,7 @@ import {
 import { checkConnection } from "@lib/network";
 import { checkSecurityDetails, getGroup, getToken, setUpSecurityDetails } from "@lib/security/auth";
 import { e2ee } from "@lib/security/e2ee";
-import { generateKey } from "@lib/security/keygen";
+import generateKey from "@lib/security/keygen";
 import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
@@ -30,8 +25,6 @@ interface LoginValues {
     server: string;
     /** Password to the server */
     password: string;
-    /** Secret string used for authentication */
-    secretString: string;
 }
 
 const Login: React.FC = () => {
@@ -52,15 +45,14 @@ const Login: React.FC = () => {
         server = server.replace(/\/$/, ""); // Remove trailing slash
 
         const password = inputs[1].value! as string;
-        const secretKey = inputs[2].value! as string;
 
         // Form values
-        return { server: server, password: password, secretString: secretKey };
+        return { server: server, password: password };
     }
 
-    function validateValues({ server, password, secretString: secretKey }: LoginValues) {
+    function validateValues({ server, password }: LoginValues) {
         // Check all filled
-        if (server === "" || password === "" || secretKey === "") {
+        if (server === "" || password === "") {
             return false;
         }
 
@@ -150,7 +142,7 @@ const Login: React.FC = () => {
                             console.debug(
                                 `Created salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
                             );
-                            const key = await generateKey(values.password, values.secretString, srpSalt);
+                            const key = await generateKey(values.password, { serverURL: values.server }, srpSalt);
                             console.log(
                                 `Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
                             );
@@ -174,7 +166,7 @@ const Login: React.FC = () => {
         const e2eeResponse = await e2ee(
             apiURL,
             values.password,
-            values.secretString,
+            { serverURL: values.server },
             () => setIsLoading(false),
             setLoadingState,
             (header, msg) => {
@@ -237,28 +229,6 @@ const Login: React.FC = () => {
                                 >
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
-                            </div>
-                            <div>
-                                <IonAccordionGroup>
-                                    <IonAccordion>
-                                        <IonItem slot="header" color="light">
-                                            <IonLabel>Secret String</IonLabel>
-                                        </IonItem>
-                                        <div className="ion-padding" slot="content">
-                                            <IonText className="pb-1 inline-block">
-                                                The secret string is an additional value used for authentication. It
-                                                should be treated the same as the actual password.
-                                            </IonText>
-                                            {/* TODO: Remove default value; get this value from storage */}
-                                            <IonInput
-                                                label="Secret String"
-                                                labelPlacement="stacked"
-                                                fill="solid"
-                                                value="abcdabcd-1234-1234-5678-0123456789ab"
-                                            />
-                                        </div>
-                                    </IonAccordion>
-                                </IonAccordionGroup>
                             </div>
                         </div>
 
