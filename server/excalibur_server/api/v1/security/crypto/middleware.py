@@ -1,3 +1,4 @@
+import json
 from typing import Awaitable, Callable
 
 from fastapi import Request, Response, status
@@ -6,13 +7,25 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.crypto.crypto import encrypt
-
-encrypted_routes = {}
+from excalibur_server.api.v1.security.crypto.crypto import EncryptedResponse, decrypt, encrypt
 
 
 class EncryptedRoute(BaseModel):
+    encrypted_body: bool
+    "Whether the body of the request is encrypted"
+
+    encrypted_response: bool
+    "Whether the response is encrypted"
+
     excluded_statuses: list[int]
+    "List of status codes for which the response should not be encrypted"
+
+    @property
+    def is_encrypted(self) -> bool:
+        return self.encrypted_body or self.encrypted_response
+
+
+encrypted_routes: dict[str, EncryptedRoute] = {}
 
 
 class EncryptResponse:
@@ -20,46 +33,50 @@ class EncryptResponse:
     Used as a dependency for a route to be added to the list of encrypted routes.
     """
 
-    def __init__(self, excluded_statuses: list[int] = None):
+    def __init__(
+        self, encrypted_body: bool = True, encrypted_response: bool = True, excluded_statuses: list[int] = None
+    ):
         """
         Initializes the EncryptResponse class.
 
-        :param excluded_statuses: list of status codes that should not be encrypted. Defaults to the
-            single element 401
+        :param encrypted_body: whether the body of the request is encrypted
+        :param encrypted_response: whether the response is encrypted
+        :param excluded_statuses: list of status codes for which the response should not be
+            encrypted. Defaults to the single element 401
         """
 
         if excluded_statuses is None:
             excluded_statuses = [status.HTTP_401_UNAUTHORIZED]
+
+        self._encrypted_body = encrypted_body
+        self._encrypted_response = encrypted_response
         self._excluded_statuses = excluded_statuses
 
     def __call__(
         self,
         request: Request,
     ) -> Request:
-        encrypted_routes[request.url.path] = EncryptedRoute(excluded_statuses=self._excluded_statuses)
+        encrypted_routes[request.url.path] = EncryptedRoute(
+            encrypted_body=self._encrypted_body,
+            encrypted_response=self._encrypted_response,
+            excluded_statuses=self._excluded_statuses,
+        )
         return request
 
 
-class ResponseEncryptionMiddleware(BaseHTTPMiddleware):
+class RouteEncryptionMiddleware(BaseHTTPMiddleware):
     """
-    Middleware that encrypts the response body of encrypted routes.
+    Middleware that encrypts the traffic of encrypted routes.
     """
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        response = await call_next(request)
+    def _get_master_key(self, request: Request, response: Response | None = None) -> bytes | None:
+        """
+        Tries to obtain the master key from the cache based on the UUID.
 
-        # Check if route is part of the list of encrypted routes
-        if request.url.path not in encrypted_routes:
-            return response
-
-        # Check if status code is in the list of excluded statuses
-        if response.status_code in encrypted_routes[request.url.path].excluded_statuses:
-            return response
-
-        # Dump the response body
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
+        :param request: The request
+        :param response: The response, if available
+        :return: The master key if found, otherwise None
+        """
 
         # Try to obtain the UUID
         uuid = None
@@ -69,19 +86,84 @@ class ResponseEncryptionMiddleware(BaseHTTPMiddleware):
                 # No need to worry about invalid token since the bearer token check passed already
                 # during initial authorization phase
                 uuid = decode_token(auth[1])["uuid"]
-        elif response.headers.get("uuid") is not None:  # Patched in from an endpoint
+        elif response is not None and response.headers.get("uuid") is not None:  # Patched in from an endpoint
             uuid = response.headers.get("uuid")
             del response.headers["uuid"]
 
         # Try to obtain the master key
-        master_key = VALID_UUIDS_CACHE.get(uuid)
-        if uuid is None or master_key is None:
-            return Response(
-                content=f'{{"detail": "{CREDENTIALS_EXCEPTION.detail}"}}'.encode("UTF-8"),
-                status_code=CREDENTIALS_EXCEPTION.status_code,
-                headers=CREDENTIALS_EXCEPTION.headers,
-                media_type="application/json",
-            )
+        return VALID_UUIDS_CACHE.get(uuid)
+
+    def _raise_credentials_exception(self) -> Response:
+        """
+        Raises an HTTPException with the credentials exception.
+
+        This is a shortcut for re-raising the credentials exception that was caught during the
+        middleware processing.
+
+        :return: The raised HTTPException
+        """
+
+        return Response(
+            content=f'{{"detail": "Middleware processing: {CREDENTIALS_EXCEPTION.detail}"}}'.encode("UTF-8"),
+            status_code=CREDENTIALS_EXCEPTION.status_code,
+            headers=CREDENTIALS_EXCEPTION.headers,
+            media_type="application/json",
+        )
+
+    async def _decrypt_request(self, request: Request, master_key: bytes) -> Request | None:
+        """
+        Decrypts the incoming request body using the provided master key.
+
+        :param request: The incoming HTTP request containing an encrypted body.
+        :param master_key: The encryption key used to decrypt the request body.
+        :return: A new request object with the decrypted body, or None if decryption fails.
+        """
+
+        # Read the request body
+        request_body = b""
+        async for chunk in request.stream():
+            request_body += chunk
+
+        # Try to decode the request body
+        try:
+            request_body = json.loads(request_body)
+        except json.JSONDecodeError:
+            return None
+
+        # Decrypt the request body
+        decrypted_body = decrypt(EncryptedResponse(**request_body), master_key)
+
+        # Return the decrypted request
+        decrypted_request = Request(
+            scope=request.scope,
+            receive=request.receive,
+        )
+        decrypted_request._body = decrypted_body
+        return decrypted_request
+
+    async def _encrypt_response(
+        self, request: Request, response: Response, master_key: bytes | None = None
+    ) -> Response:
+        """
+        Encrypts the response body of the given response using the provided master key.
+
+        :param request: The incoming HTTP request
+        :param response: The response to encrypt
+        :param master_key: The encryption key used to encrypt the response body. Defaults to None
+        :return: The encrypted response
+        """
+
+        # Dump the response body
+        response_body = b""
+        async for chunk in response.body_iterator:
+            response_body += chunk
+
+        # Try to obtain the master key
+        if master_key is None:
+            master_key = self._get_master_key(request, response)
+
+        if master_key is None:  # Still no master key
+            return self._raise_credentials_exception()
 
         # Encrypt the response body
         encrypted_response = encrypt(response_body, master_key)
@@ -98,3 +180,43 @@ class ResponseEncryptionMiddleware(BaseHTTPMiddleware):
             headers=dict(response.headers),
             media_type=response.media_type,
         )
+
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        path = request.url.path
+        route_data = encrypted_routes.get(path, None)
+
+        # FIXME: Initial call to route will always be unencrypted
+
+        # Check if the route should be encrypted
+        if route_data is None:
+            # Pass through
+            return await call_next(request)
+
+        # Try and get master key from request only
+        master_key = self._get_master_key(request)
+
+        # Check if we need to decrypt incoming request
+        if not route_data.encrypted_body:
+            pass
+        elif request.headers.get("X-Encrypted", "false") == "false":
+            pass
+        elif request.headers["Content-Length"] == "0":
+            pass
+        else:
+            if master_key is None:  # Need to decrypt but no master key
+                return self._raise_credentials_exception()
+            request = await self._decrypt_request(request, master_key)
+
+        if request is None:
+            return self._raise_credentials_exception()
+
+        # Call next using decrypted request
+        response = await call_next(request)
+
+        # Check if need to encrypt response
+        if not route_data.encrypted_response:
+            return response
+        if response.status_code in route_data.excluded_statuses:
+            return response
+
+        return await self._encrypt_response(request, response, master_key=master_key)

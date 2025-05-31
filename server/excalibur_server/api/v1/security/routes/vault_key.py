@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Body, Depends, HTTPException, status
 
 from excalibur_server.api.v1.security.auth.token import check_credentials
+from excalibur_server.api.v1.security.crypto.middleware import EncryptResponse
 from excalibur_server.api.v1.security.routes import router
 from excalibur_server.api.v1.security.vault_key import VAULT_KEY_FILE, EncryptedVaultKey, get_vault_key, set_vault_key
 
@@ -33,7 +34,7 @@ def check_vault_key_endpoint():
 @router.get(
     "/vault-key",
     summary="Get Vault Key Details",
-    dependencies=[Depends(check_credentials)],
+    dependencies=[Depends(check_credentials), Depends(EncryptResponse())],
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
         status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
@@ -55,12 +56,13 @@ def get_vault_key_endpoint():
     "/vault-key",
     summary="Set Vault Key Details",
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(check_credentials)],
+    dependencies=[Depends(check_credentials), Depends(EncryptResponse())],
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
         status.HTTP_409_CONFLICT: {"description": "Vault key file already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
     },
+    response_model=str,
 )
 def set_vault_key_endpoint(
     alg: Annotated[

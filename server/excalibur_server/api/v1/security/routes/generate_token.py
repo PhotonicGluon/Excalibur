@@ -20,7 +20,7 @@ class AuthTokenResponse(BaseModel):
         status.HTTP_404_NOT_FOUND: {"description": "Handshake UUID not found or has expired"},
     },
     response_model=AuthTokenResponse,
-    dependencies=[Depends(EncryptResponse(excluded_statuses=[status.HTTP_404_NOT_FOUND]))],
+    dependencies=[Depends(EncryptResponse(encrypted_body=False, excluded_statuses=[status.HTTP_404_NOT_FOUND]))],
     tags=["encrypted"],
 )
 def generate_token_endpoint(
