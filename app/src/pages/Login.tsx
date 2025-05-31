@@ -142,7 +142,7 @@ const Login: React.FC = () => {
                             console.debug(
                                 `Created salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
                             );
-                            const key = await generateKey(values.password, { serverURL: values.server }, srpSalt);
+                            const key = await generateKey(values.password, srpSalt);
                             console.log(
                                 `Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
                             );
@@ -166,7 +166,6 @@ const Login: React.FC = () => {
         const e2eeResponse = await e2ee(
             apiURL,
             values.password,
-            { serverURL: values.server },
             () => setIsLoading(false),
             setLoadingState,
             (header, msg) => {
@@ -215,7 +214,7 @@ const Login: React.FC = () => {
                     <form>
                         <div className="flex flex-col gap-3">
                             <div className="h-18">
-                                {/* TODO: Remove value */}
+                                {/* TODO: Remove default value */}
                                 <URLInput label="Server URL" value="http://localhost:8000/" />
                             </div>
                             <div className="h-18">

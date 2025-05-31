@@ -1,12 +1,11 @@
 import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/auth";
-import { KeygenAdditionalInfo, generateKey } from "@lib/security/keygen";
+import { generateKey } from "@lib/security/keygen";
 
 /**
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
  * @param apiURL The URL of the API server to query
  * @param password The password to use for key generation
- * @param additionalInfo Additional information to use for key generation
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -17,7 +16,6 @@ import { KeygenAdditionalInfo, generateKey } from "@lib/security/keygen";
 export async function e2ee(
     apiURL: string,
     password: string,
-    additionalInfo: KeygenAdditionalInfo,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, message: string | undefined) => void,
@@ -49,7 +47,7 @@ export async function e2ee(
 
     // Generate SRP key
     setLoadingState?.("Generating SRP key...");
-    const key = await generateKey(password, additionalInfo, srpSalt);
+    const key = await generateKey(password, srpSalt);
     console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
     // Perform SRP handshake
