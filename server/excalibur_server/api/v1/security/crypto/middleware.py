@@ -11,13 +11,13 @@ from excalibur_server.api.v1.security.crypto.crypto import EncryptedResponse, de
 
 
 class EncryptedRoute(BaseModel):
-    encrypted_body: bool
+    encrypted_body: bool = True
     "Whether the body of the request is encrypted"
 
-    encrypted_response: bool
+    encrypted_response: bool = True
     "Whether the response is encrypted"
 
-    excluded_statuses: list[int]
+    excluded_statuses: list[int] = [status.HTTP_401_UNAUTHORIZED]
     "List of status codes for which the response should not be encrypted"
 
     @property
@@ -25,43 +25,15 @@ class EncryptedRoute(BaseModel):
         return self.encrypted_body or self.encrypted_response
 
 
-encrypted_routes: dict[str, EncryptedRoute] = {}
-
-
-class EncryptResponse:
-    """
-    Used as a dependency for a route to be added to the list of encrypted routes.
-    """
-
-    def __init__(
-        self, encrypted_body: bool = True, encrypted_response: bool = True, excluded_statuses: list[int] = None
-    ):
-        """
-        Initializes the EncryptResponse class.
-
-        :param encrypted_body: whether the body of the request is encrypted
-        :param encrypted_response: whether the response is encrypted
-        :param excluded_statuses: list of status codes for which the response should not be
-            encrypted. Defaults to the single element 401
-        """
-
-        if excluded_statuses is None:
-            excluded_statuses = [status.HTTP_401_UNAUTHORIZED]
-
-        self._encrypted_body = encrypted_body
-        self._encrypted_response = encrypted_response
-        self._excluded_statuses = excluded_statuses
-
-    def __call__(
-        self,
-        request: Request,
-    ) -> Request:
-        encrypted_routes[request.url.path] = EncryptedRoute(
-            encrypted_body=self._encrypted_body,
-            encrypted_response=self._encrypted_response,
-            excluded_statuses=self._excluded_statuses,
-        )
-        return request
+API_URL_PREFIX = "/api/v1"
+ENCRYPTED_ROUTES: dict[tuple[str, str], EncryptedRoute] = {
+    ("/security/generate-token", "POST"): EncryptedRoute(
+        encrypted_body=False, excluded_statuses=[status.HTTP_404_NOT_FOUND]
+    ),
+    ("/security/vault-key", "GET"): EncryptedRoute(),
+    ("/security/vault-key", "POST"): EncryptedRoute(),
+    # ("/files/list/{path:path}", "GET"): EncryptedRoute(),
+}
 
 
 class RouteEncryptionMiddleware(BaseHTTPMiddleware):
@@ -183,9 +155,8 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         path = request.url.path
-        route_data = encrypted_routes.get(path, None)
-
-        # FIXME: Initial call to route will always be unencrypted
+        method = request.method
+        route_data = ENCRYPTED_ROUTES.get((path.removeprefix(API_URL_PREFIX), method), None)
 
         # Check if the route should be encrypted
         if route_data is None:
@@ -199,8 +170,6 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
         if not route_data.encrypted_body:
             pass
         elif request.headers.get("X-Encrypted", "false") == "false":
-            pass
-        elif request.headers["Content-Length"] == "0":
             pass
         else:
             if master_key is None:  # Need to decrypt but no master key

@@ -1,18 +1,16 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, status
+from fastapi import HTTPException, Path, status
 
 from excalibur_server.api.v1.files.listings import listdir
 from excalibur_server.api.v1.files.routes import router
 from excalibur_server.api.v1.files.structures import Directory
-from excalibur_server.api.v1.security.crypto.middleware import EncryptResponse
 from excalibur_server.consts import FILES_FOLDER
 
 
 @router.get(
     "/list/{path:path}",
     name="List Directory Contents",
-    dependencies=[Depends(EncryptResponse())],
     responses={
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid path"},
     },

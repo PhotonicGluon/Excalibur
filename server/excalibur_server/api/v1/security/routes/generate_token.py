@@ -1,11 +1,10 @@
 from typing import Annotated
 
-from fastapi import Body, Depends, HTTPException, Response, status
+from fastapi import Body, HTTPException, Response, status
 from pydantic import BaseModel
 
 from excalibur_server.api.v1.security.auth.token import generate_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.crypto.middleware import EncryptResponse
 from excalibur_server.api.v1.security.routes import router
 
 
@@ -20,7 +19,6 @@ class AuthTokenResponse(BaseModel):
         status.HTTP_404_NOT_FOUND: {"description": "Handshake UUID not found or has expired"},
     },
     response_model=AuthTokenResponse,
-    dependencies=[Depends(EncryptResponse(encrypted_body=False, excluded_statuses=[status.HTTP_404_NOT_FOUND]))],
     tags=["encrypted"],
 )
 def generate_token_endpoint(
