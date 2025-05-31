@@ -19,8 +19,16 @@ class EncryptedRoute(BaseModel):
 
 class RoutingTree(BaseModel):
     segment: str
+    "The segment of the path that corresponds to this routing tree"
+
+    has_path_param: bool = False
+    "Whether the routing tree has a path parameter"
+
     subtrees: dict[str, "RoutingTree"] = {}
+    "Subtrees of the routing tree"
+
     encrypted_routes: dict[str, EncryptedRoute] = {}
+    "Encrypted routes for this routing tree"
 
     def traverse(self, path: str) -> dict[str, EncryptedRoute]:
         """
@@ -33,6 +41,8 @@ class RoutingTree(BaseModel):
 
         path = path.removeprefix("/").removesuffix("/")
         if path == self.segment:
+            return self.encrypted_routes
+        elif self.has_path_param and path.startswith(self.segment):
             return self.encrypted_routes
 
         next_path = path.removeprefix(self.segment + "/")
@@ -51,6 +61,7 @@ FILES_ROUTING_TREE = RoutingTree(
     subtrees={
         "list": RoutingTree(
             segment="list",
+            has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
             },
