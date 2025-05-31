@@ -60,7 +60,7 @@ def get_security_details_endpoint():
 
 @router.post(
     "/details",
-    summary="Enrol Security Details",
+    summary="Set Security Details",
     status_code=status.HTTP_201_CREATED,
     response_model=str,
     responses={
@@ -88,4 +88,4 @@ def set_security_details_endpoint(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 
     set_security_details(SecurityDetailsWithVerifier(auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier))
-    return "Verifier enrolled"
+    return "Security details set"

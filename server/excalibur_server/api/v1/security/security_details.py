@@ -1,23 +1,13 @@
 import json
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from pathlib import Path
 
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.consts import ROOT_FOLDER
+from excalibur_server.src.utils import serialize_bytes
 
-SECURITY_DETAILS_FILE = Path(ROOT_FOLDER, "security_details.json")
-
-
-def serialize_bytes(a_bytes: bytes) -> str:
-    """
-    Encodes the given bytes as a base64-encoded string.
-
-    :param a_bytes: The bytes to encode.
-    :return: A base64-encoded string.
-    """
-
-    return b64encode(a_bytes).decode("utf-8")
+SECURITY_DETAILS_FILE = ROOT_FOLDER / "security.details"
 
 
 class SecurityDetails(BaseModel):
