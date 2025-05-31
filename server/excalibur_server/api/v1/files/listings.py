@@ -15,13 +15,17 @@ def get_fullpath(path: Path):
     return path.resolve().relative_to(FILES_FOLDER).as_posix()
 
 
-def listdir(path: Path) -> Directory:
+def listdir(path: Path) -> Directory | None:
     """
     Lists the contents of a directory.
 
     :param path: The path to list.
-    :returns: A `Directory` object with a list of `File` and ``Directory` objects.
+    :returns: A `Directory` object with a list of `File` and `Directory` objects, or `None` if the
+        path does not exist or is not a directory.
     """
+
+    if not path.is_dir():
+        return None
 
     items = []
     for item in path.iterdir():

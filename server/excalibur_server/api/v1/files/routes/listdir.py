@@ -12,6 +12,7 @@ from excalibur_server.consts import FILES_FOLDER
     "/list/{path:path}",
     name="List Directory Contents",
     responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Invalid path"},
     },
     response_model=Directory,
@@ -30,4 +31,8 @@ def listdir_endpoint(path: Annotated[str, Path(description="The path to list (us
     if not user_path.is_relative_to(FILES_FOLDER):
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Invalid path")
 
-    return listdir(user_path)
+    contents = listdir(user_path)
+    if contents is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
+
+    return contents

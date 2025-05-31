@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 
 from excalibur_server.api.v1.security.auth.consts import KEY
+from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
 
 API_TOKEN_HEADER = HTTPBearer(auto_error=False)
 CREDENTIALS_EXCEPTION = HTTPException(
@@ -49,6 +50,10 @@ def decode_token(token: str) -> dict | None:
     return decoded
 
 
+def generate_auth_token(uuid: str) -> str:
+    return generate_token({"uuid": uuid})  # TODO: Do we need more stuff?
+
+
 def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:
     """
     Checks the validity of the authorization credentials.
@@ -61,7 +66,15 @@ def check_credentials(credentials: HTTPAuthorizationCredentials | None = Securit
     if not credentials:
         raise CREDENTIALS_EXCEPTION
 
-    if decode_token(credentials.credentials) is not None:
-        return True
+    decoded = decode_token(credentials.credentials)
+    if decoded is None:
+        raise CREDENTIALS_EXCEPTION
 
-    raise CREDENTIALS_EXCEPTION
+    uuid = decoded.get("uuid")
+    if uuid is None:
+        raise CREDENTIALS_EXCEPTION
+
+    if uuid not in VALID_UUIDS_CACHE:
+        raise CREDENTIALS_EXCEPTION
+
+    return True

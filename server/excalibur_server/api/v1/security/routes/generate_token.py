@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Body, HTTPException, Response, status
 from pydantic import BaseModel
 
-from excalibur_server.api.v1.security.auth.token import generate_token
+from excalibur_server.api.v1.security.auth.token import generate_auth_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
 from excalibur_server.api.v1.security.routes import router
 
@@ -39,5 +39,5 @@ def generate_token_endpoint(
     response.headers["uuid"] = handshake_uuid  # Used to help the middleware find the master key
 
     # Generate token for continued authentication
-    token = generate_token({"uuid": handshake_uuid})  # TODO: Do we need more stuff?
+    token = generate_auth_token(handshake_uuid)
     return AuthTokenResponse(token=token)
