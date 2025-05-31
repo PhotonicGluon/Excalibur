@@ -1,39 +1,13 @@
 import json
 from typing import Awaitable, Callable
 
-from fastapi import Request, Response, status
-from pydantic import BaseModel
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
 from excalibur_server.api.v1.security.crypto.crypto import EncryptedResponse, decrypt, encrypt
-
-
-class EncryptedRoute(BaseModel):
-    encrypted_body: bool = True
-    "Whether the body of the request is encrypted"
-
-    encrypted_response: bool = True
-    "Whether the response is encrypted"
-
-    excluded_statuses: list[int] = [status.HTTP_401_UNAUTHORIZED]
-    "List of status codes for which the response should not be encrypted"
-
-    @property
-    def is_encrypted(self) -> bool:
-        return self.encrypted_body or self.encrypted_response
-
-
-API_URL_PREFIX = "/api/v1"
-ENCRYPTED_ROUTES: dict[tuple[str, str], EncryptedRoute] = {
-    ("/security/generate-token", "POST"): EncryptedRoute(
-        encrypted_body=False, excluded_statuses=[status.HTTP_404_NOT_FOUND]
-    ),
-    ("/security/vault-key", "GET"): EncryptedRoute(),
-    ("/security/vault-key", "POST"): EncryptedRoute(),
-    # ("/files/list/{path:path}", "GET"): EncryptedRoute(),
-}
+from excalibur_server.api.v1.security.crypto.middleware.routing import ROUTING_TREE
 
 
 class RouteEncryptionMiddleware(BaseHTTPMiddleware):
@@ -156,7 +130,7 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         path = request.url.path
         method = request.method
-        route_data = ENCRYPTED_ROUTES.get((path.removeprefix(API_URL_PREFIX), method), None)
+        route_data = ROUTING_TREE.traverse(path).get(method)
 
         # Check if the route should be encrypted
         if route_data is None:
