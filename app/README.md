@@ -10,6 +10,9 @@ First, install the correct node version using `nvm` by running
 nvm install
 ```
 
+> [!IMPORTANT]For Windows
+> If you are using [`nvm` for Windows](https://github.com/coreybutler/nvm-windows) run `nvm install lts` and `nvm use lts`.
+
 Then you can install dependencies by running
 
 ```bash
