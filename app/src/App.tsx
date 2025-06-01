@@ -39,14 +39,9 @@ const App: React.FC = () => (
         <IonReactRouter>
             <IonRouterOutlet>
                 <Route exact path="/login" component={Login} />
-                <Route exact path="/files" component={FileExplorer}>
-                    <Redirect to="/files/" />
-                </Route>
                 <Route path="/files/*" component={FileExplorer} />
-                <Route exact path="/">
-                    <Redirect to="/login" />
-                    {/* <Redirect to="/files/" /> */}
-                </Route>
+                <Redirect exact from="/" to="/login" />
+                {/* <Redirect exact from ="/" to="/files/" /> */}
             </IonRouterOutlet>
         </IonReactRouter>
     </IonApp>

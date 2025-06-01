@@ -9,6 +9,7 @@ import {
     IonLoading,
     IonPage,
     useIonAlert,
+    useIonRouter,
     useIonToast,
 } from "@ionic/react";
 
@@ -29,6 +30,7 @@ interface LoginValues {
 
 const Login: React.FC = () => {
     // States
+    const router = useIonRouter();
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
@@ -199,10 +201,8 @@ const Login: React.FC = () => {
 
         // TODO: Continue with files retrieval
         setIsLoading(false);
-        presentAlert({
-            header: "Connected",
-            buttons: ["OK"],
-        });
+        router.push("/files/", "root", "push"); // TODO: Send data
+        return;
     }
 
     // Render
