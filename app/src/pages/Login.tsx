@@ -14,11 +14,12 @@ import {
 } from "@ionic/react";
 
 import { checkConnection } from "@lib/network";
-import { checkSecurityDetails, getGroup, getToken, setUpSecurityDetails } from "@lib/security/auth";
-import { E2EEData, e2ee } from "@lib/security/e2ee";
+import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/auth";
+import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
 import { validateURL } from "@lib/validators";
 
+import { useAuth } from "@components/auth/ProvideAuth";
 import URLInput from "@components/inputs/URLInput";
 
 interface LoginValues {
@@ -28,16 +29,11 @@ interface LoginValues {
     password: string;
 }
 
-export interface LoginData {
-    /** Server API URL */
-    apiURL: string;
-    /** E2EE data */
-    e2eeData: E2EEData;
-}
-
 const Login: React.FC = () => {
-    // States
+    const auth = useAuth();
     const history = useHistory();
+
+    // States
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
@@ -189,17 +185,14 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Form the login data to send to the files page
-        const loginData: LoginData = {
-            apiURL: apiURL,
-            e2eeData: e2eeData,
-        };
-
-        console.log("----- Login Complete -----");
+        // Authenticate
+        console.debug("Authenticating...");
+        const token = await auth.authenticate(apiURL, e2eeData.uuid, e2eeData.key);
+        console.debug(`Authenticated with token '${token}'`);
 
         // Continue with files retrieval
         setIsLoading(false);
-        history.push("/files/", loginData);
+        history.push("/files/");
         return;
     }
 

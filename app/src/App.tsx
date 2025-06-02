@@ -26,6 +26,9 @@ import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import "@ionic/react/css/typography.css";
 
+import { PrivateRoute } from "@components/auth/PrivateRoute";
+import { ProvideAuth } from "@components/auth/ProvideAuth";
+
 /* App pages */
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
@@ -36,14 +39,18 @@ setupIonicReact();
 
 const App: React.FC = () => (
     <IonApp>
-        <IonReactRouter>
-            <IonRouterOutlet>
-                <Route exact path="/login" component={Login} />
-                {/* TODO: Authenticate before allowing */}
-                <Route path="/files/*" component={FileExplorer} />
-                <Redirect exact from="/" to="/login" />
-            </IonRouterOutlet>
-        </IonReactRouter>
+        <ProvideAuth>
+            <IonReactRouter>
+                <IonRouterOutlet>
+                    <Route exact path="/login" component={Login} />
+                    {/* TODO: Authenticate before allowing */}
+                    <PrivateRoute path="/files/*">
+                        <FileExplorer />
+                    </PrivateRoute>
+                    <Redirect exact from="/" to="/login" />
+                </IonRouterOutlet>
+            </IonReactRouter>
+        </ProvideAuth>
     </IonApp>
 );
 

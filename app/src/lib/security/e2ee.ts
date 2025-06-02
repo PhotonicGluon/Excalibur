@@ -1,7 +1,7 @@
 import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/auth";
 import { generateKey } from "@lib/security/keygen";
 
-export interface E2EEData {
+interface E2EEData {
     /** UUID of the handshake */
     uuid: string;
     /** Bilaterally agreed symmetric key to encrypt communications */

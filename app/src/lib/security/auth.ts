@@ -37,6 +37,14 @@ export async function checkSecurityDetails(apiURL: string) {
     return true;
 }
 
+/**
+ * Retrieves the security details from the server.
+ *
+ * @param apiURL The URL of the API server to query.
+ * @returns A promise which resolves to an object containing the success status, optional AUK and
+ *      SRP salts as `Buffer`s, and an optional error message. If the security details file is not
+ *      found, success is `false` and an error message is provided.
+ */
 export async function getSecurityDetails(apiURL: string): Promise<{
     success: boolean;
     aukSalt?: Buffer;
