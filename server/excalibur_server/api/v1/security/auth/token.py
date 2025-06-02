@@ -7,6 +7,7 @@ from jwt.exceptions import InvalidTokenError
 
 from excalibur_server.api.v1.security.auth.consts import KEY
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
+from excalibur_server.api.v1.security.consts import LOGIN_VALIDITY_TIME
 
 API_TOKEN_HEADER = HTTPBearer(auto_error=False)
 CREDENTIALS_EXCEPTION = HTTPException(
@@ -51,7 +52,7 @@ def decode_token(token: str) -> dict | None:
 
 
 def generate_auth_token(uuid: str) -> str:
-    return generate_token({"uuid": uuid})  # TODO: Do we need more stuff?
+    return generate_token({"uuid": uuid}, expiry=LOGIN_VALIDITY_TIME)  # TODO: Do we need more stuff?
 
 
 def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:

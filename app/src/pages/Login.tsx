@@ -10,6 +10,7 @@ import {
     IonLoading,
     IonPage,
     useIonAlert,
+    useIonRouter,
     useIonToast,
 } from "@ionic/react";
 
@@ -31,7 +32,7 @@ interface LoginValues {
 
 const Login: React.FC = () => {
     const auth = useAuth();
-    const history = useHistory();
+    const router = useIonRouter();
 
     // States
     const [presentAlert] = useIonAlert();
@@ -192,7 +193,7 @@ const Login: React.FC = () => {
 
         // Continue with files retrieval
         setIsLoading(false);
-        history.push("/files/");
+        router.push("/files/", "forward", "replace");
         return;
     }
 
@@ -227,6 +228,8 @@ const Login: React.FC = () => {
                         </IonButton>
                     </form>
                 </div>
+
+                {/* Loading indicator */}
                 <IonLoading
                     className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
                     isOpen={isLoading}

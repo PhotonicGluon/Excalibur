@@ -1,6 +1,6 @@
 from excalibur_server.api.v1.security.auth.srp import SRPGroup
 
-LOGIN_VALIDITY_TIME = 3600 * 3  # 3 hours
+LOGIN_VALIDITY_TIME = 3600  # 1 hour
 
 SRP_GROUP = SRPGroup.SMALL
 SRP_HANDSHAKE_CACHE_SIZE = 128

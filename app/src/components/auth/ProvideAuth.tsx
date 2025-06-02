@@ -53,7 +53,7 @@ function useProvideAuth(): AuthProvider {
     const authenticate = async (apiURL: string, uuid: string, key: Buffer) => {
         const tokenResponse = await getToken(apiURL, uuid, key);
         if (!tokenResponse.success) {
-            // TODO: Possibly handle E2EE exchange again
+            // TODO: Kick back to login screen
             return "";
         }
 
