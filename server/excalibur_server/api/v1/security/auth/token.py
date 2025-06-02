@@ -27,7 +27,8 @@ def generate_token(data: dict, expiry: int = 3600) -> str:
     """
 
     data = data.copy()
-    data.update({"exp": datetime.now() + timedelta(seconds=expiry)})
+    now = datetime.now()
+    data.update({"iat": now, "exp": now + timedelta(seconds=expiry)})
     return jwt.encode(data, KEY, algorithm="HS256")
 
 
@@ -44,15 +45,20 @@ def decode_token(token: str) -> dict | None:
     except InvalidTokenError:
         return None
 
+    now = datetime.now().timestamp()
+    issued_at = decoded.pop("iat")
+    if issued_at > now:
+        return None
+
     expiry = decoded.pop("exp", 0)
-    if expiry < datetime.now().timestamp():
+    if expiry < now:
         return None
 
     return decoded
 
 
 def generate_auth_token(uuid: str) -> str:
-    return generate_token({"uuid": uuid}, expiry=LOGIN_VALIDITY_TIME)  # TODO: Do we need more stuff?
+    return generate_token({"sub": uuid}, expiry=LOGIN_VALIDITY_TIME)  # TODO: Do we need more stuff?
 
 
 def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:
@@ -71,7 +77,7 @@ def check_credentials(credentials: HTTPAuthorizationCredentials | None = Securit
     if decoded is None:
         raise CREDENTIALS_EXCEPTION
 
-    uuid = decoded.get("uuid")
+    uuid = decoded.get("sub")
     if uuid is None:
         raise CREDENTIALS_EXCEPTION
 
