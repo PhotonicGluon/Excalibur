@@ -1,6 +1,13 @@
 import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/auth";
 import { generateKey } from "@lib/security/keygen";
 
+export interface E2EEData {
+    /** UUID of the handshake */
+    uuid: string;
+    /** Bilaterally agreed symmetric key to encrypt communications */
+    key: Buffer;
+}
+
 /**
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
@@ -10,8 +17,7 @@ import { generateKey } from "@lib/security/keygen";
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
  * @param showToast A function to call if a non-fatal error occurs, which takes a message
- * @returns A promise which resolves to an object with a UUID for the handshake and the master key
- *      used to encrypt communications, or undefined if the handshake could not be completed
+ * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
  */
 export async function e2ee(
     apiURL: string,
@@ -20,7 +26,7 @@ export async function e2ee(
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, message: string | undefined) => void,
     showToast?: (message: string) => void,
-): Promise<{ uuid: string; key: Buffer } | undefined> {
+): Promise<E2EEData | undefined> {
     // Get SRP group used for communication
     setLoadingState?.("Determining SRP group...");
     const groupResponse = await getGroup(apiURL);

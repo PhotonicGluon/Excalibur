@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { useState } from "react";
+import { useHistory } from "react-router";
 
 import {
     IonButton,
@@ -9,13 +10,12 @@ import {
     IonLoading,
     IonPage,
     useIonAlert,
-    useIonRouter,
     useIonToast,
 } from "@ionic/react";
 
 import { checkConnection } from "@lib/network";
 import { checkSecurityDetails, getGroup, getToken, setUpSecurityDetails } from "@lib/security/auth";
-import { e2ee } from "@lib/security/e2ee";
+import { E2EEData, e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
 import { validateURL } from "@lib/validators";
 
@@ -28,9 +28,16 @@ interface LoginValues {
     password: string;
 }
 
+export interface LoginData {
+    /** Server API URL */
+    apiURL: string;
+    /** E2EE data */
+    e2eeData: E2EEData;
+}
+
 const Login: React.FC = () => {
     // States
-    const router = useIonRouter();
+    const history = useHistory();
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
@@ -165,7 +172,7 @@ const Login: React.FC = () => {
         }
 
         // Set up End-to-End Encryption (E2EE)
-        const e2eeResponse = await e2ee(
+        const e2eeData = await e2ee(
             apiURL,
             values.password,
             () => setIsLoading(false),
@@ -177,31 +184,22 @@ const Login: React.FC = () => {
                 presentToast({ message: msg, duration: 3000 });
             },
         );
-        if (!e2eeResponse) {
+        if (!e2eeData) {
             // Errors already handled in `e2ee()`
             return;
         }
-        const { uuid: handshakeUUID, key: masterKey } = e2eeResponse;
 
-        // Get token for continued authentication
-        setLoadingState("Retrieving token...");
-        console.debug("Retrieving token...");
-        const tokenResponse = await getToken(apiURL, handshakeUUID, masterKey);
-        if (!tokenResponse.success) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Token Retrieval Failed",
-                message: tokenResponse.error,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        const token = tokenResponse.token!;
-        console.log(`Got token: ${token}`);
+        // Form the login data to send to the files page
+        const loginData: LoginData = {
+            apiURL: apiURL,
+            e2eeData: e2eeData,
+        };
 
-        // TODO: Continue with files retrieval
+        console.log("----- Login Complete -----");
+
+        // Continue with files retrieval
         setIsLoading(false);
-        router.push("/files/", "root", "push"); // TODO: Send data
+        history.push("/files/", loginData);
         return;
     }
 

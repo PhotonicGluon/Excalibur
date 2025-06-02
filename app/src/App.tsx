@@ -39,9 +39,9 @@ const App: React.FC = () => (
         <IonReactRouter>
             <IonRouterOutlet>
                 <Route exact path="/login" component={Login} />
+                {/* TODO: Authenticate before allowing */}
                 <Route path="/files/*" component={FileExplorer} />
                 <Redirect exact from="/" to="/login" />
-                {/* <Redirect exact from ="/" to="/files/" /> */}
             </IonRouterOutlet>
         </IonReactRouter>
     </IonApp>
