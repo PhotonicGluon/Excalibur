@@ -5,7 +5,7 @@ from .token import KEY, decode_token, generate_token
 if KEY != b"one demo 16B key":
     pytest.skip("Skipping token tests as key is wrong", allow_module_level=True)
 
-SAMPLE_DATA = {"sub": "1234567890", "name": "John Doe", "iat": 1516239022}
+SAMPLE_DATA = {"sub": "1234567890", "name": "John Doe"}
 
 
 def test_check_token():

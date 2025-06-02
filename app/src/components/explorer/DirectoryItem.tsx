@@ -3,7 +3,7 @@ import React from "react";
 import { IonIcon, IonItem, IonLabel, IonNote, IonText } from "@ionic/react";
 import { documentOutline, folderOutline } from "ionicons/icons";
 
-import { bytesToHumanReadable } from "@lib/units";
+import { bytesToHumanReadable } from "@lib/util";
 
 interface ContainerProps {
     /** Name of the item in the directory */

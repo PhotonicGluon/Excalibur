@@ -1,6 +1,6 @@
 import { decryptJSON } from "@lib/crypto";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
-import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util";
+import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util/buffer";
 
 /**
  * Fetches the SRP group size from the server, and returns the corresponding

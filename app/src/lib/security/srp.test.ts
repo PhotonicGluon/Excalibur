@@ -1,4 +1,4 @@
-import { bufferToNumber, numberToBuffer } from "@lib/util";
+import { bufferToNumber, numberToBuffer } from "@lib/util/buffer";
 
 import { SRPGroup, getSRPGroup } from "./srp";
 

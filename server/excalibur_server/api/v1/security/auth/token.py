@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import HTTPException, Security, status
@@ -27,7 +27,7 @@ def generate_token(data: dict, expiry: int = 3600) -> str:
     """
 
     data = data.copy()
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     data.update({"iat": now, "exp": now + timedelta(seconds=expiry)})
     return jwt.encode(data, KEY, algorithm="HS256")
 

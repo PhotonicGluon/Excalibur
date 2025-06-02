@@ -4,6 +4,10 @@ import { IonBreadcrumb, IonBreadcrumbs, IonIcon } from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import { home } from "ionicons/icons";
 
+import { decodeJWT } from "@lib/security/token";
+
+import Countdown from "@components/Countdown";
+import { useAuth } from "@components/auth/ProvideAuth";
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
 const FileExplorer: React.FC = () => {
@@ -11,17 +15,23 @@ const FileExplorer: React.FC = () => {
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
 
-    // TODO: Request files list from server
+    // Get token expiry
+    const auth = useAuth();
+    const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.token!);
+    const tokenExpiry = new Date(expTimestamp * 1000);
 
     // Generate breadcrumbs to render
     const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
+
+    // TODO: Request files list from server
 
     // Render
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>Files</IonTitle>
+                    <IonTitle slot="start">Files</IonTitle>
+                    <Countdown className="ion-padding-end" date={tokenExpiry} slot="end" />
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen>

@@ -1,9 +1,8 @@
 import { createHash } from "crypto";
 import { sha3_256 } from "js-sha3";
 
-import { modulo, powmod } from "@lib/math";
 import { randbits } from "@lib/security/util";
-import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util";
+import { bufferToNumber, modulo, numberToBuffer, padBuffer, powmod } from "@lib/util";
 
 /**
  * Underlying SRP group implementation, based off RFC5054 and RFC2945.

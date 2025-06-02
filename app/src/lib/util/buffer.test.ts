@@ -1,4 +1,4 @@
-import { bufferToNumber, numberToBuffer, padBuffer, xorBuffer } from "./util";
+import { bufferToNumber, numberToBuffer, padBuffer, xorBuffer } from "./buffer";
 
 test("numberToBuffer", () => {
     expect(numberToBuffer(3n)).toEqual(Buffer.from("03", "hex"));

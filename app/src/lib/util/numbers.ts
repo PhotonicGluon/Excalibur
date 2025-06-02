@@ -1,4 +1,15 @@
 /**
+ * Pads a number with leading zeros to ensure it has at least the specified length.
+ *
+ * @param num The number to pad.
+ * @param length The desired length of the resulting string.
+ * @returns A string representation of the number, padded with leading zeros.
+ */
+export function padNumber(num: number, length: number): string {
+    return num.toString().padStart(length, "0");
+}
+
+/**
  * Converts a given number of bytes into a human-readable format.
  *
  * @param bytes The number of bytes.

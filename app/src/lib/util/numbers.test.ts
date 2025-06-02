@@ -1,4 +1,12 @@
-import { bytesToHumanReadable } from "./units";
+import { bytesToHumanReadable, padNumber } from "./numbers";
+
+test("padNumber", () => {
+    expect(padNumber(1, 2)).toBe("01");
+    expect(padNumber(123, 2)).toBe("123");
+    expect(padNumber(123, 3)).toBe("123");
+    expect(padNumber(123, 4)).toBe("0123");
+    expect(padNumber(12, 5)).toBe("00012");
+});
 
 test("bytesToHumanReadable", () => {
     expect(bytesToHumanReadable(0)).toBe("0 B");
