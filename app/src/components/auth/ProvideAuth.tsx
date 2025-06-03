@@ -1,13 +1,15 @@
 // Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
 import { createContext, useContext, useState } from "react";
 
-import { getToken } from "@lib/security/auth";
+import { login, logout } from "@lib/security/auth";
 
 interface AuthProvider {
     /** The current authentication token */
     token: string | null;
-    /** Function to authenticate with the server, returning the token */
-    authenticate: (apiURL: string, uuid: string, key: Buffer) => Promise<string>;
+    /** Function to log into the server, returning the token for continued authentication */
+    login: (apiURL: string, uuid: string, key: Buffer) => Promise<string>;
+    /** Function to log out of the server */
+    logout: () => Promise<void>;
 }
 
 const authContext = createContext<AuthProvider>(null!);
@@ -48,21 +50,35 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  *      with the server.
  */
 function useProvideAuth(): AuthProvider {
+    const [apiURL, setApiURL] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(null);
 
-    const authenticate = async (apiURL: string, uuid: string, key: Buffer) => {
-        const tokenResponse = await getToken(apiURL, uuid, key);
+    const loginFunc = async (apiURL: string, uuid: string, key: Buffer) => {
+        const tokenResponse = await login(apiURL, uuid, key);
         if (!tokenResponse.success) {
             // TODO: Kick back to login screen
             return "";
         }
 
+        setApiURL(apiURL);
         setToken(tokenResponse.token!);
         return tokenResponse.token!;
     };
 
+    const logoutFunc = async () => {
+        const logoutResponse = await logout(apiURL!, token!);
+        if (!logoutResponse.success) {
+            // TODO: What to do here?
+            return;
+        }
+
+        setApiURL(null);
+        setToken(null); // FIXME: This likely breaks something in the PrivateRoute component
+    };
+
     return {
         token,
-        authenticate,
+        login: loginFunc,
+        logout: logoutFunc,
     };
 }

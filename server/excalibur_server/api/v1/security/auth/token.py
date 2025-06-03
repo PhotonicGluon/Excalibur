@@ -57,8 +57,19 @@ def decode_token(token: str) -> dict | None:
     return decoded
 
 
-def generate_auth_token(uuid: str) -> str:
-    return generate_token({"sub": uuid}, expiry=LOGIN_VALIDITY_TIME)  # TODO: Do we need more stuff?
+def generate_auth_token(uuid: str, expiry_timestamp: float) -> str:
+    """
+    Generates a JWT token for the given UUID and expiry timestamp.
+
+    :param uuid: the subject of the token
+    :param expiry_timestamp: the timestamp when the token expires
+    :return: a serialized JWT
+    """
+
+    return generate_token(
+        {"sub": uuid},
+        expiry=int(round(expiry_timestamp - datetime.now(timezone.utc).timestamp())),
+    )
 
 
 def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:

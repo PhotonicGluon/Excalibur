@@ -1,5 +1,6 @@
 import binascii
 from base64 import b64decode, b64encode
+from datetime import datetime, timezone
 from typing import Annotated
 
 from Crypto.Util.number import bytes_to_long
@@ -15,7 +16,7 @@ from excalibur_server.api.v1.security.auth import (
 )
 from excalibur_server.api.v1.security.auth.srp import get_verifier
 from excalibur_server.api.v1.security.cache import HANDSHAKE_CACHE, VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.consts import SRP_GROUP
+from excalibur_server.api.v1.security.consts import LOGIN_VALIDITY_TIME, SRP_GROUP
 from excalibur_server.api.v1.security.routes.srp import router
 from excalibur_server.api.v1.security.security_details import SECURITY_DETAILS_FILE
 
@@ -80,8 +81,8 @@ def check_srp_validity_endpoint(
     if m1_server != m1:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="M1 values do not match")
 
-    # Update server-side cache of valid UUIDs
-    VALID_UUIDS_CACHE[handshake_uuid] = master
+    # Update server-side cache of valid UUIDs with their respective master keys and expiry times
+    VALID_UUIDS_CACHE[handshake_uuid] = (master, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
 
     # Generate server-side M2s
     return SRPValidityResponse(m2=b64encode(generate_m2(a_pub, m1_server, master)).decode("UTF-8"))

@@ -71,8 +71,8 @@ FILES_ROUTING_TREE = RoutingTree(
 SECURITY_ROUTING_TREE = RoutingTree(
     segment="security",
     subtrees={
-        "generate-token": RoutingTree(
-            segment="generate-token",
+        "login": RoutingTree(
+            segment="login",
             encrypted_routes={
                 "POST": EncryptedRoute(encrypted_body=False, excluded_statuses=[status.HTTP_404_NOT_FOUND]),
             },

@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 
-import { IonBreadcrumb, IonBreadcrumbs, IonIcon } from "@ionic/react";
+import { IonBreadcrumb, IonBreadcrumbs, IonButton, IonButtons, IonIcon, useIonRouter } from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import { home } from "ionicons/icons";
 
@@ -11,6 +11,8 @@ import { useAuth } from "@components/auth/ProvideAuth";
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
 const FileExplorer: React.FC = () => {
+    const router = useIonRouter();
+
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
@@ -25,13 +27,28 @@ const FileExplorer: React.FC = () => {
 
     // TODO: Request files list from server
 
+    async function onClickLogout() {
+        // Navigate back to login
+        router.push("/login", "forward", "replace");
+
+        // Log user out
+        await auth.logout(); // FIXME: Apparently this causes an infinite loop?
+    }
+
     // Render
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle slot="start">Files</IonTitle>
-                    <Countdown className="ion-padding-end" date={tokenExpiry} slot="end" />
+                    <IonTitle class="pr-0" slot="start">
+                        Files
+                    </IonTitle>
+                    <Countdown className="center" date={tokenExpiry} slot="" />
+                    <IonButtons className="ion-padding-end" slot="end">
+                        <IonButton fill="solid" onClick={() => onClickLogout()}>
+                            Logout
+                        </IonButton>
+                    </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen>

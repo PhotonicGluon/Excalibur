@@ -37,7 +37,7 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
             del response.headers["uuid"]
 
         # Try to obtain the master key
-        return VALID_UUIDS_CACHE.get(uuid)
+        return VALID_UUIDS_CACHE.get(uuid, (None, None))[0]
 
     def _raise_credentials_exception(self) -> Response:
         """

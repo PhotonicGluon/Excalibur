@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useHistory } from "react-router";
 
 import {
@@ -186,10 +186,10 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Authenticate
-        console.debug("Authenticating...");
-        const token = await auth.authenticate(apiURL, e2eeData.uuid, e2eeData.key);
-        console.debug(`Authenticated with token '${token}'`);
+        // Log into the server using the UUID and master key
+        console.debug("Logging in...");
+        const token = await auth.login(apiURL, e2eeData.uuid, e2eeData.key);
+        console.debug(`Logged in; using token: ${token}`);
 
         // Continue with files retrieval
         setIsLoading(false);
@@ -223,7 +223,7 @@ const Login: React.FC = () => {
                             </div>
                         </div>
 
-                        <IonButton className="mx-auto pt-4" onClick={onLoginButtonClick}>
+                        <IonButton className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
                             Log In
                         </IonButton>
                     </form>

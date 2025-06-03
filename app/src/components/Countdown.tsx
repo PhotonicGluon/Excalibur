@@ -1,7 +1,6 @@
 import React, { HTMLAttributes, useEffect, useState } from "react";
 
-import { IonIcon, IonLabel, IonText } from "@ionic/react";
-import { timeOutline } from "ionicons/icons";
+import { IonLabel, IonText } from "@ionic/react";
 
 import { padNumber } from "@lib/util";
 
@@ -36,10 +35,7 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
 
     return (
         <IonLabel {...props}>
-            <div className="flex">
-                <IonIcon icon={timeOutline} size="small"></IonIcon>
-                <IonText className="pl-1">{`${padNumber(state.hours, 2)}:${padNumber(state.minutes, 2)}:${padNumber(state.seconds, 2)}`}</IonText>
-            </div>
+            <IonText className="pl-1">{`${padNumber(state.hours, 2)}:${padNumber(state.minutes, 2)}:${padNumber(state.seconds, 2)}`}</IonText>
         </IonLabel>
     );
 };
