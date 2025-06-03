@@ -73,7 +73,7 @@ function useProvideAuth(): AuthProvider {
         }
 
         setApiURL(null);
-        setToken(null); // FIXME: This likely breaks something in the PrivateRoute component
+        setToken(null);
     };
 
     return {

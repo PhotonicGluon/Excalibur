@@ -78,7 +78,7 @@ print("Valid UUID found:", handshake_response["handshake_uuid"])
 # Retrieve token
 print("Retrieve token...")
 response = requests.post(
-    f"{URL}/security/generate-token",
+    f"{URL}/security/login",
     json=handshake_response["handshake_uuid"],
 )
 response.raise_for_status()

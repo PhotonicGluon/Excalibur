@@ -32,7 +32,7 @@ const FileExplorer: React.FC = () => {
         router.push("/login", "forward", "replace");
 
         // Log user out
-        await auth.logout(); // FIXME: Apparently this causes an infinite loop?
+        await auth.logout();
     }
 
     // Render

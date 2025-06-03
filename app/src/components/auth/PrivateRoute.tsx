@@ -9,19 +9,5 @@ import { useAuth } from "@components/auth/ProvideAuth";
 export const PrivateRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
     const auth = useAuth();
     const location = useLocation();
-
-    return (
-        <Route {...rest}>
-            {auth.token ? (
-                children
-            ) : (
-                <Redirect
-                    to={{
-                        pathname: "/login",
-                        state: { from: location },
-                    }}
-                />
-            )}
-        </Route>
-    );
+    return <Route {...rest}>{auth.token ? children : <Redirect from={location.pathname} to="/login" />}</Route>;
 };

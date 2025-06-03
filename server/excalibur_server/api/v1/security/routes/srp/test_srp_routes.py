@@ -88,7 +88,7 @@ def test_srp_negotiation():
     assert response["m2"] == b64encode(long_to_bytes(M2)).decode("UTF-8")
 
     # Check that the client can generate tokens now
-    response = client.post("/api/v1/security/generate-token", json=handshake_uuid)
+    response = client.post("/api/v1/security/login", json=handshake_uuid)
     assert response.status_code == status.HTTP_200_OK
 
 
