@@ -118,6 +118,8 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
         # Update headers
         response.headers["Content-Length"] = str(len(to_return))
         response.headers["Content-Type"] = "application/json"
+        response.headers.append("Access-Control-Expose-Headers", "X-Encrypted")
+        response.headers.append("X-Encrypted", "true")
 
         # Return the encrypted response
         return Response(

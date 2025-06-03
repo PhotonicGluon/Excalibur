@@ -61,3 +61,19 @@ export function encryptJSON(data: any, masterKey: Buffer, nonce?: Buffer): Encry
 export function decryptJSON(response: EncryptedResponse, masterKey: Buffer): any {
     return JSON.parse(decrypt(response, masterKey).toString("utf-8"));
 }
+
+/**
+ * Decrypts the response data using the provided master key if the response is encrypted.
+ *
+ * @param response The HTTP response containing potentially encrypted data.
+ * @param masterKey The master key to use for decryption.
+ * @returns A promise that resolves to the decrypted data, or the original data if not encrypted.
+ */
+export async function decryptResponse(response: Response, masterKey: Buffer): Promise<any> {
+    let data = await response.json();
+    if (response.headers.get("X-Encrypted") === "true") {
+        data = decryptJSON(data, masterKey);
+    }
+
+    return data;
+}

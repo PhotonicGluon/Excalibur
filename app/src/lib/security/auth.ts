@@ -1,4 +1,4 @@
-import { decryptJSON } from "@lib/crypto";
+import { decryptResponse } from "@lib/crypto";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
 import { bufferToNumber, numberToBuffer, padBuffer } from "@lib/util/buffer";
 
@@ -217,7 +217,8 @@ export async function getToken(
             return { success: false, error: "Unknown error" };
     }
 
-    const data = decryptJSON(await response.json(), masterKey);
+    const data = await decryptResponse(response, masterKey);
+
     return {
         success: true,
         token: data["token"],
