@@ -31,7 +31,7 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
             if auth[0] == "Bearer":
                 # No need to worry about invalid token since the bearer token check passed already
                 # during initial authorization phase
-                uuid = decode_token(auth[1])["uuid"]
+                uuid = decode_token(auth[1])["sub"]
         elif response is not None and response.headers.get("uuid") is not None:  # Patched in from an endpoint
             uuid = response.headers.get("uuid")
             del response.headers["uuid"]
