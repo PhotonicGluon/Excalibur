@@ -6,13 +6,17 @@ import { padNumber } from "@lib/util";
 
 interface CountdownProps {
     /** Countdown ending date */
-    date: Date;
+    endDate: Date;
     /** Callback to be called when the countdown expires */
     onExpiry: () => void;
 }
 
-const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> = ({ date, onExpiry, ...props }) => {
-    const [state, setState] = useState({
+const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> = ({
+    endDate: date,
+    onExpiry,
+    ...props
+}) => {
+    const [time, setTime] = useState({
         hours: 0,
         minutes: 0,
         seconds: 0,
@@ -28,7 +32,7 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
             const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
 
-            setState({ hours, minutes, seconds });
+            setTime({ hours, minutes, seconds });
 
             if (interval && hours === 0 && minutes === 0 && seconds === 0) {
                 clearInterval(interval);
@@ -44,7 +48,9 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
 
     return (
         <IonLabel {...props}>
-            <IonText className="pl-1">{`${padNumber(state.hours, 2)}:${padNumber(state.minutes, 2)}:${padNumber(state.seconds, 2)}`}</IonText>
+            <IonText className="pl-1">
+                {`${padNumber(time.hours, 2)}:${padNumber(time.minutes, 2)}:${padNumber(time.seconds, 2)}`}
+            </IonText>
         </IonLabel>
     );
 };

@@ -1,8 +1,22 @@
 import { useParams } from "react-router";
 
-import { IonBreadcrumb, IonBreadcrumbs, IonButton, IonButtons, IonIcon, useIonRouter } from "@ionic/react";
+import {
+    IonBreadcrumb,
+    IonBreadcrumbs,
+    IonButton,
+    IonButtons,
+    IonIcon,
+    IonItem,
+    IonLabel,
+    IonMenu,
+    IonMenuButton,
+    IonPopover,
+    IonText,
+    useIonRouter,
+    useIonToast,
+} from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
-import { home } from "ionicons/icons";
+import { chevronForward, ellipsisVertical, home, logOutOutline, search } from "ionicons/icons";
 
 import { decodeJWT } from "@lib/security/token";
 
@@ -12,6 +26,7 @@ import DirectoryItem from "@components/explorer/DirectoryItem";
 
 const FileExplorer: React.FC = () => {
     const router = useIonRouter();
+    const [presentToast] = useIonToast();
 
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
@@ -34,6 +49,12 @@ const FileExplorer: React.FC = () => {
      *      false, only navigates back to the login screen.
      */
     async function handleLogout(withLogout: boolean = true) {
+        // Show toast
+        presentToast({
+            message: "You have been logged out.",
+            duration: 3000,
+        });
+
         // Navigate back to login
         router.push("/login", "forward", "replace");
 
@@ -45,45 +66,87 @@ const FileExplorer: React.FC = () => {
 
     // Render
     return (
-        <IonPage>
-            <IonHeader>
-                <IonToolbar>
-                    <IonTitle class="pr-0" slot="start">
-                        Files
-                    </IonTitle>
-                    <Countdown className="center" date={tokenExpiry} onExpiry={() => handleLogout(false)} slot="" />
-                    <IonButtons className="ion-padding-end" slot="end">
-                        <IonButton fill="solid" onClick={() => handleLogout()}>
-                            Logout
-                        </IonButton>
-                    </IonButtons>
-                </IonToolbar>
-            </IonHeader>
-            <IonContent fullscreen>
-                <IonHeader collapse="condense">
-                    <IonToolbar>
-                        <IonTitle size="large">Files</IonTitle>
+        <>
+            {/* Hamburger menu */}
+            <IonMenu type="overlay" contentId="main-content">
+                <IonContent>
+                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center h-full">
+                        <IonItem button={true} onClick={() => handleLogout()}>
+                            <IonLabel>
+                                <IonIcon icon={logOutOutline} size="large" />
+                                <IonText className="pl-2">Logout</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem>TODO: Add more hamburger menu items</IonItem>
+                    </IonList>
+                </IonContent>
+            </IonMenu>
+
+            {/* Ellipsis menu*/}
+            <IonPopover trigger="ellipsis-button">
+                <IonContent className="ion-padding">TODO: Add ellipsis menu</IonContent>
+            </IonPopover>
+
+            {/* Main content */}
+            <IonPage id="main-content">
+                {/* Header content */}
+                <IonHeader>
+                    <IonToolbar className="flex">
+                        <IonButtons slot="start">
+                            <IonMenuButton></IonMenuButton>
+                        </IonButtons>
+                        <div className="flex" slot="">
+                            <Countdown
+                                className="w-full text-center"
+                                endDate={tokenExpiry}
+                                onExpiry={() => handleLogout(false)}
+                            />
+                        </div>
+                        <IonButtons className="ion-padding-end" slot="end">
+                            {/* Search button */}
+                            <IonButton>
+                                {/* TODO: Add functionality */}
+                                <IonIcon icon={search}></IonIcon>
+                            </IonButton>
+                            {/* Ellipsis menu trigger button */}
+                            <IonButton id="ellipsis-button">
+                                <IonIcon icon={ellipsisVertical} />
+                            </IonButton>
+                        </IonButtons>
                     </IonToolbar>
                 </IonHeader>
-                {/* Breadcrumb */}
-                <IonBreadcrumbs maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
-                    <IonBreadcrumb routerLink="/files/">
-                        <IonIcon slot="start" icon={home}></IonIcon>
-                        Home
-                    </IonBreadcrumb>
-                    {breadcrumbPaths.map((fragment, idx) => (
-                        <IonBreadcrumb key={idx} routerLink={`/files/${breadcrumbPaths.slice(0, idx + 1).join("/")}`}>
-                            {fragment}
+
+                {/* Body content */}
+                <IonContent fullscreen>
+                    <IonHeader collapse="condense">
+                        <IonToolbar>
+                            <IonTitle size="large">Files</IonTitle>
+                        </IonToolbar>
+                    </IonHeader>
+                    {/* Breadcrumb */}
+                    <IonBreadcrumbs maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+                        <IonBreadcrumb routerLink="/files/">
+                            <IonIcon slot="" icon={home} />
+                            <IonIcon slot="separator" icon={chevronForward} />
                         </IonBreadcrumb>
-                    ))}
-                </IonBreadcrumbs>
-                {/* Files list */}
-                <IonList lines="none">
-                    {/* TODO: Add */}
-                    <DirectoryItem name="test.txt" type="file" size={12345} />
-                </IonList>
-            </IonContent>
-        </IonPage>
+                        {breadcrumbPaths.map((fragment, idx) => (
+                            <IonBreadcrumb
+                                key={idx}
+                                routerLink={`/files/${breadcrumbPaths.slice(0, idx + 1).join("/")}`}
+                            >
+                                {fragment}
+                                <IonIcon slot="separator" icon={chevronForward} />
+                            </IonBreadcrumb>
+                        ))}
+                    </IonBreadcrumbs>
+                    {/* Files list */}
+                    <IonList lines="none">
+                        {/* TODO: Add */}
+                        <DirectoryItem name="test.txt" type="file" size={12345} />
+                    </IonList>
+                </IonContent>
+            </IonPage>
+        </>
     );
 };
 
