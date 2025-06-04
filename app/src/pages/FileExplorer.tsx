@@ -27,12 +27,20 @@ const FileExplorer: React.FC = () => {
 
     // TODO: Request files list from server
 
-    async function onClickLogout() {
+    /**
+     * Logs the user out of the app and navigates back to the login screen.
+     *
+     * @param withLogout If true, calls the logout function to invalidate the current token. If
+     *      false, only navigates back to the login screen.
+     */
+    async function handleLogout(withLogout: boolean = true) {
         // Navigate back to login
         router.push("/login", "forward", "replace");
 
         // Log user out
-        await auth.logout();
+        if (withLogout) {
+            await auth.logout();
+        }
     }
 
     // Render
@@ -43,9 +51,9 @@ const FileExplorer: React.FC = () => {
                     <IonTitle class="pr-0" slot="start">
                         Files
                     </IonTitle>
-                    <Countdown className="center" date={tokenExpiry} slot="" />
+                    <Countdown className="center" date={tokenExpiry} onExpiry={() => handleLogout(false)} slot="" />
                     <IonButtons className="ion-padding-end" slot="end">
-                        <IonButton fill="solid" onClick={() => onClickLogout()}>
+                        <IonButton fill="solid" onClick={() => handleLogout()}>
                             Logout
                         </IonButton>
                     </IonButtons>

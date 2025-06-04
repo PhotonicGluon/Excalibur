@@ -7,9 +7,11 @@ import { padNumber } from "@lib/util";
 interface CountdownProps {
     /** Countdown ending date */
     date: Date;
+    /** Callback to be called when the countdown expires */
+    onExpiry: () => void;
 }
 
-const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> = ({ date, ...props }) => {
+const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> = ({ date, onExpiry, ...props }) => {
     const [state, setState] = useState({
         hours: 0,
         minutes: 0,
@@ -17,6 +19,7 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
     });
 
     useEffect(() => {
+        let interval: NodeJS.Timeout;
         function tick() {
             const now = new Date();
             const timeDifference = date.getTime() - now.getTime();
@@ -26,8 +29,14 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
             const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
 
             setState({ hours, minutes, seconds });
+
+            if (interval && hours === 0 && minutes === 0 && seconds === 0) {
+                clearInterval(interval);
+                onExpiry();
+            }
         }
-        const interval = setInterval(tick, 1000);
+
+        interval = setInterval(tick, 1000);
         tick();
 
         return () => clearInterval(interval);
