@@ -32,4 +32,4 @@ app.add_middleware(
 # Define other routes
 @app.get("/")
 def index_page():
-    return "Hello World"  # TODO: Change?
+    return f"Excalibur Server, version {VERSION}"

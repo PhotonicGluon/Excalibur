@@ -1,13 +1,14 @@
 from typing import Literal, Union
-from pydantic import BaseModel, model_serializer
+
+from pydantic import BaseModel
 
 
 class Filelike(BaseModel):
     name: str
-    "Name of file"
+    "Name of item"
 
     fullpath: str
-    "Path to the file from the root directory"
+    "Path to the item from the root directory"
 
 
 class File(Filelike):

@@ -217,7 +217,7 @@ export async function login(
             return { success: false, error: "Unknown error" };
     }
 
-    const data = await decryptResponse(response, masterKey);
+    const data = await decryptResponse<{ token: string }>(response, masterKey);
 
     return {
         success: true,

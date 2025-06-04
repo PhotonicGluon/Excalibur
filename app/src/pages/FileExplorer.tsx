@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams } from "react-router";
 
 import {
@@ -18,6 +19,7 @@ import {
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import { chevronForward, ellipsisVertical, home, logOutOutline, search } from "ionicons/icons";
 
+import { listdir } from "@lib/files/rest";
 import { decodeJWT } from "@lib/security/token";
 
 import Countdown from "@components/Countdown";
@@ -25,9 +27,6 @@ import { useAuth } from "@components/auth/ProvideAuth";
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
 const FileExplorer: React.FC = () => {
-    const router = useIonRouter();
-    const [presentToast] = useIonToast();
-
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
@@ -40,8 +39,11 @@ const FileExplorer: React.FC = () => {
     // Generate breadcrumbs to render
     const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
 
-    // TODO: Request files list from server
+    // States
+    const router = useIonRouter();
+    const [presentToast] = useIonToast();
 
+    // Functions
     /**
      * Logs the user out of the app and navigates back to the login screen.
      *
@@ -63,6 +65,13 @@ const FileExplorer: React.FC = () => {
             await auth.logout();
         }
     }
+
+    // Effects
+    useEffect(() => {
+        listdir(auth, requestedPath).then((dir) => {
+            console.log(dir);
+        });
+    }, []);
 
     // Render
     return (

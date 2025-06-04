@@ -15,9 +15,9 @@ import {
 } from "@ionic/react";
 
 import { checkConnection } from "@lib/network";
-import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/auth";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
+import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/rest";
 import { validateURL } from "@lib/validators";
 
 import { useAuth } from "@components/auth/ProvideAuth";
