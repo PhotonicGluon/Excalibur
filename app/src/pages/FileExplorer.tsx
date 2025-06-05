@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import {
@@ -17,9 +17,10 @@ import {
     useIonToast,
 } from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
-import { chevronForward, ellipsisVertical, home, logOutOutline, search } from "ionicons/icons";
+import { chevronForward, ellipsisVertical, home, logOutOutline, refresh, search } from "ionicons/icons";
 
 import { listdir } from "@lib/files/rest";
+import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 
 import Countdown from "@components/Countdown";
@@ -42,6 +43,7 @@ const FileExplorer: React.FC = () => {
     // States
     const router = useIonRouter();
     const [presentToast] = useIonToast();
+    const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
 
     // Functions
     /**
@@ -66,11 +68,37 @@ const FileExplorer: React.FC = () => {
         }
     }
 
+    /**
+     * Fetches the contents of the current directory and updates the component state to reflect
+     * the new contents.
+     *
+     * If the request fails, it displays a toast with an error message and does not update the
+     * component state.
+     *
+     * @param showToast If true, displays a toast telling the user that the page was refreshed
+     */
+    async function refreshContents(showToast: boolean = true) {
+        const response = await listdir(auth, requestedPath);
+        if (!response.success) {
+            presentToast({
+                message: response.error,
+                duration: 3000,
+            });
+            return;
+        }
+        setDirectoryContents(response.directory!);
+        if (showToast) {
+            presentToast({
+                message: "Refreshed",
+                duration: 1000,
+            });
+        }
+    }
+
     // Effects
     useEffect(() => {
-        listdir(auth, requestedPath).then((dir) => {
-            console.log(dir);
-        });
+        // Refresh directory contents
+        refreshContents(false);
     }, []);
 
     // Render
@@ -92,8 +120,18 @@ const FileExplorer: React.FC = () => {
             </IonMenu>
 
             {/* Ellipsis menu*/}
-            <IonPopover trigger="ellipsis-button">
-                <IonContent className="ion-padding">TODO: Add ellipsis menu</IonContent>
+            <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
+                <IonContent>
+                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center h-full">
+                        <IonItem button={true} onClick={() => refreshContents()}>
+                            <IonLabel>
+                                <IonIcon icon={refresh} size="small" />
+                                <IonText className="pl-2">Refresh Directory</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem>TODO: Add more ellipsis menu items</IonItem>
+                    </IonList>
+                </IonContent>
             </IonPopover>
 
             {/* Main content */}
@@ -150,8 +188,17 @@ const FileExplorer: React.FC = () => {
                     </IonBreadcrumbs>
                     {/* Files list */}
                     <IonList lines="none">
-                        {/* TODO: Add */}
-                        <DirectoryItem name="test.txt" type="file" size={12345} />
+                        {directoryContents &&
+                            directoryContents.items &&
+                            directoryContents.items.length > 0 &&
+                            directoryContents.items.map((item, idx) => (
+                                <DirectoryItem
+                                    key={idx}
+                                    name={item.name}
+                                    type={item.type}
+                                    size={item.type === "file" ? item.size : undefined}
+                                />
+                            ))}
                     </IonList>
                 </IonContent>
             </IonPage>

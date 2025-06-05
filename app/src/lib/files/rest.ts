@@ -15,7 +15,6 @@ export async function listdir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
-    console.log(auth);
     const response = await fetch(`${auth.apiURL}/files/list/${path}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${auth.token}` },
