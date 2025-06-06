@@ -9,6 +9,7 @@ test("ExEF parsing", () => {
     const exef = ExEF.fromBuffer(SAMPLE_EXEF);
     expect(exef.version).toBe(1);
     expect(exef.keysize).toBe(192);
+    expect(exef.alg).toBe("aes-192-gcm");
     expect(exef.nonce.toString("hex")).toBe("abababababababababababababababababababababababab0000000000000000");
     expect(exef.tag.toString("hex")).toBe("cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd");
     expect(exef.ciphertext.toString("hex")).toBe("48454c4c4f");

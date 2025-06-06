@@ -1,1 +1,1 @@
-from .crypto import EncryptedResponse, encrypt
+from .crypto import decrypt, encrypt

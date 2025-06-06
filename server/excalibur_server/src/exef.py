@@ -14,17 +14,19 @@ class ExEF(BaseModel):
     tag: bytes
     ciphertext: bytes
 
+    # Properties
+    @property
+    def alg(self) -> Literal["aes-128-gcm", "aes-192-gcm", "aes-256-gcm"]:
+        """
+        The encryption algorithm used in the ExEF format based on the key size.
+        """
+        return f"aes-{self.keysize}-gcm"
+
     # Validators
     @field_validator("keysize")
     def validate_keysize(cls, value: int) -> int:
         if value not in {128, 192, 256}:
             raise ValueError("keysize must be 128, 192, or 256")
-        return value
-
-    @field_validator("nonce")
-    def validate_nonce(cls, value: bytes) -> bytes:
-        if len(value) not in {16, 24, 32}:
-            raise ValueError("nonce must be 16, 24, or 32 bytes")
         return value
 
     @field_validator("tag")

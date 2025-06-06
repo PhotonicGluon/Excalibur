@@ -1,20 +1,30 @@
+export type KeySize = 128 | 192 | 256;
+export type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
+
 /**
  * Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
  */
 export class ExEF {
     version: number = 1;
-    keysize: 128 | 192 | 256;
+    keysize: KeySize;
     nonce: Buffer;
     tag: Buffer;
     ciphertext: Buffer;
 
-    constructor(keysize: 128 | 192 | 256, nonce: Buffer, tag: Buffer, ciphertext: Buffer) {
+    constructor(keysize: KeySize, nonce: Buffer, tag: Buffer, ciphertext: Buffer) {
         this.keysize = keysize;
         this.nonce = nonce;
         this.tag = tag;
         this.ciphertext = ciphertext;
     }
 
+    // Properties
+    /** The encryption algorithm used in the ExEF format based on the key size */
+    get alg(): Algorithm {
+        return `aes-${this.keysize}-gcm`;
+    }
+
+    // Serializers
     toBuffer(): Buffer {
         let buffer = Buffer.alloc(64);
         buffer.write("ExEF", 0, 4);
@@ -43,7 +53,12 @@ export class ExEF {
             throw new Error(`Invalid key size: ${keysize}`);
         }
 
-        const nonce = buffer.subarray(8, 40);
+        let nonce = buffer.subarray(8, 40);
+        const firstNullByte = nonce.indexOf(0);
+        if (firstNullByte !== -1) {
+            nonce = nonce.subarray(0, firstNullByte);
+        }
+
         const tag = buffer.subarray(40, 56);
         const ciphertextLength = parseInt(buffer.toString("hex", 56, 64), 16);
         const ciphertext = buffer.subarray(64, 64 + ciphertextLength);

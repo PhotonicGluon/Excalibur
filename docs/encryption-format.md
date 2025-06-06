@@ -12,7 +12,7 @@ The following is a diagram of the ExEF format. The numbers represent 0-indexed *
   - The bytes `00 80` represent `aes-128-gcm`.
   - The bytes `00 C0` represent `aes-192-gcm`.
   - The bytes `01 00` represent `aes-256-gcm`.
-- Bytes `8` to `39` represent the nonce used for AES-GCM encryption. The length of the nonce is proportional to the key size used for encryption. Unused bytes are set to null (i.e., the byte `00`) on the right.
+- Bytes `8` to `39` represent the nonce used for AES-GCM encryption. Unused bytes are set to null (i.e., the byte `00`) on the right.
   - For example, a nonce for `aes-192-gcm` will have bytes `8` to `31` filled in with the nonce and bytes `32` to `39` will be null bytes.
 - Bytes `40` to `55` is the 16-byte AES-GCM tag.
 - Bytes `56` to `63` represent the ciphertext length, which should be interpreted as an `unsigned long`.
