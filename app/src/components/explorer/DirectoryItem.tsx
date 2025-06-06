@@ -41,7 +41,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             <IonIcon className="size-6" icon={isFile ? documentOutline : folderOutline} />
                             <div className="pl-4">
                                 <IonLabel>{props.name}</IonLabel>
-                                {props.size && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}
+                                {props.size !== undefined && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}
                             </div>
                         </IonCol>
                     </IonRow>
