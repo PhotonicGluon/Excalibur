@@ -4,6 +4,7 @@
         ".python-version": true,
     },
     "cSpell.words": [
+        "exef",
         "fastapi",
         "keysize",
         "maxfail",
