@@ -1,28 +1,44 @@
 import React from "react";
 
-import { IonCol, IonGrid, IonIcon, IonItem, IonLabel, IonNote, IonRow } from "@ionic/react";
+import { IonCol, IonGrid, IonIcon, IonItem, IonLabel, IonNote, IonRow, useIonRouter } from "@ionic/react";
 import { documentOutline, folderOutline } from "ionicons/icons";
 
 import { FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
 
-interface ContainerProps extends Omit<FileLike, "fullpath"> {
+interface ContainerProps extends FileLike {
     /** Size of the item, in bytes */
     size?: number;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
-    const itemIcon = isFile ? documentOutline : folderOutline;
 
-    // TODO: Add functionality
+    // States
+    const router = useIonRouter();
+
+    // Functions
+    /**
+     * Handles the user clicking on a directory item.
+     */
+    function onClick() {
+        if (!isFile) {
+            // Navigate into the directory
+            router.push(`/files/${props.fullpath}`, "forward", "push");
+            return;
+        }
+
+        // TODO: Handle file case
+    }
+
+    // Render
     return (
         <div className="flex h-16 w-full items-center">
-            <IonItem className="w-full" button={true}>
+            <IonItem className="w-full" button={true} onClick={() => onClick()}>
                 <IonGrid>
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
-                            <IonIcon className="size-6" icon={itemIcon} />
+                            <IonIcon className="size-6" icon={isFile ? documentOutline : folderOutline} />
                             <div className="pl-4">
                                 <IonLabel>{props.name}</IonLabel>
                                 {props.size && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}

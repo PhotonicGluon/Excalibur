@@ -66,6 +66,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                     <DirectoryItem
                         key={idx}
                         name={item.name}
+                        fullpath={item.fullpath}
                         type={item.type}
                         size={item.type === "file" ? item.size : undefined}
                     />

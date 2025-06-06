@@ -25,7 +25,6 @@ import { decodeJWT } from "@lib/security/token";
 
 import Countdown from "@components/Countdown";
 import { useAuth } from "@components/auth/ProvideAuth";
-import DirectoryItem from "@components/explorer/DirectoryItem";
 import DirectoryList from "@components/explorer/DirectoryList";
 
 const FileExplorer: React.FC = () => {
@@ -100,7 +99,7 @@ const FileExplorer: React.FC = () => {
     useEffect(() => {
         // Refresh directory contents
         refreshContents(false);
-    }, []);
+    }, [requestedPath]);
 
     // Render
     return (
@@ -171,6 +170,7 @@ const FileExplorer: React.FC = () => {
                             <IonTitle size="large">Files</IonTitle>
                         </IonToolbar>
                     </IonHeader>
+
                     {/* Breadcrumb */}
                     <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
                         <IonBreadcrumb routerLink="/files/">
@@ -187,14 +187,9 @@ const FileExplorer: React.FC = () => {
                             </IonBreadcrumb>
                         ))}
                     </IonBreadcrumbs>
+
                     {/* Files list */}
-                    {directoryContents && (
-                        <DirectoryList
-                            name={directoryContents!.name}
-                            type="directory"
-                            items={directoryContents!.items}
-                        />
-                    )}
+                    {directoryContents && <DirectoryList {...directoryContents!} />}
                 </IonContent>
             </IonPage>
         </>
