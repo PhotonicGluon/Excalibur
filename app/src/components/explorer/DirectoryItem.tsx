@@ -1,6 +1,6 @@
 import React from "react";
 
-import { IonIcon, IonItem, IonLabel, IonNote, IonText } from "@ionic/react";
+import { IonCol, IonGrid, IonIcon, IonItem, IonLabel, IonNote, IonRow } from "@ionic/react";
 import { documentOutline, folderOutline } from "ionicons/icons";
 
 import { FileLike } from "@lib/files/structures";
@@ -12,22 +12,24 @@ interface ContainerProps extends Omit<FileLike, "fullpath"> {
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
-    const itemIcon = props.type === "file" ? documentOutline : folderOutline;
+    const isFile = props.type === "file";
+    const itemIcon = isFile ? documentOutline : folderOutline;
 
     // TODO: Add functionality
     return (
-        <div className="h-16 flex items-center w-full">
+        <div className="flex h-16 w-full items-center">
             <IonItem className="w-full" button={true}>
-                <IonIcon aria-hidden="true" slot="start" icon={itemIcon}></IonIcon>
-                <IonLabel>
-                    <IonText>{props.name}</IonText>
-                    {props.size && (
-                        <>
-                            <br />
-                            <IonNote>{bytesToHumanReadable(props.size)}</IonNote>
-                        </>
-                    )}
-                </IonLabel>
+                <IonGrid>
+                    <IonRow className="ion-align-items-center">
+                        <IonCol className="flex items-center">
+                            <IonIcon className="size-6" icon={itemIcon} />
+                            <div className="pl-4">
+                                <IonLabel>{props.name}</IonLabel>
+                                {props.size && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}
+                            </div>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
             </IonItem>
         </div>
     );

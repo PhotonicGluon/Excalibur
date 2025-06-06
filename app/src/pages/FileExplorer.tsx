@@ -26,6 +26,7 @@ import { decodeJWT } from "@lib/security/token";
 import Countdown from "@components/Countdown";
 import { useAuth } from "@components/auth/ProvideAuth";
 import DirectoryItem from "@components/explorer/DirectoryItem";
+import DirectoryList from "@components/explorer/DirectoryList";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -107,7 +108,7 @@ const FileExplorer: React.FC = () => {
             {/* Hamburger menu */}
             <IonMenu type="overlay" contentId="main-content">
                 <IonContent>
-                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center h-full">
+                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
                         <IonItem button={true} onClick={() => handleLogout()}>
                             <IonLabel>
                                 <IonIcon icon={logOutOutline} size="large" />
@@ -122,7 +123,7 @@ const FileExplorer: React.FC = () => {
             {/* Ellipsis menu*/}
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
                 <IonContent>
-                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center h-full">
+                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
                         <IonItem button={true} onClick={() => refreshContents()}>
                             <IonLabel>
                                 <IonIcon icon={refresh} size="small" />
@@ -171,7 +172,7 @@ const FileExplorer: React.FC = () => {
                         </IonToolbar>
                     </IonHeader>
                     {/* Breadcrumb */}
-                    <IonBreadcrumbs maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+                    <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
                         <IonBreadcrumb routerLink="/files/">
                             <IonIcon slot="" icon={home} />
                             <IonIcon slot="separator" icon={chevronForward} />
@@ -187,19 +188,13 @@ const FileExplorer: React.FC = () => {
                         ))}
                     </IonBreadcrumbs>
                     {/* Files list */}
-                    <IonList lines="none">
-                        {directoryContents &&
-                            directoryContents.items &&
-                            directoryContents.items.length > 0 &&
-                            directoryContents.items.map((item, idx) => (
-                                <DirectoryItem
-                                    key={idx}
-                                    name={item.name}
-                                    type={item.type}
-                                    size={item.type === "file" ? item.size : undefined}
-                                />
-                            ))}
-                    </IonList>
+                    {directoryContents && (
+                        <DirectoryList
+                            name={directoryContents!.name}
+                            type="directory"
+                            items={directoryContents!.items}
+                        />
+                    )}
                 </IonContent>
             </IonPage>
         </>
