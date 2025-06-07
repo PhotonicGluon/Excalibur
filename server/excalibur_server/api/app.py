@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from excalibur_server.api.cors import ALLOW_ORIGINS
 
 # Define app
-from .meta import TITLE, SUMMARY, VERSION
+from .meta import SUMMARY, TITLE, VERSION
 
 app = FastAPI(
     title=TITLE,

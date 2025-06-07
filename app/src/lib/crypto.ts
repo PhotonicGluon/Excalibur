@@ -56,6 +56,7 @@ export function decryptJSON<T>(encryptedData: ExEF, masterKey: Buffer): T {
  * @returns A promise that resolves to the decrypted data, or the original data if not encrypted.
  */
 export async function decryptResponse<T>(response: Response, masterKey: Buffer): Promise<T> {
+    // FIXME: On android: "Msg: Uncaught (in promise) Error: Unsupported state or unable to authenticate data"
     let data: T;
     if (response.headers.get("X-Encrypted") === "true") {
         const responseData = Buffer.from(await response.arrayBuffer());
