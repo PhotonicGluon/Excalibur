@@ -6,9 +6,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.crypto.crypto import decrypt, encrypt
+from excalibur_server.api.v1.security.crypto.crypto import EncryptedResponse, decrypt, encrypt
 from excalibur_server.api.v1.security.crypto.middleware.routing import ROUTING_TREE
-from excalibur_server.src.exef import ExEF
 
 
 class RouteEncryptionMiddleware(BaseHTTPMiddleware):
@@ -71,8 +70,14 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
         async for chunk in request.stream():
             request_body += chunk
 
+        # Try to decode the request body
+        try:
+            request_body = json.loads(request_body)
+        except json.JSONDecodeError:
+            return None
+
         # Decrypt the request body
-        decrypted_body = decrypt(ExEF.from_serialized(request_body), master_key)
+        decrypted_body = decrypt(EncryptedResponse(**request_body), master_key)
 
         # Return the decrypted request
         decrypted_request = Request(
@@ -107,12 +112,12 @@ class RouteEncryptionMiddleware(BaseHTTPMiddleware):
             return self._raise_credentials_exception()
 
         # Encrypt the response body
-        exef = encrypt(response_body, master_key)
-        to_return = exef.serialize_exef()
+        encrypted_response = encrypt(response_body, master_key)
+        to_return = encrypted_response.model_dump_json().encode("UTF-8")
 
         # Update headers
         response.headers["Content-Length"] = str(len(to_return))
-        response.headers["Content-Type"] = "application/octet-stream"
+        response.headers["Content-Type"] = "application/json"
         response.headers.append("Access-Control-Expose-Headers", "X-Encrypted")
         response.headers.append("X-Encrypted", "true")
 
