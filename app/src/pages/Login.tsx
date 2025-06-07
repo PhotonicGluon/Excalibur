@@ -188,7 +188,20 @@ const Login: React.FC = () => {
 
         // Log into the server using the UUID and master key
         console.debug("Logging in...");
-        const token = await auth.login(apiURL, e2eeData.uuid, e2eeData.key);
+        let token: string;
+        try {
+            token = await auth.login(apiURL, e2eeData.uuid, e2eeData.key);
+        } catch (error) {
+            console.error(`Could not log in: ${error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Login Failure",
+                message: `Could not log in: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+
         console.debug(`Logged in; using token: ${token}`);
 
         // Continue with files retrieval

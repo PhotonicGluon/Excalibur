@@ -38,6 +38,7 @@ export class ExEF {
     }
 
     static fromBuffer(buffer: Buffer): ExEF {
+        console.debug(`Buffer to parse as ExEF: ${buffer.toString("hex")}`);
         if (buffer.length < 64) {
             throw new Error("Invalid ExEF buffer");
         }

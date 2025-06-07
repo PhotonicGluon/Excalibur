@@ -16,6 +16,12 @@ export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): ExEF {
 }
 
 export function decrypt(encryptedData: ExEF, masterKey: Buffer): Buffer {
+    console.debug("Want to decrypt:");
+    console.debug(`    Algorithm: ${encryptedData.alg}`);
+    console.debug(`    Nonce: ${encryptedData.nonce.toString("hex")}`);
+    console.debug(`    Tag: ${encryptedData.tag.toString("hex")}`);
+    console.debug(`    Ciphertext: ${encryptedData.ciphertext.toString("hex")}`);
+    console.debug(`    Master key: ${masterKey.toString("hex")}`);
     const decipher = createDecipheriv(encryptedData.alg, masterKey, encryptedData.nonce);
     decipher.setAuthTag(encryptedData.tag);
 
@@ -43,9 +49,10 @@ export function encryptJSON(data: any, masterKey: Buffer, nonce?: Buffer): ExEF 
  * @param encryptedData The encrypted JSON data to decrypt.
  * @param masterKey The master key to decrypt the data with.
  * @returns The decrypted JSON data.
+ * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch).
  */
 export function decryptJSON<T>(encryptedData: ExEF, masterKey: Buffer): T {
-    return JSON.parse(decrypt(encryptedData, masterKey).toString("utf-8"));
+    return JSON.parse(decrypt(encryptedData, masterKey).toString("utf-8")) as T;
 }
 
 /**
@@ -54,9 +61,9 @@ export function decryptJSON<T>(encryptedData: ExEF, masterKey: Buffer): T {
  * @param response The HTTP response containing potentially encrypted data.
  * @param masterKey The master key to use for decryption.
  * @returns A promise that resolves to the decrypted data, or the original data if not encrypted.
+ * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch).
  */
 export async function decryptResponse<T>(response: Response, masterKey: Buffer): Promise<T> {
-    // FIXME: On android: "Msg: Uncaught (in promise) Error: Unsupported state or unable to authenticate data"
     let data: T;
     if (response.headers.get("X-Encrypted") === "true") {
         const responseData = Buffer.from(await response.arrayBuffer());
