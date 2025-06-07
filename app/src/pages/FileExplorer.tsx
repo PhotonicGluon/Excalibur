@@ -107,7 +107,10 @@ const FileExplorer: React.FC = () => {
             {/* Hamburger menu */}
             <IonMenu type="overlay" contentId="main-content">
                 <IonContent>
-                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+                    <IonList
+                        lines="none"
+                        className="ion-padding-top h-full [&_ion-label]:!flex [&_ion-label]:!items-center"
+                    >
                         <IonItem button={true} onClick={() => handleLogout()}>
                             <IonLabel>
                                 <IonIcon icon={logOutOutline} size="large" />
@@ -138,9 +141,9 @@ const FileExplorer: React.FC = () => {
             <IonPage id="main-content">
                 {/* Header content */}
                 <IonHeader>
-                    <IonToolbar className="flex">
+                    <IonToolbar className="ion-padding-top flex">
                         <IonButtons slot="start">
-                            <IonMenuButton></IonMenuButton>
+                            <IonMenuButton />
                         </IonButtons>
                         <div className="flex" slot="">
                             <Countdown
@@ -149,7 +152,7 @@ const FileExplorer: React.FC = () => {
                                 onExpiry={() => handleLogout(false)}
                             />
                         </div>
-                        <IonButtons className="ion-padding-end" slot="end">
+                        <IonButtons slot="end">
                             {/* Search button */}
                             <IonButton>
                                 {/* TODO: Add functionality */}
