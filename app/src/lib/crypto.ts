@@ -1,19 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
-export type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
-interface EncryptedResponse {
-    /** Name of the encryption algorithm */
-    alg: Algorithm;
-    /** Base64 encoded nonce for the encryption */
-    nonce: string;
-    /** Base64 encoded ciphertext to decrypt using the master key */
-    ciphertext: string;
-    /** Base64 encoded AES-GCM tag */
-    tag: string;
-}
+import { type Algorithm, ExEF, KeySize } from "@lib/exef";
 
-export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): EncryptedResponse {
-    const algorithm = `aes-${8 * masterKey.length}-gcm` as Algorithm; // We know master key is 16, 24 or 32 bytes
+export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): ExEF {
+    const keysize = (8 * masterKey.length) as KeySize;
+    const algorithm = `aes-${keysize}-gcm` as Algorithm; // We know master key is 16, 24 or 32 bytes
     if (!nonce) {
         nonce = randomBytes(12);
     }
@@ -21,25 +12,20 @@ export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): Encryp
     const cipher = createCipheriv(algorithm, masterKey, nonce);
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
 
-    return {
-        alg: algorithm,
-        nonce: nonce.toString("base64"),
-        ciphertext: encrypted.toString("base64"),
-        tag: cipher.getAuthTag().toString("base64"),
-    };
+    return new ExEF(keysize, nonce, cipher.getAuthTag(), encrypted);
 }
 
-export function decrypt(response: EncryptedResponse, masterKey: Buffer): Buffer {
+export function decrypt(encryptedData: ExEF, masterKey: Buffer): Buffer {
     console.debug("Want to decrypt:");
-    console.debug(`    Algorithm: ${response.alg}`);
-    console.debug(`    Nonce: ${response.nonce}`);
-    console.debug(`    Tag: ${response.tag}`);
-    console.debug(`    Ciphertext: ${response.ciphertext}`);
+    console.debug(`    Algorithm: ${encryptedData.alg}`);
+    console.debug(`    Nonce: ${encryptedData.nonce.toString("hex")}`);
+    console.debug(`    Tag: ${encryptedData.tag.toString("hex")}`);
+    console.debug(`    Ciphertext: ${encryptedData.ciphertext.toString("hex")}`);
     console.debug(`    Master key: ${masterKey.toString("hex")}`);
-    const decipher = createDecipheriv(response.alg, masterKey, Buffer.from(response.nonce, "base64"));
-    decipher.setAuthTag(Buffer.from(response.tag, "base64"));
+    const decipher = createDecipheriv(encryptedData.alg, masterKey, encryptedData.nonce);
+    decipher.setAuthTag(encryptedData.tag);
 
-    let decrypted = decipher.update(Buffer.from(response.ciphertext, "base64"));
+    let decrypted = decipher.update(encryptedData.ciphertext);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
 
     return decrypted;
@@ -53,20 +39,20 @@ export function decrypt(response: EncryptedResponse, masterKey: Buffer): Buffer 
  * @param nonce A nonce to use for the encryption. If not provided, a 12-byte random one will be generated.
  * @returns Encrypted data.
  */
-export function encryptJSON(data: any, masterKey: Buffer, nonce?: Buffer): EncryptedResponse {
+export function encryptJSON(data: any, masterKey: Buffer, nonce?: Buffer): ExEF {
     return encrypt(Buffer.from(JSON.stringify(data)), masterKey, nonce);
 }
 
 /**
  * Decrypts the given encrypted JSON data using the given master key.
  *
- * @param response The encrypted JSON data to decrypt.
+ * @param encryptedData The encrypted JSON data to decrypt.
  * @param masterKey The master key to decrypt the data with.
  * @returns The decrypted JSON data.
  * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch).
  */
-export function decryptJSON<T>(response: EncryptedResponse, masterKey: Buffer): T {
-    return JSON.parse(decrypt(response, masterKey).toString("utf-8")) as T;
+export function decryptJSON<T>(encryptedData: ExEF, masterKey: Buffer): T {
+    return JSON.parse(decrypt(encryptedData, masterKey).toString("utf-8")) as T;
 }
 
 /**
@@ -78,9 +64,14 @@ export function decryptJSON<T>(response: EncryptedResponse, masterKey: Buffer): 
  * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch).
  */
 export async function decryptResponse<T>(response: Response, masterKey: Buffer): Promise<T> {
-    let data = await response.json();
+    let data: T;
     if (response.headers.get("X-Encrypted") === "true") {
-        data = decryptJSON(data, masterKey);
+        const arrayBuffer = await response.arrayBuffer();
+        const responseData = Buffer.from(arrayBuffer);
+        const exef = ExEF.fromBuffer(responseData);
+        data = decryptJSON<T>(exef, masterKey);
+    } else {
+        data = (await response.json()) as T;
     }
 
     return data;

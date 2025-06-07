@@ -4,10 +4,8 @@ const config: CapacitorConfig = {
     appId: "com.excalibur.app",
     appName: "Excalibur",
     webDir: "dist",
-    plugins: {
-        CapacitorHttp: {
-            enabled: true,
-        },
+    server: {
+        androidScheme: "http",
     },
 };
 
