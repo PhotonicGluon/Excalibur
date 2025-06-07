@@ -38,7 +38,7 @@ def login_endpoint(
     """
 
     # Get master key associated with handshake UUID
-    master_key, expiry = VALID_UUIDS_CACHE.get(handshake_uuid)
+    master_key, expiry = VALID_UUIDS_CACHE.get(handshake_uuid, (None, None))
     if master_key is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handshake UUID not found or has expired")
 
