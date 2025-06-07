@@ -15,16 +15,16 @@
         "bump-dependencies": "npx npm-check-updates --peer -u"
     },
     "dependencies": {
-        "@capacitor/android": "7.2.0",
+        "@capacitor/android": "7.3.0",
         "@capacitor/app": "7.0.1",
-        "@capacitor/core": "7.2.0",
+        "@capacitor/core": "7.3.0",
         "@capacitor/haptics": "7.0.1",
         "@capacitor/keyboard": "7.0.1",
         "@capacitor/status-bar": "7.0.1",
-        "@ionic/react": "^8.5.8",
-        "@ionic/react-router": "^8.5.8",
+        "@ionic/react": "^8.6.0",
+        "@ionic/react-router": "^8.6.0",
         "@tailwindcss/vite": "^4.1.8",
-        "ionicons": "^8.0.8",
+        "ionicons": "^8.0.9",
         "js-sha3": "^0.9.3",
         "jsonwebtoken": "^9.0.2",
         "react": "19.1.0",
@@ -34,7 +34,7 @@
         "tailwindcss": "^4.1.8"
     },
     "devDependencies": {
-        "@capacitor/cli": "7.2.0",
+        "@capacitor/cli": "7.3.0",
         "@testing-library/dom": ">=10.4.0",
         "@testing-library/jest-dom": "^6.6.3",
         "@testing-library/react": "^16.3.0",
@@ -42,12 +42,12 @@
         "@trivago/prettier-plugin-sort-imports": "^5.2.2",
         "@types/jsonwebtoken": "^9.0.9",
         "@types/react": "19.1.6",
-        "@types/react-dom": "19.1.5",
+        "@types/react-dom": "19.1.6",
         "@types/react-router": "^5.1.20",
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-legacy": "^6.1.1",
-        "@vitejs/plugin-react": "^4.5.0",
-        "cypress": "^14.4.0",
+        "@vitejs/plugin-react": "^4.5.1",
+        "cypress": "^14.4.1",
         "eslint": "^9.28.0",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.2.0",
@@ -56,11 +56,11 @@
         "jsdom": "^26.1.0",
         "prettier": "^3.5.3",
         "prettier-plugin-tailwindcss": "^0.6.12",
-        "terser": "^5.40.0",
+        "terser": "^5.41.0",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.33.0",
+        "typescript-eslint": "^8.33.1",
         "vite": "~6.3.5",
         "vite-plugin-node-polyfills": "^0.23.0",
-        "vitest": "^3.1.4"
+        "vitest": "^3.2.2"
     }
 }
