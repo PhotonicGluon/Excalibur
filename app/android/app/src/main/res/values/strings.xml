@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Excalibur</string>
+    <string name="title_activity_main">Excalibur</string>
+    <string name="package_name">com.excalibur.app</string>
+    <string name="custom_url_scheme">com.excalibur.app</string>
+</resources>
