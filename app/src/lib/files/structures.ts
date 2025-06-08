@@ -1,10 +1,12 @@
+export type ItemType = "file" | "directory";
+
 export interface FileLike {
     /** Name of item */
     name: string;
     /** Path to the item from the root directory */
     fullpath: string;
     /** Type of the item */
-    type: "file" | "directory";
+    type: ItemType;
 }
 
 export interface File extends FileLike {

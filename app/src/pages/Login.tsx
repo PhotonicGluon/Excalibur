@@ -118,6 +118,7 @@ const Login: React.FC = () => {
                             presentToast({
                                 message: "Security details setup cancelled",
                                 duration: 3000,
+                                color: "warning",
                             });
                         },
                     },
@@ -134,6 +135,7 @@ const Login: React.FC = () => {
                                 presentToast({
                                     message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
                                     duration: 3000,
+                                    color: "danger",
                                 });
                                 return;
                             }
@@ -159,6 +161,7 @@ const Login: React.FC = () => {
                             presentToast({
                                 message: "Security details set up. Please log in again.",
                                 duration: 5000,
+                                color: "success",
                             });
                         },
                     },
@@ -176,8 +179,8 @@ const Login: React.FC = () => {
             (header, msg) => {
                 presentAlert({ header: header, message: msg, buttons: ["OK"] });
             },
-            (msg) => {
-                presentToast({ message: msg, duration: 3000 });
+            (msg, isError) => {
+                presentToast({ message: msg, duration: 3000, color: isError ? "danger" : "primary" });
             },
         );
         if (!e2eeData) {

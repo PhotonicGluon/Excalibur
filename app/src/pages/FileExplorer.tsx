@@ -35,7 +35,7 @@ import {
 
 import { encrypt } from "@lib/crypto";
 import { ExEF } from "@lib/exef";
-import { listdir, uploadFile } from "@lib/files/api";
+import { deleteItem, listdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 
@@ -99,6 +99,7 @@ const FileExplorer: React.FC = () => {
             presentToast({
                 message: response.error,
                 duration: 3000,
+                color: "danger",
             });
             return;
         }
@@ -142,14 +143,32 @@ const FileExplorer: React.FC = () => {
             presentToast({
                 message: `Failed to upload file: ${response.error}`,
                 duration: 3000,
+                color: "danger",
             });
             return;
         }
 
         // Refresh page
-        refreshContents();
+        refreshContents(false);
         presentToast({
             message: "File uploaded",
+            duration: 3000,
+        });
+    }
+
+    async function onDeleteItem(path: string, isDir: boolean) {
+        const response = await deleteItem(auth, path, isDir);
+        if (!response.success) {
+            presentToast({
+                message: `Failed to delete item: ${response.error}`,
+                duration: 3000,
+                color: "danger",
+            });
+        }
+
+        refreshContents(false);
+        presentToast({
+            message: `Deleted ${isDir ? "directory" : "file"}`,
             duration: 3000,
         });
     }
@@ -266,7 +285,7 @@ const FileExplorer: React.FC = () => {
                     </IonFab>
 
                     {/* Files list */}
-                    {directoryContents && <DirectoryList {...directoryContents!} />}
+                    {directoryContents && <DirectoryList {...directoryContents!} onDelete={onDeleteItem} />}
                 </IonContent>
             </IonPage>
         </>

@@ -25,7 +25,7 @@ export async function e2ee(
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, message: string | undefined) => void,
-    showToast?: (message: string) => void,
+    showToast?: (message: string, isError?: boolean) => void,
 ): Promise<E2EEData | undefined> {
     // Get SRP group used for communication
     setLoadingState?.("Determining SRP group...");
@@ -33,7 +33,7 @@ export async function e2ee(
     const srpGroup = groupResponse.group;
     if (!srpGroup) {
         stopLoading?.();
-        showToast?.(`Unable to determine server's SRP group: ${groupResponse.error!}`);
+        showToast?.(`Unable to determine server's SRP group: ${groupResponse.error!}`, true);
         return;
     }
 

@@ -7,7 +7,10 @@ import { Directory, FileLike } from "@lib/files/structures";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
-interface ContainerProps extends Omit<Directory, "fullpath"> {}
+interface ContainerProps extends Omit<Directory, "fullpath"> {
+    /** Function to call when deletion is requested */
+    onDelete: (path: string, isDir: boolean) => Promise<void>;
+}
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
@@ -69,6 +72,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                         fullpath={item.fullpath}
                         type={item.type}
                         size={item.type === "file" ? item.size : undefined}
+                        onDelete={props.onDelete}
                     />
                 ))}
             </IonList>
