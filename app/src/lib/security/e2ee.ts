@@ -1,5 +1,5 @@
+import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/api";
 import { generateKey } from "@lib/security/keygen";
-import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/rest";
 
 interface E2EEData {
     /** UUID of the handshake */

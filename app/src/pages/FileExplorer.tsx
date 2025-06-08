@@ -19,7 +19,7 @@ import {
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import { chevronForward, ellipsisVertical, home, logOutOutline, refresh, search } from "ionicons/icons";
 
-import { listdir } from "@lib/files/rest";
+import { listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 

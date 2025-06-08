@@ -1,7 +1,7 @@
 // Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
 import { createContext, useContext, useState } from "react";
 
-import { login, logout } from "@lib/security/rest";
+import { login, logout } from "@lib/security/api";
 
 export interface AuthProvider {
     /** API URL */

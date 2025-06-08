@@ -1,6 +1,5 @@
 import { randomBytes } from "crypto";
-import { useEffect, useState } from "react";
-import { useHistory } from "react-router";
+import { useState } from "react";
 
 import {
     IonButton,
@@ -15,9 +14,9 @@ import {
 } from "@ionic/react";
 
 import { checkConnection } from "@lib/network";
+import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
-import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/rest";
 import { validateURL } from "@lib/validators";
 
 import { useAuth } from "@components/auth/ProvideAuth";
