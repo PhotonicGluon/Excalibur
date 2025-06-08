@@ -1,7 +1,7 @@
 import React from "react";
 
 import { IonCol, IonGrid, IonIcon, IonItem, IonLabel, IonNote, IonRow, useIonRouter } from "@ionic/react";
-import { documentOutline, folderOutline } from "ionicons/icons";
+import { documentTextOutline, folderOutline } from "ionicons/icons";
 
 import { FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
@@ -38,7 +38,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 <IonGrid>
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
-                            <IonIcon className="size-6" icon={isFile ? documentOutline : folderOutline} />
+                            <IonIcon className="size-6" icon={isFile ? documentTextOutline : folderOutline} />
                             <div className="pl-4">
                                 <IonLabel>{props.name}</IonLabel>
                                 {props.size !== undefined && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}

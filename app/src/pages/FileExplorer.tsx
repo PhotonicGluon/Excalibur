@@ -1,3 +1,4 @@
+import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -6,6 +7,9 @@ import {
     IonBreadcrumbs,
     IonButton,
     IonButtons,
+    IonFab,
+    IonFabButton,
+    IonFabList,
     IonIcon,
     IonItem,
     IonLabel,
@@ -17,9 +21,21 @@ import {
     useIonToast,
 } from "@ionic/react";
 import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
-import { chevronForward, ellipsisVertical, home, logOutOutline, refresh, search } from "ionicons/icons";
+import {
+    add,
+    chevronForward,
+    documentOutline,
+    ellipsisVertical,
+    folderOutline,
+    home,
+    logOutOutline,
+    refresh,
+    search,
+} from "ionicons/icons";
 
-import { listdir } from "@lib/files/api";
+import { encrypt } from "@lib/crypto";
+import { ExEF } from "@lib/exef";
+import { listdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 
@@ -93,6 +109,49 @@ const FileExplorer: React.FC = () => {
                 duration: 1000,
             });
         }
+    }
+
+    /**
+     * Prompts the user to choose a file, encrypts it, and uploads it to the current directory.
+     *
+     * If the request fails, it displays a toast with an error message.
+     *
+     * @returns A promise which resolves when the upload is complete.
+     */
+    async function onUploadFile() {
+        // Choose the file to upload
+        const result = await FilePicker.pickFiles();
+        const rawFile = result.files[0];
+        if (!rawFile.blob) {
+            // TODO: Do something?
+            return;
+        }
+
+        // TODO: Probably check if file exists first?
+
+        // Encrypt the file
+        const rawFileData = await rawFile.blob.arrayBuffer();
+        const exef = encrypt(Buffer.from(rawFileData), auth.masterKey!); // FIXME: actually use the correct encryption/decryption key
+        const encryptedFile = new File([exef.toBuffer()], rawFile.name + ".exef");
+
+        // Upload the file
+        // TODO: Do the uploading
+        // TODO: Handle the case where the file already exists
+        const response = await uploadFile(auth, requestedPath, encryptedFile, false); // TODO: allow setting force flag
+        if (!response.success) {
+            presentToast({
+                message: `Failed to upload file: ${response.error}`,
+                duration: 3000,
+            });
+            return;
+        }
+
+        // Refresh page
+        refreshContents();
+        presentToast({
+            message: "File uploaded",
+            duration: 3000,
+        });
     }
 
     // Effects
@@ -190,6 +249,21 @@ const FileExplorer: React.FC = () => {
                             </IonBreadcrumb>
                         ))}
                     </IonBreadcrumbs>
+
+                    {/* Fab button */}
+                    <IonFab slot="fixed" vertical="bottom" horizontal="end">
+                        <IonFabButton>
+                            <IonIcon icon={add} />
+                        </IonFabButton>
+                        <IonFabList side="top">
+                            <IonFabButton aria-label="Create Folder" onClick={() => console.log("TODO: Create folder")}>
+                                <IonIcon icon={folderOutline} />
+                            </IonFabButton>
+                            <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
+                                <IonIcon icon={documentOutline} />
+                            </IonFabButton>
+                        </IonFabList>
+                    </IonFab>
 
                     {/* Files list */}
                     {directoryContents && <DirectoryList {...directoryContents!} />}

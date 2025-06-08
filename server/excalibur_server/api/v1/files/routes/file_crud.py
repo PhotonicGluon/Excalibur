@@ -1,7 +1,7 @@
 from typing import Annotated
 
 import aiofiles
-from fastapi import File, HTTPException, Path, UploadFile, status
+from fastapi import File, HTTPException, Path, Query, UploadFile, status
 from fastapi.responses import FileResponse
 
 from excalibur_server.api.v1.files.consts import FILE_PROCESS_CHUNK_SIZE
@@ -24,8 +24,8 @@ from excalibur_server.src.path import validate_path
 )
 async def upload_file_endpoint(
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify current directory)")],
-    force: Annotated[bool, File(description="Force upload (overwrite existing files)")] = False,
-    file: Annotated[UploadFile, File(description="The *encrypted* file to upload. Should end with `.exef`")] = ...,
+    file: Annotated[UploadFile, File(description="The *encrypted* file to upload. Should end with `.exef`")],
+    force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
 ):
     """
     Uploads a file to a directory.
