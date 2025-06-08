@@ -6,6 +6,7 @@ from excalibur_server.api.v1.files.listings import listdir
 from excalibur_server.api.v1.files.routes import router
 from excalibur_server.api.v1.files.structures import Directory
 from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.path import validate_path
 
 
 @router.get(
@@ -25,10 +26,8 @@ def listdir_endpoint(path: Annotated[str, Path(description="The path to list (us
     """
 
     # Check for any attempts at path traversal
-    # TODO: Vet this code
-    user_path = FILES_FOLDER / path
-    user_path = user_path.resolve()
-    if not user_path.is_relative_to(FILES_FOLDER):
+    user_path, valid = validate_path(path, FILES_FOLDER)
+    if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
     contents = listdir(user_path)

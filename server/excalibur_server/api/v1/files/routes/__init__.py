@@ -8,4 +8,5 @@ router = APIRouter(
     responses={status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"}},
 )
 
+from .file_crud import upload_file_endpoint
 from .listdir import listdir_endpoint

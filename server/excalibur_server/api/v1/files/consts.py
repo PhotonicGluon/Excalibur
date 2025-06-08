@@ -1,0 +1,1 @@
+FILE_PROCESS_CHUNK_SIZE = 4096  # In bytes

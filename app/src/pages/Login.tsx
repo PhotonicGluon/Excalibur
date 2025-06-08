@@ -202,7 +202,7 @@ const Login: React.FC = () => {
             return;
         }
 
-        console.debug(`Logged in; using token: ${token}`);
+        console.log(`Logged in; using token: ${token}`);
 
         // Continue with files retrieval
         setIsLoading(false);
