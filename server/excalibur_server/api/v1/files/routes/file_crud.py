@@ -2,6 +2,7 @@ from typing import Annotated
 
 import aiofiles
 from fastapi import File, HTTPException, Path, UploadFile, status
+from fastapi.responses import FileResponse
 
 from excalibur_server.api.v1.files.consts import FILE_PROCESS_CHUNK_SIZE
 from excalibur_server.api.v1.files.routes import router
@@ -57,3 +58,35 @@ async def upload_file_endpoint(
             await out_file.write(content)
 
     return "File uploaded"
+
+
+@router.get(
+    "/download/{path:path}",
+    name="Download File",
+    responses={
+        status.HTTP_200_OK: {
+            "content": {"application/octet-stream": {"example": "Some file content. Can be binary."}},
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a file"},
+        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
+    },
+    response_class=FileResponse,
+)
+async def download_file_endpoint(
+    path: Annotated[str, Path(description="The file to download")],
+):
+    """
+    Downloads a file.
+
+    MIME type of the downloaded file should be inferred by the client.
+    """
+
+    # Check for any attempts at path traversal
+    user_path, valid = validate_path(path, FILES_FOLDER)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
+
+    if not (user_path.exists() and user_path.is_file()):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
+
+    return FileResponse(user_path, media_type="application/octet-stream")
