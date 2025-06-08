@@ -1,4 +1,3 @@
-import json
 from typing import Awaitable, Callable
 
 from fastapi import Request, Response
