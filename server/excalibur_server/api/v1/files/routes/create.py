@@ -2,7 +2,7 @@ from typing import Annotated
 
 import aiofiles
 from fastapi import File, HTTPException, Path, Query, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.params import Body
 
 from excalibur_server.api.v1.files.consts import FILE_PROCESS_CHUNK_SIZE
 from excalibur_server.api.v1.files.routes import router
@@ -23,7 +23,7 @@ from excalibur_server.src.path import validate_path
     response_model=str,
 )
 async def upload_file_endpoint(
-    path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify current directory)")],
+    path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
     file: Annotated[UploadFile, File(description="The *encrypted* file to upload. Should end with `.exef`")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
 ):
@@ -60,33 +60,37 @@ async def upload_file_endpoint(
     return "File uploaded"
 
 
-@router.get(
-    "/download/{path:path}",
-    name="Download File",
+@router.post(
+    "/mkdir/{path:path}",
+    name="Create Directory",
     responses={
-        status.HTTP_200_OK: {
-            "content": {"application/octet-stream": {"example": "Some file content. Can be binary."}},
-        },
-        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a file"},
+        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
+        status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
     },
-    response_class=FileResponse,
+    status_code=status.HTTP_201_CREATED,
+    response_model=str,
 )
-async def download_file_endpoint(
-    path: Annotated[str, Path(description="The file to download")],
+async def create_directory_endpoint(
+    path: Annotated[
+        str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
+    ],
+    name: Annotated[str, Body(description="The name of the new directory")],
 ):
-    """
-    Downloads a file.
-
-    MIME type of the downloaded file should be inferred by the client.
-    """
-
     # Check for any attempts at path traversal
     user_path, valid = validate_path(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
-    if not (user_path.exists() and user_path.is_file()):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
+    if not (user_path.exists() and user_path.is_dir()):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    return FileResponse(user_path, media_type="application/octet-stream")
+    # Check if file already exists
+    dir_path = user_path / name
+    if dir_path.exists():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
+
+    # Create the directory
+    dir_path.mkdir(parents=True)
+
+    return "Directory created"
