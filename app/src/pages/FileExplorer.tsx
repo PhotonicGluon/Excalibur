@@ -1,3 +1,4 @@
+import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker } from "@capawesome/capacitor-file-picker";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -34,7 +35,6 @@ import {
 } from "ionicons/icons";
 
 import { encrypt } from "@lib/crypto";
-import { ExEF } from "@lib/exef";
 import { deleteItem, listdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
@@ -120,19 +120,41 @@ const FileExplorer: React.FC = () => {
      * @returns A promise which resolves when the upload is complete.
      */
     async function onUploadFile() {
-        // Choose the file to upload
-        const result = await FilePicker.pickFiles();
+        // Pick the file to upload
+        const result = await FilePicker.pickFiles({
+            limit: 1, // TODO: allow uploading multiple files
+        });
+
+        console.debug(`Picked ${result.files.length} files`);
         const rawFile = result.files[0];
-        if (!rawFile.blob) {
-            // TODO: Do something?
-            return;
-        }
 
         // TODO: Probably check if file exists first?
 
+        // Get contents of file
+        let rawFileData;
+        if (rawFile.blob) {
+            // Blob means that we are on web
+            console.debug("On web; using blob for raw file data");
+            rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
+        } else {
+            // No blob means that we are on mobile
+            console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
+            const result = await Filesystem.readFile({
+                path: rawFile.path!,
+            });
+            rawFileData = Buffer.from(result.data as string, "base64");
+        }
+        if (!rawFileData) {
+            presentToast({
+                message: "Failed to get file contents",
+                duration: 3000,
+                color: "danger",
+            });
+            return;
+        }
+
         // Encrypt the file
-        const rawFileData = await rawFile.blob.arrayBuffer();
-        const exef = encrypt(Buffer.from(rawFileData), auth.masterKey!); // FIXME: actually use the correct encryption/decryption key
+        const exef = encrypt(rawFileData, auth.masterKey!); // FIXME: actually use the correct encryption/decryption key
         const encryptedFile = new File([exef.toBuffer()], rawFile.name + ".exef");
 
         // Upload the file
