@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 import {
     IonCol,
@@ -29,6 +29,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
 
     // States
+    const slideRef = useRef<HTMLIonItemSlidingElement>(null);
     const router = useIonRouter();
 
     // Functions
@@ -52,12 +53,13 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      */
     async function onClickDelete() {
         await props.onDelete(props.fullpath, !isFile);
+        slideRef.current?.close();
     }
 
     // Render
     return (
         <div className="flex h-16 w-full items-center">
-            <IonItemSliding className="w-full">
+            <IonItemSliding ref={slideRef} className="w-full">
                 {/* Main item content */}
                 <IonItem button={true} onClick={() => onClickItem()}>
                     <IonGrid>
@@ -74,7 +76,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 </IonItem>
 
                 {/* Slide options */}
-                <IonItemOptions>
+                <IonItemOptions side="end">
                     <IonItemOption color="danger" onClick={() => onClickDelete()}>
                         <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
                     </IonItemOption>
