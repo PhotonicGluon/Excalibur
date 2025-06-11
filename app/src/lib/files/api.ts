@@ -35,7 +35,7 @@ export async function listdir(
             return { success: false, error: "Unknown error" };
     }
 
-    const directory = await decryptResponse<Directory>(response, auth.masterKey!);
+    const directory = await decryptResponse<Directory>(response, auth.e2eeKey!);
     return { success: true, directory };
 }
 

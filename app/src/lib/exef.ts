@@ -2,6 +2,27 @@ export type KeySize = 128 | 192 | 256;
 export type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
 
 /**
+ * Converts algorithm to keysize.
+ *
+ * @param alg Algorithm type
+ * @returns Keysize
+ */
+export function algToKeysize(alg: Algorithm): KeySize {
+    const matches = alg.match(/aes-(?<keysize>128|192|256)-gcm/)!;
+    return parseInt(matches.groups!.keysize) as KeySize;
+}
+
+/**
+ * Converts keysize to algorithm.
+ *
+ * @param keysize Key size
+ * @returns Algorithm type
+ */
+export function keysizeToAlg(keysize: KeySize): Algorithm {
+    return `aes-${keysize}-gcm`;
+}
+
+/**
  * Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
  */
 export class ExEF {
@@ -21,7 +42,7 @@ export class ExEF {
     // Properties
     /** The encryption algorithm used in the ExEF format based on the key size */
     get alg(): Algorithm {
-        return `aes-${this.keysize}-gcm`;
+        return keysizeToAlg(this.keysize);
     }
 
     // Serializers

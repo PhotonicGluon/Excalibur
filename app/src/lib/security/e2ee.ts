@@ -1,11 +1,13 @@
 import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/api";
-import { generateKey } from "@lib/security/keygen";
+import generateKey from "@lib/security/keygen";
 
 interface E2EEData {
     /** UUID of the handshake */
     uuid: string;
     /** Bilaterally agreed symmetric key to encrypt communications */
-    key: Buffer;
+    e2eeKey: Buffer;
+    /** Account unlock key (AUK) */
+    auk: Buffer;
 }
 
 /**
@@ -51,10 +53,12 @@ export async function e2ee(
     const srpSalt = securityDetailsResponse.srpSalt!;
     console.debug(`Loaded security details with salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`);
 
-    // Generate SRP key
-    setLoadingState?.("Generating SRP key...");
-    const key = await generateKey(password, srpSalt);
-    console.log(`Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
+    // Generate keys
+    setLoadingState?.("Generating keys...");
+    const auk = await generateKey(password, aukSalt);
+    const srpKey = await generateKey(password, srpSalt);
+    console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
+    console.log(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
     // Perform SRP handshake
     setLoadingState?.("Performing handshake...");
@@ -91,7 +95,7 @@ export async function e2ee(
 
     setLoadingState?.("Calculating master...");
     console.debug("Calculating master...");
-    const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, key, sharedU);
+    const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, srpKey, sharedU);
     console.debug("Premaster: " + premaster.toString(16));
     const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
     console.log("Master key: " + masterKey.toString("hex"));
@@ -117,5 +121,5 @@ export async function e2ee(
 
     console.log(`Bilateral authentication complete; handshake UUID is ${handshakeUUID}`);
 
-    return { uuid: handshakeUUID, key: masterKey };
+    return { uuid: handshakeUUID, e2eeKey: masterKey, auk: auk };
 }

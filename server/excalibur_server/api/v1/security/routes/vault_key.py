@@ -27,9 +27,6 @@ def check_vault_key_endpoint():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
 
 
-# TODO: The routes below need to be encrypted
-
-
 @router.get(
     "/vault-key",
     summary="Get Vault Key Details",

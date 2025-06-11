@@ -131,12 +131,14 @@ const FileExplorer: React.FC = () => {
         // TODO: Probably check if file exists first?
 
         // Get contents of file
+        // TODO: Stream contents of file for encryption and upload; also add progress bar
         let rawFileData;
         if (rawFile.blob) {
             // Blob means that we are on web
             console.debug("On web; using blob for raw file data");
             rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
         } else {
+            // TODO: Should we cap the file size on mobile
             // No blob means that we are on mobile
             console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
             const result = await Filesystem.readFile({
@@ -154,11 +156,10 @@ const FileExplorer: React.FC = () => {
         }
 
         // Encrypt the file
-        const exef = encrypt(rawFileData, auth.masterKey!); // FIXME: actually use the correct encryption/decryption key
+        const exef = encrypt(rawFileData, auth.vaultKey!);
         const encryptedFile = new File([exef.toBuffer()], rawFile.name + ".exef");
 
         // Upload the file
-        // TODO: Do the uploading
         // TODO: Handle the case where the file already exists
         const response = await uploadFile(auth, requestedPath, encryptedFile, false); // TODO: allow setting force flag
         if (!response.success) {

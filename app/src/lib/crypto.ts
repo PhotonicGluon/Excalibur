@@ -16,12 +16,6 @@ export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): ExEF {
 }
 
 export function decrypt(encryptedData: ExEF, masterKey: Buffer): Buffer {
-    console.debug("Want to decrypt:");
-    console.debug(`    Algorithm: ${encryptedData.alg}`);
-    console.debug(`    Nonce: ${encryptedData.nonce.toString("hex")}`);
-    console.debug(`    Tag: ${encryptedData.tag.toString("hex")}`);
-    console.debug(`    Ciphertext: ${encryptedData.ciphertext.toString("hex")}`);
-    console.debug(`    Master key: ${masterKey.toString("hex")}`);
     const decipher = createDecipheriv(encryptedData.alg, masterKey, encryptedData.nonce);
     decipher.setAuthTag(encryptedData.tag);
 

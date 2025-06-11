@@ -1,19 +1,23 @@
 // Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
-import { createContext, useContext, useState } from "react";
+import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
 
 import { login, logout } from "@lib/security/api";
 
 export interface AuthProvider {
     /** API URL */
     apiURL: string | null;
-    /** Master key used for communication */
-    masterKey: Buffer | null;
+    /** Key used for end-to-end encryption */
+    e2eeKey: Buffer | null;
+    /** Key used to encrypt data in the vault */
+    vaultKey: Buffer | null;
     /** The current authentication token */
     token: string | null;
     /** Function to log into the server, returning the token for continued authentication */
-    login: (apiURL: string, uuid: string, key: Buffer) => Promise<string>;
+    login: (apiURL: string, uuid: string, e2eeKey: Buffer) => Promise<string>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
+    /** Function to set the vault key */
+    setVaultKey: Dispatch<SetStateAction<Buffer<ArrayBufferLike> | null>>;
 }
 
 const authContext = createContext<AuthProvider>(null!);
@@ -55,18 +59,19 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  */
 function useProvideAuth(): AuthProvider {
     const [apiURL, setApiURL] = useState<string | null>(null);
-    const [masterKey, setMasterKey] = useState<Buffer | null>(null);
+    const [e2eeKey, setE2EEKey] = useState<Buffer | null>(null);
+    const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [token, setToken] = useState<string | null>(null);
 
-    const loginFunc = async (apiURL: string, uuid: string, key: Buffer) => {
-        const tokenResponse = await login(apiURL, uuid, key);
+    const loginFunc = async (apiURL: string, uuid: string, e2eeKey: Buffer) => {
+        const tokenResponse = await login(apiURL, uuid, e2eeKey);
         if (!tokenResponse.success) {
             // TODO: Kick back to login screen
             return "";
         }
 
         setApiURL(apiURL);
-        setMasterKey(key);
+        setE2EEKey(e2eeKey);
         setToken(tokenResponse.token!);
         return tokenResponse.token!;
     };
@@ -79,15 +84,18 @@ function useProvideAuth(): AuthProvider {
         }
 
         setApiURL(null);
-        setMasterKey(null);
+        setE2EEKey(null);
+        setVaultKey(null);
         setToken(null);
     };
 
     return {
         apiURL,
-        masterKey,
+        e2eeKey,
+        vaultKey,
         token,
         login: loginFunc,
         logout: logoutFunc,
+        setVaultKey,
     };
 }

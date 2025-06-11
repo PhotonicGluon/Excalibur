@@ -25,8 +25,6 @@ export async function slowHash(password: string, salt: Buffer): Promise<Buffer> 
  * @param salt A buffer representing the salt value.
  * @returns A buffer containing the generated key.
  */
-export async function generateKey(password: string, salt: Buffer): Promise<Buffer> {
+export default async function generateKey(password: string, salt: Buffer): Promise<Buffer> {
     return await slowHash(password, salt);
 }
-
-export default generateKey;

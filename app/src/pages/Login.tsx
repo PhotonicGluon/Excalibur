@@ -15,8 +15,10 @@ import {
 
 import { checkConnection } from "@lib/network";
 import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
+import { checkVaultKey } from "@lib/security/api/vault";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
+import { createVaultKey, retrieveVaultKey } from "@lib/security/vault";
 import { validateURL } from "@lib/validators";
 
 import { useAuth } from "@components/auth/ProvideAuth";
@@ -192,7 +194,7 @@ const Login: React.FC = () => {
         console.debug("Logging in...");
         let token: string;
         try {
-            token = await auth.login(apiURL, e2eeData.uuid, e2eeData.key);
+            token = await auth.login(apiURL, e2eeData.uuid, e2eeData.e2eeKey);
         } catch (error) {
             console.error(`Could not log in: ${error}`);
             setIsLoading(false);
@@ -205,6 +207,39 @@ const Login: React.FC = () => {
         }
 
         console.log(`Logged in; using token: ${token}`);
+
+        // Handle vault key
+        if (!(await checkVaultKey(apiURL, token)).success) {
+            const vaultKeyCreated = await createVaultKey(apiURL, token, e2eeData.auk, (error) => {
+                console.error(error);
+                setIsLoading(false);
+                presentAlert({
+                    header: "Vault Key Failure",
+                    message: error,
+                    buttons: ["OK"],
+                });
+            });
+            if (!vaultKeyCreated) {
+                // Errors already handled in `createVaultKey()`
+                return;
+            }
+        }
+
+        const vaultKey = await retrieveVaultKey(apiURL, token, e2eeData.e2eeKey, e2eeData.auk, (error) => {
+            console.error(error);
+            setIsLoading(false);
+            presentAlert({
+                header: "Vault Key Failure",
+                message: error,
+                buttons: ["OK"],
+            });
+        });
+        if (!vaultKey) {
+            // Errors already handled in `retrieveVaultKey()`
+            return;
+        }
+
+        auth.setVaultKey(vaultKey);
 
         // Continue with files retrieval
         setIsLoading(false);
