@@ -1,9 +1,11 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Path, status
+from fastapi import HTTPException, Path, Query, status
 from fastapi.responses import FileResponse
 
+from excalibur_server.api.v1.files.listings import listdir
 from excalibur_server.api.v1.files.routes import router
+from excalibur_server.api.v1.files.structures import Directory
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.path import validate_path
 
@@ -40,17 +42,6 @@ async def download_file_endpoint(
     return FileResponse(user_path, media_type="application/octet-stream")
 
 
-from typing import Annotated
-
-from fastapi import HTTPException, Path, status
-
-from excalibur_server.api.v1.files.listings import listdir
-from excalibur_server.api.v1.files.routes import router
-from excalibur_server.api.v1.files.structures import Directory
-from excalibur_server.consts import FILES_FOLDER
-from excalibur_server.src.path import validate_path
-
-
 @router.get(
     "/list/{path:path}",
     name="List Directory Contents",
@@ -60,7 +51,12 @@ from excalibur_server.src.path import validate_path
     },
     response_model=Directory,
 )
-def listdir_endpoint(path: Annotated[str, Path(description="The path to list (use `.` to specify root directory)")]):
+def listdir_endpoint(
+    path: Annotated[str, Path(description="The path to list (use `.` to specify root directory)")],
+    with_exef_header: Annotated[
+        bool, Query(description="Whether to include ExEF header size in the file sizes")
+    ] = False,
+):
     """
     Lists the contents of a directory.
 
@@ -72,7 +68,7 @@ def listdir_endpoint(path: Annotated[str, Path(description="The path to list (us
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
-    contents = listdir(user_path)
+    contents = listdir(user_path, with_exef_header=with_exef_header)
     if contents is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 

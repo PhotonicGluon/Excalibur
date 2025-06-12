@@ -1,7 +1,9 @@
+import mimetypes
 from pathlib import Path
 
 from excalibur_server.api.v1.files.structures import Directory, File
 from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.exef import ExEF
 
 
 def get_fullpath(path: Path):
@@ -15,11 +17,12 @@ def get_fullpath(path: Path):
     return path.resolve().relative_to(FILES_FOLDER).as_posix()
 
 
-def listdir(path: Path) -> Directory | None:
+def listdir(path: Path, with_exef_header: bool = False) -> Directory | None:
     """
     Lists the contents of a directory.
 
     :param path: The path to list.
+    :param with_exef_header: Whether to include the EXEF header size in file sizes.
     :returns: A `Directory` object with a list of `File` and `Directory` objects, or `None` if the
         path does not exist or is not a directory.
     """
@@ -33,7 +36,11 @@ def listdir(path: Path) -> Directory | None:
         if item.is_dir():
             items.append(Directory(name=item.name, fullpath=fullpath))
         else:
-            # TODO: Address mimetype detection
-            items.append(File(name=item.name, fullpath=fullpath, size=item.stat().st_size, mimetype=item.suffix))
+            size = item.stat().st_size
+            if item.suffix == ".exef" and not with_exef_header:
+                size -= ExEF.header_size
+
+            mimetype, _ = mimetypes.guess_type(fullpath.removesuffix(".exef"), strict=True)
+            items.append(File(name=item.name, fullpath=fullpath, size=size, mimetype=mimetype))
 
     return Directory(name=path.name, fullpath=get_fullpath(path), items=items)

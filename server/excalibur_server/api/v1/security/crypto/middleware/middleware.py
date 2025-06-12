@@ -171,8 +171,7 @@ class EncryptionHandler:
 
         message_type = message["type"]
         if message_type == "http.response.start":
-            # Don't send the initial message until we've determined how to
-            # modify the outgoing headers correctly.
+            # Don't send the initial message until we've determined how to modify the outgoing headers correctly
             self._initial_message = message
             return
         if message_type == "http.response.body":

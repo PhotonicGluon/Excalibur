@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_serializer
 
@@ -7,6 +7,8 @@ class ExEF(BaseModel):
     """
     Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
     """
+
+    header_size: ClassVar[int] = 64
 
     version: Annotated[int, Field(frozen=True)] = 1
     keysize: Literal[128, 192, 256]

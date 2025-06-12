@@ -121,11 +121,25 @@ const FileExplorer: React.FC = () => {
      */
     async function onUploadFile() {
         // Pick the file to upload
-        const result = await FilePicker.pickFiles({
-            limit: 1, // TODO: allow uploading multiple files
-        });
+        let result;
+        try {
+            result = await FilePicker.pickFiles({
+                limit: 1, // TODO: allow uploading multiple files
+            });
+        } catch (e: any) {
+            const message = (e as Error).message;
+            if (message.includes("pickFiles canceled")) {
+                console.debug("Cancelled upload of file");
+                return;
+            }
+            presentToast({
+                message: `Failed to pick file: ${message}`,
+                duration: 3000,
+                color: "danger",
+            });
+            return;
+        }
 
-        console.debug(`Picked ${result.files.length} files`);
         const rawFile = result.files[0];
 
         // TODO: Probably check if file exists first?
@@ -138,7 +152,7 @@ const FileExplorer: React.FC = () => {
             console.debug("On web; using blob for raw file data");
             rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
         } else {
-            // TODO: Should we cap the file size on mobile
+            // TODO: Should we cap the file size on mobile?
             // No blob means that we are on mobile
             console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
             const result = await Filesystem.readFile({

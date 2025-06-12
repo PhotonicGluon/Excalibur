@@ -17,8 +17,8 @@ class File(Filelike):
     size: int
     "Size of the file in bytes"
 
-    mimetype: str
-    "MIME type of the file"
+    mimetype: str | None
+    "MIME type of the file, or None if unknown"
 
 
 class Directory(Filelike):
