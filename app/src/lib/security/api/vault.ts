@@ -1,4 +1,4 @@
-import { decryptResponse } from "@lib/crypto";
+import { decryptResponse, encryptJSON } from "@lib/crypto";
 import { Algorithm } from "@lib/exef";
 
 export interface EncryptedVaultKey {
@@ -85,6 +85,7 @@ export async function getVaultKey(
  *
  * @param apiURL The URL of the API server to query
  * @param token Authentication token for accessing the server
+ * @param e2eeKey The key used to encrypt the end-to-end encrypted communications
  * @param encryptedVaultKey The vault key details to set
  * @returns A promise which resolves to an object containing the success status and an optional
  *      error message
@@ -92,20 +93,29 @@ export async function getVaultKey(
 export async function setUpVaultKey(
     apiURL: string,
     token: string,
+    e2eeKey: Buffer,
     encryptedVaultKey: EncryptedVaultKey,
 ): Promise<{ success: boolean; error?: string }> {
-    // TODO: Encrypt the body of this endpoint
+    // Encrypt body
+    const data = {
+        alg: encryptedVaultKey.alg,
+        nonce: encryptedVaultKey.nonce.toString("base64"),
+        key_enc: encryptedVaultKey.encryptedKey.toString("base64"),
+        tag: encryptedVaultKey.tag.toString("base64"),
+    };
+    const exef = encryptJSON(data, e2eeKey);
 
+    // Send request
     const response = await fetch(`${apiURL}/security/vault-key`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-            alg: encryptedVaultKey.alg,
-            nonce: encryptedVaultKey.nonce.toString("base64"),
-            key_enc: encryptedVaultKey.encryptedKey.toString("base64"),
-            tag: encryptedVaultKey.tag.toString("base64"),
-        }),
+        headers: {
+            "Content-Type": "application/octet-stream",
+            Authorization: `Bearer ${token}`,
+            "X-Encrypted": "true",
+        },
+        body: exef.toBuffer(),
     });
+
     switch (response.status) {
         case 201:
             break; // Continue with normal flow

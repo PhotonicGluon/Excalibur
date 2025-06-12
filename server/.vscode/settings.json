@@ -5,6 +5,7 @@
         ".python-version": true,
     },
     "cSpell.words": [
+        "asgi",
         "exef",
         "fastapi",
         "keysize",

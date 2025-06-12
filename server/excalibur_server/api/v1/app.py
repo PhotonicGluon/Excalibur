@@ -22,10 +22,11 @@ if artificial_delay > 0:
 
 
 # Encrypt responses for specific routes
-if os.environ.get("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0":
-    from excalibur_server.api.v1.security.crypto.middleware import RouteEncryptionMiddleware
+from excalibur_server.api.v1.security.crypto.middleware import RouteEncryptionMiddleware
 
-    app.add_middleware(RouteEncryptionMiddleware)
+app.add_middleware(
+    RouteEncryptionMiddleware, encrypt_response=os.environ.get("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0"
+)
 
 # Include routes
 from .files.routes import router as files_router

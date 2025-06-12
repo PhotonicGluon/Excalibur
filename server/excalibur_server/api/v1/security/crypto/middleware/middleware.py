@@ -1,161 +1,269 @@
-from typing import Awaitable, Callable
-
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.datastructures import MutableHeaders
+from starlette.responses import JSONResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.crypto.crypto import decrypt, encrypt
+from excalibur_server.api.v1.security.crypto import decrypt, encrypt
 from excalibur_server.api.v1.security.crypto.middleware.routing import ROUTING_TREE
+from excalibur_server.api.v1.security.crypto.middleware.structures import EncryptedRoute
 from excalibur_server.src.exef import ExEF
 
 
-class RouteEncryptionMiddleware(BaseHTTPMiddleware):
+class RouteEncryptionMiddleware:
     """
     Middleware that encrypts the traffic of encrypted routes.
     """
 
-    def _get_master_key(self, request: Request, response: Response | None = None) -> bytes | None:
+    def __init__(self, app: ASGIApp, encrypt_response: bool = True) -> None:
         """
-        Tries to obtain the master key from the cache based on the UUID.
+        Constructor
 
-        :param request: The request
-        :param response: The response, if available
-        :return: The master key if found, otherwise None
-        """
-
-        # Try to obtain the UUID
-        uuid = None
-        if request.headers.get("authorization") is not None:
-            auth = request.headers.get("authorization").split(" ")
-            if auth[0] == "Bearer":
-                # No need to worry about invalid token since the bearer token check passed already
-                # during initial authorization phase
-                uuid = decode_token(auth[1])["sub"]
-        elif response is not None and response.headers.get("uuid") is not None:  # Patched in from an endpoint
-            uuid = response.headers.get("uuid")
-            del response.headers["uuid"]
-
-        # Try to obtain the master key
-        return VALID_UUIDS_CACHE.get(uuid, (None, None))[0]
-
-    def _raise_credentials_exception(self) -> Response:
-        """
-        Raises an HTTPException with the credentials exception.
-
-        This is a shortcut for re-raising the credentials exception that was caught during the
-        middleware processing.
-
-        :return: The raised HTTPException
+        :param app: The ASGI app
+        :param encrypt_response: Whether to encrypt the response
         """
 
-        return Response(
-            content=f'{{"detail": "Middleware processing: {CREDENTIALS_EXCEPTION.detail}"}}'.encode("UTF-8"),
+        self.app = app
+        self.encrypt_response = encrypt_response
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """
+        Handles the request
+
+        :param scope: The scope
+        :param receive: The receive function
+        :param send: The send function
+        """
+
+        # We only handle HTTP requests
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # Check if the route should be encrypted
+        path = scope["path"]
+        method = scope["method"]
+        route_data = ROUTING_TREE.traverse(path).get(method)
+        if route_data is None:
+            # Pass through
+            await self.app(scope, receive, send)
+            return
+
+        # Handle using the actual handler
+        handler = EncryptionHandler(self.app, route_data, self.encrypt_response)
+        await handler(scope, receive, send)
+
+
+class EncryptionHandler:
+    """
+    Handles the encryption of the request and response.
+    """
+
+    def __init__(self, app: ASGIApp, route_data: EncryptedRoute, encrypt_response: bool) -> None:
+        """
+        Constructor
+
+        :param app: The ASGI app
+        :param route_data: The route data
+        :param encrypt_response: Whether to encrypt the response
+        """
+
+        self.app = app
+        self.route_data = route_data
+
+        self._scope: Scope | None = None
+        self._receive: Receive | None = None
+        self._send: Send | None = None
+
+        self._e2ee_key: bytes | None = None
+        self._initial_message: Message | None = None
+        self._should_encrypt_response: bool = self.route_data.encrypted_response and encrypt_response
+
+        self._to_raise_credentials_exception: bool = False
+
+    # Magic methods
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        """
+        Handles the request
+
+        :param scope: The scope
+        :param receive: The receive function
+        :param send: The send function
+        """
+
+        self._scope = scope
+        self._receive = receive
+        self._send = send
+
+        # Try to set the E2EE key using the scope headers
+        self._set_e2ee_key(MutableHeaders(scope=scope))
+        await self.app(scope, self.receive_wrapper, self.send_wrapper)
+
+    # Helper functions
+    async def _raise_credentials_exception(self) -> None:
+        """
+        Raises the credentials exception, returning a JSON response.
+        """
+
+        response = JSONResponse(
+            {"detail": f"Middleware processing: {CREDENTIALS_EXCEPTION.detail}"},
             status_code=CREDENTIALS_EXCEPTION.status_code,
             headers=CREDENTIALS_EXCEPTION.headers,
             media_type="application/json",
         )
+        await response(self._scope, self._receive, self._send)
 
-    async def _decrypt_request(self, request: Request, master_key: bytes) -> Request | None:
+    def _set_e2ee_key(self, headers: MutableHeaders) -> None:
         """
-        Decrypts the incoming request body using the provided master key.
+        Tries to set the E2EE key.
 
-        :param request: The incoming HTTP request containing an encrypted body.
-        :param master_key: The encryption key used to decrypt the request body.
-        :return: A new request object with the decrypted body, or None if decryption fails.
-        """
-
-        # Read the request body
-        request_body = b""
-        async for chunk in request.stream():
-            request_body += chunk
-
-        # Decrypt the request body
-        decrypted_body = decrypt(ExEF.from_serialized(request_body), master_key)
-
-        # Return the decrypted request
-        decrypted_request = Request(
-            scope=request.scope,
-            receive=request.receive,
-        )
-        decrypted_request._body = decrypted_body
-        return decrypted_request
-
-    async def _encrypt_response(
-        self, request: Request, response: Response, master_key: bytes | None = None
-    ) -> Response:
-        """
-        Encrypts the response body of the given response using the provided master key.
-
-        :param request: The incoming HTTP request
-        :param response: The response to encrypt
-        :param master_key: The encryption key used to encrypt the response body. Defaults to None
-        :return: The encrypted response
+        :param headers: The headers
         """
 
-        # Dump the response body
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
+        if self._e2ee_key is not None:
+            return
 
-        # Try to obtain the master key
-        if master_key is None:
-            master_key = self._get_master_key(request, response)
+        # Try to obtain the UUID
+        uuid = None
+        if headers.get("Authorization") is not None:
+            auth = headers.get("Authorization").split(" ")
+            if auth[0] == "Bearer" and len(auth) == 2:
+                # No need to worry about invalid token since the bearer token check passed already
+                # during initial authorization phase
+                uuid = decode_token(auth[1])["sub"]
+        elif headers.get("uuid") is not None:  # Patched in from an endpoint
+            uuid = headers.get("uuid")
+            del headers["uuid"]
 
-        if master_key is None:  # Still no master key
-            return self._raise_credentials_exception()
+        # Try to obtain the E2EE key
+        e2ee_key = VALID_UUIDS_CACHE.get(uuid, (None, None))[0]
 
-        # Encrypt the response body
-        exef = encrypt(response_body, master_key)
-        to_return = exef.serialize_exef()
+        # Update cache
+        self._e2ee_key = e2ee_key
+
+    async def _decrypt_request(self, message: Message) -> None:
+        """
+        Decrypts the request.
+
+        :param message: The message
+        """
+
+        # Decrypt body
+        encrypted_body: bytes = message.get("body", b"")
+        decrypted_body = decrypt(ExEF.from_serialized(encrypted_body), self._e2ee_key)
+        message["body"] = decrypted_body
 
         # Update headers
-        response.headers["Content-Length"] = str(len(to_return))
-        response.headers["Content-Type"] = "application/octet-stream"
-        response.headers.append("Access-Control-Expose-Headers", "X-Encrypted")
-        response.headers.append("X-Encrypted", "true")
+        headers = MutableHeaders(raw=self._scope["headers"])
+        headers["Content-Length"] = str(len(decrypted_body))
+        headers["Content-Type"] = "application/json"  # TODO: Is it always JSON?
+        if "X-Encrypted" in headers:
+            del headers["X-Encrypted"]
 
-        # Return the encrypted response
-        return Response(
-            content=to_return,
-            status_code=response.status_code,
-            headers=dict(response.headers),
-            media_type=response.media_type,
-        )
+        self._scope["headers"] = headers.raw
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        path = request.url.path
-        method = request.method
-        route_data = ROUTING_TREE.traverse(path).get(method)
+    async def _encrypt_response(self, message: Message) -> None:
+        """
+        Encrypts the response and sends it.
 
-        # Check if the route should be encrypted
-        if route_data is None:
-            # Pass through
-            return await call_next(request)
+        :param message: The message
+        """
 
-        # Try and get master key from request only
-        master_key = self._get_master_key(request)
+        message_type = message["type"]
+        if message_type == "http.response.start":
+            # Don't send the initial message until we've determined how to
+            # modify the outgoing headers correctly.
+            self._initial_message = message
+            return
+        if message_type == "http.response.body":
+            # Encrypt body
+            plaintext_body = message.get("body", b"")
+            if plaintext_body == b"":
+                assert 0
+            exef = encrypt(plaintext_body, self._e2ee_key)
+            encrypted_body = exef.serialize_exef()
+            message["body"] = encrypted_body
 
-        # Check if we need to decrypt incoming request
-        if not route_data.encrypted_body:
-            pass
-        elif request.headers.get("X-Encrypted", "false") == "false":
-            pass
-        else:
-            if master_key is None:  # Need to decrypt but no master key
-                return self._raise_credentials_exception()
-            request = await self._decrypt_request(request, master_key)
+            # Update headers
+            headers = MutableHeaders(raw=self._initial_message["headers"])
+            headers["Content-Length"] = str(len(encrypted_body))
+            headers["Content-Type"] = "application/octet-stream"
+            headers["Access-Control-Expose-Headers"] = "X-Encrypted"
+            headers["X-Encrypted"] = "true"
 
-        if request is None:
-            return self._raise_credentials_exception()
+            message["headers"] = headers
 
-        # Call next using decrypted request
-        response = await call_next(request)
+            # Send messages
+            await self._send(self._initial_message)
+            await self._send(message)
+            return
+
+    # Main functions
+    async def receive_wrapper(self) -> Message:
+        """
+        Handles the incoming request.
+
+        :raises NotImplementedError: if the request body is being streamed
+        :return: the message to be passed to the app
+        """
+
+        # Receive full body
+        message = await self._receive()
+        assert message["type"] == "http.request"
+        more_body: bool = message.get("more_body", False)
+        if more_body:
+            # Some implementations (e.g. HTTPX) may send one more empty-body message.
+            # Make sure they don't send one that contains a body, or it means
+            # that clients attempt to stream the request body.
+            message = await self._receive()
+            if message.get("body", b"") != b"":  # pragma: no cover
+                raise NotImplementedError("Streaming the request body isn't supported yet")
+
+        # Check if the incoming request needs to be decrypted
+        if not self.route_data.encrypted_body:
+            return message
+
+        headers = MutableHeaders(scope=self._scope)
+        if headers.get("X-Encrypted", "false") == "false":
+            return message
+
+        # Check for E2EE key
+        if self._e2ee_key is None:
+            # We wanted to decrypt but no key was found...
+            self._to_raise_credentials_exception = True
+            return message
+
+        # Decrypt request
+        await self._decrypt_request(message)
+        return message
+
+    async def send_wrapper(self, message: Message) -> None:
+        """
+        Handles the outgoing response.
+
+        :param message: The message to be sent
+        """
+
+        if self._to_raise_credentials_exception:
+            return await self._raise_credentials_exception()
 
         # Check if need to encrypt response
-        if not route_data.encrypted_response:
-            return response
-        if response.status_code in route_data.excluded_statuses:
-            return response
+        if not self._should_encrypt_response:
+            await self._send(message)
+            return
 
-        return await self._encrypt_response(request, response, master_key=master_key)
+        message_type = message["type"]
+        if message_type == "http.response.start" and message["status"] in self.route_data.excluded_statuses:
+            self._should_encrypt_response = False
+            await self._send(message)
+            return
+
+        if self._e2ee_key is None:
+            # Try again using the headers
+            self._set_e2ee_key(MutableHeaders(scope=message))
+
+        if self._e2ee_key is None:
+            # Wanted to encrypt but still no key found
+            return await self._raise_credentials_exception()
+
+        await self._encrypt_response(message)

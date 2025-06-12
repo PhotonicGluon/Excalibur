@@ -210,7 +210,7 @@ const Login: React.FC = () => {
 
         // Handle vault key
         if (!(await checkVaultKey(apiURL, token)).success) {
-            const vaultKeyCreated = await createVaultKey(apiURL, token, e2eeData.auk, (error) => {
+            const vaultKeyCreated = await createVaultKey(apiURL, token, e2eeData.e2eeKey, e2eeData.auk, (error) => {
                 console.error(error);
                 setIsLoading(false);
                 presentAlert({

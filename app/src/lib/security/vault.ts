@@ -9,6 +9,7 @@ import { getVaultKey, setUpVaultKey } from "@lib/security/api/vault";
  *
  * @param apiURL The URL of the API server to query
  * @param token The token to use for authentication
+ * @param e2eeKey The key used to encrypt the end-to-end encrypted communications
  * @param auk The account unlock key to use for encryption
  * @param onError A function to call if an error occurs, which takes a string argument. The string
  *      will be the error message
@@ -18,6 +19,7 @@ import { getVaultKey, setUpVaultKey } from "@lib/security/api/vault";
 export async function createVaultKey(
     apiURL: string,
     token: string,
+    e2eeKey: Buffer,
     auk: Buffer,
     onError: (error: string) => void,
 ): Promise<boolean> {
@@ -26,7 +28,7 @@ export async function createVaultKey(
     const encryptedVaultKeyData = encrypt(vaultKey, auk);
 
     console.debug("Setting vault key on server...");
-    const vaultKeyResponse = await setUpVaultKey(apiURL, token, {
+    const vaultKeyResponse = await setUpVaultKey(apiURL, token, e2eeKey, {
         alg: encryptedVaultKeyData.alg,
         nonce: encryptedVaultKeyData.nonce,
         encryptedKey: encryptedVaultKeyData.ciphertext,
