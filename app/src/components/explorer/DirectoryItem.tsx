@@ -15,8 +15,13 @@ import {
 } from "@ionic/react";
 import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons";
 
+import { decrypt } from "@lib/crypto";
+import { ExEF } from "@lib/exef";
+import { downloadFile } from "@lib/files/api";
 import { FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
+
+import { useAuth } from "@components/auth/ProvideAuth";
 
 interface ContainerProps extends FileLike {
     /** Size of the item, in bytes */
@@ -30,20 +35,38 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // States
     const slideRef = useRef<HTMLIonItemSlidingElement>(null);
+    const auth = useAuth();
     const router = useIonRouter();
 
     // Functions
     /**
      * Handles the user clicking on a directory item.
      */
-    function onClickItem() {
+    async function onClickItem() {
         if (!isFile) {
             // Navigate into the directory
             router.push(`/files/${props.fullpath}`, "forward", "push");
             return;
         }
 
-        // TODO: Handle file case
+        // Send request for file
+        const response = await downloadFile(auth, props.fullpath);
+        if (!response.success) {
+            // TODO: Raise toast
+            console.error(response.error);
+            return;
+        }
+
+        // Download encrypted file
+        const data = response.data!;
+        const encryptedFileData = Buffer.from(data);
+
+        // Decrypt file
+        const exef = ExEF.fromBuffer(encryptedFileData);
+        const fileData = decrypt(exef, auth.vaultKey!);
+
+        // TODO: Save file
+        console.log(fileData.toString("utf-8"));
     }
 
     /**

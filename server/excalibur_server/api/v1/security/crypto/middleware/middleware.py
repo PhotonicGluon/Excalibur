@@ -128,9 +128,10 @@ class EncryptionHandler:
         if headers.get("Authorization") is not None:
             auth = headers.get("Authorization").split(" ")
             if auth[0] == "Bearer" and len(auth) == 2:
-                # No need to worry about invalid token since the bearer token check passed already
-                # during initial authorization phase
-                uuid = decode_token(auth[1])["sub"]
+                token = decode_token(auth[1])
+                if token is None:
+                    return None
+                uuid = token["sub"]
         elif headers.get("uuid") is not None:  # Patched in from an endpoint
             uuid = headers.get("uuid")
             del headers["uuid"]
