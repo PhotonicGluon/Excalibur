@@ -1,3 +1,4 @@
+import { Device } from "@capacitor/device";
 import React, { useRef } from "react";
 
 import {
@@ -65,8 +66,23 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const exef = ExEF.fromBuffer(encryptedFileData);
         const fileData = decrypt(exef, auth.vaultKey!);
 
-        // TODO: Save file
-        console.log(fileData.toString("utf-8"));
+        // Save file
+        const info = await Device.getInfo();
+        if (info.platform === "web") {
+            // Create a new a element to download the file
+            const a = document.createElement("a");
+            const url = URL.createObjectURL(new Blob([fileData]));
+            a.href = url;
+            a.download = props.name.replace(".exef", "");
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+        } else {
+            // TODO: Handle save on mobile
+        }
     }
 
     /**
