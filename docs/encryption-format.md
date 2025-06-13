@@ -4,16 +4,15 @@ All traffic and files will be encrypted using the Excalibur Encryption Format (E
 
 The following is a diagram of the ExEF format. The numbers represent 0-indexed *byte* positions.
 
-[![](https://mermaid.ink/img/pako:eNpVjctugzAQRX_FmlUq4QiDMeBtmm7aRlVbZVGxcWAKKGAjx0h5KP9eTNqqnd09o3vuBUpTIUgYVLlHR3foVKEJCWksSQHr4_qBPKu6LQvwmNPE4y3aQ2v0jQmaevaIJ_LWnvEGMxrnnm6MLpEsNmPXkRdVVVgRo8lrWzfu7lsZ0mSWvqv6RhJBxby-aocGrcOj-2MWnOaJ_PdcbJVt1a5D8oS6ds1khgBq21YgnR0xgB5tr3yEi3cU4BrsJ6FfqZTde_V16gxKfxjT_9SsGesG5KfqDlMah0o5vG9VbVX_Sy3qCu3KjNqBzDMxS0Be4AgyY0uRpTzjKWcRC3MewAkkS9gyTaI0ZnEURzyKrgGc59VwmaVJOB1jIk-5yOLrF_0Re-c?type=png)](https://mermaid.live/edit#pako:eNpVjctugzAQRX_FmlUq4QiDMeBtmm7aRlVbZVGxcWAKKGAjx0h5KP9eTNqqnd09o3vuBUpTIUgYVLlHR3foVKEJCWksSQHr4_qBPKu6LQvwmNPE4y3aQ2v0jQmaevaIJ_LWnvEGMxrnnm6MLpEsNmPXkRdVVVgRo8lrWzfu7lsZ0mSWvqv6RhJBxby-aocGrcOj-2MWnOaJ_PdcbJVt1a5D8oS6ds1khgBq21YgnR0xgB5tr3yEi3cU4BrsJ6FfqZTde_V16gxKfxjT_9SsGesG5KfqDlMah0o5vG9VbVX_Sy3qCu3KjNqBzDMxS0Be4AgyY0uRpTzjKWcRC3MewAkkS9gyTaI0ZnEURzyKrgGc59VwmaVJOB1jIk-5yOLrF_0Re-c)
+[![](https://mermaid.ink/img/pako:eNpVkLtugzAUhl8FnamVIOJiwPaapkubLqkyVCwOnIBVsJFjpFyUd68NUdV682f_37ncoNYNAodR1N9oowNaUakgiKOMBxVszpvXYCtaWVfgMYlyj_doTlKrhRVR6dkbXoKdvOICaZQwTz-0qh8odc45_SnahWRFROYyazl2aCye7R8FIRHL-b_Hp70wUhx6DN5RtbZ7rgBCGNAMQjZuiJvPVWA7HJzEmxs8iqm33nh3X8Vk9e6iauDWTBiC0VPbAT-K_uRu09gIiy9StEYMv3QUCvgNzsDTOF0xmjBGipSyuEjzEC7ACV2RrMzjskhZxkie3UO4au0M8Yo67k6SFKwkBc1CwEZabbbL1uflzyW-5sDSVWv8NI8OUTVo1npSFnhC0_sPDluCMw?type=png)](https://mermaid.live/edit#pako:eNpVkLtugzAUhl8FnamVIOJiwPaapkubLqkyVCwOnIBVsJFjpFyUd68NUdV682f_37ncoNYNAodR1N9oowNaUakgiKOMBxVszpvXYCtaWVfgMYlyj_doTlKrhRVR6dkbXoKdvOICaZQwTz-0qh8odc45_SnahWRFROYyazl2aCye7R8FIRHL-b_Hp70wUhx6DN5RtbZ7rgBCGNAMQjZuiJvPVWA7HJzEmxs8iqm33nh3X8Vk9e6iauDWTBiC0VPbAT-K_uRu09gIiy9StEYMv3QUCvgNzsDTOF0xmjBGipSyuEjzEC7ACV2RrMzjskhZxkie3UO4au0M8Yo67k6SFKwkBc1CwEZabbbL1uflzyW-5sDSVWv8NI8OUTVo1npSFnhC0_sPDluCMw)
 
 - Bytes `0` to `3` will be the ExEF magic constant. The magic constant is the ASCII string `ExEF`.
-- Bytes `4` and `5` represent the ExEF version, which should be interpreted as an 2-byte unsigned integer.
+- Bytes `4` and `5` represent the ExEF version, which should be interpreted as an 2-byte unsigned integer. The current version is `00 01`.
 - Bytes `6` and `7` represent the AES-GCM key size, which should be interpreted as an 2-byte unsigned integer. There are currently only 3 supported values.
   - The bytes `00 80` represent `aes-128-gcm`.
   - The bytes `00 C0` represent `aes-192-gcm`.
   - The bytes `01 00` represent `aes-256-gcm`.
-- Bytes `8` to `39` represent the nonce used for AES-GCM encryption. Unused bytes are set to null (i.e., the byte `00`) on the right.
-  - For example, a nonce for `aes-192-gcm` will have bytes `8` to `31` filled in with the nonce and bytes `32` to `39` will be null bytes.
-- Bytes `40` to `55` is the 16-byte AES-GCM tag.
-- Bytes `56` to `63` represent the ciphertext length, which should be interpreted as an 8-byte unsigned integer.
+- Bytes `8` to `19` represent the 12-byte nonce used for AES-GCM encryption.
+- Bytes `20` to `35` is the 16-byte AES-GCM tag.
+- Bytes `36` to `43` represent the ciphertext length, which should be interpreted as an 8-byte unsigned integer.
 - The remainder of the message/file is the ciphertext.

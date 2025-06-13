@@ -8,9 +8,9 @@ class ExEF(BaseModel):
     Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
     """
 
-    header_size: ClassVar[int] = 64
+    header_size: ClassVar[int] = 44
+    version: ClassVar[int] = 1
 
-    version: Annotated[int, Field(frozen=True)] = 1
     keysize: Literal[128, 192, 256]
     nonce: bytes
     tag: bytes
@@ -31,6 +31,12 @@ class ExEF(BaseModel):
             raise ValueError("keysize must be 128, 192, or 256")
         return value
 
+    @field_validator("nonce")
+    def validate_nonce(cls, value: bytes) -> bytes:
+        if len(value) != 12:
+            raise ValueError("nonce must be 12 bytes")
+        return value
+
     @field_validator("tag")
     def validate_tag(cls, value: bytes) -> bytes:
         if len(value) != 16:
@@ -47,9 +53,9 @@ class ExEF(BaseModel):
     @model_serializer
     def serialize_exef(self) -> bytes:
         output = b"ExEF"
-        output += self.version.to_bytes(2, "big")
+        output += ExEF.version.to_bytes(2, "big")
         output += self.keysize.to_bytes(2, "big")
-        output += self.nonce.ljust(32, b"\x00")
+        output += self.nonce  # Fixed at 12 bytes
         output += self.tag  # Fixed at 16 bytes
         output += len(self.ciphertext).to_bytes(8, "big")
         output += self.ciphertext
@@ -57,21 +63,25 @@ class ExEF(BaseModel):
 
     @classmethod
     def from_serialized(cls, data: bytes) -> "ExEF":
-        if len(data) <= 64:
-            raise ValueError("data must be at least 64 bytes")
+        if len(data) <= ExEF.header_size:
+            raise ValueError(f"data must be at least {ExEF.header_size} bytes")
 
         if data[:4] != b"ExEF":
             raise ValueError("data must start with ExEF")
 
-        ct = data[64:]
-        ct_len = int.from_bytes(data[56:64], "big")
+        version = int.from_bytes(data[4:6], "big")
+        if version != ExEF.version:
+            raise ValueError(f"version must be {ExEF.version}")
+
+        ct = data[ExEF.header_size :]
+        ct_len = int.from_bytes(data[36:44], "big")
         if len(ct) != ct_len:
             raise ValueError("ciphertext length does not match header")
 
         return cls(
-            version=int.from_bytes(data[4:6], "big"),
+            version=version,
             keysize=int.from_bytes(data[6:8], "big"),
-            nonce=data[8:40].rstrip(b"\x00"),
-            tag=data[40:56],
+            nonce=data[8:20],
+            tag=data[20:36],
             ciphertext=ct,
         )

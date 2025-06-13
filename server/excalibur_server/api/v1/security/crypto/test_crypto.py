@@ -8,9 +8,9 @@ ALGORITHMS = ["aes-128-gcm", "aes-192-gcm", "aes-256-gcm"]
 TEST_DATA = {
     "plaintext": [b"hello world foo bar"] * 3,
     "key": [b"1" * 16, b"1" * 24, b"1" * 32],
-    "nonce": [b"one demo 16B val", b"one demo 24B val, oh wow", b"one demo 32B val, oh wow, oh my!"],
-    "ciphertext": ["a49Y6bWynsEFTKEy7t/GVdeZbw==", "LlxwEapEAxEu6DCRou59v9ZCLg==", "DQIweslwGwPt1/RzOGng6kk3mw=="],
-    "tag": ["8ZdhE+7NuFQoDmIbhxpKcw==", "+vp2LYHo48VwWTI0o1uOSg==", "nNUnGV/B05N/uM3rejAf0w=="],
+    "nonce": [b"one demo 12B"] * 3,
+    "ciphertext": ["HUT7Wpg9GU/r4v9UzJGX/2ORpA==", "4VSXb4RkykkaCtO/LDK6d/gaPQ==", "ULS1EVfQ568dVIfyx09eUHcCmQ=="],
+    "tag": ["60vQUfUmlasTofOiWARzjw==", "23cILL0C1tV3APGCjcR1Xw==", "U3syOuWcA4Ir7IAp18ZHig=="],
 }
 
 

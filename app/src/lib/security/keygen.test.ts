@@ -1,4 +1,4 @@
-import { generateKey, slowHash } from "./keygen";
+import generateKey, { slowHash } from "./keygen";
 
 test("slowHash", async () => {
     const password = "password";

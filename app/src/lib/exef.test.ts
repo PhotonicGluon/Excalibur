@@ -1,16 +1,15 @@
 import { ExEF } from "./exef";
 
 const SAMPLE_EXEF = Buffer.from(
-    "45784546000100c0abababababababababababababababababababababababab0000000000000000cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd000000000000000548454c4c4f",
+    "45784546000100c0ababababababababababababcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd000000000000000548454c4c4f",
     "hex",
 );
 
 test("ExEF parsing", () => {
     const exef = ExEF.fromBuffer(SAMPLE_EXEF);
-    expect(exef.version).toBe(1);
     expect(exef.keysize).toBe(192);
     expect(exef.alg).toBe("aes-192-gcm");
-    expect(exef.nonce.toString("hex")).toBe("abababababababababababababababababababababababab");
+    expect(exef.nonce.toString("hex")).toBe("abababababababababababab");
     expect(exef.tag.toString("hex")).toBe("cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd");
     expect(exef.ciphertext.toString("hex")).toBe("48454c4c4f");
 

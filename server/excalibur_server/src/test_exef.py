@@ -3,22 +3,17 @@ import pytest
 from .exef import ExEF
 
 SAMPLE_EXEF = (
-    b"ExEF"
-    + b"\x00\x01"
-    + b"\x00\xc0"
-    + (b"\xab" * 24 + b"\x00" * 8)
-    + b"\xcd" * 16
-    + b"\x00\x00\x00\x00\x00\x00\x00\x05"
-    + b"HELLO"
+    b"ExEF" + b"\x00\x01" + b"\x00\xc0" + b"\xab" * 12 + b"\xcd" * 16 + b"\x00\x00\x00\x00\x00\x00\x00\x05" + b"HELLO"
 )
 
 
 def test_parse():
     parsed = ExEF.from_serialized(SAMPLE_EXEF)
+    assert len(parsed.serialize_exef()) == len(SAMPLE_EXEF)
     assert parsed.version == 1
     assert parsed.keysize == 192
     assert parsed.alg == "aes-192-gcm"
-    assert parsed.nonce == b"\xab" * 24
+    assert parsed.nonce == b"\xab" * 12
     assert parsed.tag == b"\xcd" * 16
     assert parsed.ciphertext == b"HELLO"
 
