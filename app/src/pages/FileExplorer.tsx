@@ -18,6 +18,7 @@ import {
     IonMenuButton,
     IonPopover,
     IonText,
+    useIonAlert,
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
@@ -35,7 +36,7 @@ import {
 } from "ionicons/icons";
 
 import { encrypt } from "@lib/crypto";
-import { deleteItem, listdir, uploadFile } from "@lib/files/api";
+import { deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 
@@ -58,6 +59,7 @@ const FileExplorer: React.FC = () => {
 
     // States
     const router = useIonRouter();
+    const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
 
@@ -193,6 +195,52 @@ const FileExplorer: React.FC = () => {
         });
     }
 
+    /**
+     * Prompts the user for a folder name, then creates a new folder at the requested path.
+     */
+    function onCreateFolder() {
+        // Ask for user input
+        // TODO: handle validation of input when in the alert
+        presentAlert({
+            header: "Enter Folder Name",
+            inputs: [{ name: "folderName", placeholder: "Folder Name", type: "text" }],
+            buttons: [
+                "Cancel",
+                {
+                    text: "Create",
+                    handler: async (data: { folderName: string }) => {
+                        const folderName = data.folderName;
+
+                        // TODO: Handle the case where the folder already exists
+
+                        // Create the folder
+                        const response = await mkdir(auth, requestedPath, folderName);
+                        if (!response.success) {
+                            presentToast({
+                                message: `Failed to create folder: ${response.error}`,
+                                duration: 3000,
+                                color: "danger",
+                            });
+                            return;
+                        }
+
+                        refreshContents(false);
+                        presentToast({
+                            message: "Folder created",
+                            duration: 3000,
+                        });
+                    },
+                },
+            ],
+        });
+    }
+
+    /**
+     * Handles the user clicking the delete button on a directory item.
+     *
+     * @param path The path of the item to delete
+     * @param isDir If true, the item is a directory. If false, the item is a file.
+     */
     async function onDeleteItem(path: string, isDir: boolean) {
         const response = await deleteItem(auth, path, isDir);
         if (!response.success) {
@@ -312,7 +360,7 @@ const FileExplorer: React.FC = () => {
                             <IonIcon icon={add} />
                         </IonFabButton>
                         <IonFabList side="top">
-                            <IonFabButton aria-label="Create Folder" onClick={() => console.log("TODO: Create folder")}>
+                            <IonFabButton aria-label="Create Folder" onClick={() => onCreateFolder()}>
                                 <IonIcon icon={folderOutline} />
                             </IonFabButton>
                             <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
