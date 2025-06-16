@@ -97,10 +97,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Render
     return (
-        <div className="flex h-16 w-full items-center">
-            <IonItemSliding ref={slideRef} className="w-full">
-                {/* Main item content */}
-                <IonItem button={true} onClick={() => onClickItem()}>
+        <IonItemSliding ref={slideRef} className="w-full">
+            {/* Main item content */}
+            <IonItem button={true} onClick={() => onClickItem()}>
+                <div className="flex h-16 w-full items-center">
                     <IonGrid>
                         <IonRow className="ion-align-items-center">
                             <IonCol className="flex items-center">
@@ -112,16 +112,16 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             </IonCol>
                         </IonRow>
                     </IonGrid>
-                </IonItem>
+                </div>
+            </IonItem>
 
-                {/* Slide options */}
-                <IonItemOptions side="end">
-                    <IonItemOption color="danger" onClick={() => onClickDelete()}>
-                        <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
-                    </IonItemOption>
-                </IonItemOptions>
-            </IonItemSliding>
-        </div>
+            {/* Slide options */}
+            <IonItemOptions side="end">
+                <IonItemOption color="danger" onClick={() => onClickDelete()}>
+                    <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
+                </IonItemOption>
+            </IonItemOptions>
+        </IonItemSliding>
     );
 };
 
