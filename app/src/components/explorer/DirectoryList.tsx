@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
-import { arrowDown, arrowUp } from "ionicons/icons";
+import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
 import { Directory, FileLike } from "@lib/files/structures";
 
@@ -65,16 +65,26 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             {/* Items List */}
             <IonList lines="none">
-                {sortItems().map((item, idx) => (
-                    <DirectoryItem
-                        key={idx}
-                        name={item.name}
-                        fullpath={item.fullpath}
-                        type={item.type}
-                        size={item.type === "file" ? item.size : undefined}
-                        onDelete={props.onDelete}
-                    />
-                ))}
+                {props.items &&
+                    props.items.length > 0 &&
+                    sortItems().map((item, idx) => (
+                        <DirectoryItem
+                            key={idx}
+                            name={item.name}
+                            fullpath={item.fullpath}
+                            type={item.type}
+                            size={item.type === "file" ? item.size : undefined}
+                            onDelete={props.onDelete}
+                        />
+                    ))}
+                {!(props.items && props.items.length > 0) && (
+                    <div className="flex justify-center">
+                        <div className="flex flex-col items-center">
+                            <IonIcon icon={sadOutline} className="size-16 pb-1"></IonIcon>
+                            <IonLabel className="text-lg">No items</IonLabel>
+                        </div>
+                    </div>
+                )}
             </IonList>
         </>
     );

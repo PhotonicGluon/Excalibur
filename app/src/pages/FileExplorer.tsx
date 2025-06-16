@@ -305,7 +305,7 @@ const FileExplorer: React.FC = () => {
                 {/* Header content */}
                 <IonHeader>
                     <IonToolbar className="ion-padding-top flex">
-                        <IonButtons slot="start">
+                        <IonButtons className="w-24" slot="start">
                             <IonMenuButton />
                         </IonButtons>
                         <div className="flex" slot="">
@@ -315,7 +315,7 @@ const FileExplorer: React.FC = () => {
                                 onExpiry={() => handleLogout(false)}
                             />
                         </div>
-                        <IonButtons slot="end">
+                        <IonButtons className="w-24 justify-end" slot="end">
                             {/* Search button */}
                             <IonButton>
                                 {/* TODO: Add functionality */}
