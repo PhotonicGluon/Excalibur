@@ -28,6 +28,11 @@ app.add_middleware(
     RouteEncryptionMiddleware, encrypt_response=os.environ.get("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0"
 )
 
+# Add a file size limit middleware
+from excalibur_server.api.v1.files.middleware import LimitUploadSizeMiddleware
+
+app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=50 * 1024)  # TODO: Increase this limit
+
 # Include routes
 from .files.routes import router as files_router
 from .security.routes import router as security_router
