@@ -4,9 +4,9 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.crypto import decrypt, encrypt
 from excalibur_server.api.v1.security.crypto.middleware.routing import ROUTING_TREE
 from excalibur_server.api.v1.security.crypto.middleware.structures import EncryptedRoute
+from excalibur_server.src.crypto import encrypt, decrypt
 from excalibur_server.src.exef import ExEF
 
 

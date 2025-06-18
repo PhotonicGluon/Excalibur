@@ -14,6 +14,6 @@ def test_check_token():
     assert decoded_data == SAMPLE_DATA
 
     wrong_token = list(token)
-    wrong_token[123] = "A"
+    wrong_token[0] = "A"
     wrong_token = "".join(wrong_token)
     assert decode_token(wrong_token) is None
