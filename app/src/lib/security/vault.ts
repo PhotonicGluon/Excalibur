@@ -72,8 +72,8 @@ export async function retrieveVaultKey(
     const exef = new ExEF(
         algToKeysize(encryptedVaultKey.alg),
         encryptedVaultKey.nonce,
-        encryptedVaultKey.tag,
         encryptedVaultKey.encryptedKey,
+        encryptedVaultKey.tag,
     );
     const vaultKey = decrypt(exef, auk);
 

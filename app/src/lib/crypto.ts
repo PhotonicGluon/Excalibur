@@ -12,7 +12,7 @@ export function encrypt(data: Buffer, masterKey: Buffer, nonce?: Buffer): ExEF {
     const cipher = createCipheriv(algorithm, masterKey, nonce);
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
 
-    return new ExEF(keysize, nonce, cipher.getAuthTag(), encrypted);
+    return new ExEF(keysize, nonce, encrypted, cipher.getAuthTag());
 }
 
 export function decrypt(encryptedData: ExEF, masterKey: Buffer): Buffer {

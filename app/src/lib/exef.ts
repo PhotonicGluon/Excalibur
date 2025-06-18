@@ -26,19 +26,20 @@ export function keysizeToAlg(keysize: KeySize): Algorithm {
  * Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
  */
 export class ExEF {
-    static headerSize: number = 44;
-    static version: number = 1;
+    static headerSize: number = 28;
+    static version: number = 2;
+    static footerSize: number = 16;
 
     keysize: KeySize;
     nonce: Buffer;
     tag: Buffer;
     ciphertext: Buffer;
 
-    constructor(keysize: KeySize, nonce: Buffer, tag: Buffer, ciphertext: Buffer) {
+    constructor(keysize: KeySize, nonce: Buffer, ciphertext: Buffer, tag: Buffer) {
         this.keysize = keysize;
         this.nonce = nonce;
-        this.tag = tag;
         this.ciphertext = ciphertext;
+        this.tag = tag;
     }
 
     // Properties
@@ -54,18 +55,13 @@ export class ExEF {
         buffer.write(ExEF.version.toString(16).padStart(4, "0"), 4, 2, "hex");
         buffer.write(this.keysize.toString(16).padStart(4, "0"), 6, 2, "hex");
         this.nonce.copy(buffer, 8);
-        this.tag.copy(buffer, 20);
-        buffer.write(this.ciphertext.length.toString(16).padStart(16, "0"), 36, 8, "hex");
-        buffer = Buffer.concat([buffer, this.ciphertext]);
+        buffer.write(this.ciphertext.length.toString(16).padStart(16, "0"), 20, 8, "hex");
+        buffer = Buffer.concat([buffer, this.ciphertext, this.tag]);
         return buffer;
     }
 
     static fromBuffer(buffer: Buffer): ExEF {
         console.debug(`Buffer to parse as ExEF: ${buffer.toString("hex")}`);
-        if (buffer.length < ExEF.headerSize) {
-            throw new Error("Invalid ExEF buffer size");
-        }
-
         if (buffer.toString("ascii", 0, 4) !== "ExEF") {
             throw new Error("Invalid ExEF buffer");
         }
@@ -82,10 +78,11 @@ export class ExEF {
 
         const nonce = buffer.subarray(8, 20);
 
-        const tag = buffer.subarray(20, 36);
-        const ciphertextLength = parseInt(buffer.toString("hex", 36, 44), 16);
+        const ciphertextLength = parseInt(buffer.toString("hex", 20, 28), 16);
         const ciphertext = buffer.subarray(ExEF.headerSize, ExEF.headerSize + ciphertextLength);
 
-        return new ExEF(keysize, nonce, tag, ciphertext);
+        const tag = buffer.subarray(ExEF.headerSize + ciphertextLength, ExEF.headerSize + ciphertextLength + 16);
+
+        return new ExEF(keysize, nonce, ciphertext, tag);
     }
 }
