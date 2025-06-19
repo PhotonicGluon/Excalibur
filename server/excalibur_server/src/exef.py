@@ -213,13 +213,13 @@ class ExEF(BaseModel):
         header = ExEFHeader.from_serialized(exef_data[: cls.header_size])
         footer = ExEFFooter.from_serialized(exef_data[-cls.footer_size :])
         if header.keysize != len(key) * 8:
-            raise ValueError(f"keysize must be {len(key) * 8}")
+            raise ValueError(f"keysize must be {header.keysize}")
 
-        ct = exef_data[cls.header_size : cls.header_size + header.ct_len]
+        ciphertext = exef_data[cls.header_size : cls.header_size + header.ct_len]
 
         instance = cls(key=key, nonce=header.nonce)
-        pt = instance.cipher.decrypt_and_verify(ct, footer.tag)
-        return pt
+        plaintext = instance.cipher.decrypt_and_verify(ciphertext, footer.tag)
+        return plaintext
 
     @classmethod
     def decrypt_stream(cls, key: bytes, exef_stream: Iterator[bytes]) -> Generator[None, bytes, None]:
