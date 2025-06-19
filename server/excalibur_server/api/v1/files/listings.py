@@ -38,7 +38,7 @@ def listdir(path: Path, with_exef_header: bool = False) -> Directory | None:
         else:
             size = item.stat().st_size
             if item.suffix == ".exef" and not with_exef_header:
-                size -= ExEF.header_size
+                size -= ExEF.header_size + ExEF.footer_size
 
             mimetype, _ = mimetypes.guess_type(fullpath.removesuffix(".exef"), strict=True)
             items.append(File(name=item.name, fullpath=fullpath, size=size, mimetype=mimetype))

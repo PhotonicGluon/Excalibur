@@ -6,7 +6,6 @@ from excalibur_server.api.v1.security.auth.token import CREDENTIALS_EXCEPTION, d
 from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
 from excalibur_server.api.v1.security.crypto.middleware.routing import ROUTING_TREE
 from excalibur_server.api.v1.security.crypto.middleware.structures import EncryptedRoute
-from excalibur_server.src.crypto import encrypt, decrypt
 from excalibur_server.src.exef import ExEF
 
 
@@ -151,7 +150,7 @@ class EncryptionHandler:
 
         # Decrypt body
         encrypted_body: bytes = message.get("body", b"")
-        decrypted_body = decrypt(ExEF.from_serialized(encrypted_body), self._e2ee_key)
+        decrypted_body = ExEF.decrypt(self._e2ee_key, encrypted_body)
         message["body"] = decrypted_body
 
         # Update headers
@@ -171,6 +170,7 @@ class EncryptionHandler:
         """
 
         message_type = message["type"]
+        print(message_type)
         if message_type == "http.response.start":
             # Don't send the initial message until we've determined how to modify the outgoing headers correctly
             self._initial_message = message
@@ -180,8 +180,8 @@ class EncryptionHandler:
             plaintext_body = message.get("body", b"")
             if plaintext_body == b"":
                 assert 0
-            exef = encrypt(plaintext_body, self._e2ee_key)
-            encrypted_body = exef.serialize_exef()
+            exef = ExEF(self._e2ee_key)
+            encrypted_body = exef.encrypt(plaintext_body)
             message["body"] = encrypted_body
 
             # Update headers
@@ -208,16 +208,16 @@ class EncryptionHandler:
         """
 
         # Receive full body
-        message = await self._receive()
-        assert message["type"] == "http.request"
-        more_body: bool = message.get("more_body", False)
-        if more_body:
-            # Some implementations (e.g. HTTPX) may send one more empty-body message.
-            # Make sure they don't send one that contains a body, or it means
-            # that clients attempt to stream the request body.
+        # TODO: One day, we will properly stream this...
+        more_body = True
+        full_body = b""
+        while more_body:
             message = await self._receive()
-            if message.get("body", b"") != b"":  # pragma: no cover
-                raise NotImplementedError("Streaming the request body isn't supported yet")
+            assert message["type"] == "http.request"
+            full_body += message.get("body", b"")
+            more_body: bool = message.get("more_body", False)
+
+        message["body"] = full_body
 
         # Check if the incoming request needs to be decrypted
         if not self.route_data.encrypted_body:
