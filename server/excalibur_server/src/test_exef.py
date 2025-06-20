@@ -2,16 +2,17 @@ import pytest
 
 from .exef import ExEF, ExEFFooter, ExEFHeader
 
+KEY = b"1" * 24
+NONCE = b"\xab" * 12
 SAMPLE_EXEF = (
     b"ExEF"
     + b"\x00\x02"
     + b"\x00\xc0"
-    + b"\xab" * 12
+    + NONCE
     + b"\x00\x00\x00\x00\x00\x00\x00\x05"
     + bytes.fromhex("2e3aa84b6a")  # HELLO, encrypted
     + bytes.fromhex("21eec34610517ba0479a0ed0dd374cba")
 )
-KEY = b"1" * 24
 
 
 def test_parsing():
@@ -19,7 +20,7 @@ def test_parsing():
     header = ExEFHeader.from_serialized(SAMPLE_EXEF[: ExEFHeader.header_size])
 
     assert header.keysize == 192
-    assert header.nonce == b"\xab" * 12
+    assert header.nonce == NONCE
     assert header.ct_len == 5
 
     # Parse footer
@@ -28,12 +29,12 @@ def test_parsing():
 
 
 def test_encrypt():
-    parsed = ExEF(key=KEY, nonce=b"\xab" * 12)
+    parsed = ExEF(key=KEY, nonce=NONCE)
     assert parsed.encrypt(b"HELLO") == SAMPLE_EXEF
 
 
 def test_encrypt_stream():
-    parsed = ExEF(key=KEY, nonce=b"\xab" * 12)
+    parsed = ExEF(key=KEY, nonce=NONCE)
     iterable = iter([b"HE", b"L", b"LO"])
 
     output = b""

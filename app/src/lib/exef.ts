@@ -29,7 +29,7 @@ export function keysizeToAlg(keysize: KeySize): Algorithm {
 /**
  * ExEF header.
  */
-class ExEFHeader {
+export class ExEFHeader {
     /** Size of the ExEF header, in bytes */
     static headerSize: number = 28;
 
@@ -53,9 +53,9 @@ class ExEFHeader {
         let buffer = Buffer.alloc(ExEFHeader.headerSize);
         buffer.write("ExEF", 0, 4);
         buffer.write(EXEF_VERSION.toString(16).padStart(4, "0"), 4, 2, "hex");
-        buffer.write(this.keysize.toString(16).padStart(4, "0"), 4, 2, "hex");
+        buffer.write(this.keysize.toString(16).padStart(4, "0"), 6, 2, "hex");
         this.nonce.copy(buffer, 8);
-        buffer.write(this.ctLen.toString(16).padStart(16, "0"), 20, 4, "hex");
+        buffer.write(this.ctLen.toString(16).padStart(16, "0"), 20, 8, "hex");
         return buffer;
     }
 
@@ -91,7 +91,7 @@ class ExEFHeader {
 /**
  * ExEF footer.
  */
-class ExEFFooter {
+export class ExEFFooter {
     /** Size of the ExEF footer, in bytes */
     static footerSize: number = 16;
 
@@ -125,7 +125,7 @@ class ExEFFooter {
 /**
  * Class that wraps the values needed for the Excalibur Encryption Format (ExEF).
  */
-export class ExEF {
+export default class ExEF {
     static headerSize: number = ExEFHeader.headerSize;
     static footerSize: number = ExEFFooter.footerSize;
     static version: number = EXEF_VERSION;
