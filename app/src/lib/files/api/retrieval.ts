@@ -1,4 +1,4 @@
-import { decryptResponse } from "@lib/crypto";
+import ExEF from "@lib/exef";
 import { Directory } from "@lib/files/structures";
 
 import { AuthProvider } from "@components/auth/ProvideAuth";
@@ -35,7 +35,7 @@ export async function listdir(
             return { success: false, error: "Unknown error" };
     }
 
-    const directory = await decryptResponse<Directory>(response, auth.e2eeKey!);
+    const directory = await ExEF.decryptResponse<Directory>(auth.e2eeKey!, response);
     return { success: true, directory };
 }
 
@@ -63,6 +63,6 @@ export async function downloadFile(
             throw new Error("Unknown error");
     }
 
-    const data = await decryptResponse<Uint8Array>(response, auth.e2eeKey!, false);
+    const data = await ExEF.decryptResponse<Uint8Array>(auth.e2eeKey!, response, false);
     return { success: true, data: data };
 }

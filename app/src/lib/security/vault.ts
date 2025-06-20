@@ -1,7 +1,6 @@
 import { randomBytes } from "crypto";
 
-import { decrypt, encrypt } from "@lib/crypto";
-import { ExEF, algToKeysize } from "@lib/exef";
+import ExEF from "@lib/exef";
 import { getVaultKey, setUpVaultKey } from "@lib/security/api/vault";
 
 /**
@@ -25,15 +24,11 @@ export async function createVaultKey(
 ): Promise<boolean> {
     console.debug("Creating new vault key");
     const vaultKey = randomBytes(32);
-    const encryptedVaultKeyData = encrypt(vaultKey, auk);
+    const exef = new ExEF(auk);
+    const encryptedVaultKey = exef.encrypt(vaultKey);
 
     console.debug("Setting vault key on server...");
-    const vaultKeyResponse = await setUpVaultKey(apiURL, token, e2eeKey, {
-        alg: encryptedVaultKeyData.alg,
-        nonce: encryptedVaultKeyData.nonce,
-        encryptedKey: encryptedVaultKeyData.ciphertext,
-        tag: encryptedVaultKeyData.tag,
-    });
+    const vaultKeyResponse = await setUpVaultKey(apiURL, token, e2eeKey, encryptedVaultKey);
     if (!vaultKeyResponse.success) {
         onError(`Could not set vault key: ${vaultKeyResponse.error}`);
         return false;
@@ -69,13 +64,7 @@ export async function retrieveVaultKey(
     const encryptedVaultKey = vaultKeyResponse.encryptedKey!;
 
     console.debug("Decrypting obtained vault key...");
-    const exef = new ExEF(
-        algToKeysize(encryptedVaultKey.alg),
-        encryptedVaultKey.nonce,
-        encryptedVaultKey.encryptedKey,
-        encryptedVaultKey.tag,
-    );
-    const vaultKey = decrypt(exef, auk);
+    const vaultKey = ExEF.decrypt(auk, encryptedVaultKey.encryptedKey);
 
     console.debug(`Vault key: ${vaultKey.toString("hex")}`);
     return vaultKey;

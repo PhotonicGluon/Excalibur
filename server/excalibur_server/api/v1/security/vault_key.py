@@ -1,6 +1,8 @@
 import json
 from base64 import b64decode
+from datetime import datetime
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, field_serializer
 
@@ -11,24 +13,33 @@ VAULT_KEY_FILE = ROOT_FOLDER / "vault.key"
 
 
 class EncryptedVaultKey(BaseModel):
-    alg: str
-    nonce: bytes
-    key_enc: bytes  # Key, encrypted
-    tag: bytes
+    version: ClassVar[int] = 1
 
-    @field_serializer("nonce", "key_enc", "tag")
+    timestamp: int
+    key_enc: bytes  # Encrypted vault key as an ExEF stream
+
+    @field_serializer("key_enc")
     def serialize_encryption_stuff(self, a_bytes: bytes, _info) -> str:
         return serialize_bytes(a_bytes)
 
     @classmethod
-    def from_base64s(cls, obj: dict[str, str]) -> "EncryptedVaultKey":
-        assert "alg" in obj and "nonce" in obj and "key_enc" in obj and "tag" in obj
+    def from_serialized(cls, obj: dict[str, str]) -> "EncryptedVaultKey":
+        assert "timestamp" in obj and "key_enc" in obj
         return EncryptedVaultKey(
-            alg=obj["alg"],
-            nonce=b64decode(obj["nonce"]),
+            timestamp=int(obj["timestamp"]),
             key_enc=b64decode(obj["key_enc"]),
-            tag=b64decode(obj["tag"]),
         )
+
+
+def check_vault_key(vault_key_file: Path = VAULT_KEY_FILE) -> bool:
+    """
+    Checks if the vault key file exists.
+
+    :param vault_key_file: The file to check. Defaults to VAULT_KEY_FILE
+    :return: True if the file exists
+    """
+
+    return vault_key_file.exists()
 
 
 def get_vault_key(vault_key_file: Path = VAULT_KEY_FILE) -> EncryptedVaultKey:
@@ -40,16 +51,17 @@ def get_vault_key(vault_key_file: Path = VAULT_KEY_FILE) -> EncryptedVaultKey:
     """
 
     with open(vault_key_file, "r") as f:
-        return EncryptedVaultKey.from_base64s(json.loads(f.read()))
+        return EncryptedVaultKey.from_serialized(json.loads(f.read()))
 
 
-def set_vault_key(encrypted_vault_key: EncryptedVaultKey, vault_key_file: Path = VAULT_KEY_FILE):
+def set_vault_key(key_enc: bytes, vault_key_file: Path = VAULT_KEY_FILE):
     """
     Writes the given vault key details to the given file.
 
-    :param encrypted_vault_key: The vault key details to write.
+    :param key_enc: The vault key as an ExEF stream
     :param vault_key_file: The file to write to, defaults to VAULT_KEY_FILE
     """
 
+    encrypted_vault_key = EncryptedVaultKey(timestamp=int(datetime.now().timestamp()), key_enc=key_enc)
     with open(vault_key_file, "w") as f:
         f.write(encrypted_vault_key.model_dump_json())

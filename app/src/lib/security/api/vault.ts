@@ -1,11 +1,10 @@
-import { decryptResponse, encryptJSON } from "@lib/crypto";
-import { Algorithm } from "@lib/exef";
+import ExEF from "@lib/exef";
 
 export interface EncryptedVaultKey {
-    alg: Algorithm;
-    nonce: Buffer;
+    /** Timestamp of when the vault key was set */
+    timestamp: number;
+    /** Encrypted vault key as an ExEF stream */
     encryptedKey: Buffer;
-    tag: Buffer;
 }
 
 /**
@@ -63,21 +62,13 @@ export async function getVaultKey(
         default:
             return { success: false, error: "Unknown error" };
     }
-    const data = await decryptResponse<{
-        alg: Algorithm;
-        nonce: string;
-        key_enc: string;
-        tag: string;
-    }>(response, e2eeKey);
 
-    // Format for returning
-    const encryptedKey: EncryptedVaultKey = {
-        alg: data.alg,
-        nonce: Buffer.from(data.nonce, "base64"),
+    const data = await ExEF.decryptResponse<{ timestamp: number; key_enc: string }>(e2eeKey, response);
+    const encryptedData = {
+        timestamp: data.timestamp,
         encryptedKey: Buffer.from(data.key_enc, "base64"),
-        tag: Buffer.from(data.tag, "base64"),
     };
-    return { success: true, encryptedKey: encryptedKey };
+    return { success: true, encryptedKey: encryptedData };
 }
 
 /**
@@ -86,7 +77,7 @@ export async function getVaultKey(
  * @param apiURL The URL of the API server to query
  * @param token Authentication token for accessing the server
  * @param e2eeKey The key used to encrypt the end-to-end encrypted communications
- * @param encryptedVaultKey The vault key details to set
+ * @param encryptedVaultKey The vault key details to set as an ExEF stream
  * @returns A promise which resolves to an object containing the success status and an optional
  *      error message
  */
@@ -94,26 +85,21 @@ export async function setUpVaultKey(
     apiURL: string,
     token: string,
     e2eeKey: Buffer,
-    encryptedVaultKey: EncryptedVaultKey,
+    encryptedVaultKey: Buffer,
 ): Promise<{ success: boolean; error?: string }> {
     // Encrypt body
-    const data = {
-        alg: encryptedVaultKey.alg,
-        nonce: encryptedVaultKey.nonce.toString("base64"),
-        key_enc: encryptedVaultKey.encryptedKey.toString("base64"),
-        tag: encryptedVaultKey.tag.toString("base64"),
-    };
-    const exef = encryptJSON(data, e2eeKey);
+    const exef = new ExEF(e2eeKey);
+    const data = exef.encrypt(encryptedVaultKey);
 
     // Send request
     const response = await fetch(`${apiURL}/security/vault-key`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/octet-stream",
             Authorization: `Bearer ${token}`,
             "X-Encrypted": "true",
+            "X-Content-Type": "application/octet-stream",
         },
-        body: exef.toBuffer(),
+        body: data,
     });
 
     switch (response.status) {

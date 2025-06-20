@@ -5,7 +5,7 @@ from fastapi import Body, Depends, HTTPException, status
 
 from excalibur_server.api.v1.security.auth.token import check_credentials
 from excalibur_server.api.v1.security.routes import router
-from excalibur_server.api.v1.security.vault_key import VAULT_KEY_FILE, EncryptedVaultKey, get_vault_key, set_vault_key
+from excalibur_server.api.v1.security.vault_key import EncryptedVaultKey, check_vault_key, get_vault_key, set_vault_key
 
 
 @router.head(
@@ -23,7 +23,7 @@ def check_vault_key_endpoint():
     Endpoint that checks if the vault key file exists.
     """
 
-    if not VAULT_KEY_FILE.exists():
+    if not check_vault_key():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
 
 
@@ -40,10 +40,10 @@ def check_vault_key_endpoint():
 )
 def get_vault_key_endpoint():
     """
-    Endpoint that returns the vault key.
+    Endpoint that returns the encrypted vault key as a Base64-encoded ExEF stream.
     """
 
-    if not VAULT_KEY_FILE.exists():
+    if not check_vault_key():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
 
     return get_vault_key()
@@ -63,36 +63,22 @@ def get_vault_key_endpoint():
     tags=["encrypted"],
 )
 def set_vault_key_endpoint(
-    alg: Annotated[
-        str,
-        Body(description="The algorithm used to encrypt the vault key."),
-    ],
-    nonce: Annotated[
-        str,
-        Body(description="Base64 string of the nonce used to encrypt the vault key."),
-    ],
     key_enc: Annotated[
-        str,
+        bytes,
         Body(
-            description="Base64 string of the **encrypted** vault key. The vault key should have been encrypted using the Account Unlock Key (AUK)."
+            description="Encrypted vault key as an ExEF stream. The vault key should have been encrypted using the Account Unlock Key (AUK)."
         ),
-    ],
-    tag: Annotated[
-        str,
-        Body(description="Base64 string of the tag used to encrypt the vault key."),
     ],
 ):
     """
     Endpoint that sets the vault key.
     """
 
-    if VAULT_KEY_FILE.exists():
+    if check_vault_key():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Vault key file already exists")
 
     try:
-        set_vault_key(
-            EncryptedVaultKey.from_base64s({"alg": alg, "nonce": nonce, "key_enc": key_enc, "tag": tag}),
-        )
+        set_vault_key(key_enc)
     except binascii.Error as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 

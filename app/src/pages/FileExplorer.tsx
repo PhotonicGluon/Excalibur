@@ -35,7 +35,7 @@ import {
     search,
 } from "ionicons/icons";
 
-import { encrypt } from "@lib/crypto";
+import ExEF from "@lib/exef";
 import { deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
@@ -172,8 +172,9 @@ const FileExplorer: React.FC = () => {
         }
 
         // Encrypt the file
-        const exef = encrypt(rawFileData, auth.vaultKey!);
-        const encryptedFile = new File([exef.toBuffer()], rawFile.name + ".exef");
+        const exef = new ExEF(auth.vaultKey!);
+        const encryptedFileData = exef.encrypt(rawFileData);
+        const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
 
         // Upload the file
         // TODO: Handle the case where the file already exists

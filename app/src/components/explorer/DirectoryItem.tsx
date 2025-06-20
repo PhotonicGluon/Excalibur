@@ -16,8 +16,7 @@ import {
 } from "@ionic/react";
 import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons";
 
-import { decrypt } from "@lib/crypto";
-import { ExEF } from "@lib/exef";
+import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
@@ -63,8 +62,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const encryptedFileData = Buffer.from(data);
 
         // Decrypt file
-        const exef = ExEF.fromBuffer(encryptedFileData);
-        const fileData = decrypt(exef, auth.vaultKey!);
+        const fileData = ExEF.decrypt(auth.vaultKey!, encryptedFileData);
 
         // Save file
         const info = await Device.getInfo();

@@ -2,8 +2,8 @@ import { CipherCCM, DecipherCCM, createCipheriv, createDecipheriv, randomBytes }
 
 const EXEF_VERSION = 2;
 
-export type KeySize = 128 | 192 | 256;
-export type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
+type KeySize = 128 | 192 | 256;
+type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
 
 /**
  * Converts algorithm to keysize.
@@ -11,7 +11,7 @@ export type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
  * @param alg Algorithm type
  * @returns Keysize
  */
-export function algToKeysize(alg: Algorithm): KeySize {
+function algToKeysize(alg: Algorithm): KeySize {
     const matches = alg.match(/aes-(?<keysize>128|192|256)-gcm/)!;
     return parseInt(matches.groups!.keysize) as KeySize;
 }
@@ -22,7 +22,7 @@ export function algToKeysize(alg: Algorithm): KeySize {
  * @param keysize Key size
  * @returns Algorithm type
  */
-export function keysizeToAlg(keysize: KeySize): Algorithm {
+function keysizeToAlg(keysize: KeySize): Algorithm {
     return `aes-${keysize}-gcm`;
 }
 

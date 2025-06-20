@@ -1,4 +1,4 @@
-import { decryptResponse } from "@lib/crypto";
+import ExEF from "@lib/exef";
 
 /**
  * Generates a token for continued authentication.
@@ -27,7 +27,7 @@ export async function login(
             return { success: false, error: "Unknown error" };
     }
 
-    const data = await decryptResponse<{ token: string }>(response, masterKey);
+    const data = await ExEF.decryptResponse<{ token: string }>(masterKey, response);
 
     return {
         success: true,

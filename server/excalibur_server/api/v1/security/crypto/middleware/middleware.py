@@ -156,7 +156,9 @@ class EncryptionHandler:
         # Update headers
         headers = MutableHeaders(raw=self._scope["headers"])
         headers["Content-Length"] = str(len(decrypted_body))
-        headers["Content-Type"] = "application/json"  # TODO: Is it always JSON?
+        if "X-Content-Type" in headers:
+            headers["Content-Type"] = headers["X-Content-Type"]
+            del headers["X-Content-Type"]
         if "X-Encrypted" in headers:
             del headers["X-Encrypted"]
 
