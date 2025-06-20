@@ -1,6 +1,8 @@
 import pytest
 
-from .exef import ExEF, ExEFFooter, ExEFHeader
+from .exef import ExEF
+from .structures import Header, Footer
+
 
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
@@ -17,45 +19,52 @@ SAMPLE_EXEF = (
 
 def test_parsing():
     # Parse header
-    header = ExEFHeader.from_serialized(SAMPLE_EXEF[: ExEFHeader.header_size])
+    header = Header.from_serialized(SAMPLE_EXEF[: Header.size])
 
     assert header.keysize == 192
     assert header.nonce == NONCE
     assert header.ct_len == 5
 
     # Parse footer
-    footer = ExEFFooter.from_serialized(SAMPLE_EXEF[-ExEFFooter.footer_size :])
+    footer = Footer.from_serialized(SAMPLE_EXEF[-Footer.size :])
     assert footer.tag == bytes.fromhex("21eec34610517ba0479a0ed0dd374cba")
 
 
 def test_encrypt():
-    parsed = ExEF(key=KEY, nonce=NONCE)
-    assert parsed.encrypt(b"HELLO") == SAMPLE_EXEF
+    ct_test = ExEF(KEY, nonce=NONCE).encrypt(b"HELLO")
+    assert ct_test == SAMPLE_EXEF
 
 
 def test_encrypt_stream():
-    parsed = ExEF(key=KEY, nonce=NONCE)
     iterable = iter([b"HE", b"L", b"LO"])
 
-    output = b""
-    for chunk in parsed.encrypt_stream(5, iterable):
-        output += chunk
+    encryptor = ExEF(KEY, nonce=NONCE).encryptor
+    encryptor.set_params(ct_len=5)
+
+    output = encryptor.get()  # Header
+    for chunk in iterable:
+        encryptor.update(chunk)
+        output += encryptor.get()
+    output += encryptor.get()  # Footer
 
     assert output == SAMPLE_EXEF
 
 
 def test_decrypt():
-    pt_test = ExEF.decrypt(KEY, SAMPLE_EXEF)
+    pt_test = ExEF(KEY).decrypt(SAMPLE_EXEF)
     assert pt_test == b"HELLO"
 
 
 def test_decrypt_stream():
     iterable = iter([SAMPLE_EXEF[i : i + 2] for i in range(0, len(SAMPLE_EXEF), 2)])
 
+    decryptor = ExEF(KEY).decryptor
     output = b""
-    for chunk in ExEF.decrypt_stream(KEY, iterable):
-        output += chunk
+    for chunk in iterable:
+        decryptor.update(chunk)
+        output += decryptor.get()
 
+    decryptor.verify()
     assert output == b"HELLO"
 
 
