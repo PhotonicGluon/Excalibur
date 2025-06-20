@@ -57,12 +57,23 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        // Download encrypted file
-        const data = response.data!;
-        const encryptedFileData = Buffer.from(data);
+        // Compute final file size
+        const encryptedFileSize = response.fileSize!;
+        const fileSize = encryptedFileSize - ExEF.additionalSize;
 
         // Decrypt file
-        const fileData = ExEF.decrypt(auth.vaultKey!, encryptedFileData);
+        const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
+        const reader = fileDataStream.getReader();
+        let fileData: Buffer = Buffer.from([]);
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            fileData = Buffer.concat([fileData, value]);
+            // TODO: Add progress bar
+            console.debug(`Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100})`);
+        }
 
         // Save file
         const info = await Device.getInfo();

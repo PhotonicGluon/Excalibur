@@ -172,6 +172,7 @@ const FileExplorer: React.FC = () => {
         }
 
         // Encrypt the file
+        // TODO: Stream this
         const exef = new ExEF(auth.vaultKey!);
         const encryptedFileData = exef.encrypt(rawFileData);
         const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");

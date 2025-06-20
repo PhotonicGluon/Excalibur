@@ -55,7 +55,6 @@ test("ExEF decrypt", () => {
 });
 
 test("ExEF decrypt stream", async () => {
-    const parsed = new ExEF(KEY, NONCE);
     const iterable = new ReadableStream({
         start(controller) {
             for (let i = 0; i < SAMPLE_EXEF.length / 2; i++) {

@@ -128,6 +128,7 @@ export class ExEFFooter {
 export default class ExEF {
     static headerSize: number = ExEFHeader.headerSize;
     static footerSize: number = ExEFFooter.footerSize;
+    static additionalSize: number = ExEFHeader.headerSize + ExEFFooter.footerSize;
     static version: number = EXEF_VERSION;
 
     /** Encryption key */
@@ -271,8 +272,8 @@ export default class ExEF {
      * @throws {Error} If the ciphertext is not received properly
      * @throws {Error} If the data cannot be decrypted (e.g., tag mismatch)
      */
-    static decryptStream(key: Buffer, exefStream: ReadableStream<Buffer>): ReadableStream<Buffer> {
-        return new ReadableStream<Buffer>({
+    static decryptStream(key: Buffer, exefStream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+        return new ReadableStream<Uint8Array>({
             async start(controller) {
                 const reader = exefStream.getReader();
 
@@ -306,7 +307,7 @@ export default class ExEF {
                         throw new Error("ciphertext not fully received");
                     }
                     if (value.length >= remainingLen) {
-                        lastPart = value.subarray(remainingLen);
+                        lastPart = Buffer.from(value).subarray(remainingLen);
                         controller.enqueue(cipher.update(value.subarray(0, remainingLen)));
                         remainingLen = 0;
                     } else {

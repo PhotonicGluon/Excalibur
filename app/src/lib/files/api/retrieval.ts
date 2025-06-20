@@ -39,10 +39,18 @@ export async function listdir(
     return { success: true, directory };
 }
 
+/**
+ * Downloads a file from the server.
+ *
+ * @param auth The current authentication provider.
+ * @param path The path to the file to download.
+ * @returns A promise which resolves to an object with a success boolean and optionally an error
+ *      message, or the file size and ReadableStream of the decrypted file data.
+ */
 export async function downloadFile(
     auth: AuthProvider,
     path: string,
-): Promise<{ success: boolean; error?: string; data?: Uint8Array }> {
+): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
     const response = await fetch(`${auth.apiURL}/files/download/${path}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${auth.token}` },
@@ -63,6 +71,7 @@ export async function downloadFile(
             throw new Error("Unknown error");
     }
 
-    const data = await ExEF.decryptResponse<Uint8Array>(auth.e2eeKey!, response, false);
-    return { success: true, data: data };
+    const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
+    const dataStream = ExEF.decryptStream(auth.e2eeKey!, response.body!);
+    return { success: true, fileSize: fileSize, dataStream: dataStream };
 }

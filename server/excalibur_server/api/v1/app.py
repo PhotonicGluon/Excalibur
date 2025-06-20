@@ -31,7 +31,7 @@ app.add_middleware(
 # Add a file size limit middleware
 from excalibur_server.api.v1.files.middleware import LimitUploadSizeMiddleware
 
-app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=100_000 * 1024)  # TODO: Increase this limit
+app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=100_000 * 1024)  # 100 MiB
 
 # Include routes
 from .files.routes import router as files_router
