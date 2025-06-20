@@ -18,6 +18,8 @@ class ExEF(BaseModel):
     """Size of the ExEF header, in bytes"""
     footer_size: ClassVar[int] = Footer.size
     """Size of the ExEF footer, in bytes"""
+    additional_size: ClassVar[int] = header_size + footer_size
+    """Size of the ExEF additional data, in bytes"""
     version: ClassVar[int] = EXEF_VERSION
     """ExEF version number"""
 

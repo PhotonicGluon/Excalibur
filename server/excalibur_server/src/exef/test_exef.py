@@ -39,7 +39,7 @@ def test_encrypt_stream():
     iterable = iter([b"HE", b"L", b"LO"])
 
     encryptor = ExEF(KEY, nonce=NONCE).encryptor
-    encryptor.set_params(ct_len=5)
+    encryptor.set_params(length=5)
 
     output = encryptor.get()  # Header
     for chunk in iterable:

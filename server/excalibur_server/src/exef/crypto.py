@@ -47,16 +47,30 @@ class Encryptor:
 
         return self._cipher
 
+    @property
+    def fully_processed(self) -> bool:
+        """
+        Checks if the encryptor has processed all parts of the message.
+
+        :raises ValueError: If parameters are not set
+        :return: True if the encryptor has processed all parts of the message, False otherwise
+        """
+
+        if self._ct_len == -1:
+            raise ValueError("parameters must be set")
+        return self._ct_sent_len == self._ct_len
+
     # Public methods
-    def set_params(self, ct_len: int):
+    def set_params(self, *, length: int):
         """
         Sets the parameters for the encryption process.
 
-        :param ct_len: The length of the ciphertext to be encrypted.
+        :param length: The length of the plaintext to be encrypted.
         :raises ValueError: If parameters are set before requesting the cipher.
         """
-        self._ct_len = ct_len
-        self._header = Header(keysize=len(self.key) * 8, nonce=self._nonce, ct_len=ct_len)
+
+        self._ct_len = length  # Ciphertext length is equal to plaintext length
+        self._header = Header(keysize=len(self.key) * 8, nonce=self._nonce, ct_len=length)
 
     def update(self, data: bytes):
         """
@@ -106,7 +120,7 @@ class Encryptor:
         :return: The encrypted ciphertext as bytes.
         """
 
-        self.set_params(ct_len=len(pt))
+        self.set_params(length=len(pt))
         self.update(pt)
         output = self.get() + self.get() + self.get()  # First is header, then body, then footer
         return output
@@ -153,6 +167,16 @@ class Decryptor:
             self._cipher = AES.new(self.key, AES.MODE_GCM, nonce=self._header.nonce)
 
         return self._cipher
+
+    @property
+    def fully_processed(self) -> bool:
+        """
+        Checks if the decryptor has processed all parts of the message.
+
+        :return: True if the decryptor has processed all parts of the message, False otherwise.
+        """
+
+        return self._header is not None and self._footer is not None
 
     # Public methods
     def update(self, data: bytes):
