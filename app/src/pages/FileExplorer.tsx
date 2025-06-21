@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import {
+    AlertInput,
     IonBreadcrumb,
     IonBreadcrumbs,
     IonButton,
@@ -36,7 +37,7 @@ import {
 } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
-import { deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
+import { checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 
@@ -205,21 +206,46 @@ const FileExplorer: React.FC = () => {
         // TODO: handle validation of input when in the alert
         presentAlert({
             header: "Enter Folder Name",
-            inputs: [{ name: "folderName", placeholder: "Folder Name", type: "text" }],
+            inputs: [{ type: "text", name: "folderName", placeholder: "Folder Name" }],
             buttons: [
                 "Cancel",
                 {
                     text: "Create",
                     handler: async (data: { folderName: string }) => {
                         const folderName = data.folderName;
+                        if (folderName === "") {
+                            presentToast({
+                                message: "Folder name cannot be empty",
+                                duration: 3000,
+                                color: "danger",
+                            });
+                            return;
+                        }
 
-                        // TODO: Handle the case where the folder already exists
+                        // Check if folder exists
+                        const checkResponse = await checkPath(auth, `${requestedPath}/${folderName}`);
+                        if (!checkResponse.success && checkResponse.error === "Illegal or invalid path") {
+                            presentToast({
+                                message: "Illegal or invalid folder name",
+                                duration: 3000,
+                                color: "danger",
+                            });
+                            return;
+                        }
+                        if (checkResponse.success && checkResponse.type === "directory") {
+                            presentToast({
+                                message: "Folder already exists",
+                                duration: 3000,
+                                color: "danger",
+                            });
+                            return;
+                        }
 
                         // Create the folder
-                        const response = await mkdir(auth, requestedPath, folderName);
-                        if (!response.success) {
+                        const mkdirResponse = await mkdir(auth, requestedPath, folderName);
+                        if (!mkdirResponse.success) {
                             presentToast({
-                                message: `Failed to create folder: ${response.error}`,
+                                message: `Failed to create folder: ${mkdirResponse.error}`,
                                 duration: 3000,
                                 color: "danger",
                             });

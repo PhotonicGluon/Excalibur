@@ -332,7 +332,6 @@ export default class ExEF {
                 }
 
                 // Check tag
-                console.log(buffer);
                 const footer = ExEFFooter.fromBuffer(buffer);
                 cipher.setAuthTag(footer.tag);
                 controller.enqueue(cipher.final());

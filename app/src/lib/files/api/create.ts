@@ -73,6 +73,8 @@ export async function mkdir(
         case 201:
             // Continue with normal flow
             break;
+        case 400:
+            return { success: false, error: "Illegal or invalid directory name" };
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:

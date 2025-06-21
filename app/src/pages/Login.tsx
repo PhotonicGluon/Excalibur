@@ -251,6 +251,7 @@ const Login: React.FC = () => {
     return (
         <IonPage>
             <IonContent class="w-full">
+                {/* Main container */}
                 <div className="mx-auto flex w-4/5 flex-col pt-4">
                     <h1>Login</h1>
                     <form>

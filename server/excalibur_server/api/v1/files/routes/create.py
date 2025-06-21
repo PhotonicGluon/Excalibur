@@ -64,6 +64,7 @@ async def upload_file_endpoint(
     "/mkdir/{path:path}",
     name="Create Directory",
     responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Illegal or invalid directory name"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
@@ -84,6 +85,11 @@ async def create_directory_endpoint(
 
     if not (user_path.exists() and user_path.is_dir()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
+
+    # Check if new directory causes issues
+    dir_path, valid = validate_path(name, user_path)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Illegal or invalid directory name")
 
     # Check if file already exists
     dir_path = user_path / name
