@@ -123,6 +123,7 @@ const FileExplorer: React.FC = () => {
      * @returns A promise which resolves when the upload is complete.
      */
     async function onUploadFile() {
+        let force = false;
         // Pick the file to upload
         let result;
         try {
@@ -145,7 +146,40 @@ const FileExplorer: React.FC = () => {
 
         const rawFile = result.files[0];
 
-        // TODO: Probably check if file exists first?
+        // Check if file exists
+        const eventualPath = `${requestedPath}/${rawFile.name}` + ".exef"; // The uploaded file has this extension
+        const checkResponse = await checkPath(auth, eventualPath);
+        if (!checkResponse.success && checkResponse.error === "Illegal or invalid path") {
+            presentToast({
+                message: "Illegal or invalid file name",
+                duration: 3000,
+                color: "danger",
+            });
+            return;
+        }
+        if (checkResponse.success && checkResponse.type === "file") {
+            // File exists, ask if want to override
+            console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
+
+            // FIXME: This does not actually work
+            await presentAlert({
+                header: "File already exists",
+                message: "Do you want to override the existing file?",
+                buttons: [
+                    {
+                        text: "No",
+                        role: "cancel",
+                    },
+                    {
+                        text: "Yes",
+                        handler: () => {
+                            force = true;
+                        },
+                    },
+                ],
+            });
+            return;
+        }
 
         // Get contents of file
         // TODO: Stream contents of file for encryption and upload; also add progress bar
@@ -180,10 +214,10 @@ const FileExplorer: React.FC = () => {
 
         // Upload the file
         // TODO: Handle the case where the file already exists
-        const response = await uploadFile(auth, requestedPath, encryptedFile, false); // TODO: allow setting force flag
-        if (!response.success) {
+        const uploadResponse = await uploadFile(auth, requestedPath, encryptedFile, force);
+        if (!uploadResponse.success) {
             presentToast({
-                message: `Failed to upload file: ${response.error}`,
+                message: `Failed to upload file: ${uploadResponse.error}`,
                 duration: 3000,
                 color: "danger",
             });
