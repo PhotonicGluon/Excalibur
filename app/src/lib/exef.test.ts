@@ -24,7 +24,30 @@ test("ExEF encrypt", () => {
     expect(parsed.encrypt(Buffer.from("HELLO", "utf-8")).toString("hex")).toBe(SAMPLE_EXEF.toString("hex"));
 });
 
-test("ExEF encrypt stream", async () => {
+test("ExEF encrypt stream 1", async () => {
+    const parsed = new ExEF(KEY, NONCE);
+    const pt = Buffer.from("HELLO", "utf-8");
+    const iterable = new ReadableStream({
+        start(controller) {
+            controller.enqueue(pt);
+            controller.close();
+        },
+    });
+
+    const stream = parsed.encryptStream(pt.length, iterable);
+    const reader = stream.getReader();
+    let output: Buffer = Buffer.from([]);
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        output = Buffer.concat([output, value]);
+    }
+    expect(output.toString("hex")).toBe(SAMPLE_EXEF.toString("hex"));
+});
+
+test("ExEF encrypt stream 2", async () => {
     const parsed = new ExEF(KEY, NONCE);
     const pt = Buffer.from("HELLO", "utf-8");
     const iterable = new ReadableStream({
@@ -54,7 +77,28 @@ test("ExEF decrypt", () => {
     expect(ptTest.toString("utf-8")).toBe("HELLO");
 });
 
-test("ExEF decrypt stream", async () => {
+test("ExEF decrypt stream 1", async () => {
+    const iterable = new ReadableStream({
+        start(controller) {
+            controller.enqueue(SAMPLE_EXEF);
+            controller.close();
+        },
+    });
+
+    const stream = ExEF.decryptStream(KEY, iterable);
+    const reader = stream.getReader();
+    let output: Buffer = Buffer.from([]);
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        output = Buffer.concat([output, value]);
+    }
+    expect(output.toString("utf-8")).toBe("HELLO");
+});
+
+test("ExEF decrypt stream 2", async () => {
     const iterable = new ReadableStream({
         start(controller) {
             for (let i = 0; i < SAMPLE_EXEF.length / 2; i++) {

@@ -278,41 +278,47 @@ export default class ExEF {
                 const reader = exefStream.getReader();
 
                 // Receive header
-                let initialBuffer = Buffer.from([]);
-                while (initialBuffer.length < ExEFHeader.headerSize) {
+                let buffer = Buffer.from([]);
+                while (buffer.length < ExEFHeader.headerSize) {
                     const { done, value } = await reader.read();
                     if (done) {
                         throw new Error("header not received");
                     }
-                    initialBuffer = Buffer.concat([initialBuffer, value]);
+                    buffer = Buffer.concat([buffer, value]);
                 }
 
-                const header = ExEFHeader.fromBuffer(initialBuffer.subarray(0, ExEFHeader.headerSize));
+                const header = ExEFHeader.fromBuffer(buffer.subarray(0, ExEFHeader.headerSize));
+                buffer = buffer.subarray(ExEFHeader.headerSize);
                 if (header.keysize != key.length * 8) {
                     throw new Error(`keysize must be ${header.keysize}`);
                 }
 
-                // Decrypt remaining part of the initial buffer
+                // Set up cipher
                 const instance = new ExEF(key, header.nonce, "decrypt");
                 const cipher = instance._cipher as DecipherCCM;
-                initialBuffer = initialBuffer.subarray(ExEFHeader.headerSize);
-                controller.enqueue(cipher.update(initialBuffer));
 
-                // Decrypt the remaining ciphertext
-                let remainingLen = header.ctLen - initialBuffer.length;
-                let lastPart: Buffer<ArrayBufferLike> = Buffer.from([]);
+                // Decrypt the ciphertext
+                let remainingLen = header.ctLen;
                 while (remainingLen > 0) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        throw new Error("ciphertext not fully received");
+                    // If buffer empty, read from stream
+                    if (buffer.length == 0) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            throw new Error("ciphertext not fully received");
+                        }
+                        buffer = Buffer.concat([buffer, value]);
                     }
-                    if (value.length >= remainingLen) {
-                        lastPart = Buffer.from(value).subarray(remainingLen);
-                        controller.enqueue(cipher.update(value.subarray(0, remainingLen)));
+
+                    if (buffer.length >= remainingLen) {
+                        // Buffer contains part of footer
+                        controller.enqueue(cipher.update(buffer.subarray(0, remainingLen)));
+                        buffer = buffer.subarray(remainingLen);
                         remainingLen = 0;
                     } else {
-                        controller.enqueue(cipher.update(value));
-                        remainingLen -= value.length;
+                        // Buffer is just the ciphertext
+                        controller.enqueue(cipher.update(buffer));
+                        remainingLen -= buffer.length;
+                        buffer = Buffer.from([]);
                     }
                 }
 
@@ -322,11 +328,12 @@ export default class ExEF {
                     if (done) {
                         break;
                     }
-                    lastPart = Buffer.concat([lastPart, value]);
+                    buffer = Buffer.concat([buffer, value]);
                 }
 
                 // Check tag
-                const footer = ExEFFooter.fromBuffer(lastPart);
+                console.log(buffer);
+                const footer = ExEFFooter.fromBuffer(buffer);
                 cipher.setAuthTag(footer.tag);
                 controller.enqueue(cipher.final());
 

@@ -35,7 +35,22 @@ def test_encrypt():
     assert ct_test == SAMPLE_EXEF
 
 
-def test_encrypt_stream():
+def test_encrypt_stream_1():
+    iterable = iter([b"HELLO"])
+
+    encryptor = ExEF(KEY, nonce=NONCE).encryptor
+    encryptor.set_params(length=5)
+
+    output = encryptor.get()  # Header
+    for chunk in iterable:
+        encryptor.update(chunk)
+        output += encryptor.get()
+    output += encryptor.get()  # Footer
+
+    assert output == SAMPLE_EXEF
+
+
+def test_encrypt_stream_2():
     iterable = iter([b"HE", b"L", b"LO"])
 
     encryptor = ExEF(KEY, nonce=NONCE).encryptor
@@ -55,7 +70,20 @@ def test_decrypt():
     assert pt_test == b"HELLO"
 
 
-def test_decrypt_stream():
+def test_decrypt_stream_1():
+    iterable = iter([SAMPLE_EXEF])
+
+    decryptor = ExEF(KEY).decryptor
+    output = b""
+    for chunk in iterable:
+        decryptor.update(chunk)
+        output += decryptor.get()
+
+    decryptor.verify()
+    assert output == b"HELLO"
+
+
+def test_decrypt_stream_2():
     iterable = iter([SAMPLE_EXEF[i : i + 2] for i in range(0, len(SAMPLE_EXEF), 2)])
 
     decryptor = ExEF(KEY).decryptor
