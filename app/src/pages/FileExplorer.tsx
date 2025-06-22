@@ -1,5 +1,5 @@
 import { Filesystem } from "@capacitor/filesystem";
-import { FilePicker } from "@capawesome/capacitor-file-picker";
+import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -124,6 +124,63 @@ const FileExplorer: React.FC = () => {
      */
     async function onUploadFile() {
         let force = false;
+
+        /**
+         * Handles the actual file upload process.
+         *
+         * @param rawFile A {@link PickedFile} object
+         */
+        async function handleFileUpload(rawFile: PickedFile) {
+            // Get contents of file
+            // TODO: Stream contents of file for encryption and upload; also add progress bar
+            let rawFileData;
+            if (rawFile.blob) {
+                // Blob means that we are on web
+                console.debug("On web; using blob for raw file data");
+                rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
+            } else {
+                // TODO: Should we cap the file size on mobile?
+                // No blob means that we are on mobile
+                console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
+                const result = await Filesystem.readFile({
+                    path: rawFile.path!,
+                });
+                rawFileData = Buffer.from(result.data as string, "base64");
+            }
+            if (!rawFileData) {
+                presentToast({
+                    message: "Failed to get file contents",
+                    duration: 3000,
+                    color: "danger",
+                });
+                return;
+            }
+
+            // Encrypt the file
+            // TODO: Stream this
+            const exef = new ExEF(auth.vaultKey!);
+            const encryptedFileData = exef.encrypt(rawFileData);
+            const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
+
+            // Upload the file
+            const uploadResponse = await uploadFile(auth, requestedPath, encryptedFile, force);
+            if (!uploadResponse.success) {
+                presentToast({
+                    message: `Failed to upload file: ${uploadResponse.error}`,
+                    duration: 3000,
+                    color: "danger",
+                });
+                return;
+            }
+
+            // Refresh page
+            refreshContents(false);
+            presentToast({
+                message: "File uploaded",
+                duration: 3000,
+            });
+        }
+
         // Pick the file to upload
         let result;
         try {
@@ -161,7 +218,6 @@ const FileExplorer: React.FC = () => {
             // File exists, ask if want to override
             console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
 
-            // FIXME: This does not actually work
             await presentAlert({
                 header: "File already exists",
                 message: "Do you want to override the existing file?",
@@ -169,11 +225,19 @@ const FileExplorer: React.FC = () => {
                     {
                         text: "No",
                         role: "cancel",
+                        handler: () => {
+                            presentToast({
+                                message: "File upload cancelled",
+                                duration: 3000,
+                                color: "warning",
+                            });
+                        },
                     },
                     {
                         text: "Yes",
                         handler: () => {
                             force = true;
+                            handleFileUpload(rawFile);
                         },
                     },
                 ],
@@ -181,55 +245,7 @@ const FileExplorer: React.FC = () => {
             return;
         }
 
-        // Get contents of file
-        // TODO: Stream contents of file for encryption and upload; also add progress bar
-        let rawFileData;
-        if (rawFile.blob) {
-            // Blob means that we are on web
-            console.debug("On web; using blob for raw file data");
-            rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
-        } else {
-            // TODO: Should we cap the file size on mobile?
-            // No blob means that we are on mobile
-            console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
-            const result = await Filesystem.readFile({
-                path: rawFile.path!,
-            });
-            rawFileData = Buffer.from(result.data as string, "base64");
-        }
-        if (!rawFileData) {
-            presentToast({
-                message: "Failed to get file contents",
-                duration: 3000,
-                color: "danger",
-            });
-            return;
-        }
-
-        // Encrypt the file
-        // TODO: Stream this
-        const exef = new ExEF(auth.vaultKey!);
-        const encryptedFileData = exef.encrypt(rawFileData);
-        const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
-
-        // Upload the file
-        // TODO: Handle the case where the file already exists
-        const uploadResponse = await uploadFile(auth, requestedPath, encryptedFile, force);
-        if (!uploadResponse.success) {
-            presentToast({
-                message: `Failed to upload file: ${uploadResponse.error}`,
-                duration: 3000,
-                color: "danger",
-            });
-            return;
-        }
-
-        // Refresh page
-        refreshContents(false);
-        presentToast({
-            message: "File uploaded",
-            duration: 3000,
-        });
+        handleFileUpload(rawFile);
     }
 
     /**
