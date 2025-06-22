@@ -5,6 +5,8 @@ from excalibur_server.api.v1.files.structures import Directory, File
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.exef import ExEF
 
+EXCLUDED_FILES = [".DS_Store"]
+
 
 def get_fullpath(path: Path):
     """
@@ -33,6 +35,10 @@ def listdir(path: Path, with_exef_header: bool = False) -> Directory | None:
     items = []
     for item in path.iterdir():
         fullpath = get_fullpath(path / item)
+
+        if item.name in EXCLUDED_FILES:
+            continue
+
         if item.is_dir():
             items.append(Directory(name=item.name, fullpath=fullpath))
         else:
