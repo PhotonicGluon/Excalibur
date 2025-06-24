@@ -19,7 +19,7 @@ import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { FileLike } from "@lib/files/structures";
-import { bytesToHumanReadable } from "@lib/util";
+import { bytesToHumanReadable, updateAndYield } from "@lib/util";
 
 import { useAuth } from "@components/auth/ProvideAuth";
 
@@ -28,6 +28,12 @@ interface ContainerProps extends FileLike {
     size?: number;
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
+    /** Function to call when the dialog is closed */
+    setShowDialog: (showing: boolean) => void;
+    /** Set the message to be displayed in the dialog */
+    setDialogMessage: (title: string) => void;
+    /** Set the progress of the dialog */
+    setProgress: (progress: number | null) => void;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -49,11 +55,16 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
+        props.setShowDialog(true);
+        props.setDialogMessage("Getting download stream...");
+        props.setProgress(null);
+
         // Send request for file
         const response = await downloadFile(auth, props.fullpath);
         if (!response.success) {
             // TODO: Raise toast
             console.error(response.error);
+            props.setShowDialog(false);
             return;
         }
 
@@ -62,6 +73,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileSize = encryptedFileSize - ExEF.additionalSize;
 
         // Decrypt file
+        props.setDialogMessage("Downloading and decrypting...");
+        props.setProgress(0);
         const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
         const reader = fileDataStream.getReader();
         let fileData: Buffer = Buffer.from([]);
@@ -71,11 +84,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 break;
             }
             fileData = Buffer.concat([fileData, value]);
-            // TODO: Add progress bar
-            console.debug(`Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100})`);
+            await updateAndYield(fileData.length / fileSize, props.setProgress);
+            console.debug(
+                `Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100}%)`,
+            );
         }
 
         // Save file
+        props.setDialogMessage("Saving...");
+        props.setProgress(null);
         const info = await Device.getInfo();
         if (info.platform === "web") {
             // Create a new a element to download the file
@@ -92,6 +109,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         } else {
             // TODO: Handle save on mobile
         }
+
+        props.setShowDialog(false);
     }
 
     /**

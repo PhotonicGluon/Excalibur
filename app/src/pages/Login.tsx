@@ -255,6 +255,7 @@ const Login: React.FC = () => {
                 <div className="mx-auto flex w-4/5 flex-col pt-4">
                     <h1>Login</h1>
                     <form>
+                        {/* TODO: Use settings to set the values for these */}
                         <div className="flex flex-col gap-3">
                             <div className="h-18">
                                 {/* TODO: Remove default value */}

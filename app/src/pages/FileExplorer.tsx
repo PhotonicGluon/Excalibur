@@ -18,6 +18,7 @@ import {
     IonMenu,
     IonMenuButton,
     IonPopover,
+    IonProgressBar,
     IonText,
     useIonAlert,
     useIonRouter,
@@ -40,9 +41,11 @@ import ExEF from "@lib/exef";
 import { checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
+import { updateAndYield } from "@lib/util";
 
 import Countdown from "@components/Countdown";
 import { useAuth } from "@components/auth/ProvideAuth";
+import ProgressDialog from "@components/dialog/ProgressDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 
 const FileExplorer: React.FC = () => {
@@ -50,18 +53,24 @@ const FileExplorer: React.FC = () => {
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
 
+    // Generate breadcrumbs to render
+    const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
+
     // Get token expiry
     const auth = useAuth();
     const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.token!);
     const tokenExpiry = new Date(expTimestamp * 1000);
 
-    // Generate breadcrumbs to render
-    const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
-
     // States
     const router = useIonRouter();
+
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
+
+    const [showDialog, setShowDialog] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [dialogMessage, setDialogMessage] = useState("");
+
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
 
     // Functions
@@ -131,9 +140,15 @@ const FileExplorer: React.FC = () => {
          * @param rawFile A {@link PickedFile} object
          */
         async function handleFileUpload(rawFile: PickedFile) {
+            // Show dialog
+            setShowDialog(true);
+            setUploadProgress(null);
+
+            // TODO: Get file size and check if it is acceptable by server
+
             // Get contents of file
-            // TODO: Stream contents of file for encryption and upload; also add progress bar
-            let rawFileData;
+            setDialogMessage("Reading file contents...");
+            let rawFileData: Buffer;
             if (rawFile.blob) {
                 // Blob means that we are on web
                 console.debug("On web; using blob for raw file data");
@@ -142,6 +157,8 @@ const FileExplorer: React.FC = () => {
                 // TODO: Should we cap the file size on mobile?
                 // No blob means that we are on mobile
                 console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
+
+                // TODO: Should we use the `readFileInChunks` method?
                 const result = await Filesystem.readFile({
                     path: rawFile.path!,
                 });
@@ -153,16 +170,48 @@ const FileExplorer: React.FC = () => {
                     duration: 3000,
                     color: "danger",
                 });
+                setShowDialog(false);
                 return;
             }
 
-            // Encrypt the file
-            // TODO: Stream this
+            const rawFileSize = rawFileData.length;
+            const encryptedFileSize = rawFileSize + ExEF.additionalSize;
+
+            // Encrypt the file using a stream
             const exef = new ExEF(auth.vaultKey!);
-            const encryptedFileData = exef.encrypt(rawFileData);
+            const rawFileDataStream = new ReadableStream<Buffer>({
+                start(controller) {
+                    const CHUNK_SIZE = 65536; // TODO: Allow setting this chunk size somewhere
+                    for (let i = 0; i < rawFileSize / CHUNK_SIZE; i++) {
+                        controller.enqueue(rawFileData.subarray(i * CHUNK_SIZE, i * CHUNK_SIZE + CHUNK_SIZE));
+                    }
+                    controller.close();
+                },
+            });
+
+            setDialogMessage("Encrypting...");
+            const encryptStream = exef.encryptStream(rawFileSize, rawFileDataStream);
+            const reader = encryptStream.getReader();
+            let encryptedFileData: Buffer = Buffer.from([]);
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                encryptedFileData = Buffer.concat([encryptedFileData, value]);
+                await updateAndYield(encryptedFileData.length / encryptedFileSize, setUploadProgress);
+                console.debug(
+                    `Encrypted ${encryptedFileData.length} of ${encryptedFileSize} bytes (${(encryptedFileData.length / encryptedFileSize) * 100}%)`,
+                );
+            }
+
             const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
 
             // Upload the file
+            // TODO: Stream contents of file upload
+            setDialogMessage("Uploading...");
+            setUploadProgress(null);
+
             const uploadResponse = await uploadFile(auth, requestedPath, encryptedFile, force);
             if (!uploadResponse.success) {
                 presentToast({
@@ -170,6 +219,7 @@ const FileExplorer: React.FC = () => {
                     duration: 3000,
                     color: "danger",
                 });
+                setShowDialog(false);
                 return;
             }
 
@@ -179,6 +229,7 @@ const FileExplorer: React.FC = () => {
                 message: "File uploaded",
                 duration: 3000,
             });
+            setShowDialog(false);
         }
 
         // Pick the file to upload
@@ -253,7 +304,6 @@ const FileExplorer: React.FC = () => {
      */
     function onCreateFolder() {
         // Ask for user input
-        // TODO: handle validation of input when in the alert
         presentAlert({
             header: "Enter Folder Name",
             inputs: [{ type: "text", name: "folderName", placeholder: "Folder Name" }],
@@ -320,6 +370,7 @@ const FileExplorer: React.FC = () => {
      * @param isDir If true, the item is a directory. If false, the item is a file.
      */
     async function onDeleteItem(path: string, isDir: boolean) {
+        // TODO: Check if directory, and warn if directory is non-empty
         const response = await deleteItem(auth, path, isDir);
         if (!response.success) {
             presentToast({
@@ -415,6 +466,14 @@ const FileExplorer: React.FC = () => {
                         </IonToolbar>
                     </IonHeader>
 
+                    {/* Encryption/Decryption progress indicator */}
+                    <ProgressDialog
+                        isOpen={showDialog}
+                        message={dialogMessage}
+                        progress={uploadProgress}
+                        onDidDismiss={() => setShowDialog(false)}
+                    />
+
                     {/* Breadcrumb */}
                     <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
                         <IonBreadcrumb routerLink="/files/">
@@ -448,7 +507,15 @@ const FileExplorer: React.FC = () => {
                     </IonFab>
 
                     {/* Files list */}
-                    {directoryContents && <DirectoryList {...directoryContents!} onDelete={onDeleteItem} />}
+                    {directoryContents && (
+                        <DirectoryList
+                            {...directoryContents!}
+                            onDelete={onDeleteItem}
+                            setShowDialog={setShowDialog}
+                            setDialogMessage={setDialogMessage}
+                            setProgress={setUploadProgress}
+                        />
+                    )}
                 </IonContent>
             </IonPage>
         </>

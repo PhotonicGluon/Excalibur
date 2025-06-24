@@ -10,6 +10,12 @@ import DirectoryItem from "@components/explorer/DirectoryItem";
 interface ContainerProps extends Omit<Directory, "fullpath"> {
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
+    /** Function to call when the dialog is closed */
+    setShowDialog: (showing: boolean) => void;
+    /** Set the message to be displayed in the dialog */
+    setDialogMessage: (title: string) => void;
+    /** Set the progress of the dialog */
+    setProgress: (progress: number | null) => void;
 }
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -75,6 +81,9 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             type={item.type}
                             size={item.type === "file" ? item.size : undefined}
                             onDelete={props.onDelete}
+                            setShowDialog={props.setShowDialog}
+                            setDialogMessage={props.setDialogMessage}
+                            setProgress={props.setProgress}
                         />
                     ))}
                 {!(props.items && props.items.length > 0) && (

@@ -216,7 +216,6 @@ class EncryptionHandler:
                 return
             if message_type == "http.response.body":
                 # Encrypt body
-                # TODO: Do we need to handle the case where the `to_send` exceeds the limit that we can send?
                 plaintext_body = message.get("body", b"")
                 exef.encryptor.update(plaintext_body)
 
