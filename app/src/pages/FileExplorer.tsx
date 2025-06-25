@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import {
-    AlertInput,
     IonBreadcrumb,
     IonBreadcrumbs,
     IonButton,
@@ -17,24 +16,23 @@ import {
     IonLabel,
     IonMenu,
     IonMenuButton,
-    IonPopover,
     IonText,
+    RefresherEventDetail,
     useIonAlert,
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar } from "@ionic/react";
 import {
-    add,
-    chevronForward,
-    documentOutline,
-    ellipsisVertical,
-    folderOutline,
-    home,
-    logOutOutline,
-    refresh,
-    search,
-} from "ionicons/icons";
+    IonContent,
+    IonHeader,
+    IonList,
+    IonPage,
+    IonRefresher,
+    IonRefresherContent,
+    IonTitle,
+    IonToolbar,
+} from "@ionic/react";
+import { add, chevronForward, documentOutline, folderOutline, home, logOutOutline, search } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { checkDir, checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
@@ -441,21 +439,6 @@ const FileExplorer: React.FC = () => {
                 </IonContent>
             </IonMenu>
 
-            {/* Ellipsis menu*/}
-            <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
-                <IonContent>
-                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
-                        <IonItem button={true} onClick={() => refreshContents()}>
-                            <IonLabel>
-                                <IonIcon icon={refresh} size="small" />
-                                <IonText className="pl-2">Refresh Directory</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem>TODO: Add more ellipsis menu items</IonItem>
-                    </IonList>
-                </IonContent>
-            </IonPopover>
-
             {/* Main content */}
             <IonPage id="main-content">
                 {/* Header content */}
@@ -477,10 +460,6 @@ const FileExplorer: React.FC = () => {
                                 {/* TODO: Add functionality */}
                                 <IonIcon icon={search}></IonIcon>
                             </IonButton>
-                            {/* Ellipsis menu trigger button */}
-                            <IonButton id="ellipsis-button">
-                                <IonIcon icon={ellipsisVertical} />
-                            </IonButton>
                         </IonButtons>
                     </IonToolbar>
                 </IonHeader>
@@ -500,6 +479,18 @@ const FileExplorer: React.FC = () => {
                         progress={uploadProgress}
                         onDidDismiss={() => setShowDialog(false)}
                     />
+
+                    <IonRefresher
+                        slot="fixed"
+                        onIonRefresh={async (event: CustomEvent<RefresherEventDetail>) => {
+                            setTimeout(async () => {
+                                await refreshContents(false);
+                                event.detail.complete();
+                            }, 500);
+                        }}
+                    >
+                        <IonRefresherContent />
+                    </IonRefresher>
 
                     {/* Breadcrumb */}
                     <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
