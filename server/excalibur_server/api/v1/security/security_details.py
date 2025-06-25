@@ -1,11 +1,10 @@
 import json
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from pathlib import Path
 
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.consts import ROOT_FOLDER
-from excalibur_server.src.utils import serialize_bytes
 
 SECURITY_DETAILS_FILE = ROOT_FOLDER / "security.details"
 
@@ -16,7 +15,7 @@ class SecurityDetails(BaseModel):
 
     @field_serializer("auk_salt", "srp_salt")
     def serialize_salts(self, a_bytes: bytes, _info) -> str:
-        return serialize_bytes(a_bytes)
+        return b64encode(a_bytes).decode("utf-8")
 
     @classmethod
     def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetails":
@@ -29,7 +28,7 @@ class SecurityDetailsWithVerifier(SecurityDetails):
 
     @field_serializer("verifier")
     def serialize_verifier(self, a_bytes: bytes, _info) -> str:
-        return serialize_bytes(a_bytes)
+        return b64encode(a_bytes).decode("utf-8")
 
     @classmethod
     def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetailsWithVerifier":
