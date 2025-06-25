@@ -4,11 +4,32 @@ const DIGEST_ALGORITHM = "sha256";
 const KEY_LENGTH = 32; // In bytes
 const NUM_ITER = 650_000;
 
-// TODO: Add a function that normalizes the password
+/**
+ * Normalizes a password by:
+ * 1. Removing leading/trailing whitespace
+ * 2. Applying Unicode NFKD normalization
+ * 3. Converting to UTF-8 byte array
+ *
+ * @param password The input password string
+ * @returns UTF-8 byte array of the normalized password
+ */
+export function normalizePassword(password: string): Uint8Array {
+    const trimmed = password.trim();
+    const normalized = trimmed.normalize("NFKD");
+    const encoder = new TextEncoder();
+    return encoder.encode(normalized);
+}
 
-export async function slowHash(password: string, salt: Buffer): Promise<Buffer> {
+/**
+ * Performs a slow hash using PBKDF2.
+ *
+ * @param passwordBuf The password buffer to be hashed.
+ * @param salt The salt to be used.
+ * @returns A promise that resolves to the hashed password.
+ */
+export async function slowHash(passwordBuf: Uint8Array, salt: Buffer): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
-        pbkdf2(password, salt, NUM_ITER, KEY_LENGTH, DIGEST_ALGORITHM, (err, derivedKey) => {
+        pbkdf2(passwordBuf, salt, NUM_ITER, KEY_LENGTH, DIGEST_ALGORITHM, (err, derivedKey) => {
             if (err) {
                 reject(err);
             } else {
@@ -26,5 +47,6 @@ export async function slowHash(password: string, salt: Buffer): Promise<Buffer> 
  * @returns A buffer containing the generated key.
  */
 export default async function generateKey(password: string, salt: Buffer): Promise<Buffer> {
-    return await slowHash(password, salt);
+    const passwordBuf = normalizePassword(password);
+    return await slowHash(passwordBuf, salt);
 }
