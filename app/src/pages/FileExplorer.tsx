@@ -18,7 +18,6 @@ import {
     IonMenu,
     IonMenuButton,
     IonPopover,
-    IonProgressBar,
     IonText,
     useIonAlert,
     useIonRouter,
@@ -38,7 +37,7 @@ import {
 } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
-import { checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
+import { checkDir, checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
@@ -369,12 +368,40 @@ const FileExplorer: React.FC = () => {
      * @param path The path of the item to delete
      * @param isDir If true, the item is a directory. If false, the item is a file.
      */
-    async function onDeleteItem(path: string, isDir: boolean) {
-        // TODO: Check if directory, and warn if directory is non-empty
-        const response = await deleteItem(auth, path, isDir);
-        if (!response.success) {
+    async function onDeleteItem(path: string, isDir: boolean, force: boolean = false) {
+        if (isDir) {
+            const dirResponse = await checkDir(auth, path);
+            if (!dirResponse.success) {
+                presentToast({
+                    message: `Failed to delete item: ${dirResponse.error}`,
+                    duration: 3000,
+                    color: "danger",
+                });
+                return;
+            }
+            if (!dirResponse.isEmpty && !force) {
+                presentAlert({
+                    header: "Directory is not empty",
+                    message: "Are you sure that you want to delete the directory?",
+                    buttons: [
+                        {
+                            text: "Cancel",
+                            role: "cancel",
+                        },
+                        {
+                            text: "Delete",
+                            handler: async () => await onDeleteItem(path, isDir, true),
+                        },
+                    ],
+                });
+                return;
+            }
+        }
+
+        const deleteResponse = await deleteItem(auth, path, isDir, force);
+        if (!deleteResponse.success) {
             presentToast({
-                message: `Failed to delete item: ${response.error}`,
+                message: `Failed to delete item: ${deleteResponse.error}`,
                 duration: 3000,
                 color: "danger",
             });

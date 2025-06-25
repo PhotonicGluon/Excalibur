@@ -1,3 +1,4 @@
+import shutil
 from typing import Annotated
 
 from fastapi import HTTPException, Path, Query, status
@@ -18,12 +19,16 @@ from excalibur_server.src.path import validate_path
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot delete root directory"},
+        status.HTTP_417_EXPECTATION_FAILED: {
+            "description": "Cannot delete directory if it is not empty (and `force` is not set)"
+        },
     },
 )
 def delete_endpoint(
     response: Response,
     path: Annotated[str, Path(description="The path to delete")],
     as_dir: Annotated[bool, Query(description="Delete directory instead of file")] = False,
+    force: Annotated[bool, Query(description="Force delete (delete even if directory is not empty)")] = False,
 ):
     """
     Deletes a file or directory.
@@ -49,7 +54,10 @@ def delete_endpoint(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete directory if `as_dir` is not set"
             )
-        user_path.rmdir()
+        if not force and any(user_path.iterdir()):
+            raise HTTPException(status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Directory is not empty")
+
+        shutil.rmtree(user_path)
         response.status_code = status.HTTP_202_ACCEPTED
         return
 
