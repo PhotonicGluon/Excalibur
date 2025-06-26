@@ -37,6 +37,8 @@ app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=MAX_FILE_SIZE)
 # Include routes
 from .files import router as files_router
 from .security import router as security_router
+from .well_known import router as well_known_router
 
 app.include_router(files_router, prefix="/files")
 app.include_router(security_router, prefix="/security")
+app.include_router(well_known_router, prefix="/well-known")

@@ -1,11 +1,20 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from excalibur_server.api.cors import ALLOW_ORIGINS
 
-# Define app
+from .log_filters import EndpointFilter
 from .meta import SUMMARY, TITLE, VERSION
 
+NO_LOG_ENDPOINTS = ["/api/v1/well-known/heartbeat"]
+
+# Add logging filter
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.addFilter(EndpointFilter(NO_LOG_ENDPOINTS))
+
+# Define app
 app = FastAPI(
     title=TITLE,
     summary=SUMMARY,

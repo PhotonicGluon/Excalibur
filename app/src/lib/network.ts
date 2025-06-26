@@ -1,3 +1,5 @@
+import { AuthProvider } from "@components/auth/ProvideAuth";
+
 /**
  * Checks if the given URL is reachable.
  *
@@ -13,5 +15,35 @@ export async function checkConnection(url: string, timeout: number = 5): Promise
     } catch (e) {
         console.error(e);
         return false;
+    }
+}
+
+/**
+ * Checks if the authentication token is valid.
+ *
+ * @param apiURL The API URL.
+ * @param token The authentication token.
+ * @returns A promise which resolves to an object with a success boolean and optionally a boolean
+ *      describing whether the authentication token is still valid
+ */
+export async function heartbeat(apiURL: string, token: string): Promise<{ success: boolean; authValid?: boolean }> {
+    try {
+        const response = await fetch(`${apiURL}/well-known/heartbeat`, {
+            method: "HEAD",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        switch (response.status) {
+            case 200:
+                // Continue with normal flow
+                break;
+            case 202:
+                // Continue with normal flow
+                break;
+            default:
+                return { success: false };
+        }
+        return { success: true, authValid: response.status === 202 };
+    } catch (e) {
+        return { success: false };
     }
 }

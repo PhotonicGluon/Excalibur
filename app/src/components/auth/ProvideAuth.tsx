@@ -1,6 +1,7 @@
 // Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
 import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
 
+import { heartbeat } from "@lib/network";
 import { login, logout } from "@lib/security/api";
 
 export interface AuthProvider {
@@ -62,27 +63,52 @@ function useProvideAuth(): AuthProvider {
     const [e2eeKey, setE2EEKey] = useState<Buffer | null>(null);
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     const loginFunc = async (apiURL: string, uuid: string, e2eeKey: Buffer) => {
-        const tokenResponse = await login(apiURL, uuid, e2eeKey);
-        if (!tokenResponse.success) {
-            // TODO: Kick back to login screen
-            return "";
-        }
-
+        // Set state variables
         setApiURL(apiURL);
         setE2EEKey(e2eeKey);
-        setToken(tokenResponse.token!);
-        return tokenResponse.token!;
+
+        // Login to the server, getting the access token
+        const tokenResponse = await login(apiURL, uuid, e2eeKey);
+        if (!tokenResponse.success) {
+            // Failed to log in; kick back to login screen
+            console.debug("Failed to log in, sending back to login screen");
+            window.location.href = "/login";
+            return "";
+        }
+        const token = tokenResponse.token!;
+        setToken(token);
+
+        // Set up heartbeat interval
+        const interval = setInterval(async () => {
+            const heartbeatResponse = await heartbeat(apiURL, token);
+            if (!heartbeatResponse.success || !heartbeatResponse.authValid) {
+                // Heartbeat failed; kick back to login screen
+                console.debug("Heartbeat failed, sending back to login screen");
+                window.location.href = "/login";
+                return;
+            }
+        }, 30_000); // 30 s
+        setHeartbeatInterval(interval);
+        return token;
     };
 
     const logoutFunc = async () => {
+        // Stop checking for heartbeat
+        clearInterval(heartbeatInterval!);
+
+        // Logout
         const logoutResponse = await logout(apiURL!, token!);
         if (!logoutResponse.success) {
-            // TODO: What to do here?
+            // Logout failed; kick back to login screen
+            console.debug("Logout failed, sending back to login screen");
+            window.location.href = "/login";
             return;
         }
 
+        // Clear state
         setApiURL(null);
         setE2EEKey(null);
         setVaultKey(null);
