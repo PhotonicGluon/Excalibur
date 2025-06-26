@@ -4,6 +4,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
+from excalibur_server.src.exef import ExEF
+
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
     """
@@ -15,11 +17,11 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
         Constructor
 
         :param app: The ASGI app
-        :param max_upload_size: The maximum size of uploaded files in bytes
+        :param max_upload_size: The maximum size of *unencrypted* uploaded files in bytes
         """
 
         super().__init__(app)
-        self.max_upload_size = max_upload_size
+        self.max_upload_size = max_upload_size + ExEF.additional_size
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """

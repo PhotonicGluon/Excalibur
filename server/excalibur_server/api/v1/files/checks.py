@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Path, Response, status
+from fastapi import HTTPException, Path, Query, Response, status
 
 from excalibur_server.api.v1.files import router
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.consts import FILES_FOLDER, MAX_FILE_SIZE
 from excalibur_server.src.path import validate_path
 
 
@@ -38,6 +38,28 @@ async def check_path_endpoint(
         return
 
     response.status_code = status.HTTP_202_ACCEPTED
+
+
+@router.head(
+    "/check/size",
+    name="Check File Size",
+    responses={
+        status.HTTP_200_OK: {"description": "File size acceptable"},
+        status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE: {"description": "File size too large"},
+    },
+)
+async def check_file_size_endpoint(
+    size: Annotated[int, Query(description="The size of the file to check", ge=0)],
+    response: Response,
+):
+    """
+    Checks whether the given file size is acceptable.
+    """
+
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, detail="File size too large")
+
+    response.status_code = status.HTTP_200_OK
 
 
 @router.head(

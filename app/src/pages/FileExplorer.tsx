@@ -35,7 +35,7 @@ import {
 import { add, chevronForward, documentOutline, folderOutline, home, logOutOutline, search } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
-import { checkDir, checkPath, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
+import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
@@ -140,8 +140,6 @@ const FileExplorer: React.FC = () => {
             // Show dialog
             setShowDialog(true);
             setUploadProgress(null);
-
-            // TODO: Get file size and check if it is acceptable by server
 
             // Get contents of file
             setDialogMessage("Reading file contents...");
@@ -250,6 +248,27 @@ const FileExplorer: React.FC = () => {
         }
 
         const rawFile = result.files[0];
+
+        // Check if file size acceptable by server
+        const checkSizeResponse = await checkSize(auth, rawFile.size);
+        if (!checkSizeResponse.success) {
+            presentToast({
+                message: `Failed to check file size: ${checkSizeResponse.error}`,
+                duration: 3000,
+                color: "danger",
+            });
+            setShowDialog(false);
+            return;
+        }
+        if (checkSizeResponse.isTooLarge) {
+            presentToast({
+                message: "File too large",
+                duration: 3000,
+                color: "danger",
+            });
+            setShowDialog(false);
+            return;
+        }
 
         // Check if file exists
         const eventualPath = `${requestedPath}/${rawFile.name}` + ".exef"; // The uploaded file has this extension

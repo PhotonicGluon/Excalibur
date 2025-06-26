@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI
 
 from excalibur_server.api.meta import SUMMARY, TITLE
+from excalibur_server.consts import MAX_FILE_SIZE
 
 from .meta import TAGS
 
@@ -31,7 +32,7 @@ app.add_middleware(
 # Add a file size limit middleware
 from excalibur_server.src.middleware import LimitUploadSizeMiddleware
 
-app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=100_000 * 1024)  # 100 MiB
+app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=MAX_FILE_SIZE)
 
 # Include routes
 from .files import router as files_router
