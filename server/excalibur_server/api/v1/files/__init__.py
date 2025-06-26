@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from excalibur_server.src.security.auth import check_credentials
+from excalibur_server.src.security.token import check_credentials
 
 router = APIRouter(
     tags=["files", "encrypted"],

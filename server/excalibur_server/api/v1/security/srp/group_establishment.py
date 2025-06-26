@@ -1,5 +1,5 @@
 from excalibur_server.api.v1.security.srp import router
-from excalibur_server.src.security.auth.srp import SRP_GROUP_SIZES_TYPE
+from excalibur_server.src.security.srp import SRP_GROUP_SIZES_TYPE
 from excalibur_server.src.security.consts import SRP_GROUP
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from .token import KEY, decode_token, generate_token
+from .jwt import KEY, decode_token, generate_token
 
 if KEY != b"one demo 16B key":
     pytest.skip("Skipping token tests as key is wrong", allow_module_level=True)
@@ -13,7 +13,9 @@ def test_check_token():
     decoded_data = decode_token(token)
     assert decoded_data == SAMPLE_DATA
 
-    wrong_token = list(token)
+
+def test_invalid_token():
+    wrong_token = list(generate_token(SAMPLE_DATA))
     wrong_token[0] = "A"
     wrong_token = "".join(wrong_token)
     assert decode_token(wrong_token) is None

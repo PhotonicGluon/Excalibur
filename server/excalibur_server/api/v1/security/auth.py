@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
 from excalibur_server.api.v1.security import router
-from excalibur_server.src.security.auth.token import (
+from excalibur_server.src.security.token import (
     API_TOKEN_HEADER,
     check_credentials,
     decode_token,

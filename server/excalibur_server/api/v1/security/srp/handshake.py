@@ -9,7 +9,7 @@ from fastapi import Body, HTTPException, status
 from pydantic import BaseModel
 
 from excalibur_server.api.v1.security.srp import router
-from excalibur_server.src.security.auth import compute_server_public_value, get_verifier
+from excalibur_server.src.security.srp import compute_server_public_value, get_verifier
 from excalibur_server.src.security.cache import HANDSHAKE_CACHE
 from excalibur_server.src.security.consts import SRP_GROUP
 from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE
