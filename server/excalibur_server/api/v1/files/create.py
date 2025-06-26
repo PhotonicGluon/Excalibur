@@ -17,6 +17,7 @@ from excalibur_server.src.path import validate_path
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {"description": "File too large"},
         status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,

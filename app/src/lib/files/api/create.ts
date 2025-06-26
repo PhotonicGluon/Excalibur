@@ -39,6 +39,8 @@ export async function uploadFile(
             return { success: false, error: "Illegal or invalid path" };
         case 409:
             return { success: false, error: "File already exists (and `force` is not set)" };
+        case 413:
+            return { success: false, error: "File too large" };
         case 417:
             return { success: false, error: "Uploaded file needs to end with `.exef`" };
         case 422:
