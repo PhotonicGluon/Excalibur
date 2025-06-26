@@ -3,10 +3,10 @@ from typing import Annotated
 from fastapi import HTTPException, Path, Query, status
 from fastapi.responses import FileResponse
 
-from excalibur_server.api.v1.files.listings import listdir
-from excalibur_server.api.v1.files.routes import router
-from excalibur_server.api.v1.files.structures import Directory
+from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.files.listings import listdir
+from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.path import validate_path
 
 

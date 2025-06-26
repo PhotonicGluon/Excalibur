@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import HTTPException, Path, Response, status
 
-from excalibur_server.api.v1.files.routes import router
+from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.path import validate_path
 

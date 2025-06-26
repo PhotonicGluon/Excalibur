@@ -4,9 +4,9 @@ import aiofiles
 from fastapi import File, HTTPException, Path, Query, UploadFile, status
 from fastapi.params import Body
 
-from excalibur_server.api.v1.files.consts import FILE_PROCESS_CHUNK_SIZE
-from excalibur_server.api.v1.files.routes import router
+from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
 from excalibur_server.src.path import validate_path
 
 

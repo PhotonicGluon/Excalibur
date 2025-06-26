@@ -1,67 +1,91 @@
-import json
-from base64 import b64decode, b64encode
-from pathlib import Path
+import binascii
+from base64 import b64decode
+from typing import Annotated
 
-from pydantic import BaseModel, field_serializer
+from fastapi import Body, HTTPException, status
 
-from excalibur_server.consts import ROOT_FOLDER
-
-SECURITY_DETAILS_FILE = ROOT_FOLDER / "security.details"
-
-
-class SecurityDetails(BaseModel):
-    auk_salt: bytes
-    srp_salt: bytes
-
-    @field_serializer("auk_salt", "srp_salt")
-    def serialize_salts(self, a_bytes: bytes, _info) -> str:
-        return b64encode(a_bytes).decode("utf-8")
-
-    @classmethod
-    def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetails":
-        assert "auk_salt" in obj and "srp_salt" in obj
-        return SecurityDetails(auk_salt=b64decode(obj["auk_salt"]), srp_salt=b64decode(obj["srp_salt"]))
+from excalibur_server.api.v1.security import router
+from excalibur_server.src.security.security_details import (
+    SECURITY_DETAILS_FILE,
+    SecurityDetails,
+    SecurityDetailsWithVerifier,
+    get_security_details,
+    set_security_details,
+)
 
 
-class SecurityDetailsWithVerifier(SecurityDetails):
-    verifier: bytes
-
-    @field_serializer("verifier")
-    def serialize_verifier(self, a_bytes: bytes, _info) -> str:
-        return b64encode(a_bytes).decode("utf-8")
-
-    @classmethod
-    def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetailsWithVerifier":
-        assert "verifier" in obj
-        super_obj = super().from_base64s(obj)
-        return SecurityDetailsWithVerifier(
-            auk_salt=super_obj.auk_salt,
-            srp_salt=super_obj.srp_salt,
-            verifier=b64decode(obj["verifier"]),
-        )
-
-
-def get_security_details(security_details_file: Path = SECURITY_DETAILS_FILE) -> SecurityDetailsWithVerifier:
+@router.head(
+    "/details",
+    summary="Check Security Details Existence",
+    responses={
+        status.HTTP_200_OK: {"description": "Security details file exists"},
+        status.HTTP_404_NOT_FOUND: {"description": "Security details file not found"},
+    },
+)
+def check_security_details_endpoint():
     """
-    Reads the security details from the given file.
-
-    :param security_details_file: The file to read from. Defaults to SECURITY_DETAILS_FILE.
-    :return: The read security details.
+    Endpoint that checks if the security details file exists.
     """
 
-    with open(security_details_file, "r") as f:
-        return SecurityDetailsWithVerifier.from_base64s(json.loads(f.read()))
+    if not SECURITY_DETAILS_FILE.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security details file not found")
+
+    return
 
 
-def set_security_details(
-    security_details: SecurityDetailsWithVerifier, security_details_file: Path = SECURITY_DETAILS_FILE
+@router.get(
+    "/details",
+    summary="Get Security Details",
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Security details file not found"},
+    },
+    response_model=SecurityDetails,
+)
+def get_security_details_endpoint():
+    """
+    Endpoint that returns the security details.
+
+    This does not return the verifier for the SRP handshake.
+    """
+
+    if not SECURITY_DETAILS_FILE.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security details file not found")
+
+    # Get raw security details
+    security_details_with_verifier = get_security_details()
+
+    # Return instance without the verifier
+    return SecurityDetails.model_validate(security_details_with_verifier)
+
+
+@router.post(
+    "/details",
+    summary="Set Security Details",
+    status_code=status.HTTP_201_CREATED,
+    response_model=str,
+    responses={
+        status.HTTP_409_CONFLICT: {"description": "Security details file already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
+    },
+)
+def set_security_details_endpoint(
+    auk_salt: Annotated[str, Body(description="Base64 string of the account unlock key (AUK) salt.")],
+    srp_salt: Annotated[str, Body(description="Base64 string of the SRP handshake salt.")],
+    verifier: Annotated[str, Body(description="Base64 string of the verifier to enrol.")],
 ):
     """
-    Writes the given security details to the given file.
-
-    :param security_details: The security details to write.
-    :param security_details_file: The file to write to. Defaults to SECURITY_DETAILS_FILE.
+    Endpoint that enrols the verifier.
     """
 
-    with open(security_details_file, "w") as f:
-        f.write(security_details.model_dump_json())
+    if SECURITY_DETAILS_FILE.exists():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Security details file already exists")
+
+    try:
+        auk_salt = b64decode(auk_salt)
+        srp_salt = b64decode(srp_salt)
+        verifier = b64decode(verifier)
+    except binascii.Error as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
+
+    set_security_details(SecurityDetailsWithVerifier(auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier))
+    return "Security details set"

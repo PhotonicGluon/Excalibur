@@ -22,20 +22,20 @@ if artificial_delay > 0:
 
 
 # Encrypt responses for specific routes
-from excalibur_server.api.v1.security.crypto.middleware import RouteEncryptionMiddleware
+from excalibur_server.src.middleware.crypto.middleware import RouteEncryptionMiddleware
 
 app.add_middleware(
     RouteEncryptionMiddleware, encrypt_response=os.environ.get("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0"
 )
 
 # Add a file size limit middleware
-from excalibur_server.api.v1.files.middleware import LimitUploadSizeMiddleware
+from excalibur_server.src.middleware import LimitUploadSizeMiddleware
 
 app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=100_000 * 1024)  # 100 MiB
 
 # Include routes
-from .files.routes import router as files_router
-from .security.routes import router as security_router
+from .files import router as files_router
+from .security import router as security_router
 
 app.include_router(files_router, prefix="/files")
 app.include_router(security_router, prefix="/security")

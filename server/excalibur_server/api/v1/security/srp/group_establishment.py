@@ -1,6 +1,6 @@
-from excalibur_server.api.v1.security.auth.srp import SRP_GROUP_SIZES_TYPE
-from excalibur_server.api.v1.security.consts import SRP_GROUP
-from excalibur_server.api.v1.security.routes.srp import router
+from excalibur_server.api.v1.security.srp import router
+from excalibur_server.src.security.auth.srp import SRP_GROUP_SIZES_TYPE
+from excalibur_server.src.security.consts import SRP_GROUP
 
 
 @router.get("/group-size", summary="Establish SRP Group Size", response_model=SRP_GROUP_SIZES_TYPE)

@@ -2,7 +2,6 @@ from fastapi import status
 
 from .structures import EncryptedRoute, RoutingTree
 
-
 FILES_ROUTING_TREE = RoutingTree(
     segment="files",
     subtrees={

@@ -1,66 +1,85 @@
-import json
-from base64 import b64decode, b64encode
-from datetime import datetime
-from pathlib import Path
-from typing import ClassVar
+import binascii
+from typing import Annotated
 
-from pydantic import BaseModel, field_serializer
+from fastapi import Body, Depends, HTTPException, status
 
-from excalibur_server.consts import ROOT_FOLDER
-
-VAULT_KEY_FILE = ROOT_FOLDER / "vault.key"
+from excalibur_server.api.v1.security import router
+from excalibur_server.src.security.auth.token import check_credentials
+from excalibur_server.src.security.vault_key import EncryptedVaultKey, check_vault_key, get_vault_key, set_vault_key
 
 
-class EncryptedVaultKey(BaseModel):
-    version: ClassVar[int] = 1
-
-    timestamp: int
-    key_enc: bytes  # Encrypted vault key as an ExEF stream
-
-    @field_serializer("key_enc")
-    def serialize_encryption_stuff(self, a_bytes: bytes, _info) -> str:
-        return b64encode(a_bytes).decode("utf-8")
-
-    @classmethod
-    def from_serialized(cls, obj: dict[str, str]) -> "EncryptedVaultKey":
-        assert "timestamp" in obj and "key_enc" in obj
-        return EncryptedVaultKey(
-            timestamp=int(obj["timestamp"]),
-            key_enc=b64decode(obj["key_enc"]),
-        )
-
-
-def check_vault_key(vault_key_file: Path = VAULT_KEY_FILE) -> bool:
+@router.head(
+    "/vault-key",
+    summary="Check Vault Key Details Existence",
+    dependencies=[Depends(check_credentials)],
+    responses={
+        status.HTTP_200_OK: {"description": "Vault key file exists"},
+        status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+        status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
+    },
+)
+def check_vault_key_endpoint():
     """
-    Checks if the vault key file exists.
-
-    :param vault_key_file: The file to check. Defaults to VAULT_KEY_FILE
-    :return: True if the file exists
+    Endpoint that checks if the vault key file exists.
     """
 
-    return vault_key_file.exists()
+    if not check_vault_key():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
 
 
-def get_vault_key(vault_key_file: Path = VAULT_KEY_FILE) -> EncryptedVaultKey:
+@router.get(
+    "/vault-key",
+    summary="Get Vault Key Details",
+    dependencies=[Depends(check_credentials)],
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+        status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
+    },
+    response_model=EncryptedVaultKey,
+    tags=["encrypted"],
+)
+def get_vault_key_endpoint():
     """
-    Reads the vault key details from the given file.
-
-    :param vault_key_file: The file to read from. Defaults to VAULT_KEY_FILE
-    :return: The read vault key details
-    """
-
-    with open(vault_key_file, "r") as f:
-        return EncryptedVaultKey.from_serialized(json.loads(f.read()))
-
-
-def set_vault_key(key_enc: bytes, vault_key_file: Path = VAULT_KEY_FILE):
-    """
-    Writes the given vault key details to the given file.
-
-    :param key_enc: The vault key as an ExEF stream
-    :param vault_key_file: The file to write to, defaults to VAULT_KEY_FILE
+    Endpoint that returns the encrypted vault key as a Base64-encoded ExEF stream.
     """
 
-    encrypted_vault_key = EncryptedVaultKey(timestamp=int(datetime.now().timestamp()), key_enc=key_enc)
-    with open(vault_key_file, "w") as f:
-        f.write(encrypted_vault_key.model_dump_json())
+    if not check_vault_key():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
+
+    return get_vault_key()
+
+
+@router.post(
+    "/vault-key",
+    summary="Set Vault Key Details",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(check_credentials)],
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+        status.HTTP_409_CONFLICT: {"description": "Vault key file already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
+    },
+    response_model=str,
+    tags=["encrypted"],
+)
+def set_vault_key_endpoint(
+    key_enc: Annotated[
+        bytes,
+        Body(
+            description="Encrypted vault key as an ExEF stream. The vault key should have been encrypted using the Account Unlock Key (AUK)."
+        ),
+    ],
+):
+    """
+    Endpoint that sets the vault key.
+    """
+
+    if check_vault_key():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Vault key file already exists")
+
+    try:
+        set_vault_key(key_enc)
+    except binascii.Error as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
+
+    return "Vault key set"

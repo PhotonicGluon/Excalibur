@@ -7,8 +7,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.api.v1.security.auth.srp import SRPGroup
-from excalibur_server.api.v1.security.consts import SRP_GROUP
+from excalibur_server.src.security.auth.srp import SRPGroup
+from excalibur_server.src.security.consts import SRP_GROUP
 
 if SRP_GROUP != SRPGroup.SMALL:
     pytest.skip("Skipping SRP tests as group is different", allow_module_level=True)

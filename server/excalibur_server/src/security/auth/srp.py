@@ -8,7 +8,7 @@ from Crypto.Hash import SHA1, SHA3_256
 from Crypto.Random.random import getrandbits
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-from excalibur_server.api.v1.security.security_details import get_security_details
+from excalibur_server.src.security.security_details import get_security_details
 
 SRP_GROUP_SIZES_TYPE = Literal[1024, 1536, 2048]
 

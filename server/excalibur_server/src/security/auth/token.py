@@ -5,9 +5,8 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 
-from excalibur_server.api.v1.security.auth.consts import KEY
-from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.consts import LOGIN_VALIDITY_TIME
+from excalibur_server.src.security.auth.consts import KEY
+from excalibur_server.src.security.cache import VALID_UUIDS_CACHE
 
 API_TOKEN_HEADER = HTTPBearer(auto_error=False)
 CREDENTIALS_EXCEPTION = HTTPException(

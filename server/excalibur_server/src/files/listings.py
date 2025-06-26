@@ -1,9 +1,9 @@
 import mimetypes
 from pathlib import Path
 
-from excalibur_server.api.v1.files.structures import Directory, File
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.exef import ExEF
+from excalibur_server.src.files.structures import Directory, File
 
 EXCLUDED_FILES = [".DS_Store"]
 

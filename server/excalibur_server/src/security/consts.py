@@ -1,4 +1,4 @@
-from excalibur_server.api.v1.security.auth.srp import SRPGroup
+from excalibur_server.src.security.auth.srp import SRPGroup
 
 LOGIN_VALIDITY_TIME = 3600  # 1 hour
 

@@ -4,14 +4,14 @@ from fastapi import Body, Depends, HTTPException, Response, Security, status
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
-from excalibur_server.api.v1.security.auth.token import (
+from excalibur_server.api.v1.security import router
+from excalibur_server.src.security.auth.token import (
     API_TOKEN_HEADER,
     check_credentials,
     decode_token,
     generate_auth_token,
 )
-from excalibur_server.api.v1.security.cache import VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.routes import router
+from excalibur_server.src.security.cache import VALID_UUIDS_CACHE
 
 
 class LoginResponse(BaseModel):

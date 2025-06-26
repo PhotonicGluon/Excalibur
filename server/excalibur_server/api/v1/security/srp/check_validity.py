@@ -7,18 +7,18 @@ from Crypto.Util.number import bytes_to_long
 from fastapi import Body, HTTPException, status
 from pydantic import BaseModel
 
-from excalibur_server.api.v1.security.auth import (
+from excalibur_server.api.v1.security.srp import router
+from excalibur_server.src.security.auth import (
     compute_premaster_secret,
     compute_u,
     generate_m1,
     generate_m2,
     premaster_to_master,
 )
-from excalibur_server.api.v1.security.auth.srp import get_verifier
-from excalibur_server.api.v1.security.cache import HANDSHAKE_CACHE, VALID_UUIDS_CACHE
-from excalibur_server.api.v1.security.consts import LOGIN_VALIDITY_TIME, SRP_GROUP
-from excalibur_server.api.v1.security.routes.srp import router
-from excalibur_server.api.v1.security.security_details import SECURITY_DETAILS_FILE
+from excalibur_server.src.security.auth.srp import get_verifier
+from excalibur_server.src.security.cache import HANDSHAKE_CACHE, VALID_UUIDS_CACHE
+from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_GROUP
+from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE
 
 
 class SRPValidityResponse(BaseModel):

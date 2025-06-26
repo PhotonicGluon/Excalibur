@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from fastapi import status
+from pydantic import BaseModel
 
 
 class EncryptedRoute(BaseModel):
