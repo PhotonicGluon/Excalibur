@@ -16,6 +16,7 @@ import {
     IonLabel,
     IonMenu,
     IonMenuButton,
+    IonPopover,
     IonText,
     RefresherEventDetail,
     useIonAlert,
@@ -32,7 +33,18 @@ import {
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
-import { add, chevronForward, documentOutline, folderOutline, home, logOutOutline, search } from "ionicons/icons";
+import {
+    add,
+    chevronForward,
+    documentOutline,
+    ellipsisVertical,
+    folderOutline,
+    home,
+    keyOutline,
+    logOutOutline,
+    refresh,
+    search,
+} from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
@@ -43,6 +55,7 @@ import { updateAndYield } from "@lib/util";
 import Countdown from "@components/Countdown";
 import { useAuth } from "@components/auth/ProvideAuth";
 import ProgressDialog from "@components/dialog/ProgressDialog";
+import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 
 const FileExplorer: React.FC = () => {
@@ -64,9 +77,11 @@ const FileExplorer: React.FC = () => {
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
-    const [showDialog, setShowDialog] = useState(false);
+    const [showProgressDialog, setShowProgressDialog] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [dialogMessage, setDialogMessage] = useState("");
+
+    const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
 
@@ -138,7 +153,7 @@ const FileExplorer: React.FC = () => {
          */
         async function handleFileUpload(rawFile: PickedFile) {
             // Show dialog
-            setShowDialog(true);
+            setShowProgressDialog(true);
             setUploadProgress(null);
 
             // Get contents of file
@@ -165,7 +180,7 @@ const FileExplorer: React.FC = () => {
                     duration: 3000,
                     color: "danger",
                 });
-                setShowDialog(false);
+                setShowProgressDialog(false);
                 return;
             }
 
@@ -214,7 +229,7 @@ const FileExplorer: React.FC = () => {
                     duration: 3000,
                     color: "danger",
                 });
-                setShowDialog(false);
+                setShowProgressDialog(false);
                 return;
             }
 
@@ -224,7 +239,7 @@ const FileExplorer: React.FC = () => {
                 message: "File uploaded",
                 duration: 3000,
             });
-            setShowDialog(false);
+            setShowProgressDialog(false);
         }
 
         // Pick the file to upload
@@ -257,7 +272,7 @@ const FileExplorer: React.FC = () => {
                 duration: 3000,
                 color: "danger",
             });
-            setShowDialog(false);
+            setShowProgressDialog(false);
             return;
         }
         if (checkSizeResponse.isTooLarge) {
@@ -266,7 +281,7 @@ const FileExplorer: React.FC = () => {
                 duration: 3000,
                 color: "danger",
             });
-            setShowDialog(false);
+            setShowProgressDialog(false);
             return;
         }
 
@@ -458,6 +473,21 @@ const FileExplorer: React.FC = () => {
                 </IonContent>
             </IonMenu>
 
+            {/* Ellipsis menu*/}
+            <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
+                <IonContent>
+                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+                        <IonItem button={true} onClick={() => setShowVaultKeyDialog(true)}>
+                            <IonLabel>
+                                <IonIcon icon={keyOutline} size="large" />
+                                <IonText className="pl-2">View Vault Key</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem>TODO: Add more ellipsis menu items</IonItem>
+                    </IonList>
+                </IonContent>
+            </IonPopover>
+
             {/* Main content */}
             <IonPage id="main-content">
                 {/* Header content */}
@@ -479,6 +509,10 @@ const FileExplorer: React.FC = () => {
                                 {/* TODO: Add functionality */}
                                 <IonIcon icon={search}></IonIcon>
                             </IonButton>
+                            {/* Ellipsis menu trigger button */}
+                            <IonButton id="ellipsis-button">
+                                <IonIcon icon={ellipsisVertical} />
+                            </IonButton>
                         </IonButtons>
                     </IonToolbar>
                 </IonHeader>
@@ -493,12 +527,20 @@ const FileExplorer: React.FC = () => {
 
                     {/* Encryption/Decryption progress indicator */}
                     <ProgressDialog
-                        isOpen={showDialog}
+                        isOpen={showProgressDialog}
                         message={dialogMessage}
                         progress={uploadProgress}
-                        onDidDismiss={() => setShowDialog(false)}
+                        onDidDismiss={() => setShowProgressDialog(false)}
                     />
 
+                    {/* Vault key info dialog */}
+                    <VaultKeyDialog
+                        isOpen={showVaultKeyDialog}
+                        vaultKey={auth.vaultKey!}
+                        onDidDismiss={() => setShowVaultKeyDialog(false)}
+                    />
+
+                    {/* Refresh indicator */}
                     <IonRefresher
                         slot="fixed"
                         onIonRefresh={async (event: CustomEvent<RefresherEventDetail>) => {
@@ -548,7 +590,7 @@ const FileExplorer: React.FC = () => {
                         <DirectoryList
                             {...directoryContents!}
                             onDelete={onDeleteItem}
-                            setShowDialog={setShowDialog}
+                            setShowDialog={setShowProgressDialog}
                             setDialogMessage={setDialogMessage}
                             setProgress={setUploadProgress}
                         />

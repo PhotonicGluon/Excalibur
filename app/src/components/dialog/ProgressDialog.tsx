@@ -19,7 +19,7 @@ const ProgressDialog: React.FC<ProgressDialogProps> = ({ isOpen, message, progre
     return (
         <IonModal
             className="flex flex-col"
-            id="example-modal"
+            id="progress-indicator-modal"
             isOpen={isOpen}
             onDidDismiss={onDidDismiss}
             backdropDismiss={false}

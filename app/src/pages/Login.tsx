@@ -72,8 +72,6 @@ const Login: React.FC = () => {
     }
 
     async function onLoginButtonClick() {
-        console.log("----- Login -----");
-
         // Check values
         const values = getAllValues();
         if (!validateValues(values)) {
