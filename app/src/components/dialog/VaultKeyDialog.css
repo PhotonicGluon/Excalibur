@@ -1,6 +1,6 @@
 ion-modal#vault-key-modal {
     --height: 50%;
-    --width: 20%;
+    --width: 350px;
 }
 
 ion-modal#vault-key-modal::part(backdrop) {

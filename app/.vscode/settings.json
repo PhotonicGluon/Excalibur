@@ -10,6 +10,7 @@
         "fullpath",
         "keysize",
         "listdir",
+        "maskito",
         "popover",
         "powmod",
         "priv",

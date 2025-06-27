@@ -26,6 +26,8 @@
         "@capawesome/capacitor-file-picker": "^7.2.0",
         "@ionic/react": "^8.6.2",
         "@ionic/react-router": "^8.6.2",
+        "@maskito/core": "^3.9.1",
+        "@maskito/react": "^3.9.1",
         "@tailwindcss/vite": "^4.1.10",
         "ionicons": "^8.0.9",
         "js-sha3": "^0.9.3",

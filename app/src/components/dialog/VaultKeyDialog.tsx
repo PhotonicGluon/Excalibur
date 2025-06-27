@@ -1,5 +1,8 @@
-import React from "react";
+import { MaskitoOptions, maskitoTransform } from "@maskito/core";
+import { useMaskito } from "@maskito/react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 
+import { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {
     IonButton,
     IonButtons,
@@ -8,6 +11,7 @@ import {
     IonIcon,
     IonModal,
     IonText,
+    IonTextarea,
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
@@ -15,29 +19,73 @@ import { close } from "ionicons/icons";
 
 import "./VaultKeyDialog.css";
 
+function generateVaultKeyMask() {
+    let mask = [];
+    for (let i = 0; i < 15; i++) {
+        mask.push(...Array(4).fill(/[0-9A-Fa-f]/), " ");
+    }
+    mask.push(...Array(4).fill(/[0-9A-Fa-f]/));
+    return mask;
+}
+
 interface VaultKeyDialogProps {
     /** Whether the dialog is open */
     isOpen: boolean;
     /** Decrypted vault key */
     vaultKey: Buffer;
+    /** Function to set the vault key */
+    setVaultKey: Dispatch<SetStateAction<Buffer<ArrayBufferLike> | null>>;
     /** Callback when the dialog is dismissed */
     onDidDismiss?: () => void;
 }
 
-const VaultKeyDialog: React.FC<VaultKeyDialogProps> = ({ isOpen, vaultKey, onDidDismiss }) => {
+const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     // Preprocess vault key so that it is easier to read
-    // TODO: Add auto-correction checksum to the vault key when displaying
-    const vaultKeyRaw = vaultKey.toString("hex");
-    const chunks = vaultKeyRaw.match(/.{1,4}/g);
-    const vaultKeyStr = chunks!.join(" ").toUpperCase();
+    const vaultKeyRaw = props.vaultKey.toString("hex").toLocaleUpperCase();
+
+    // States
+    const vaultKeyMaskOptions: MaskitoOptions = {
+        mask: generateVaultKeyMask(),
+    };
+    const vaultKeyMask = useMaskito({ options: vaultKeyMaskOptions });
+
+    const [isTouched, setIsTouched] = useState(false);
+    const [isValid, setIsValid] = useState<boolean>();
+    const [localVaultKey, setLocalVaultKey] = useState(maskitoTransform(vaultKeyRaw, vaultKeyMaskOptions));
+
+    // Functions
+    /**
+     * Handles the change event of the vault key input.
+     *
+     * @param event The change event
+     */
+    function onChangeVaultKeyInput(event: IonTextareaCustomEvent<TextareaInputEventDetail>) {
+        const currVal = (event.detail.value || "").toLocaleUpperCase();
+        setLocalVaultKey(currVal);
+        setIsValid(undefined);
+
+        const possibleNewKey = currVal.replaceAll(" ", "").toLocaleLowerCase();
+        if (possibleNewKey.length === 64) {
+            const newVaultKey = Buffer.from(possibleNewKey, "hex");
+            props.setVaultKey(newVaultKey);
+            console.debug(`Changed vault key to ${newVaultKey.toString("hex")}`);
+            setIsValid(true);
+        } else {
+            setIsValid(false);
+        }
+    }
+
+    const markTouched = () => {
+        setIsTouched(true);
+    };
 
     // Render
     return (
         <IonModal
             className="flex min-h-172 flex-col"
             id="vault-key-modal"
-            isOpen={isOpen}
-            onDidDismiss={onDidDismiss}
+            isOpen={props.isOpen}
+            onDidDismiss={props.onDidDismiss}
             backdropDismiss={true}
             handle={false} // Hide drag handle for cleaner look
         >
@@ -46,7 +94,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = ({ isOpen, vaultKey, onDid
                     <IonToolbar>
                         <IonTitle>Vault Key</IonTitle>
                         <IonButtons slot="end">
-                            <IonButton onClick={onDidDismiss}>
+                            <IonButton onClick={props.onDidDismiss}>
                                 <IonIcon icon={close} />
                             </IonButton>
                         </IonButtons>
@@ -65,10 +113,27 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = ({ isOpen, vaultKey, onDid
                             Reveal vault key
                         </summary>
                         <div className="flex w-full items-center justify-center">
-                            <div className="mt-2 w-72 rounded-2xl bg-slate-200 p-4 dark:bg-slate-900">
-                                <p className="m-0 text-center font-mono text-2xl">{vaultKeyStr}</p>
-                            </div>
+                            <IonTextarea
+                                className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} m-0 px-4 !font-mono !text-2xl`}
+                                placeholder="Vault Key"
+                                rows={4}
+                                ref={(vaultKeyRef) => {
+                                    if (vaultKeyRef) {
+                                        vaultKeyRef.getInputElement().then((input) => vaultKeyMask(input));
+                                    }
+                                }}
+                                errorText="Invalid vault key"
+                                onIonInput={(e) => onChangeVaultKeyInput(e)}
+                                onIonBlur={() => markTouched()}
+                                value={localVaultKey}
+                            ></IonTextarea>
                         </div>
+                        <IonText color="warning">
+                            <p className="ion-padding-start ion-padding-end text-justify">
+                                Consider taking a screenshot and printing out a copy of the vault key, storing it in a
+                                secure location.
+                            </p>
+                        </IonText>
                     </details>
                 </div>
             </IonContent>

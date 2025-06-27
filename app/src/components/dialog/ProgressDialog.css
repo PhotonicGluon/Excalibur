@@ -1,6 +1,6 @@
 ion-modal#progress-indicator-modal {
     --height: 25%;
-    --width: 50%;
+    --width: max(50%, 350px);
 }
 
 ion-modal#progress-indicator-modal::part(backdrop) {

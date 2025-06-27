@@ -537,6 +537,7 @@ const FileExplorer: React.FC = () => {
                     <VaultKeyDialog
                         isOpen={showVaultKeyDialog}
                         vaultKey={auth.vaultKey!}
+                        setVaultKey={auth.setVaultKey}
                         onDidDismiss={() => setShowVaultKeyDialog(false)}
                     />
 
@@ -593,6 +594,7 @@ const FileExplorer: React.FC = () => {
                             setShowDialog={setShowProgressDialog}
                             setDialogMessage={setDialogMessage}
                             setProgress={setUploadProgress}
+                            presentToast={presentToast}
                         />
                     )}
                 </IonContent>

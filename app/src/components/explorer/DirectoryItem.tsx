@@ -1,6 +1,7 @@
 import { Device } from "@capacitor/device";
 import React, { useRef } from "react";
 
+import { ToastOptions } from "@ionic/core";
 import {
     IonCol,
     IonGrid,
@@ -34,6 +35,8 @@ interface ContainerProps extends FileLike {
     setDialogMessage: (title: string) => void;
     /** Set the progress of the dialog */
     setProgress: (progress: number | null) => void;
+    /** Present a toast */
+    presentToast: (options: ToastOptions) => void;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -62,8 +65,11 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         // Send request for file
         const response = await downloadFile(auth, props.fullpath);
         if (!response.success) {
-            // TODO: Raise toast
-            console.error(response.error);
+            props.presentToast({
+                message: `Failed to get file: ${response.error}`,
+                duration: 2000,
+                color: "danger",
+            });
             props.setShowDialog(false);
             return;
         }
@@ -78,16 +84,26 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
         const reader = fileDataStream.getReader();
         let fileData: Buffer = Buffer.from([]);
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    break;
+                }
+                fileData = Buffer.concat([fileData, value]);
+                await updateAndYield(fileData.length / fileSize, props.setProgress);
+                console.debug(
+                    `Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100}%)`,
+                );
             }
-            fileData = Buffer.concat([fileData, value]);
-            await updateAndYield(fileData.length / fileSize, props.setProgress);
-            console.debug(
-                `Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100}%)`,
-            );
+        } catch (e: any) {
+            props.presentToast({
+                message: `Failed to decrypt file: ${e.message}`,
+                duration: 2000,
+                color: "danger",
+            });
+            props.setShowDialog(false);
+            return;
         }
 
         // Save file

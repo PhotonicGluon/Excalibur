@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
+import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow, ToastOptions } from "@ionic/react";
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
 import { Directory, FileLike } from "@lib/files/structures";
@@ -16,6 +16,8 @@ interface ContainerProps extends Omit<Directory, "fullpath"> {
     setDialogMessage: (title: string) => void;
     /** Set the progress of the dialog */
     setProgress: (progress: number | null) => void;
+    /** Present a toast */
+    presentToast: (options: ToastOptions) => void;
 }
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -84,6 +86,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             setShowDialog={props.setShowDialog}
                             setDialogMessage={props.setDialogMessage}
                             setProgress={props.setProgress}
+                            presentToast={props.presentToast}
                         />
                     ))}
                 {!(props.items && props.items.length > 0) && (
