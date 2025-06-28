@@ -26,7 +26,7 @@ export async function e2ee(
     password: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
-    showAlert?: (header: string, message: string | undefined) => void,
+    showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
     showToast?: (message: string, isError?: boolean) => void,
 ): Promise<E2EEData | undefined> {
     // Get SRP group used for communication
@@ -46,7 +46,7 @@ export async function e2ee(
     const securityDetailsResponse = await getSecurityDetails(apiURL);
     if (!securityDetailsResponse.success) {
         stopLoading?.();
-        showAlert?.("Security Details Not Found", securityDetailsResponse.error);
+        showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);
         return;
     }
     const aukSalt = securityDetailsResponse.aukSalt!;
@@ -89,7 +89,7 @@ export async function e2ee(
     }
     if (!clientPriv || !clientPub || !serverPub || !sharedU || !handshakeUUID) {
         stopLoading?.();
-        showAlert?.("Handshake Failed", "Could not complete handshake. Please try again.");
+        showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
         return;
     }
 
@@ -106,7 +106,11 @@ export async function e2ee(
     const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
     if (!validityResponse.success) {
         stopLoading?.();
-        showAlert?.("Client Verification Failed", `Server failed to verify client: ${validityResponse.error!}`);
+        if (validityResponse.error === "M1 values do not match") {
+            showAlert?.("Client Verification Failed", "Server failed to verify client", "Is the password correct?");
+        } else {
+            showAlert?.("Client Verification Failed", "Server failed to verify client", validityResponse.error);
+        }
         return;
     }
 
@@ -115,7 +119,7 @@ export async function e2ee(
     const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
     if (!m2Client.equals(m2Server)) {
         stopLoading?.();
-        showAlert?.("Server Verification Failed", "Client failed to verify server.");
+        showAlert?.("Server Verification Failed", "Client failed to verify server", "Server may be compromised");
         return;
     }
 

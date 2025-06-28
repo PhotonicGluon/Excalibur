@@ -176,8 +176,8 @@ const Login: React.FC = () => {
             values.password,
             () => setIsLoading(false),
             setLoadingState,
-            (header, msg) => {
-                presentAlert({ header: header, message: msg, buttons: ["OK"] });
+            (header, subheader, msg) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
             },
             (msg, isError) => {
                 presentToast({ message: msg, duration: 3000, color: isError ? "danger" : "primary" });
