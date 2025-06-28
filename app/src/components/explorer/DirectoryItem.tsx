@@ -1,4 +1,5 @@
 import { Device } from "@capacitor/device";
+import { Directory, Filesystem } from "@capacitor/filesystem";
 import React, { useRef } from "react";
 
 import { ToastOptions } from "@ionic/core";
@@ -110,20 +111,38 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         props.setDialogMessage("Saving...");
         props.setProgress(null);
         const info = await Device.getInfo();
+        const fileName = props.name.replace(".exef", "");
+        console.debug(`Saving file ${fileName}...`);
         if (info.platform === "web") {
             // Create a new a element to download the file
             const a = document.createElement("a");
             const url = URL.createObjectURL(new Blob([fileData]));
             a.href = url;
-            a.download = props.name.replace(".exef", "");
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             setTimeout(function () {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
             }, 0);
+            props.presentToast({
+                message: "File downloaded",
+                duration: 2000,
+                color: "success",
+            });
         } else {
-            // TODO: Handle save on mobile
+            // Write file to documents folder
+            await Filesystem.writeFile({
+                path: `Excalibur/${fileName}`,
+                data: fileData.toString("base64"),
+                directory: Directory.Documents,
+                recursive: true,
+            });
+            props.presentToast({
+                message: "File downloaded to the documents folder",
+                duration: 2000,
+                color: "success",
+            });
         }
 
         props.setShowDialog(false);
