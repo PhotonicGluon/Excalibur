@@ -1,4 +1,4 @@
-import { Device } from "@capacitor/device";
+import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import React, { useRef } from "react";
 
@@ -110,10 +110,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         // Save file
         props.setDialogMessage("Saving...");
         props.setProgress(null);
-        const info = await Device.getInfo();
         const fileName = props.name.replace(".exef", "");
         console.debug(`Saving file ${fileName}...`);
-        if (info.platform === "web") {
+        if (Capacitor.getPlatform() === "web") {
             // Create a new a element to download the file
             const a = document.createElement("a");
             const url = URL.createObjectURL(new Blob([fileData]));

@@ -504,11 +504,6 @@ const FileExplorer: React.FC = () => {
                             />
                         </div>
                         <IonButtons className="w-24 justify-end" slot="end">
-                            {/* Search button */}
-                            <IonButton>
-                                {/* TODO: Add functionality */}
-                                <IonIcon icon={search}></IonIcon>
-                            </IonButton>
                             {/* Ellipsis menu trigger button */}
                             <IonButton id="ellipsis-button">
                                 <IonIcon icon={ellipsisVertical} />
