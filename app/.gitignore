@@ -30,3 +30,5 @@ yarn-error.log*
 
 # Others
 misc/*
+
+resources/android/**/*
