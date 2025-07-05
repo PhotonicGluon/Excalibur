@@ -50,7 +50,8 @@
             "Ionic.ionic",
             "bradlc.vscode-tailwindcss",
             "ms-python.black-formatter",
-            "ms-python.isort"
+            "ms-python.isort",
+            "tamasfe.even-better-toml"
         ]
     }
 }
