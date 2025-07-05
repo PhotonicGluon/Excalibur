@@ -1,3 +1,4 @@
+import { PrivacyScreen } from "@capacitor/privacy-screen";
 import { Redirect, Route } from "react-router-dom";
 
 /* Theme variables */
@@ -36,6 +37,8 @@ import Login from "@pages/Login";
 import "@theme/variables.css";
 
 setupIonicReact();
+
+PrivacyScreen.enable();
 
 const App: React.FC = () => (
     <IonApp>
