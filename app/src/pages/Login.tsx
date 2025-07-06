@@ -1,12 +1,13 @@
-import { Preferences } from "@capacitor/preferences";
 import { randomBytes } from "crypto";
 import { useEffect, useState } from "react";
 
 import {
     IonButton,
+    IonCheckbox,
     IonContent,
     IonInput,
     IonInputPasswordToggle,
+    IonLabel,
     IonLoading,
     IonPage,
     useIonAlert,
@@ -15,6 +16,7 @@ import {
 } from "@ionic/react";
 
 import { checkConnection } from "@lib/network";
+import Preferences from "@lib/preferences";
 import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { checkVaultKey } from "@lib/security/api/vault";
 import { e2ee } from "@lib/security/e2ee";
@@ -30,6 +32,8 @@ interface LoginValues {
     server: string;
     /** Password to the server */
     password: string;
+    /** Whether to save the password */
+    savePassword: boolean;
 }
 
 const Login: React.FC = () => {
@@ -40,26 +44,37 @@ const Login: React.FC = () => {
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
-    const [serverURL, setServerURL] = useState("");
-
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
 
     // Functions
+    /**
+     * Gets all values from the form.
+     *
+     * @returns The values from the form
+     */
     function getAllValues(): LoginValues {
         // Get raw inputs
         const inputs = document.querySelectorAll("ion-input");
+        const checkboxes = document.querySelectorAll("ion-checkbox");
 
         // Preprocess
         let server = inputs[0].value! as string;
         server = server.replace(/\/$/, ""); // Remove trailing slash
 
         const password = inputs[1].value! as string;
+        const savePassword = checkboxes[0].checked! as boolean;
 
         // Form values
-        return { server: server, password: password };
+        return { server: server, password: password, savePassword: savePassword };
     }
 
+    /**
+     * Validates the values from the form.
+     *
+     * @param values The values from the form
+     * @returns Whether the values are valid
+     */
     function validateValues({ server, password }: LoginValues) {
         // Check all filled
         if (server === "" || password === "") {
@@ -74,6 +89,9 @@ const Login: React.FC = () => {
         return true;
     }
 
+    /**
+     * Handles the login button click event.
+     */
     async function onLoginButtonClick() {
         // Check values
         const values = getAllValues();
@@ -243,7 +261,11 @@ const Login: React.FC = () => {
         auth.setVaultKey(vaultKey);
 
         // Update preferences
-        Preferences.set({ key: "server", value: values.server });
+        Preferences.set({
+            server: values.server,
+            password: values.savePassword ? values.password : "",
+            savePassword: values.savePassword,
+        });
 
         // Continue with files retrieval
         setIsLoading(false);
@@ -254,12 +276,26 @@ const Login: React.FC = () => {
     // Effects
     useEffect(() => {
         // Get existing values from preferences
-        Preferences.get({ key: "server" }).then((result) => {
-            console.log(result.value);
-            setServerURL(result.value!);
-            console.log(`Server URL: ${serverURL}`);
+        Preferences.get("server").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing server URL from preferences: ${result}`);
+            document.querySelector("#server-input")!.setAttribute("value", result!);
         });
-    }, [serverURL]);
+        Preferences.get("password").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing password from preferences: ${result}`);
+            document.querySelector("#password-input")!.setAttribute("value", result!);
+        });
+        Preferences.get("savePassword").then((rawResult) => {
+            const result = rawResult === "true";
+            console.debug(`Got existing save password from preferences: ${result}, ${rawResult}`);
+            if (result) {
+                document.querySelector("#save-password-checkbox")!.setAttribute("checked", "checked");
+            } else {
+                document.querySelector("#save-password-checkbox")!.removeAttribute("checked");
+            }
+        });
+    }, []);
 
     // Render
     return (
@@ -271,13 +307,28 @@ const Login: React.FC = () => {
                     <form>
                         <div className="flex flex-col gap-3">
                             <div className="h-18">
-                                <URLInput label="Server URL" value={serverURL} />
+                                <URLInput id="server-input" label="Server URL" />
                             </div>
                             <div className="h-18">
-                                <IonInput label="Password" labelPlacement="stacked" fill="solid" type="password">
+                                <IonInput
+                                    id="password-input"
+                                    label="Password"
+                                    labelPlacement="stacked"
+                                    fill="solid"
+                                    placeholder="My secure password!"
+                                    type="password"
+                                >
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
                             </div>
+                            <IonCheckbox id="save-password-checkbox" labelPlacement="end">
+                                <div className="flex flex-col">
+                                    <IonLabel>Save password</IonLabel>
+                                    <IonLabel color="danger" className="-mt-1 text-xs">
+                                        This is not recommended for security reasons.
+                                    </IonLabel>
+                                </div>
+                            </IonCheckbox>
                         </div>
 
                         <IonButton className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>

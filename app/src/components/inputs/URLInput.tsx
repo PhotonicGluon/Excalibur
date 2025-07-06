@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { HTMLProps, useState } from "react";
 
 import { IonInput } from "@ionic/react";
 
 import { validateURL } from "@lib/validators";
 
-interface ContainerProps {
+interface ContainerProps extends HTMLProps<HTMLIonInputElement> {
     label: string;
-    class?: string;
     value?: string;
 }
 
 const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
-    const [inputValue, setInputValue] = useState("");
-
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
 
@@ -25,7 +22,6 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
      */
     function validate(event: Event) {
         const value = (event.target as HTMLInputElement).value;
-        setInputValue(value);
 
         setIsValid(undefined);
         if (value === "") {
@@ -41,17 +37,11 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
         setIsTouched(true);
     }
 
-    // Effects
-    useEffect(() => {
-        if (props.value) {
-            setInputValue(props.value);
-        }
-    }, [props.value]);
-
     // Render
     return (
         <IonInput
-            className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} ${props.class}`}
+            id={props.id}
+            className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} ${props.className}`}
             label={props.label}
             labelPlacement="stacked"
             fill="solid"
@@ -59,7 +49,6 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
             errorText="Invalid URL"
             onIonInput={(event) => validate(event)}
             onIonBlur={() => markTouched()}
-            value={inputValue}
         ></IonInput>
     );
 };
