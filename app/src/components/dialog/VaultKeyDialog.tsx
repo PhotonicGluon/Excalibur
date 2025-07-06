@@ -75,9 +75,12 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
         }
     }
 
-    const markTouched = () => {
+    /**
+     * Marks the vault key input as touched.
+     */
+    function markTouched() {
         setIsTouched(true);
-    };
+    }
 
     // Render
     return (

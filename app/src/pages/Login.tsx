@@ -1,5 +1,6 @@
+import { Preferences } from "@capacitor/preferences";
 import { randomBytes } from "crypto";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     IonButton,
@@ -38,6 +39,8 @@ const Login: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
+
+    const [serverURL, setServerURL] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
@@ -239,11 +242,24 @@ const Login: React.FC = () => {
 
         auth.setVaultKey(vaultKey);
 
+        // Update preferences
+        Preferences.set({ key: "server", value: values.server });
+
         // Continue with files retrieval
         setIsLoading(false);
         router.push("/files/", "forward", "replace");
         return;
     }
+
+    // Effects
+    useEffect(() => {
+        // Get existing values from preferences
+        Preferences.get({ key: "server" }).then((result) => {
+            console.log(result.value);
+            setServerURL(result.value!);
+            console.log(`Server URL: ${serverURL}`);
+        });
+    }, [serverURL]);
 
     // Render
     return (
@@ -253,21 +269,12 @@ const Login: React.FC = () => {
                 <div className="mx-auto flex w-4/5 flex-col pt-4">
                     <h1>Login</h1>
                     <form>
-                        {/* TODO: Use settings to set the values for these */}
                         <div className="flex flex-col gap-3">
                             <div className="h-18">
-                                {/* TODO: Remove default value */}
-                                <URLInput label="Server URL" value="http://localhost:8000/" />
+                                <URLInput label="Server URL" value={serverURL} />
                             </div>
                             <div className="h-18">
-                                {/* TODO: Remove default value */}
-                                <IonInput
-                                    label="Password"
-                                    labelPlacement="stacked"
-                                    fill="solid"
-                                    type="password"
-                                    value="Password"
-                                >
+                                <IonInput label="Password" labelPlacement="stacked" fill="solid" type="password">
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
                             </div>

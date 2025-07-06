@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { IonInput } from "@ionic/react";
 
@@ -11,11 +11,18 @@ interface ContainerProps {
 }
 
 const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
-    const [inputValue, setInputValue] = useState(props.value || "");
+    // States
+    const [inputValue, setInputValue] = useState("");
 
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
 
+    // Functions
+    /**
+     * Validates the URL input.
+     *
+     * @param event The event
+     */
     function validate(event: Event) {
         const value = (event.target as HTMLInputElement).value;
         setInputValue(value);
@@ -27,10 +34,21 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
         validateURL(value) ? setIsValid(true) : setIsValid(false);
     }
 
-    const markTouched = () => {
+    /**
+     * Marks the URL input as touched.
+     */
+    function markTouched() {
         setIsTouched(true);
-    };
+    }
 
+    // Effects
+    useEffect(() => {
+        if (props.value) {
+            setInputValue(props.value);
+        }
+    }, [props.value]);
+
+    // Render
     return (
         <IonInput
             className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} ${props.class}`}

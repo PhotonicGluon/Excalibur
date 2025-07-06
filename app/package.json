@@ -21,6 +21,7 @@
         "@capacitor/filesystem": "7.1.2",
         "@capacitor/haptics": "7.0.1",
         "@capacitor/keyboard": "7.0.1",
+        "@capacitor/preferences": "^7.0.1",
         "@capacitor/privacy-screen": "^1.1.0",
         "@capacitor/status-bar": "7.0.1",
         "@capawesome/capacitor-file-picker": "^7.2.0",
