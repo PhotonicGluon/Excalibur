@@ -61,8 +61,8 @@ export class _SRPGroup {
     /**
      * Computes the SRP shared `u` value.
      *
-     * @param clientPub - The client's public value `A`.
-     * @param serverPub - The server's public value `B`.
+     * @param clientPub The client's public value `A`.
+     * @param serverPub The server's public value `B`.
      * @returns The computed `u` value as a bigint.
      */
     computeU(clientPub: bigint, serverPub: bigint): bigint {
