@@ -80,6 +80,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileSize = encryptedFileSize - ExEF.additionalSize;
 
         // Decrypt file
+        // FIXME: Seems like the download hangs for a while before actually 'committing', especially for larger files (>10 MB)
         props.setDialogMessage("Downloading and decrypting...");
         props.setProgress(0);
         const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
