@@ -58,6 +58,8 @@ import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 
+import logo from "@assets/icon.png";
+
 const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
@@ -457,11 +459,19 @@ const FileExplorer: React.FC = () => {
         <>
             {/* Hamburger menu */}
             <IonMenu type="overlay" contentId="main-content">
+                <IonHeader>
+                    <IonToolbar className="ion-padding-top min-h-16">
+                        <div className="ion-padding-start ion-padding-end flex items-center">
+                            <img src={logo} className="m-0 size-8" alt="Excalibur logo" />
+                            <IonTitle className="ml-2 !p-0">
+                                <IonText>Excalibur</IonText>
+                            </IonTitle>
+                        </div>
+                    </IonToolbar>
+                </IonHeader>
                 <IonContent>
-                    <IonList
-                        lines="none"
-                        className="ion-padding-top h-full [&_ion-label]:!flex [&_ion-label]:!items-center"
-                    >
+                    {/* Actions */}
+                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center">
                         <IonItem button={true} onClick={() => handleLogout()}>
                             <IonLabel>
                                 <IonIcon icon={logOutOutline} size="large" />
@@ -470,10 +480,21 @@ const FileExplorer: React.FC = () => {
                         </IonItem>
                         <IonItem>TODO: Add more hamburger menu items</IonItem>
                     </IonList>
+
+                    {/* Info */}
+                    <div className="ion-padding-start ion-padding-end pt-4 *:m-0 *:block">
+                        {/* TODO: Get client version */}
+                        <IonText color="medium" className="text-xs md:text-sm">
+                            Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
+                        </IonText>
+                        <IonText color="medium" className="text-xs md:text-sm">
+                            Login at <span className="font-mono">{auth.serverInfo!.loginTime}</span>
+                        </IonText>
+                    </div>
                 </IonContent>
             </IonMenu>
 
-            {/* Ellipsis menu*/}
+            {/* Ellipsis menu */}
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
                 <IonContent>
                     <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">

@@ -1,5 +1,3 @@
-import { AuthProvider } from "@components/auth/ProvideAuth";
-
 /**
  * Checks if the given URL is reachable.
  *
@@ -46,4 +44,48 @@ export async function heartbeat(apiURL: string, token: string): Promise<{ succes
     } catch (e) {
         return { success: false };
     }
+}
+
+/**
+ * Gets the server version.
+ *
+ * @param apiURL The API URL.
+ * @returns A promise which resolves to an object with a success boolean and optionally the server
+ *      version.
+ */
+export async function getServerVersion(apiURL: string): Promise<{ success: boolean; version?: string }> {
+    const response = await fetch(`${apiURL}/well-known/version`);
+    switch (response.status) {
+        case 200:
+            // Continue with normal flow
+            break;
+        default:
+            return { success: false };
+    }
+
+    const rawVersion = await response.text();
+    const version = rawVersion.substring(1, rawVersion.length - 1); // Remove quotes
+    return { success: true, version };
+}
+
+/**
+ * Gets the server time.
+ *
+ * @param apiURL The API URL.
+ * @returns A promise which resolves to an object with a success boolean and optionally the server
+ *      time.
+ */
+export async function getServerTime(apiURL: string): Promise<{ success: boolean; time?: string }> {
+    const response = await fetch(`${apiURL}/well-known/clock`);
+    switch (response.status) {
+        case 200:
+            // Continue with normal flow
+            break;
+        default:
+            return { success: false };
+    }
+
+    const rawTime = await response.text();
+    const time = rawTime.substring(1, rawTime.length - 1); // Remove quotes
+    return { success: true, time };
 }

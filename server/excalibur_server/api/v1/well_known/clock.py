@@ -14,4 +14,5 @@ async def clock_endpoint() -> str:
     """
 
     time = datetime.now().astimezone()
+    time = time.replace(microsecond=0)  # Remove fractional seconds
     return time.isoformat()

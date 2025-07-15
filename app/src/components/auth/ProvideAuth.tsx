@@ -1,8 +1,15 @@
 // Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
 import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
 
-import { heartbeat } from "@lib/network";
+import { getServerTime, getServerVersion, heartbeat } from "@lib/network";
 import { login, logout } from "@lib/security/api";
+
+interface ServerInfo {
+    /** Server version*/
+    version: string;
+    /** Time of login, as an ISO 8601 string */
+    loginTime: string;
+}
 
 export interface AuthProvider {
     /** API URL */
@@ -13,6 +20,8 @@ export interface AuthProvider {
     vaultKey: Buffer | null;
     /** The current authentication token */
     token: string | null;
+    /** Server info, retrieved upon login */
+    serverInfo: ServerInfo | null;
     /** Function to log into the server, returning the token for continued authentication */
     login: (apiURL: string, uuid: string, e2eeKey: Buffer) => Promise<string>;
     /** Function to log out of the server */
@@ -63,6 +72,7 @@ function useProvideAuth(): AuthProvider {
     const [e2eeKey, setE2EEKey] = useState<Buffer | null>(null);
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     const loginFunc = async (apiURL: string, uuid: string, e2eeKey: Buffer) => {
@@ -70,16 +80,21 @@ function useProvideAuth(): AuthProvider {
         setApiURL(apiURL);
         setE2EEKey(e2eeKey);
 
-        // Login to the server, getting the access token
+        // Login to the server, getting the access token and server info
         const tokenResponse = await login(apiURL, uuid, e2eeKey);
-        if (!tokenResponse.success) {
+        const versionResponse = await getServerVersion(apiURL);
+        const timeResponse = await getServerTime(apiURL);
+        if (!tokenResponse.success || !versionResponse.success || !timeResponse.success) {
             // Failed to log in; kick back to login screen
-            console.debug("Failed to log in, sending back to login screen");
+            console.debug("Failed to log in and retrieve info, sending back to login screen");
             window.location.href = "/login";
             return "";
         }
         const token = tokenResponse.token!;
+        const serverVersion = versionResponse.version!;
+        const serverTime = timeResponse.time!;
         setToken(token);
+        setServerInfo({ version: serverVersion, loginTime: serverTime });
 
         // Set up heartbeat interval
         const interval = setInterval(async () => {
@@ -112,6 +127,7 @@ function useProvideAuth(): AuthProvider {
         setApiURL(null);
         setE2EEKey(null);
         setVaultKey(null);
+        setServerInfo(null);
         setToken(null);
     };
 
@@ -120,6 +136,7 @@ function useProvideAuth(): AuthProvider {
         e2eeKey,
         vaultKey,
         token,
+        serverInfo,
         login: loginFunc,
         logout: logoutFunc,
         setVaultKey,

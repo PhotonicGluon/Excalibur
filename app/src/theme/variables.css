@@ -3,3 +3,12 @@
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+    /* Phone size breakpoints; XL and larger are for web */
+    --breakpoint-sm: 320px;
+    --breakpoint-md: 375px;
+    --breakpoint-lg: 425px;
+    --breakpoint-xl: 768px;
+    --breakpoint-2xl: 1024px;
+}

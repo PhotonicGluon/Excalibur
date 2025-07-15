@@ -329,6 +329,8 @@ const Login: React.FC = () => {
                                         <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                     </IonInput>
                                 </div>
+
+                                {/* FIXME: Still kinda buggy for persistence setting */}
                                 <IonCheckbox id="save-password-checkbox" labelPlacement="end">
                                     <div className="flex flex-col">
                                         <IonLabel>Save password</IonLabel>

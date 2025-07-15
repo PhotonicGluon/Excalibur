@@ -98,7 +98,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                         <IonTitle>Vault Key</IonTitle>
                         <IonButtons slot="end">
                             <IonButton onClick={props.onDidDismiss}>
-                                <IonIcon icon={close} />
+                                <IonIcon size="large" icon={close} />
                             </IonButton>
                         </IonButtons>
                     </IonToolbar>
@@ -106,7 +106,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
 
                 <div className="ion-padding-start ion-padding-end">
                     <IonText className="text-justify" color="danger">
-                        <p>
+                        <p className="text-sm leading-none md:text-base">
                             <span className="font-bold">Warning</span>: this vault key is used to encrypt and decrypt
                             all data stored in the vault. It is critical to keep this key secret.
                         </p>
@@ -117,7 +117,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                         </summary>
                         <div className="flex w-full items-center justify-center">
                             <IonTextarea
-                                className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} m-0 px-4 !font-mono !text-2xl`}
+                                className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} m-0 px-4 !font-mono !text-lg md:!text-2xl`}
                                 placeholder="Vault Key"
                                 rows={4}
                                 ref={(vaultKeyRef) => {
@@ -132,7 +132,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                             ></IonTextarea>
                         </div>
                         <IonText color="warning">
-                            <p className="ion-padding-start ion-padding-end text-justify">
+                            <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none md:text-base">
                                 Consider taking a screenshot and printing out a copy of the vault key, storing it in a
                                 secure location.
                             </p>
