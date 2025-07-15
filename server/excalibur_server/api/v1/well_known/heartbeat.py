@@ -15,7 +15,7 @@ DEFAULT_RESPONSE = Response(
 
 @router.head(
     "/heartbeat",
-    summary="Health check endpoint",
+    summary="Health check",
     responses={
         status.HTTP_200_OK: {"description": "Alive"},
         status.HTTP_202_ACCEPTED: {"description": "Authenticated"},
@@ -27,7 +27,7 @@ async def heartbeat_endpoint(
     """
     Health check endpoint.
 
-    Can include a HTTP `Bearer` header to check whether user is still authenticated or not.
+    Can include a HTTP `Bearer` header to check whether user is (still) authenticated or not.
     """
 
     response = DEFAULT_RESPONSE
