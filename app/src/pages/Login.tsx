@@ -27,6 +27,8 @@ import { validateURL } from "@lib/validators";
 import { useAuth } from "@components/auth/ProvideAuth";
 import URLInput from "@components/inputs/URLInput";
 
+import logo from "@assets/icon.png";
+
 interface LoginValues {
     /** URL to the server */
     server: string;
@@ -122,14 +124,13 @@ const Login: React.FC = () => {
 
         const apiURL = `${values.server}/api/v1`;
 
-        // Check whether security details has been set up
+        // Check whether security details have been set up
         setLoadingState("Finding security details...");
         if (!(await checkSecurityDetails(apiURL))) {
             setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Set Up",
-                message:
-                    "Security details has not been set up. Would you like to set it up now with your entered password?",
+                message: "Security details have not been set up. Would you like to set it up now with your password?",
                 buttons: [
                     {
                         text: "No",
@@ -302,39 +303,47 @@ const Login: React.FC = () => {
         <IonPage>
             <IonContent class="w-full">
                 {/* Main container */}
-                <div className="mx-auto flex w-4/5 flex-col pt-4">
-                    <h1>Login</h1>
-                    <form>
-                        <div className="flex flex-col gap-3">
-                            <div className="h-18">
-                                <URLInput id="server-input" label="Server URL" />
-                            </div>
-                            <div className="h-18">
-                                <IonInput
-                                    id="password-input"
-                                    label="Password"
-                                    labelPlacement="stacked"
-                                    fill="solid"
-                                    placeholder="My secure password!"
-                                    type="password"
-                                >
-                                    <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
-                                </IonInput>
-                            </div>
-                            <IonCheckbox id="save-password-checkbox" labelPlacement="end">
-                                <div className="flex flex-col">
-                                    <IonLabel>Save password</IonLabel>
-                                    <IonLabel color="danger" className="-mt-1 text-xs">
-                                        This is not recommended for security reasons.
-                                    </IonLabel>
-                                </div>
-                            </IonCheckbox>
+                <div className="flex h-full items-center justify-center">
+                    <div className="mx-auto flex w-4/5 flex-col pt-4">
+                        {/* Branding */}
+                        <div className="flex flex-col items-center">
+                            <img src={logo} className="size-36" alt="Excalibur logo" />
+                            <h1 className="!-mt-4 !font-bold">Login</h1>
                         </div>
 
-                        <IonButton className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
-                            Log In
-                        </IonButton>
-                    </form>
+                        {/* Form */}
+                        <form>
+                            <div className="flex flex-col gap-3">
+                                <div className="h-18">
+                                    <URLInput id="server-input" label="Server URL" />
+                                </div>
+                                <div className="h-18">
+                                    <IonInput
+                                        id="password-input"
+                                        label="Password"
+                                        labelPlacement="stacked"
+                                        fill="solid"
+                                        placeholder="My secure password!"
+                                        type="password"
+                                    >
+                                        <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
+                                    </IonInput>
+                                </div>
+                                <IonCheckbox id="save-password-checkbox" labelPlacement="end">
+                                    <div className="flex flex-col">
+                                        <IonLabel>Save password</IonLabel>
+                                        <IonLabel color="danger" className="-mt-1 text-xs">
+                                            This is not recommended for security reasons.
+                                        </IonLabel>
+                                    </div>
+                                </IonCheckbox>
+                            </div>
+
+                            <IonButton className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
+                                Log In
+                            </IonButton>
+                        </form>
+                    </div>
                 </div>
 
                 {/* Loading indicator */}

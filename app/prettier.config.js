@@ -13,6 +13,7 @@ const config = {
         "^@components/(.*)$",
         "^@pages/(.*)$",
         "^@theme/(.*)$",
+        "^@assets/(.*)$",
         "^[./]",
     ],
     importOrderSeparation: true,

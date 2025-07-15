@@ -21,6 +21,9 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
+            "@assets/*": [
+                "./resources/*"
+            ],
             "@components/*": [
                 "./src/components/*"
             ],
