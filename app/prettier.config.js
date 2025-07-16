@@ -8,7 +8,7 @@ const config = {
     printWidth: 120,
     // Import ordering
     importOrder: [
-        "^(?:@ionic|ionicons)/(.*)$",
+        "^(?:@root|@ionic|ionicons)/(.*)$",
         "^@lib/(.*)$",
         "^@components/(.*)$",
         "^@pages/(.*)$",

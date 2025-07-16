@@ -33,6 +33,7 @@ import {
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
+import packageInfo from "@root/package.json";
 import {
     add,
     chevronForward,
@@ -42,8 +43,6 @@ import {
     home,
     keyOutline,
     logOutOutline,
-    refresh,
-    search,
 } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
@@ -484,7 +483,9 @@ const FileExplorer: React.FC = () => {
 
                     {/* Info */}
                     <div className="ion-padding-start ion-padding-end pt-4 *:m-0 *:block">
-                        {/* TODO: Get client version */}
+                        <IonText color="medium" className="text-xs md:text-sm">
+                            App version: <span className="font-mono">{packageInfo.version}</span>
+                        </IonText>
                         <IonText color="medium" className="text-xs md:text-sm">
                             Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
                         </IonText>
