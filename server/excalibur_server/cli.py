@@ -3,7 +3,19 @@ from typing import Annotated
 
 import typer
 
-app = typer.Typer(help="Commands relating to the API endpoint.", no_args_is_help=True)
+app = typer.Typer(no_args_is_help=True, invoke_without_command=True)
+
+
+@app.callback()
+def main(version: Annotated[bool, typer.Option("--version", "-v", help="Show Excalibur's version and exit.")] = False):
+    """
+    Commands relating to the API endpoint.
+    """
+
+    if version:
+        from importlib import metadata
+
+        typer.echo(metadata.version("excalibur-server"))
 
 
 @app.command(name="start")
@@ -24,7 +36,9 @@ def start_api_server(
     ] = 0,
 ):
     """
-    Starts the API server.
+    Start API server.
+
+    This starts the API server.
     """
 
     from excalibur_server.main import start_server
@@ -37,16 +51,26 @@ def start_api_server(
 @app.command(name="reset")
 def reset_api_server():
     """
-    Resets the API server.
+    Reset API server.
+
+    This removes any user-created files and resets the server back to factory settings.
     """
 
     from excalibur_server.main import reset_server
 
     reset_server()
 
+    typer.secho("Server reset.", fg="green")
+
 
 @app.command(name="test")
 def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verbosity level.", count=True)] = 0):
+    """
+    Run tests.
+
+    This runs the tests for the API server. Used for development only.
+    """
+
     import importlib.util
     import sys
 

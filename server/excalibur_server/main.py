@@ -53,4 +53,5 @@ def reset_server():
     """
 
     # Remove the files folder
-    os.rmdir(ROOT_FOLDER)
+    if os.path.exists(ROOT_FOLDER):
+        os.rmdir(ROOT_FOLDER)
