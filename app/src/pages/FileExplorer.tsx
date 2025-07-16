@@ -3,6 +3,7 @@ import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
+import { menuController } from "@ionic/core/components";
 import {
     IonBreadcrumb,
     IonBreadcrumbs,
@@ -43,6 +44,7 @@ import {
     home,
     keyOutline,
     logOutOutline,
+    settingsOutline,
 } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
@@ -472,6 +474,18 @@ const FileExplorer: React.FC = () => {
                 <IonContent>
                     {/* Actions */}
                     <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center">
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                router.push("/settings", "forward", "push");
+                                menuController.close();
+                            }}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={settingsOutline} size="large" />
+                                <IonText className="pl-2">Settings</IonText>
+                            </IonLabel>
+                        </IonItem>
                         <IonItem button={true} onClick={() => handleLogout()}>
                             <IonLabel>
                                 <IonIcon icon={logOutOutline} size="large" />
@@ -514,7 +528,7 @@ const FileExplorer: React.FC = () => {
                 <IonHeader>
                     <IonToolbar className="ion-padding-top flex">
                         <IonButtons className="w-24" slot="start">
-                            <IonMenuButton />
+                            <IonMenuButton onClick={() => menuController.open()} />
                         </IonButtons>
                         <div className="flex" slot="">
                             <Countdown

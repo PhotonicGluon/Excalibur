@@ -33,6 +33,7 @@ import { ProvideAuth } from "@components/auth/ProvideAuth";
 /* App pages */
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
+import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
 
@@ -47,6 +48,7 @@ const App: React.FC = () => (
                 <IonRouterOutlet>
                     <Route exact path="/login" component={Login} />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
+                    <PrivateRoute path="/settings" component={Settings} />
                     <Redirect exact from="/" to="/login" />
                 </IonRouterOutlet>
             </IonReactRouter>
