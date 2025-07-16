@@ -7,8 +7,8 @@ import { login, logout } from "@lib/security/api";
 interface ServerInfo {
     /** Server version*/
     version: string;
-    /** Time of login, as an ISO 8601 string */
-    loginTime: string;
+    /** Delta of time between server and client */
+    deltaTime: number;
 }
 
 export interface AuthProvider {
@@ -80,21 +80,32 @@ function useProvideAuth(): AuthProvider {
         setApiURL(apiURL);
         setE2EEKey(e2eeKey);
 
-        // Login to the server, getting the access token and server info
+        // Login to the server and get the access token
         const tokenResponse = await login(apiURL, uuid, e2eeKey);
-        const versionResponse = await getServerVersion(apiURL);
-        const timeResponse = await getServerTime(apiURL);
-        if (!tokenResponse.success || !versionResponse.success || !timeResponse.success) {
+        if (!tokenResponse.success) {
             // Failed to log in; kick back to login screen
-            console.debug("Failed to log in and retrieve info, sending back to login screen");
+            console.debug("Failed to log in, sending back to login screen");
             window.location.href = "/login";
             return "";
         }
+
         const token = tokenResponse.token!;
+        setToken(token);
+
+        // Get server info
+        const versionResponse = await getServerVersion(apiURL);
+        const timeResponse = await getServerTime(apiURL);
+        if (!versionResponse.success || !timeResponse.success) {
+            // Failed to retrieve info; kick back to login screen
+            console.debug("Failed to retrieve info, sending back to login screen");
+            window.location.href = "/login";
+            return "";
+        }
+
         const serverVersion = versionResponse.version!;
         const serverTime = timeResponse.time!;
-        setToken(token);
-        setServerInfo({ version: serverVersion, loginTime: serverTime });
+        const deltaTime = new Date(serverTime).getTime() - new Date().getTime();
+        setServerInfo({ version: serverVersion, deltaTime });
 
         // Set up heartbeat interval
         const interval = setInterval(async () => {

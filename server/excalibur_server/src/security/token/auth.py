@@ -26,7 +26,7 @@ def generate_auth_token(uuid: str, expiry_timestamp: float) -> str:
 
     return generate_token(
         {"sub": uuid},
-        expiry=int(round(expiry_timestamp - datetime.now(timezone.utc).timestamp())),
+        expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
     )
 
 
@@ -47,6 +47,10 @@ def check_auth_token(token: str) -> bool:
         return False
 
     if uuid not in VALID_UUIDS_CACHE:
+        return False
+
+    _, expiry_timestamp = VALID_UUIDS_CACHE[uuid]
+    if expiry_timestamp < datetime.now(tz=timezone.utc).timestamp():
         return False
 
     return True

@@ -488,9 +488,6 @@ const FileExplorer: React.FC = () => {
                         <IonText color="medium" className="text-xs md:text-sm">
                             Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
                         </IonText>
-                        <IonText color="medium" className="text-xs md:text-sm">
-                            Login at <span className="font-mono">{auth.serverInfo!.loginTime}</span>
-                        </IonText>
                     </div>
                 </IonContent>
             </IonMenu>
@@ -521,7 +518,7 @@ const FileExplorer: React.FC = () => {
                         <div className="flex" slot="">
                             <Countdown
                                 className="w-full text-center"
-                                endDate={tokenExpiry}
+                                endDate={new Date(tokenExpiry.getTime() - auth.serverInfo!.deltaTime)}
                                 onExpiry={() => handleLogout(false)}
                             />
                         </div>
