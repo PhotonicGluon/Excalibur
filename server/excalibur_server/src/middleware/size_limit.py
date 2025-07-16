@@ -10,6 +10,10 @@ from excalibur_server.src.exef import ExEF
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
     """
     Middleware that limits the size of uploaded files.
+
+    Note that the middleware will allow requests which Content-Length are 1024 bytes more than the
+    maximum upload size. This is to account for the additional content size for the multipart file
+    upload format.
     """
 
     def __init__(self, app: ASGIApp, max_upload_size: int) -> None:
@@ -21,7 +25,11 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
         """
 
         super().__init__(app)
-        self.max_upload_size = max_upload_size + ExEF.additional_size
+        self.max_upload_size = (
+            max_upload_size
+            + ExEF.additional_size  # For the actual encrypted file (which is an ExEF stream)
+            + 1024  # For the transmission (which includes multipart form data)
+        )
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """

@@ -95,7 +95,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 fileData = Buffer.concat([fileData, value]);
                 await updateAndYield(fileData.length / fileSize, props.setProgress);
                 console.debug(
-                    `Downloaded ${fileData.length} of ${fileSize} bytes (${(fileData.length / fileSize) * 100}%)`,
+                    `Downloaded ${fileData.length} / ${fileSize} (${((fileData.length / fileSize) * 100).toFixed(2)}%)`,
                 );
             }
         } catch (e: any) {

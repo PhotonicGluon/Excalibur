@@ -193,7 +193,8 @@ const FileExplorer: React.FC = () => {
             const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
-                    const CHUNK_SIZE = 65536; // TODO: Allow setting this chunk size somewhere
+                    // const CHUNK_SIZE = 65536; // TODO: Allow setting this chunk size somewhere
+                    const CHUNK_SIZE = 262_144;
                     for (let i = 0; i < rawFileSize / CHUNK_SIZE; i++) {
                         controller.enqueue(rawFileData.subarray(i * CHUNK_SIZE, i * CHUNK_SIZE + CHUNK_SIZE));
                     }
@@ -213,7 +214,7 @@ const FileExplorer: React.FC = () => {
                 encryptedFileData = Buffer.concat([encryptedFileData, value]);
                 await updateAndYield(encryptedFileData.length / encryptedFileSize, setUploadProgress);
                 console.debug(
-                    `Encrypted ${encryptedFileData.length} of ${encryptedFileSize} bytes (${(encryptedFileData.length / encryptedFileSize) * 100}%)`,
+                    `Encrypted ${encryptedFileData.length} / ${encryptedFileSize} (${((encryptedFileData.length / encryptedFileSize) * 100).toFixed(2)}%)`,
                 );
             }
 
