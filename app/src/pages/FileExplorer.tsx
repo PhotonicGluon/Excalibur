@@ -28,6 +28,7 @@ import {
     IonTitle,
     IonToolbar,
     RefresherEventDetail,
+    isPlatform,
     useIonAlert,
     useIonRouter,
     useIonToast,
@@ -477,12 +478,12 @@ const FileExplorer: React.FC = () => {
             <IonMenu type="overlay" contentId="main-content">
                 <IonHeader>
                     <IonToolbar className="ion-padding-top min-h-16">
-                        <div className="ion-padding-start ion-padding-end flex items-center">
-                            <img src={logo} className="m-0 size-8" alt="Excalibur logo" />
-                            <IonTitle className="ml-2 !p-0">
-                                <IonText>Excalibur</IonText>
-                            </IonTitle>
-                        </div>
+                        <IonTitle>
+                            <div className="flex items-center">
+                                {!isPlatform("ios") && <img className="size-8" src={logo} alt="Excalibur logo" />}
+                                <IonText className="pl-2">Excalibur</IonText>
+                            </div>
+                        </IonTitle>
                     </IonToolbar>
                 </IonHeader>
                 <IonContent>
@@ -562,12 +563,6 @@ const FileExplorer: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
-                    <IonHeader collapse="condense">
-                        <IonToolbar>
-                            <IonTitle size="large">Files</IonTitle>
-                        </IonToolbar>
-                    </IonHeader>
-
                     {/* Encryption/Decryption progress indicator */}
                     <ProgressDialog
                         isOpen={showProgressDialog}
@@ -599,7 +594,7 @@ const FileExplorer: React.FC = () => {
 
                     {/* Breadcrumb */}
                     <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
-                        <IonBreadcrumb routerLink="/files/">
+                        <IonBreadcrumb routerLink="/files/" routerDirection="back">
                             <IonIcon slot="" icon={home} />
                             <IonIcon slot="separator" icon={chevronForward} />
                         </IonBreadcrumb>
@@ -607,6 +602,7 @@ const FileExplorer: React.FC = () => {
                             <IonBreadcrumb
                                 key={idx}
                                 routerLink={`/files/${breadcrumbPaths.slice(0, idx + 1).join("/")}`}
+                                routerDirection="back"
                             >
                                 {fragment}
                                 <IonIcon slot="separator" icon={chevronForward} />

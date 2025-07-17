@@ -113,12 +113,6 @@ const Settings: React.FC = () => {
 
             {/* Body content */}
             <IonContent fullscreen>
-                <IonHeader collapse="condense">
-                    <IonToolbar>
-                        <IonTitle size="large">Settings</IonTitle>
-                    </IonToolbar>
-                </IonHeader>
-
                 {/* Settings list */}
                 <IonList>
                     <SettingsItem
