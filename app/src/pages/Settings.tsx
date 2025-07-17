@@ -147,7 +147,12 @@ const Settings: React.FC = () => {
                 </IonList>
 
                 {/* Save button */}
-                <IonButton expand="block" className="ion-padding" onClick={onSaveSettings}>
+                <IonButton
+                    expand="block"
+                    className="ion-padding"
+                    onClick={onSaveSettings}
+                    disabled={!hasUnsavedChanges}
+                >
                     Save Settings
                 </IonButton>
             </IonContent>

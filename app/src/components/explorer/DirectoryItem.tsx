@@ -64,6 +64,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         props.setProgress(null);
 
         // Send request for file
+        // TODO: Stream file download, with chunk size management?
         const response = await downloadFile(auth, props.fullpath);
         if (!response.success) {
             props.presentToast({
