@@ -1,11 +1,12 @@
 import { Preferences as PreferencesHandler } from "@capacitor/preferences";
 
 import { LoginPreferenceValues } from "./login";
+import { SettingsPreferenceValues } from "./settings";
 
 /**
  * Values stored in preferences.
  */
-interface PreferenceValues extends LoginPreferenceValues {}
+interface PreferenceValues extends LoginPreferenceValues, SettingsPreferenceValues {}
 
 /**
  * Preferences manager for storing and retrieving preferences.
@@ -16,11 +17,14 @@ export default class Preferences {
      *
      * @param values The values to set
      */
-    static async set(values: PreferenceValues) {
+    static async set(values: Partial<PreferenceValues>) {
         for (const [key, value] of Object.entries(values)) {
+            if (value === undefined) {
+                continue;
+            }
             await PreferencesHandler.set({
                 key: key,
-                value: value!,
+                value: value.toString(),
             });
         }
     }

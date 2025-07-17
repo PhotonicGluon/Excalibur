@@ -48,6 +48,8 @@ import {
 import ExEF from "@lib/exef";
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
+import Preferences from "@lib/preferences";
+import { DEFAULT_SETTINGS_VALUES, EncryptionChunkSize } from "@lib/preferences/settings";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
 
@@ -85,6 +87,10 @@ const FileExplorer: React.FC = () => {
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+
+    const [encryptionChunkSize, setEncryptionChunkSize] = useState<EncryptionChunkSize>(
+        DEFAULT_SETTINGS_VALUES.encryptionChunkSize,
+    );
 
     // Functions
     /**
@@ -192,10 +198,13 @@ const FileExplorer: React.FC = () => {
             const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
-                    // const CHUNK_SIZE = 65536; // TODO: Allow setting this chunk size somewhere
-                    const CHUNK_SIZE = 262_144;
-                    for (let i = 0; i < rawFileSize / CHUNK_SIZE; i++) {
-                        controller.enqueue(rawFileData.subarray(i * CHUNK_SIZE, i * CHUNK_SIZE + CHUNK_SIZE));
+                    for (let i = 0; i < rawFileSize / encryptionChunkSize; i++) {
+                        controller.enqueue(
+                            rawFileData.subarray(
+                                i * encryptionChunkSize,
+                                i * encryptionChunkSize + encryptionChunkSize,
+                            ),
+                        );
                     }
                     controller.close();
                 },
@@ -450,6 +459,13 @@ const FileExplorer: React.FC = () => {
 
     // Effects
     useEffect(() => {
+        // Retrieve settings
+        Preferences.get("encryptionChunkSize").then((value) => {
+            if (value) {
+                setEncryptionChunkSize(parseInt(value) as EncryptionChunkSize);
+            }
+        });
+
         // Refresh directory contents
         refreshContents(false);
     }, [requestedPath]);
@@ -538,7 +554,7 @@ const FileExplorer: React.FC = () => {
                         <IonButtons className="w-24 justify-end" slot="end">
                             {/* Ellipsis menu trigger button */}
                             <IonButton id="ellipsis-button">
-                                <IonIcon icon={ellipsisVertical} />
+                                <IonIcon slot="icon-only" icon={ellipsisVertical} />
                             </IonButton>
                         </IonButtons>
                     </IonToolbar>
