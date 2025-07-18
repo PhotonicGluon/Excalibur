@@ -4,11 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from excalibur_server.api.cors import ALLOW_ORIGINS
+from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 from .log_filters import EndpointFilter
 from .meta import SUMMARY, TITLE, VERSION
 
 NO_LOG_ENDPOINTS = ["/api/v1/well-known/heartbeat"]
+
+TOKEN_CAPACITY = 50
+TOKEN_REFILL_RATE = 5
 
 # Add logging filter
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
@@ -23,11 +27,6 @@ app = FastAPI(
     root_path="/api",
 )
 
-# Mount other apps
-from excalibur_server.api.v1.app import app as api_v1
-
-app.mount("/v1", api_v1)
-
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +35,18 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+# Add rate limit middleware
+app.add_middleware(
+    RateLimitMiddleware,
+    capacity=TOKEN_CAPACITY,
+    refill_rate=TOKEN_REFILL_RATE,
+)
+
+# Mount other apps
+from excalibur_server.api.v1.app import app as api_v1
+
+app.mount("/v1", api_v1)
 
 
 # Define other routes
