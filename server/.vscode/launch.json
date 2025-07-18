@@ -2,13 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "poetry run excalibur start --debug",
+            "command": "uv run excalibur start --debug",
             "name": "Start Excalibur Server (Debug)",
             "request": "launch",
             "type": "node-terminal"
         },
         {
-            "command": "poetry run excalibur start",
+            "command": "uv run excalibur start",
             "name": "Start Excalibur Server",
             "request": "launch",
             "type": "node-terminal"
