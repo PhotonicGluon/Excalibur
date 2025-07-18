@@ -1,31 +1,34 @@
-[tool.poetry]
+[project]
 name = "excalibur-server"
 version = "0.0.1"
 description = "An encrypted file server."
-authors = ["The-Photons"]
-license = "GPL-3.0"
 readme = "README.md"
+authors = [{ name = "The-Photons" }]
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
 
-[tool.poetry.dependencies]
-python = "^3.11"
+dependencies = [
+    "aiofiles>=24.1.0",
+    "cachetools>=6.1.0",
+    "fastapi>=0.116.1",
+    "pycryptodome>=3.23.0",
+    "pydantic>=2.11.7",
+    "pyjwt>=2.10.1",
+    "python-multipart>=0.0.20",
+    "typer>=0.16.0",
+    "uvicorn[standard]>=0.35.0",
+]
 
-aiofiles = "^24.1.0"
-cachetools = "^5.5.2"
-fastapi = "^0.115.14"
-pycryptodome = "^3.23.0"
-pydantic = "^2.11.7"
-pyjwt = "^2.10.1"
-python-multipart = "^0.0.20"
-typer = "^0.15.4"
-uvicorn = { extras = ["standard"], version = "^0.34.3" }
+[project.scripts]
+excalibur = "excalibur_server.cli:app"
 
-[tool.poetry.group.test.dependencies]
-httpx = "^0.28.1"
-pytest = "^8.4.1"
+[dependency-groups]
+test = ["httpx>=0.28.1", "pytest>=8.4.1"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.8.0,<0.9"]
+build-backend = "uv_build"
 
-[tool.poetry.scripts]
-excalibur = "excalibur_server.cli:app"
+[tool.uv.build-backend]
+module-name = "excalibur_server"
+module-root = ""

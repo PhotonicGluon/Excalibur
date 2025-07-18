@@ -16,10 +16,17 @@ pipx install [PATH_TO_WHEEL_FILE]
 > These instructions are for development purposes only.
 
 ### Installation
-First install [Poetry 2.x](https://python-poetry.org/). Then install dependencies by running
+
+First install [the `uv` package manager](https://docs.astral.sh/uv/). Then install dependencies by running
 
 ```bash
-poetry install --with test
+uv sync --group test
+```
+
+Validate that everything is installed correctly by running
+
+```bash
+uv version
 ```
 
 ### Running the API Server
@@ -27,11 +34,11 @@ poetry install --with test
 Run
 
 ```bash
-poetry run excalibur start
+uv run excalibur start
 ```
 
 If using debug mode, run
 
 ```bash
-poetry run excalibur start --debug
+uv run excalibur start --debug
 ```

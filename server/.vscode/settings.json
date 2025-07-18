@@ -3,6 +3,7 @@
         "**/__pycache__": true,
         ".pytest_cache": true,
         ".python-version": true,
+        ".venv": true
     },
     "cSpell.words": [
         "asgi",
