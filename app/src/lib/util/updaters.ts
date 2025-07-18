@@ -12,7 +12,7 @@
 export async function updateAndYield<T>(value: T, updater: (x: T) => void): Promise<void> {
     return new Promise((resolve) => {
         updater(value);
-        // `setTimeout` with 0ms delay queues the 'resolve' call  to run on the next event loop tick.
+        // `setTimeout` with 0ms delay queues the 'resolve' call to run on the next event loop tick.
         // This gives React time to process the state update and re-render the UI.
         setTimeout(resolve, 0);
     });

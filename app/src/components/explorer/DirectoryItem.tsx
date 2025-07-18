@@ -81,7 +81,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileSize = encryptedFileSize - ExEF.additionalSize;
 
         // Decrypt file
-        // FIXME: Seems like the download hangs for a while before actually 'committing', especially for larger files (>10 MB)
         props.setDialogMessage("Downloading and decrypting...");
         props.setProgress(0);
         const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
@@ -94,7 +93,12 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     break;
                 }
                 fileData = Buffer.concat([fileData, value]);
+
+                // FIXME: `updateAndYield` seems to block the reading here, causing the download to
+                //        hang for a while before actually 'committing', especially for larger files
+                //        (>10 MB). Can we use `comlink` to set up a worker thread to handle this?
                 await updateAndYield(fileData.length / fileSize, props.setProgress);
+
                 console.debug(
                     `Downloaded ${fileData.length} / ${fileSize} (${((fileData.length / fileSize) * 100).toFixed(2)}%)`,
                 );
