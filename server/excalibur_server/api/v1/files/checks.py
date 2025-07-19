@@ -11,7 +11,7 @@ from excalibur_server.src.path import validate_path
     "/check/path/{path:path}",
     name="Check Existence",
     responses={
-        status.HTTP_200_OK: {"description": "File exists"},
+        status.HTTP_200_OK: {"description": "File exists", "content": None},
         status.HTTP_202_ACCEPTED: {"description": "Directory exists"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
@@ -44,7 +44,7 @@ async def check_path_endpoint(
     "/check/size",
     name="Check File Size",
     responses={
-        status.HTTP_200_OK: {"description": "File size acceptable"},
+        status.HTTP_200_OK: {"description": "File size acceptable", "content": None},
         status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE: {"description": "File size too large"},
     },
 )
@@ -66,7 +66,7 @@ async def check_file_size_endpoint(
     "/check/dir/{path:path}",
     name="Check Directory Type",
     responses={
-        status.HTTP_200_OK: {"description": "Directory exists and is empty"},
+        status.HTTP_200_OK: {"description": "Directory exists and is empty", "content": None},
         status.HTTP_202_ACCEPTED: {"description": "Directory exists and is not empty"},
         status.HTTP_404_NOT_FOUND: {"description": "Directory not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},

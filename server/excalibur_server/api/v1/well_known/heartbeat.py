@@ -1,37 +1,41 @@
 from typing import Annotated
 
 from fastapi import Depends, Response, status
+from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
 from excalibur_server.api.v1.well_known import router
 from excalibur_server.src.security.token import API_TOKEN_HEADER, check_auth_token
 
-DEFAULT_RESPONSE = Response(
-    content=None,
-    status_code=status.HTTP_200_OK,
-    headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
-)
+HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type": "text/plain"}
 
 
-@router.head(
+@router.get(
     "/heartbeat",
     summary="Health check",
     responses={
-        status.HTTP_200_OK: {"description": "Alive"},
-        status.HTTP_202_ACCEPTED: {"description": "Authenticated"},
+        status.HTTP_200_OK: {
+            "description": "Alive",
+            "content": {"text/plain": {"example": "OK", "schema": None}},
+        },
+        status.HTTP_202_ACCEPTED: {"description": "Authenticated", "content": {"text/plain": {"example": "Auth OK"}}},
     },
+    status_code=None,
+    response_class=PlainTextResponse,
 )
 async def heartbeat_endpoint(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(API_TOKEN_HEADER)],
-) -> Response:
+    response: Response,
+) -> str:
     """
     Health check endpoint.
 
     Can include a HTTP `Bearer` header to check whether user is (still) authenticated or not.
     """
 
-    response = DEFAULT_RESPONSE
+    response.headers.update(HEADERS)
     if credentials and check_auth_token(credentials.credentials):
         response.status_code = status.HTTP_202_ACCEPTED
+        return "Auth OK"
 
-    return response
+    return "OK"

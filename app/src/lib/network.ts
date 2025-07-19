@@ -27,7 +27,7 @@ export async function checkConnection(url: string, timeout: number = 5): Promise
 export async function heartbeat(apiURL: string, token: string): Promise<{ success: boolean; authValid?: boolean }> {
     try {
         const response = await fetch(`${apiURL}/well-known/heartbeat`, {
-            method: "HEAD",
+            method: "GET",
             headers: { Authorization: `Bearer ${token}` },
         });
         switch (response.status) {
@@ -63,9 +63,7 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
             return { success: false };
     }
 
-    const rawVersion = await response.text();
-    const version = rawVersion.substring(1, rawVersion.length - 1); // Remove quotes
-    return { success: true, version };
+    return { success: true, version: await response.text() };
 }
 
 /**
@@ -85,7 +83,5 @@ export async function getServerTime(apiURL: string): Promise<{ success: boolean;
             return { success: false };
     }
 
-    const rawTime = await response.text();
-    const time = rawTime.substring(1, rawTime.length - 1); // Remove quotes
-    return { success: true, time };
+    return { success: true, time: await response.text() };
 }

@@ -11,4 +11,4 @@ def test_version():
     """Test the version endpoint with GET request."""
     response = client.get("/api/v1/well-known/version")
     assert response.status_code == status.HTTP_200_OK
-    assert response.text == f'"{VERSION}"'
+    assert response.text == VERSION

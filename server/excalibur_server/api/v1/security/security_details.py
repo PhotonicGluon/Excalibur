@@ -3,6 +3,7 @@ from base64 import b64decode
 from typing import Annotated
 
 from fastapi import Body, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.v1.security import router
 from excalibur_server.src.security.security_details import (
@@ -18,7 +19,7 @@ from excalibur_server.src.security.security_details import (
     "/details",
     summary="Check Security Details Existence",
     responses={
-        status.HTTP_200_OK: {"description": "Security details file exists"},
+        status.HTTP_200_OK: {"description": "Security details file exists", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Security details file not found"},
     },
 )
@@ -62,11 +63,15 @@ def get_security_details_endpoint():
     "/details",
     summary="Set Security Details",
     status_code=status.HTTP_201_CREATED,
-    response_model=str,
     responses={
+        status.HTTP_201_CREATED: {
+            "description": "Security details set",
+            "content": {"text/plain": {"example": "Security details set", "schema": None}},
+        },
         status.HTTP_409_CONFLICT: {"description": "Security details file already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
     },
+    response_class=PlainTextResponse,
 )
 def set_security_details_endpoint(
     auk_salt: Annotated[str, Body(description="Base64 string of the account unlock key (AUK) salt.")],

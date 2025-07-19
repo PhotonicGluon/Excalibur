@@ -1,12 +1,20 @@
 from datetime import datetime
 
+from fastapi import status
+from fastapi.responses import PlainTextResponse
+
 from excalibur_server.api.v1.well_known import router
 
 
 @router.get(
     "/clock",
     summary="Get server time",
-    response_model=str,
+    responses={
+        status.HTTP_200_OK: {
+            "content": {"text/plain": {"example": "2012-03-04T05:06:07+08:09"}},
+        },
+    },
+    response_class=PlainTextResponse,
 )
 async def clock_endpoint() -> str:
     """
