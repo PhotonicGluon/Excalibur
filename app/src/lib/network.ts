@@ -27,7 +27,7 @@ export async function checkConnection(url: string, timeout: number = 5): Promise
 export async function heartbeat(apiURL: string, token: string): Promise<{ success: boolean; authValid?: boolean }> {
     try {
         const response = await fetch(`${apiURL}/well-known/heartbeat`, {
-            method: "HEAD",
+            method: "GET",
             headers: { Authorization: `Bearer ${token}` },
         });
         switch (response.status) {
