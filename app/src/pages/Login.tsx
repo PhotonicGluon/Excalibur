@@ -63,6 +63,7 @@ const Login: React.FC = () => {
         // Preprocess
         let server = inputs[0].value! as string;
         server = server.replace(/\/$/, ""); // Remove trailing slash
+        inputs[0].value = server;
 
         const password = inputs[1].value! as string;
         const savePassword = checkboxes[0].checked! as boolean;
@@ -289,7 +290,7 @@ const Login: React.FC = () => {
         });
         Preferences.get("savePassword").then((rawResult) => {
             const result = rawResult === "true";
-            console.debug(`Got existing save password from preferences: ${result}, ${rawResult}`);
+            console.debug(`Got existing save password from preferences: ${result}`);
             if (result) {
                 document.querySelector("#save-password-checkbox")!.setAttribute("checked", "checked");
             } else {
