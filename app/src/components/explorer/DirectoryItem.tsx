@@ -137,6 +137,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
         } else {
             // Write file to documents folder
+            // FIXME: What if file with the same name already exists?
+
+            // FIXME: Somehow the data that is written is corrupted... consider https://github.com/diachedelic/capacitor-blob-writer instead?
             await Filesystem.writeFile({
                 path: `Excalibur/${fileName}`,
                 data: fileData.toString("base64"),
