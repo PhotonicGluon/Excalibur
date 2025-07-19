@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
-import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Directory } from "@capacitor/filesystem";
+import write_blob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
 import React, { useRef } from "react";
 
@@ -113,6 +114,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             worker.terminate();
         }
 
+        const fileDataBlob = new Blob([fileData]);
+
         // Save file
         props.setDialogMessage("Saving...");
         props.setProgress(null);
@@ -121,7 +124,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         if (Capacitor.getPlatform() === "web") {
             // Create a new a element to download the file
             const a = document.createElement("a");
-            const url = URL.createObjectURL(new Blob([fileData]));
+            const url = URL.createObjectURL(fileDataBlob);
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
@@ -137,14 +140,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
         } else {
             // Write file to documents folder
-            // FIXME: What if file with the same name already exists?
-
-            // FIXME: Somehow the data that is written is corrupted... consider https://github.com/diachedelic/capacitor-blob-writer instead?
-            await Filesystem.writeFile({
+            // TODO: Handle case where file already exists on the mobile
+            await write_blob({
                 path: `Excalibur/${fileName}`,
-                data: fileData.toString("base64"),
                 directory: Directory.Documents,
+                blob: fileDataBlob,
                 recursive: true,
+                on_fallback(error) {
+                    console.error(error);
+                },
             });
             props.presentToast({
                 message: "File downloaded to the documents folder",
