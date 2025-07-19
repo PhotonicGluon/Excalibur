@@ -3,26 +3,26 @@ import * as Comlink from "comlink";
 
 import ExEF from "@lib/exef";
 
-const fileProcessor = {
+const decryptionProcessor = {
     /**
-     * Decrypts a stream of data and reports progress.
+     * Decrypts a stream of file data and reports progress.
      *
-     * @param dataStream The readable stream of encrypted data.
+     * @param encryptedStream The readable stream of encrypted data.
      * @param vaultKey The key to use for decryption.
      * @param fileSize The final, decrypted size of the file.
      * @param onProgress A callback function to report progress (a value from 0 to 1).
      * @returns A promise that resolves with the decrypted file data as a Buffer.
      */
     async processStream(
-        dataStream: ReadableStream<Uint8Array>,
+        encryptedStream: ReadableStream<Uint8Array>,
         vaultKey: Buffer,
         fileSize: number,
         onProgress: (progress: number) => void,
     ): Promise<Buffer> {
         // Create the decryption stream inside the worker
-        const fileDataStream = ExEF.decryptStream(vaultKey, dataStream);
-        const reader = fileDataStream.getReader();
-        let fileData: Buffer = Buffer.from([]);
+        const decryptedStream = ExEF.decryptStream(vaultKey, encryptedStream);
+        const reader = decryptedStream.getReader();
+        let data: Buffer = Buffer.from([]);
 
         // Read the stream and decrypt the data
         while (true) {
@@ -30,18 +30,16 @@ const fileProcessor = {
             if (done) {
                 break;
             }
-            fileData = Buffer.concat([fileData, value]);
-            onProgress(fileData.length / fileSize);
-            console.debug(
-                `Downloaded ${fileData.length} / ${fileSize} (${((fileData.length / fileSize) * 100).toFixed(2)}%)`,
-            );
+            data = Buffer.concat([data, value]);
+            onProgress(data.length / fileSize);
+            console.debug(`Decrypted ${data.length} / ${fileSize} (${((data.length / fileSize) * 100).toFixed(2)}%)`);
         }
 
-        return fileData;
+        return data;
     },
 };
 
-export type FileProcessor = typeof fileProcessor;
+export type DecryptionProcessor = typeof decryptionProcessor;
 
 // Expose the worker object to the main thread
-Comlink.expose(fileProcessor);
+Comlink.expose(decryptionProcessor);

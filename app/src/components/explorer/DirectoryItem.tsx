@@ -23,11 +23,10 @@ import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
+import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
+import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/ProvideAuth";
-
-import { FileProcessor } from "./fileProcessor.worker";
-import FileProcessorWorker from "./fileProcessor.worker?worker";
 
 interface ContainerProps extends FileLike {
     /** Size of the item, in bytes */
@@ -88,8 +87,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         props.setDialogMessage("Downloading and decrypting...");
         props.setProgress(0);
 
-        const worker = new FileProcessorWorker();
-        const processor = Comlink.wrap<FileProcessor>(worker);
+        const worker = new DecryptionProcessorWorker();
+        const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
         let fileData: Buffer = Buffer.from([]);
         try {
