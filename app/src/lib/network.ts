@@ -3,16 +3,15 @@
  *
  * @param url The URL to check.
  * @param timeout The timeout in seconds.
- * @returns `true` if the URL is reachable, `false` otherwise.
+ * @returns A promise which resolves to an object with a success boolean and optionally an error message
  */
-export async function checkConnection(url: string, timeout: number = 5): Promise<boolean> {
+export async function checkConnection(url: string, timeout: number = 5): Promise<{ success: boolean; error?: string }> {
     // Try to connect
     try {
         await fetch(url, { signal: AbortSignal.timeout(timeout * 1000) });
-        return true;
-    } catch (e) {
-        console.error(e);
-        return false;
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
     }
 }
 

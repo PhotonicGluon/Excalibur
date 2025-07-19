@@ -113,11 +113,20 @@ const Login: React.FC = () => {
 
         // Check connectivity to the server
         setLoadingState("Checking connectivity...");
-        if (!(await checkConnection(values.server))) {
+        const connectionResult = await checkConnection(values.server);
+        if (!connectionResult.success) {
             setIsLoading(false);
+            console.error(connectionResult.error);
+
+            let error = connectionResult.error;
+            if (error === "Failed to fetch") {
+                error = "Please check your internet connection.";
+            }
+
             presentAlert({
                 header: "Connection Failure",
-                message: `Could not connect to ${values.server}.`,
+                subHeader: `Could not connect to ${values.server}`,
+                message: error,
                 buttons: ["OK"],
             });
             return;
