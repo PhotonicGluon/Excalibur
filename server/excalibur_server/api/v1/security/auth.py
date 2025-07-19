@@ -1,17 +1,13 @@
 from typing import Annotated
 
 from fastapi import Body, Depends, HTTPException, Response, Security, status
+from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
 from excalibur_server.api.v1.security import router
-from excalibur_server.src.security.token import (
-    API_TOKEN_HEADER,
-    check_credentials,
-    decode_token,
-    generate_auth_token,
-)
 from excalibur_server.src.security.cache import VALID_UUIDS_CACHE
+from excalibur_server.src.security.token import API_TOKEN_HEADER, check_credentials, decode_token, generate_auth_token
 
 
 class LoginResponse(BaseModel):
@@ -53,8 +49,14 @@ def login_endpoint(
     "/logout",
     summary="Logout",
     dependencies=[Depends(check_credentials)],
-    responses={status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized or invalid token"}},
-    response_model=str,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Logged out successfully",
+            "content": {"text/plain": {"example": "Logged out 'uuid' successfully", "schema": None}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized or invalid token"},
+    },
+    response_class=PlainTextResponse,
 )
 def logout_endpoint(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)):
     """

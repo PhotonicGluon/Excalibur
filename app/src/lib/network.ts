@@ -63,9 +63,7 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
             return { success: false };
     }
 
-    const rawVersion = await response.text();
-    const version = rawVersion.substring(1, rawVersion.length - 1); // Remove quotes
-    return { success: true, version };
+    return { success: true, version: await response.text() };
 }
 
 /**
@@ -85,7 +83,5 @@ export async function getServerTime(apiURL: string): Promise<{ success: boolean;
             return { success: false };
     }
 
-    const rawTime = await response.text();
-    const time = rawTime.substring(1, rawTime.length - 1); // Remove quotes
-    return { success: true, time };
+    return { success: true, time: await response.text() };
 }

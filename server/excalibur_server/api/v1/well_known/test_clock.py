@@ -13,6 +13,5 @@ def test_clock():
     response = client.get("/api/v1/well-known/clock")
     assert response.status_code == status.HTTP_200_OK
 
-    response = response.text.strip('"')
-    response_time = datetime.fromisoformat(response)
+    response_time = datetime.fromisoformat(response.text)
     assert response_time - datetime.now().astimezone() < timedelta(seconds=1)

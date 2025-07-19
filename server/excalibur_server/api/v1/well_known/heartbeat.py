@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, Response, status
+from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
 from excalibur_server.api.v1.well_known import router
@@ -15,14 +16,12 @@ HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type
     responses={
         status.HTTP_200_OK: {
             "description": "Alive",
-            "content": {
-                "text/plain": {"example": "OK"},
-                "application/json": None,
-            },
+            "content": {"text/plain": {"example": "OK", "schema": None}},
         },
         status.HTTP_202_ACCEPTED: {"description": "Authenticated", "content": {"text/plain": {"example": "Auth OK"}}},
     },
     status_code=None,
+    response_class=PlainTextResponse,
 )
 async def heartbeat_endpoint(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(API_TOKEN_HEADER)],

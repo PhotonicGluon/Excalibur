@@ -13,7 +13,7 @@ from excalibur_server.src.path import validate_path
     "/delete/{path:path}",
     name="Delete Path",
     responses={
-        status.HTTP_200_OK: {"description": "Deleted file"},
+        status.HTTP_200_OK: {"description": "Deleted file", "content": None},
         status.HTTP_202_ACCEPTED: {"description": "Deleted directory"},
         status.HTTP_400_BAD_REQUEST: {"description": "Cannot delete directory if `as_dir` is not set"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},

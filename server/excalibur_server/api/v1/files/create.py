@@ -3,6 +3,7 @@ from typing import Annotated
 import aiofiles
 from fastapi import File, HTTPException, Path, Query, UploadFile, status
 from fastapi.params import Body
+from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
@@ -14,6 +15,10 @@ from excalibur_server.src.path import validate_path
     "/upload/{path:path}",
     name="Upload File",
     responses={
+        status.HTTP_201_CREATED: {
+            "description": "File uploaded",
+            "content": {"text/plain": {"example": "File uploaded", "schema": None}},
+        },
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
@@ -21,7 +26,7 @@ from excalibur_server.src.path import validate_path
         status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,
-    response_model=str,
+    response_class=PlainTextResponse,
 )
 async def upload_file_endpoint(
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
@@ -65,13 +70,17 @@ async def upload_file_endpoint(
     "/mkdir/{path:path}",
     name="Create Directory",
     responses={
+        status.HTTP_201_CREATED: {
+            "description": "Directory created",
+            "content": {"text/plain": {"example": "Directory created", "schema": None}},
+        },
         status.HTTP_400_BAD_REQUEST: {"description": "Illegal or invalid directory name"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
     },
     status_code=status.HTTP_201_CREATED,
-    response_model=str,
+    response_class=PlainTextResponse,
 )
 async def create_directory_endpoint(
     path: Annotated[

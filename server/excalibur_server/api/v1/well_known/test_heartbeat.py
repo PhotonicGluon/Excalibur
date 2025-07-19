@@ -14,7 +14,7 @@ def test_heartbeat_no_auth():
     assert response.status_code == status.HTTP_200_OK
     assert "Cache-Control" in response.headers
     assert HEADERS["Cache-Control"] in response.headers["Cache-Control"]
-    assert response.text == '"OK"'
+    assert response.text == "OK"
 
 
 # TODO: Also test the authentication version of the heartbeat

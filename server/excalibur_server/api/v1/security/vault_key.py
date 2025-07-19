@@ -2,6 +2,7 @@ import binascii
 from typing import Annotated
 
 from fastapi import Body, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.v1.security import router
 from excalibur_server.src.security.token import check_credentials
@@ -13,7 +14,10 @@ from excalibur_server.src.security.vault_key import EncryptedVaultKey, check_vau
     summary="Check Vault Key Details Existence",
     dependencies=[Depends(check_credentials)],
     responses={
-        status.HTTP_200_OK: {"description": "Vault key file exists"},
+        status.HTTP_200_OK: {
+            "description": "Vault key file exists",
+            "content": None,
+        },
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
         status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
     },
@@ -55,11 +59,15 @@ def get_vault_key_endpoint():
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(check_credentials)],
     responses={
+        status.HTTP_201_CREATED: {
+            "description": "Vault key set",
+            "content": {"text/plain": {"example": "Vault key set", "schema": None}},
+        },
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
         status.HTTP_409_CONFLICT: {"description": "Vault key file already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
     },
-    response_model=str,
+    response_class=PlainTextResponse,
     tags=["encrypted"],
 )
 def set_vault_key_endpoint(
