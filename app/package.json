@@ -30,6 +30,7 @@
         "@maskito/core": "^3.10.0",
         "@maskito/react": "^3.10.0",
         "@tailwindcss/vite": "^4.1.11",
+        "comlink": "^4.4.2",
         "ionicons": "^8.0.13",
         "js-sha3": "^0.9.3",
         "jsonwebtoken": "^9.0.2",

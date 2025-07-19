@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
+import * as Comlink from "comlink";
 import React, { useRef } from "react";
 
 import { ToastOptions } from "@ionic/core";
@@ -21,9 +22,12 @@ import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { FileLike } from "@lib/files/structures";
-import { bytesToHumanReadable, updateAndYield } from "@lib/util";
+import { bytesToHumanReadable } from "@lib/util";
 
 import { useAuth } from "@components/auth/ProvideAuth";
+
+import { FileProcessor } from "./fileProcessor.worker";
+import FileProcessorWorker from "./fileProcessor.worker?worker";
 
 interface ContainerProps extends FileLike {
     /** Size of the item, in bytes */
@@ -80,29 +84,23 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const encryptedFileSize = response.fileSize!;
         const fileSize = encryptedFileSize - ExEF.additionalSize;
 
-        // Decrypt file
+        // Decrypt file using a Comlink worker
         props.setDialogMessage("Downloading and decrypting...");
         props.setProgress(0);
-        const fileDataStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
-        const reader = fileDataStream.getReader();
+
+        const worker = new FileProcessorWorker();
+        const processor = Comlink.wrap<FileProcessor>(worker);
+
         let fileData: Buffer = Buffer.from([]);
         try {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                fileData = Buffer.concat([fileData, value]);
-
-                // FIXME: `updateAndYield` seems to block the reading here, causing the download to
-                //        hang for a while before actually 'committing', especially for larger files
-                //        (>10 MB). Can we use `comlink` to set up a worker thread to handle this?
-                await updateAndYield(fileData.length / fileSize, props.setProgress);
-
-                console.debug(
-                    `Downloaded ${fileData.length} / ${fileSize} (${((fileData.length / fileSize) * 100).toFixed(2)}%)`,
-                );
-            }
+            fileData = await processor.processStream(
+                // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                Comlink.transfer(response.dataStream!, [response.dataStream!]),
+                auth.vaultKey!,
+                fileSize,
+                // `proxy()` ensures the callback function works across threads
+                Comlink.proxy(props.setProgress),
+            );
         } catch (e: any) {
             props.presentToast({
                 message: `Failed to decrypt file: ${e.message}`,
@@ -111,6 +109,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
             props.setShowDialog(false);
             return;
+        } finally {
+            // Free up resources
+            worker.terminate();
         }
 
         // Save file
