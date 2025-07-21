@@ -10,8 +10,8 @@ export async function checkConnection(url: string, timeout: number = 5): Promise
     try {
         await fetch(url, { signal: AbortSignal.timeout(timeout * 1000) });
         return { success: true };
-    } catch (e: any) {
-        return { success: false, error: e.message };
+    } catch (e: unknown) {
+        return { success: false, error: (e as Error).message };
     }
 }
 
@@ -40,7 +40,7 @@ export async function heartbeat(apiURL: string, token: string): Promise<{ succes
                 return { success: false };
         }
         return { success: true, authValid: response.status === 202 };
-    } catch (e) {
+    } catch {
         return { success: false };
     }
 }

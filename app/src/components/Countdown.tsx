@@ -23,7 +23,6 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
     });
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
         function tick() {
             const now = new Date();
             const timeDifference = date.getTime() - now.getTime();
@@ -40,11 +39,11 @@ const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> 
             }
         }
 
-        interval = setInterval(tick, 1000);
+        const interval = setInterval(tick, 1000);
         tick();
 
         return () => clearInterval(interval);
-    }, [date]);
+    }, [date, onExpiry]);
 
     return (
         <IonLabel {...props}>

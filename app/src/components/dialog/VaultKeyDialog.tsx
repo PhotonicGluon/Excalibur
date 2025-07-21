@@ -20,7 +20,7 @@ import { close } from "ionicons/icons";
 import "./VaultKeyDialog.css";
 
 function generateVaultKeyMask() {
-    let mask = [];
+    const mask = [];
     for (let i = 0; i < 15; i++) {
         mask.push(...Array(4).fill(/[0-9A-Fa-f]/), " ");
     }

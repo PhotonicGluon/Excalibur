@@ -6,17 +6,6 @@ type KeySize = 128 | 192 | 256;
 type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
 
 /**
- * Converts algorithm to keysize.
- *
- * @param alg Algorithm type
- * @returns Keysize
- */
-function algToKeysize(alg: Algorithm): KeySize {
-    const matches = alg.match(/aes-(?<keysize>128|192|256)-gcm/)!;
-    return parseInt(matches.groups!.keysize) as KeySize;
-}
-
-/**
  * Converts keysize to algorithm.
  *
  * @param keysize Key size
@@ -50,7 +39,7 @@ export class ExEFHeader {
      * Generates the ExEF header.
      */
     toBuffer(): Buffer {
-        let buffer = Buffer.alloc(ExEFHeader.headerSize);
+        const buffer = Buffer.alloc(ExEFHeader.headerSize);
         buffer.write("ExEF", 0, 4);
         buffer.write(EXEF_VERSION.toString(16).padStart(4, "0"), 4, 2, "hex");
         buffer.write(this.keysize.toString(16).padStart(4, "0"), 6, 2, "hex");
@@ -106,7 +95,7 @@ export class ExEFFooter {
      * Generates the ExEF footer.
      */
     toBuffer(): Buffer {
-        let buffer = Buffer.alloc(ExEFFooter.footerSize);
+        const buffer = Buffer.alloc(ExEFFooter.footerSize);
         this.tag.copy(buffer, 0);
         return buffer;
     }
@@ -224,15 +213,15 @@ export default class ExEF {
         });
     }
 
-    /**
-     * Encrypts the given JSON-serializable data.
-     *
-     * @param data The data to be encrypted, as a JSON serializable object
-     * @returns The ExEF bytes
-     */
-    encryptJSON(data: any): Buffer {
-        return this.encrypt(Buffer.from(JSON.stringify(data)));
-    }
+    // /**
+    //  * Encrypts the given JSON-serializable data.
+    //  *
+    //  * @param data The data to be encrypted, as a JSON serializable object
+    //  * @returns The ExEF bytes
+    //  */
+    // encryptJSON(data: any): Buffer {
+    //     return this.encrypt(Buffer.from(JSON.stringify(data)));
+    // }
 
     /**
      * Decrypts the given ExEF data.

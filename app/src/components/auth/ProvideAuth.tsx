@@ -1,45 +1,9 @@
-// Adapted from https://web.archive.org/web/20230320185219/https://usehooks.com/useAuth/
-import { Dispatch, SetStateAction, createContext, useContext, useState } from "react";
+import { useState } from "react";
 
 import { getServerTime, getServerVersion, heartbeat } from "@lib/network";
 import { login, logout } from "@lib/security/api";
 
-interface ServerInfo {
-    /** Server version*/
-    version: string;
-    /** Delta of time between server and client */
-    deltaTime: number;
-}
-
-export interface AuthProvider {
-    /** API URL */
-    apiURL: string | null;
-    /** Key used for end-to-end encryption */
-    e2eeKey: Buffer | null;
-    /** Key used to encrypt data in the vault */
-    vaultKey: Buffer | null;
-    /** The current authentication token */
-    token: string | null;
-    /** Server info, retrieved upon login */
-    serverInfo: ServerInfo | null;
-    /** Function to log into the server, returning the token for continued authentication */
-    login: (apiURL: string, uuid: string, e2eeKey: Buffer) => Promise<string>;
-    /** Function to log out of the server */
-    logout: () => Promise<void>;
-    /** Function to set the vault key */
-    setVaultKey: Dispatch<SetStateAction<Buffer<ArrayBufferLike> | null>>;
-}
-
-const authContext = createContext<AuthProvider>(null!);
-
-/**
- * Hook to get the current authentication state.
- *
- * @returns The current authentication state.
- */
-export function useAuth() {
-    return useContext(authContext);
-}
+import { AuthProvider, ServerInfo, authContext } from "./auth-provider";
 
 /**
  * A component that provides the authentication state to the rest of the app.

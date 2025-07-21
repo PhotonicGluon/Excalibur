@@ -27,7 +27,7 @@ import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
-import { useAuth } from "@components/auth/ProvideAuth";
+import { useAuth } from "@components/auth";
 
 interface ContainerProps extends FileLike {
     /** Size of the item, in bytes */
@@ -101,9 +101,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 // `proxy()` ensures the callback function works across threads
                 Comlink.proxy(props.setProgress),
             );
-        } catch (e: any) {
+        } catch (e) {
             props.presentToast({
-                message: `Failed to decrypt file: ${e.message}`,
+                message: `Failed to decrypt file: ${(e as Error).message}`,
                 duration: 2000,
                 color: "danger",
             });

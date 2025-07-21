@@ -1,6 +1,6 @@
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import { menuController } from "@ionic/core/components";
@@ -55,7 +55,7 @@ import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
 
 import Countdown from "@components/Countdown";
-import { useAuth } from "@components/auth/ProvideAuth";
+import { useAuth } from "@components/auth";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
@@ -125,24 +125,27 @@ const FileExplorer: React.FC = () => {
      *
      * @param showToast If true, displays a toast telling the user that the page was refreshed
      */
-    async function refreshContents(showToast: boolean = true) {
-        const response = await listdir(auth, requestedPath);
-        if (!response.success) {
-            presentToast({
-                message: response.error,
-                duration: 3000,
-                color: "danger",
-            });
-            return;
-        }
-        setDirectoryContents(response.directory!);
-        if (showToast) {
-            presentToast({
-                message: "Refreshed",
-                duration: 1000,
-            });
-        }
-    }
+    const refreshContents = useCallback(
+        async (showToast: boolean = true) => {
+            const response = await listdir(auth, requestedPath);
+            if (!response.success) {
+                presentToast({
+                    message: response.error,
+                    duration: 3000,
+                    color: "danger",
+                });
+                return;
+            }
+            setDirectoryContents(response.directory!);
+            if (showToast) {
+                presentToast({
+                    message: "Refreshed",
+                    duration: 1000,
+                });
+            }
+        },
+        [auth, requestedPath, presentToast],
+    );
 
     /**
      * Prompts the user to choose a file, encrypts it, and uploads it to the current directory.
@@ -250,6 +253,7 @@ const FileExplorer: React.FC = () => {
             presentToast({
                 message: "File uploaded",
                 duration: 3000,
+                color: "success",
             });
             setShowProgressDialog(false);
         }
@@ -260,7 +264,7 @@ const FileExplorer: React.FC = () => {
             result = await FilePicker.pickFiles({
                 limit: 1, // TODO: allow uploading multiple files
             });
-        } catch (e: any) {
+        } catch (e: unknown) {
             const message = (e as Error).message;
             if (message.includes("pickFiles canceled")) {
                 console.debug("Cancelled upload of file");
@@ -469,7 +473,7 @@ const FileExplorer: React.FC = () => {
 
         // Refresh directory contents
         refreshContents(false);
-    }, [requestedPath]);
+    }, [requestedPath, refreshContents]);
 
     // Render
     return (

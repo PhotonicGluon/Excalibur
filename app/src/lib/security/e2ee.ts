@@ -65,7 +65,7 @@ export async function e2ee(
     console.debug("Handshake...");
     let clientPriv, clientPub, serverPub, sharedU, handshakeUUID;
     for (let tryCount = 0; tryCount < 3; tryCount++) {
-        let { priv, pub } = srpGroup.generateClientValues();
+        const { priv, pub } = srpGroup.generateClientValues();
         const handshakeResponse = await handshake(apiURL, pub);
         if (!handshakeResponse.success) {
             console.debug(`Handshake failed: ${handshakeResponse.error} (try count: ${tryCount})`);

@@ -27,7 +27,12 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
         if (value === "") {
             return;
         }
-        validateURL(value) ? setIsValid(true) : setIsValid(false);
+
+        if (validateURL(value)) {
+            setIsValid(true);
+        } else {
+            setIsValid(false);
+        }
     }
 
     /**
