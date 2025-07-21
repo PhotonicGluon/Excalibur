@@ -1,9 +1,14 @@
 import { useState } from "react";
 
-import { getServerTime, getServerVersion, heartbeat } from "@lib/network";
+import { getServerTime, getServerVersion } from "@lib/network";
 import { login, logout } from "@lib/security/api";
 
 import { AuthProvider, ServerInfo, authContext } from "./auth-provider";
+import { heartbeat } from "./heartbeat";
+
+const HEARTBEAT_INTERVAL = 15; // Interval between successful heartbeats, in seconds
+const HEARTBEAT_RETRY_COUNT = 5; // Number of times to retry heartbeat on failure
+const HEARTBEAT_RETRY_INTERVAL = 1; // Interval between retries, in seconds
 
 /**
  * A component that provides the authentication state to the rest of the app.
@@ -73,14 +78,14 @@ function useProvideAuth(): AuthProvider {
 
         // Set up heartbeat interval
         const interval = setInterval(async () => {
-            const heartbeatResponse = await heartbeat(apiURL, token);
-            if (!heartbeatResponse.success || !heartbeatResponse.authValid) {
+            const connected = await heartbeat(apiURL, token, HEARTBEAT_RETRY_COUNT, HEARTBEAT_RETRY_INTERVAL);
+            if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 console.debug("Heartbeat failed, sending back to login screen");
                 window.location.href = "/login";
                 return;
             }
-        }, 30_000); // 30 s
+        }, HEARTBEAT_INTERVAL * 1000);
         setHeartbeatInterval(interval);
         return token;
     };
