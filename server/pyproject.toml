@@ -1,6 +1,6 @@
 [project]
 name = "excalibur-server"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "An encrypted file server."
 readme = "README.md"
 authors = [{ name = "The-Photons" }]
@@ -17,6 +17,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "typer>=0.16.0",
     "uvicorn[standard]>=0.35.0",
+    "websockets>=15.0.1",
 ]
 
 [project.scripts]

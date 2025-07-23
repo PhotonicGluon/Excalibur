@@ -10,6 +10,7 @@ from .security_details import (
 from .auth import login_endpoint
 from .vault_key import check_vault_key_endpoint, get_vault_key_endpoint, set_vault_key_endpoint
 from .srp import router as srp_router
+from .srp_ws import srp_websocket_endpoint
 
 router.include_router(srp_router, prefix="/srp")
 
