@@ -45,8 +45,9 @@ def get_security_details(security_details_file: Path = SECURITY_DETAILS_FILE) ->
     """
     Reads the security details from the given file.
 
-    :param security_details_file: The file to read from. Defaults to SECURITY_DETAILS_FILE.
-    :return: The read security details.
+    :param security_details_file: The file to read from. Defaults to `SECURITY_DETAILS_FILE`
+    :raises FileNotFoundError: If the file does not exist
+    :return: The read security details
     """
 
     with open(security_details_file, "r") as f:
@@ -59,8 +60,8 @@ def set_security_details(
     """
     Writes the given security details to the given file.
 
-    :param security_details: The security details to write.
-    :param security_details_file: The file to write to. Defaults to SECURITY_DETAILS_FILE.
+    :param security_details: The security details to write
+    :param security_details_file: The file to write to. Defaults to `SECURITY_DETAILS_FILE`
     """
 
     with open(security_details_file, "w") as f:

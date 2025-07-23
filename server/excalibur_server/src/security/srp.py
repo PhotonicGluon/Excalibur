@@ -54,6 +54,7 @@ def get_verifier(security_details_file: Path) -> int:
     Gets the verifier value from a file.
 
     :param security_details_file: security details file
+    :raises FileNotFoundError: if the security details file does not exist
     :return: the verifier
     """
 
