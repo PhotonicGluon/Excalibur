@@ -1,6 +1,6 @@
 [project]
 name = "excalibur-server"
-version = "0.0.1"
+version = "0.1.0a1"
 description = "An encrypted file server."
 readme = "README.md"
 authors = [{ name = "The-Photons" }]
