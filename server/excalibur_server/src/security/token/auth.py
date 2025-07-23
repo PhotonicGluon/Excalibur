@@ -1,9 +1,11 @@
+from base64 import b64encode
 from datetime import datetime, timezone
 
+from Crypto.Cipher import AES
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from excalibur_server.src.security.cache import VALID_UUIDS_CACHE
+from excalibur_server.src.security.consts import KEY
 
 from .jwt import decode_token, generate_token
 
@@ -15,17 +17,25 @@ CREDENTIALS_EXCEPTION = HTTPException(
 )
 
 
-def generate_auth_token(uuid: str, expiry_timestamp: float) -> str:
+def generate_auth_token(e2ee_key: bytes, expiry_timestamp: float) -> str:
     """
-    Generates a JWT token for the given UUID and expiry timestamp.
+    Generates a JWT token for the given E2EE key and expiry timestamp.
 
-    :param uuid: the subject of the token
+    :param e2ee_key: the E2EE key
     :param expiry_timestamp: the timestamp when the token expires
     :return: a serialized JWT
     """
 
+    cipher = AES.new(KEY, AES.MODE_GCM)
     return generate_token(
-        {"sub": uuid},
+        {
+            "sub": "excalibur",
+            "e2ee": {
+                "nonce": b64encode(cipher.nonce).decode("utf-8"),
+                "key": b64encode(cipher.encrypt(e2ee_key)).decode("utf-8"),
+                "tag": b64encode(cipher.digest()).decode("utf-8"),
+            },
+        },
         expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
     )
 
@@ -40,17 +50,6 @@ def check_auth_token(token: str) -> bool:
 
     decoded = decode_token(token)
     if decoded is None:
-        return False
-
-    uuid = decoded.get("sub")
-    if uuid is None:
-        return False
-
-    if uuid not in VALID_UUIDS_CACHE:
-        return False
-
-    _, expiry_timestamp = VALID_UUIDS_CACHE[uuid]
-    if expiry_timestamp < datetime.now(tz=timezone.utc).timestamp():
         return False
 
     return True

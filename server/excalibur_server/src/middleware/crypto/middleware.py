@@ -1,3 +1,7 @@
+import warnings
+from base64 import b64decode
+
+from Crypto.Cipher import AES
 from starlette.datastructures import MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -5,7 +9,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
-from excalibur_server.src.security.cache import VALID_UUIDS_CACHE
+from excalibur_server.src.security.consts import KEY
 from excalibur_server.src.security.token import CREDENTIALS_EXCEPTION, decode_token
 
 
@@ -271,21 +275,27 @@ class EncryptionHandler:
         if self._e2ee_key is not None:
             return
 
-        # Try to obtain the UUID
-        uuid = None
-        if headers.get("Authorization") is not None:
-            auth = headers.get("Authorization").split(" ")
-            if auth[0] == "Bearer" and len(auth) == 2:
-                token = decode_token(auth[1])
-                if token is None:
-                    return None
-                uuid = token["sub"]
-        elif headers.get("uuid") is not None:  # Patched in from an endpoint
-            uuid = headers.get("uuid")
-            del headers["uuid"]
+        # Try to obtain the e2ee data
+        e2ee_data = None
+        if headers.get("Authorization") is None:
+            return
 
-        # Try to obtain the E2EE key
-        e2ee_key = VALID_UUIDS_CACHE.get(uuid, (None, None))[0]
+        auth = headers.get("Authorization").split(" ")
+        if auth[0] != "Bearer" or len(auth) != 2:
+            return
+
+        token = decode_token(auth[1])
+        if token is None:
+            return
+        e2ee_data = token["e2ee"]
+
+        # Decrypt the e2ee data to get the key
+        cipher = AES.new(KEY, AES.MODE_GCM, nonce=b64decode(e2ee_data["nonce"]))
+        try:
+            e2ee_key = cipher.decrypt_and_verify(b64decode(e2ee_data["key"]), b64decode(e2ee_data["tag"]))
+        except ValueError:
+            warnings.warn("Invalid E2EE key")
+            return
 
         # Update cache
         self._e2ee_key = e2ee_key
