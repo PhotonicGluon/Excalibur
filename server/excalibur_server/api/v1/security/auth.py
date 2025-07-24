@@ -39,6 +39,11 @@ async def auth_endpoint(websocket: WebSocket):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Security details not found")
 
     verifier = bytes_to_long(security_details.verifier)
+    if (
+        os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
+        and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None
+    ):
+        verifier = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
 
     await websocket.accept()
     try:
@@ -57,7 +62,7 @@ async def auth_endpoint(websocket: WebSocket):
         client_accepted = False
         iter_count = 0
         while not client_accepted and iter_count < MAX_ITER_COUNT:
-            b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier)
+            b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier, private_value=b_priv)
             await websocket.send_bytes(long_to_bytes(b_pub))
 
             # Await client's response
@@ -95,13 +100,20 @@ async def auth_endpoint(websocket: WebSocket):
             await websocket.send_text("ERR: Shared U value is zero")
             await websocket.close()
             return
+        await websocket.send_text("U is OK")
 
         # Compute server's master value
         premaster = compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier)
         master_server = premaster_to_master(SRP_GROUP, premaster)
 
         # Wait for client's M1 value
-        m1_server = generate_m1(SRP_GROUP, security_details.srp_salt, a_pub, b_pub, master_server)
+        srp_salt = security_details.srp_salt
+        if (
+            os.environ.get("EXCALIBUR_SERVER_DEBUG") == "1"
+            and os.environ.get("EXCALIBUR_SERVER_TEST_SRP_SALT") is not None
+        ):
+            srp_salt = b64decode(os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"])
+        m1_server = generate_m1(SRP_GROUP, srp_salt, a_pub, b_pub, master_server)
         m1_client = await websocket.receive_bytes()
 
         if m1_client != m1_server:
