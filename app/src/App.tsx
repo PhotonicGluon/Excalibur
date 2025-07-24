@@ -30,6 +30,7 @@ import "@ionic/react/css/typography.css";
 import { PrivateRoute, ProvideAuth } from "@components/auth";
 
 /* App pages */
+import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import Settings from "@pages/Settings";
@@ -48,6 +49,7 @@ const App: React.FC = () => (
                     <Route exact path="/login" component={Login} />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
                     <PrivateRoute path="/settings" component={Settings} />
+                    <Route path="/credits" component={Credits} />
                     <Redirect exact from="/" to="/login" />
                 </IonRouterOutlet>
             </IonReactRouter>

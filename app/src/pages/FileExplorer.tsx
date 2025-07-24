@@ -41,6 +41,7 @@ import {
     ellipsisVertical,
     folderOutline,
     home,
+    informationCircleOutline,
     keyOutline,
     logOutOutline,
     settingsOutline,
@@ -493,6 +494,12 @@ const FileExplorer: React.FC = () => {
                 <IonContent>
                     {/* Actions */}
                     <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center">
+                        <IonItem button={true} onClick={() => handleLogout()}>
+                            <IonLabel>
+                                <IonIcon icon={logOutOutline} size="large" />
+                                <IonText className="pl-2">Logout</IonText>
+                            </IonLabel>
+                        </IonItem>
                         <IonItem
                             button={true}
                             onClick={() => {
@@ -505,13 +512,18 @@ const FileExplorer: React.FC = () => {
                                 <IonText className="pl-2">Settings</IonText>
                             </IonLabel>
                         </IonItem>
-                        <IonItem button={true} onClick={() => handleLogout()}>
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                router.push("/credits", "forward", "push");
+                                menuController.close();
+                            }}
+                        >
                             <IonLabel>
-                                <IonIcon icon={logOutOutline} size="large" />
-                                <IonText className="pl-2">Logout</IonText>
+                                <IonIcon icon={informationCircleOutline} size="large" />
+                                <IonText className="pl-2">Credits</IonText>
                             </IonLabel>
                         </IonItem>
-                        <IonItem>TODO: Add more hamburger menu items</IonItem>
                     </IonList>
 
                     {/* Info */}
