@@ -43,20 +43,24 @@ export async function login(
  * @returns A promise which resolves to an object indicating the success status and an optional error message.
  */
 export async function logout(apiURL: string, token: string): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${apiURL}/security/logout`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    switch (response.status) {
-        case 401:
-            return { success: false, error: "Unauthorized or invalid token" };
-        case 200:
-            break; // Continue with normal flow
-        default:
-            return { success: false, error: "Unknown error" };
-    }
+    // TODO: Remove
 
-    return {
-        success: true,
-    };
+    // const response = await fetch(`${apiURL}/security/logout`, {
+    //     method: "POST",
+    //     headers: { Authorization: `Bearer ${token}` },
+    // });
+    // switch (response.status) {
+    //     case 401:
+    //         return { success: false, error: "Unauthorized or invalid token" };
+    //     case 200:
+    //         break; // Continue with normal flow
+    //     default:
+    //         return { success: false, error: "Unknown error" };
+    // }
+
+    // return {
+    //     success: true,
+    // };
+
+    return { success: true };
 }

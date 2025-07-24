@@ -1,5 +1,6 @@
 import os
-from base64 import b64decode
+import json
+from base64 import b64decode, b64encode
 from datetime import datetime, timezone
 
 from Crypto.Cipher import AES
@@ -18,6 +19,8 @@ from excalibur_server.src.security.srp import (
     premaster_to_master,
 )
 from excalibur_server.src.security.token.auth import generate_auth_token
+
+MAX_ITER_COUNT = 3
 
 
 @router.websocket("/auth")
@@ -39,6 +42,9 @@ async def auth_endpoint(websocket: WebSocket):
 
     await websocket.accept()
     try:
+        # Send server's SRP group size
+        await websocket.send_text(str(SRP_GROUP.bits))
+
         # Compute server's ephemeral values
         b_priv = None
         b_pub = 0
@@ -48,28 +54,49 @@ async def auth_endpoint(websocket: WebSocket):
         ):
             b_priv = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"]))
 
-        while b_pub % SRP_GROUP.prime == 0:
+        client_accepted = False
+        iter_count = 0
+        while not client_accepted and iter_count < MAX_ITER_COUNT:
             b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier)
+            await websocket.send_bytes(long_to_bytes(b_pub))
 
-        # Send server's parameters
-        await websocket.send_text(str(SRP_GROUP.bits))
-        await websocket.send_bytes(security_details.srp_salt)
-        await websocket.send_bytes(long_to_bytes(b_pub))
+            # Await client's response
+            response = await websocket.receive_text()
+            if response == "OK":
+                client_accepted = True
+            else:
+                iter_count += 1
 
-        # Next, await client's public value
-        a_pub = bytes_to_long(await websocket.receive_bytes())
-
-        # Check given client public value
-        if a_pub % SRP_GROUP.prime == 0:
-            await websocket.send_text("ERR")
-            await websocket.send_text("Client public value is illegal: A mod N cannot be 0")
+        if not client_accepted:
+            await websocket.send_text("ERR: Client refused all server's public values")
             await websocket.close()
             return
 
-        await websocket.send_text("OK")
+        # Next, await client's public value
+        iter_count = 0
+        while iter_count < MAX_ITER_COUNT:
+            a_pub = bytes_to_long(await websocket.receive_bytes())
+
+            # Check given client public value
+            if a_pub % SRP_GROUP.prime != 0:
+                await websocket.send_text("OK")
+                break
+            else:
+                await websocket.send_text("ERR: Client public value is illegal; A mod N cannot be 0")
+                iter_count += 1
+
+        if a_pub % SRP_GROUP.prime == 0:
+            await websocket.close()
+            return
+
+        # Check shared U value
+        u = compute_u(SRP_GROUP, a_pub, b_pub)
+        if u == 0:
+            await websocket.send_text("ERR: Shared U value is zero")
+            await websocket.close()
+            return
 
         # Compute server's master value
-        u = compute_u(SRP_GROUP, a_pub, b_pub)
         premaster = compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier)
         master_server = premaster_to_master(SRP_GROUP, premaster)
 
@@ -79,8 +106,7 @@ async def auth_endpoint(websocket: WebSocket):
         m1_client = await websocket.receive_bytes()
 
         if m1_client != m1_server:
-            await websocket.send_text("ERR")
-            await websocket.send_text("M1 values do not match")
+            await websocket.send_text("ERR: M1 values do not match")
             await websocket.close()
             return
 
@@ -89,6 +115,9 @@ async def auth_endpoint(websocket: WebSocket):
         # Generate M2 for client to verify
         m2 = generate_m2(a_pub, m1_server, master_server)
         await websocket.send_bytes(m2)
+        if await websocket.receive_text() != "OK":
+            await websocket.close()
+            return
 
         # Send the auth token for client to use, after encrypting with the master
         auth_token = generate_auth_token(master_server, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
@@ -97,10 +126,15 @@ async def auth_endpoint(websocket: WebSocket):
         auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))
         tag = cipher.digest()
 
-        await websocket.send_text("Auth Token Data")
-        await websocket.send_bytes(cipher.nonce)
-        await websocket.send_bytes(auth_token_enc)
-        await websocket.send_bytes(tag)
+        auth_token_data = json.dumps(
+            {
+                "nonce": b64encode(cipher.nonce).decode("utf-8"),
+                "token": b64encode(auth_token_enc).decode("utf-8"),
+                "tag": b64encode(tag).decode("utf-8"),
+            }
+        )
+
+        await websocket.send_text(auth_token_data)
 
         # Finally, close connection
         await websocket.close()

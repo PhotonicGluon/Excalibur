@@ -13,8 +13,8 @@ export function padNumber(num: number, length: number): string {
  * Converts a given number of bytes into a human-readable format.
  *
  * @param bytes The number of bytes.
- * @param use1024Units If true, the units will be 1024-based (KiB, MiB, GiB)
- *                     instead of 1000-based (KB, MB, GB).
+ * @param use1024Units If true, the units will be 1024-based (KiB, MiB, GiB) instead of 1000-based
+ *      (KB, MB, GB).
  * @returns A string like "4.00 KiB", "1.00 GB", etc.
  */
 export function bytesToHumanReadable(bytes: number, use1024Units?: boolean): string {

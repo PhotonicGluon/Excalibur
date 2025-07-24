@@ -44,6 +44,7 @@ function useProvideAuth(): AuthProvider {
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
+    // FIXME: Update using the new websocket system
     const loginFunc = async (apiURL: string, uuid: string, e2eeKey: Buffer) => {
         // Set state variables
         setApiURL(apiURL);
@@ -90,6 +91,7 @@ function useProvideAuth(): AuthProvider {
         return token;
     };
 
+    // FIXME: Update using the new websocket system
     const logoutFunc = async () => {
         // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);

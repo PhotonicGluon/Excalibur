@@ -1,13 +1,59 @@
-import { checkValidity, getGroup, getSecurityDetails, handshake } from "@lib/security/api";
+import { createDecipheriv } from "crypto";
+
+import { getSecurityDetails } from "@lib/security/api";
 import generateKey from "@lib/security/keygen";
+import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
+import { bufferToNumber, numberToBuffer } from "@lib/util";
+
+const MAX_ITER_COUNT = 3;
 
 interface E2EEData {
-    /** UUID of the handshake */
-    uuid: string;
     /** Bilaterally agreed symmetric key to encrypt communications */
     e2eeKey: Buffer;
     /** Account unlock key (AUK) */
     auk: Buffer;
+    /** Authentication token */
+    token: string;
+}
+
+enum E2EECommsStage {
+    WAITING_FOR_SRP_GROUP,
+    WAITING_FOR_SALT,
+    WAITING_FOR_SERVER_PUB,
+    WAITING_FOR_CLIENT_VALUE_RESPONSE,
+    WAITING_FOR_M1,
+    WAITING_FOR_M2,
+    WAITING_FOR_AUTH_TOKEN,
+}
+
+interface E2EECommsState {
+    /** Current stage of the negotiation */
+    stage: E2EECommsStage;
+
+    /** Iteration number for negotiation */
+    negotiationIter: number;
+
+    /** SRP group to use for negotiation */
+    srpGroup?: _SRPGroup;
+
+    /** Bilaterally agreed master key */
+    master?: Buffer;
+
+    /** Auth token */
+    authToken?: string;
+
+    /** Values used in the SRP protocol */
+    values?: {
+        server?: {
+            pub: bigint;
+        };
+        client?: {
+            priv: bigint;
+            pub: bigint;
+        };
+        m1?: Buffer;
+        m2?: Buffer;
+    };
 }
 
 /**
@@ -29,18 +75,6 @@ export async function e2ee(
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
     showToast?: (message: string, isError?: boolean) => void,
 ): Promise<E2EEData | undefined> {
-    // Get SRP group used for communication
-    setLoadingState?.("Determining SRP group...");
-    const groupResponse = await getGroup(apiURL);
-    const srpGroup = groupResponse.group;
-    if (!srpGroup) {
-        stopLoading?.();
-        showToast?.(`Unable to determine server's SRP group: ${groupResponse.error!}`, true);
-        return;
-    }
-
-    console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
-
     // Get security details
     setLoadingState?.("Loading security details...");
     const securityDetailsResponse = await getSecurityDetails(apiURL);
@@ -61,69 +95,189 @@ export async function e2ee(
     console.log(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
     // Perform SRP handshake
-    setLoadingState?.("Performing handshake...");
-    console.debug("Handshake...");
-    let clientPriv, clientPub, serverPub, sharedU, handshakeUUID;
-    for (let tryCount = 0; tryCount < 3; tryCount++) {
-        const { priv, pub } = srpGroup.generateClientValues();
-        const handshakeResponse = await handshake(apiURL, pub);
-        if (!handshakeResponse.success) {
-            console.debug(`Handshake failed: ${handshakeResponse.error} (try count: ${tryCount})`);
-            continue;
-        }
+    const wsURL = apiURL.replace("http", "ws");
+    const ws = new WebSocket(`${wsURL}/security/auth`);
 
-        clientPriv = priv;
-        clientPub = pub;
-        serverPub = handshakeResponse.serverPub!;
-        if (serverPub % srpGroup.prime === 0n) {
-            console.debug(`Server sent invalid public value, retrying (try count: ${tryCount})`);
-            continue;
-        }
-        sharedU = srpGroup.computeU(clientPub, serverPub);
-        if (sharedU === 0n) {
-            console.debug(`Computed U is zero, retrying (try count: ${tryCount})`);
-            continue;
-        }
-        handshakeUUID = handshakeResponse.handshakeUUID;
-        break;
-    }
-    if (!clientPriv || !clientPub || !serverPub || !sharedU || !handshakeUUID) {
-        stopLoading?.();
-        showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
-        return;
-    }
+    setLoadingState?.("Determining SRP group...");
+    let state: E2EECommsState = {
+        stage: E2EECommsStage.WAITING_FOR_SRP_GROUP,
+        negotiationIter: 0,
+    };
 
-    setLoadingState?.("Calculating master...");
-    console.debug("Calculating master...");
-    const premaster = srpGroup.computePremasterSecret(clientPriv, serverPub, srpKey, sharedU);
-    console.debug("Premaster: " + premaster.toString(16));
-    const masterKey = srpGroup.premasterToMaster(premaster); // Key used to encrypt communications
-    console.log("Master key: " + masterKey.toString("hex"));
+    return new Promise<E2EEData>((resolve, reject) => {
+        ws.addEventListener("error", (event) => {
+            const e = event as ErrorEvent;
+            ws.close();
+            console.error(e);
+            stopLoading?.();
+            showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
+            reject(e);
+        });
 
-    setLoadingState?.("Authentication...");
-    console.debug("Verifying M1...");
-    const m1 = srpGroup.generateM1(srpSalt, clientPub, serverPub, masterKey);
-    const validityResponse = await checkValidity(apiURL, handshakeUUID, srpSalt, clientPub, serverPub, m1);
-    if (!validityResponse.success) {
-        stopLoading?.();
-        if (validityResponse.error === "M1 values do not match") {
-            showAlert?.("Client Verification Failed", "Server failed to verify client", "Is the password correct?");
-        } else {
-            showAlert?.("Client Verification Failed", "Server failed to verify client", validityResponse.error);
-        }
-        return;
-    }
+        ws.addEventListener("message", async (event) => {
+            const data = event.data;
+            try {
+                if (state.stage === E2EECommsStage.WAITING_FOR_SRP_GROUP) {
+                    const srpBits = parseInt(data.toString());
+                    state.srpGroup = getSRPGroup(srpBits);
+                    state.stage = E2EECommsStage.WAITING_FOR_SERVER_PUB;
+                    console.debug(`Server is using ${state.srpGroup.bits}-bit SRP group`);
+                    return;
+                }
 
-    console.debug("Verifying M2...");
-    const m2Server = validityResponse.m2!;
-    const m2Client = srpGroup.generateM2(clientPub, m1, masterKey);
-    if (!m2Client.equals(m2Server)) {
-        stopLoading?.();
-        showAlert?.("Server Verification Failed", "Client failed to verify server", "Server may be compromised");
-        return;
-    }
+                if (state.stage === E2EECommsStage.WAITING_FOR_SERVER_PUB) {
+                    // Receive server's public value
+                    const serverPub = bufferToNumber(Buffer.from(await data.arrayBuffer(), "binary"));
+                    if (serverPub % state.srpGroup!.prime === 0n) {
+                        state.negotiationIter++;
+                        console.debug(
+                            `Server sent invalid public value, retrying (try count: ${state.negotiationIter})`,
+                        );
+                        ws.send("ERR");
+                        if (state.negotiationIter >= MAX_ITER_COUNT) {
+                            ws.close();
+                            stopLoading?.();
+                            showAlert?.(
+                                "Handshake Failed",
+                                undefined,
+                                "Could not complete handshake. Please try again.",
+                            );
+                            reject("Server keeps sending invalid public value");
+                        }
+                        return;
+                    }
 
-    console.log(`Bilateral authentication complete; handshake UUID is ${handshakeUUID}`);
+                    state.negotiationIter = 0;
+                    state.values = { server: { pub: serverPub } };
+                    ws.send("OK");
 
-    return { uuid: handshakeUUID, e2eeKey: masterKey, auk: auk };
+                    // Now generate client's ephemeral values and send the public value
+                    const { priv, pub } = state.srpGroup!.generateClientValues();
+                    state.values.client = { priv, pub };
+                    ws.send(numberToBuffer(pub));
+                    state.stage = E2EECommsStage.WAITING_FOR_CLIENT_VALUE_RESPONSE;
+                    return;
+                }
+
+                if (state.stage === E2EECommsStage.WAITING_FOR_CLIENT_VALUE_RESPONSE) {
+                    if (data.toString() !== "OK") {
+                        console.debug("Server rejected client's public value, retrying");
+                        const { priv, pub } = state.srpGroup!.generateClientValues();
+                        state.values!.client = { priv, pub };
+                        ws.send(numberToBuffer(pub));
+                        state.stage = E2EECommsStage.WAITING_FOR_CLIENT_VALUE_RESPONSE;
+                        return;
+                    }
+
+                    // Check shared U value
+                    const sharedU = state.srpGroup!.computeU(state.values!.client!.pub, state.values!.server!.pub);
+                    if (sharedU === 0n) {
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.("Handshake Failed", undefined, "Computed shared value is zero. Please try again.");
+                        reject("Computed shared value is zero");
+                        return;
+                    }
+
+                    // Calculate master key
+                    setLoadingState?.("Calculating master...");
+                    console.debug("Calculating master...");
+                    const premaster = state.srpGroup!.computePremasterSecret(
+                        state.values!.client!.priv,
+                        state.values!.server!.pub,
+                        srpKey,
+                        sharedU,
+                    );
+                    console.debug("Premaster: " + premaster.toString(16));
+
+                    const masterKey = state.srpGroup!.premasterToMaster(premaster); // Key used to encrypt communications
+                    state.master = masterKey;
+                    console.log("Master key: " + masterKey.toString("hex"));
+
+                    // Generate client's M1 and send to server
+                    setLoadingState?.("Authentication...");
+                    console.debug("Verifying M1...");
+                    const m1Client = state.srpGroup!.generateM1(
+                        srpSalt,
+                        state.values!.client!.pub,
+                        state.values!.server!.pub,
+                        masterKey,
+                    );
+                    ws.send(m1Client);
+
+                    state.values!.m1 = m1Client;
+                    state.stage = E2EECommsStage.WAITING_FOR_M1;
+                    return;
+                }
+
+                if (state.stage === E2EECommsStage.WAITING_FOR_M1) {
+                    if (data.toString() !== "OK") {
+                        const errorMsg = data.toString().substring(4); // Remove leading "ERR: "
+                        ws.close();
+                        stopLoading?.();
+                        if (errorMsg === "M1 values do not match") {
+                            showAlert?.(
+                                "Client Verification Failed",
+                                "Server failed to verify client",
+                                "Is the password correct?",
+                            );
+                            reject("Client verification failed");
+                        } else {
+                            showAlert?.("Client Verification Failed", "Server failed to verify client", errorMsg);
+                            reject("Client verification failed");
+                        }
+                        return;
+                    }
+
+                    state.stage = E2EECommsStage.WAITING_FOR_M2;
+                    return;
+                }
+
+                if (state.stage === E2EECommsStage.WAITING_FOR_M2) {
+                    const m2Server = Buffer.from(await data.arrayBuffer(), "binary");
+                    const m2Client = state.srpGroup!.generateM2(
+                        state.values!.client!.pub,
+                        state.values!.m1!,
+                        state.master!,
+                    );
+                    if (!m2Client.equals(m2Server)) {
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.(
+                            "Server Verification Failed",
+                            "Client failed to verify server",
+                            "Server may be compromised",
+                        );
+                        reject("Server verification failed");
+                        return;
+                    }
+                    ws.send("OK");
+                    state.stage = E2EECommsStage.WAITING_FOR_AUTH_TOKEN;
+                    return;
+                }
+
+                if (state.stage === E2EECommsStage.WAITING_FOR_AUTH_TOKEN) {
+                    const auth_token_data = JSON.parse(data.toString());
+                    const nonce = Buffer.from(auth_token_data.nonce, "base64");
+                    const token = Buffer.from(auth_token_data.token, "base64");
+                    const tag = Buffer.from(auth_token_data.tag, "base64");
+
+                    const cipher = createDecipheriv("aes-256-gcm", state.master!, nonce);
+                    cipher.setAuthTag(tag);
+
+                    const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);
+                    state.authToken = plaintext.toString("utf-8");
+
+                    resolve({ e2eeKey: state.master!, auk: auk, token: state.authToken });
+                    return;
+                }
+            } catch (e: unknown) {
+                ws.close();
+                console.error(e);
+                stopLoading?.();
+                showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
+                reject(e);
+            }
+        });
+    });
 }
