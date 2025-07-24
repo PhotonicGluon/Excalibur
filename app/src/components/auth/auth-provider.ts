@@ -18,8 +18,8 @@ export interface AuthProvider {
     token: string | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
-    /** Function to log into the server, returning the token for continued authentication */
-    login: (apiURL: string, uuid: string, e2eeKey: Buffer) => Promise<string>;
+    /** Function to log into the server */
+    login: (apiURL: string, token: string, e2eeKey: Buffer) => Promise<void>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
     /** Function to set the vault key */

@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { getServerTime, getServerVersion } from "@lib/network";
-import { login, logout } from "@lib/security/api";
 
 import { AuthProvider, ServerInfo, authContext } from "./auth-provider";
 import { heartbeat } from "./heartbeat";
@@ -44,22 +43,10 @@ function useProvideAuth(): AuthProvider {
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
-    // FIXME: Update using the new websocket system
-    const loginFunc = async (apiURL: string, uuid: string, e2eeKey: Buffer) => {
+    const loginFunc = async (apiURL: string, token: string, e2eeKey: Buffer) => {
         // Set state variables
         setApiURL(apiURL);
         setE2EEKey(e2eeKey);
-
-        // Login to the server and get the access token
-        const tokenResponse = await login(apiURL, uuid, e2eeKey);
-        if (!tokenResponse.success) {
-            // Failed to log in; kick back to login screen
-            console.debug("Failed to log in, sending back to login screen");
-            window.location.href = "/login";
-            return "";
-        }
-
-        const token = tokenResponse.token!;
         setToken(token);
 
         // Get server info
@@ -69,7 +56,7 @@ function useProvideAuth(): AuthProvider {
             // Failed to retrieve info; kick back to login screen
             console.debug("Failed to retrieve info, sending back to login screen");
             window.location.href = "/login";
-            return "";
+            return;
         }
 
         const serverVersion = versionResponse.version!;
@@ -88,22 +75,11 @@ function useProvideAuth(): AuthProvider {
             }
         }, HEARTBEAT_INTERVAL * 1000);
         setHeartbeatInterval(interval);
-        return token;
     };
 
-    // FIXME: Update using the new websocket system
     const logoutFunc = async () => {
         // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);
-
-        // Logout
-        const logoutResponse = await logout(apiURL!, token!);
-        if (!logoutResponse.success) {
-            // Logout failed; kick back to login screen
-            console.debug("Logout failed, sending back to login screen");
-            window.location.href = "/login";
-            return;
-        }
 
         // Clear state
         setApiURL(null);

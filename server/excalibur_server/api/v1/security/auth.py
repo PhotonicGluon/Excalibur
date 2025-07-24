@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from base64 import b64decode, b64encode
 from datetime import datetime, timezone
 
@@ -102,7 +102,6 @@ async def auth_endpoint(websocket: WebSocket):
 
         # Wait for client's M1 value
         m1_server = generate_m1(SRP_GROUP, security_details.srp_salt, a_pub, b_pub, master_server)
-        print(m1_server.hex())  # TODO: Remove when no more debugging needed
         m1_client = await websocket.receive_bytes()
 
         if m1_client != m1_server:

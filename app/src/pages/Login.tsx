@@ -220,7 +220,21 @@ const Login: React.FC = () => {
             return;
         }
 
+        // Log into the server using the UUID and master key
+        console.debug("Logging in...");
         const token = e2eeData.token;
+        try {
+            await auth.login(apiURL, token, e2eeData.e2eeKey);
+        } catch (error) {
+            console.error(`Could not log in: ${error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Login Failure",
+                message: `Could not log in: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
         console.log(`Logged in; using token: ${token}`);
 
         // Handle vault key
