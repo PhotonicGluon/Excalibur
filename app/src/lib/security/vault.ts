@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 
 import ExEF from "@lib/exef";
-import { getVaultKey, setUpVaultKey } from "@lib/security/api/vault";
+import { getVaultKey, setUpVaultKey } from "@lib/security/api";
 
 /**
  * Creates a new vault key and sets it up on the server.

@@ -29,20 +29,15 @@ enum E2EECommsStage {
 interface E2EECommsState {
     /** Current stage of the negotiation */
     stage: E2EECommsStage;
-
     /** Iteration number for negotiation */
     negotiationIter: number;
-
-    /** SRP group to use for negotiation */
+    /** SRP group to use */
     srpGroup?: _SRPGroup;
-
     /** Bilaterally agreed master key */
     master?: Buffer;
-
     /** Auth token */
     authToken?: string;
-
-    /** Values used in the SRP protocol */
+    /** Values used in the SRP exchange */
     values?: {
         server?: {
             pub: bigint;
@@ -64,7 +59,6 @@ interface E2EECommsState {
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @param showToast A function to call if a non-fatal error occurs, which takes a message
  * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
  */
 export async function e2ee(
@@ -73,7 +67,6 @@ export async function e2ee(
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
-    showToast?: (message: string, isError?: boolean) => void,
 ): Promise<E2EEData | undefined> {
     // Get security details
     setLoadingState?.("Loading security details...");

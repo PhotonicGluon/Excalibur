@@ -17,8 +17,7 @@ import {
 
 import { checkConnection } from "@lib/network";
 import Preferences from "@lib/preferences";
-import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
-import { checkVaultKey } from "@lib/security/api/vault";
+import { checkSecurityDetails, checkVaultKey, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
 import { createVaultKey, retrieveVaultKey } from "@lib/security/vault";
@@ -210,9 +209,6 @@ const Login: React.FC = () => {
             setLoadingState,
             (header, subheader, msg) => {
                 presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
-            },
-            (msg, isError) => {
-                presentToast({ message: msg, duration: 3000, color: isError ? "danger" : "primary" });
             },
         );
         if (!e2eeData) {
