@@ -16,20 +16,20 @@ interface E2EEData {
     token: string;
 }
 
-enum CommsStage {
-    WAITING_FOR_SRP_GROUP,
-    WAITING_FOR_SALT,
-    WAITING_FOR_SERVER_PUB,
-    WAITING_FOR_CLIENT_VALUE_RESPONSE,
-    WAITING_FOR_SHARED_U_CHECK,
-    WAITING_FOR_M1,
-    WAITING_FOR_M2,
-    WAITING_FOR_AUTH_TOKEN,
+enum E2EEStage {
+    GET_SRP_GROUP,
+    GET_SRP_SALT,
+    GET_SERVER_PUBLIC_VALUE,
+    CHECK_CLIENT_VALUE,
+    SHARED_VALUE_CHECK,
+    M1_CHECK,
+    M2_CHECK,
+    GET_AUTH_TOKEN,
 }
 
-interface CommsState {
+interface E2EEState {
     /** Current stage of the negotiation */
-    stage: CommsStage;
+    stage: E2EEStage;
     /** Iteration number for negotiation */
     negotiationIter: number;
     /** SRP group to use */
@@ -55,7 +55,7 @@ interface CommsState {
 /**
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
- * @param apiURL The URL of the API server to query
+ * @param apiURL The HTTP(S) URL of the API server to query
  * @param password The password to use for key generation
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
@@ -93,8 +93,8 @@ export async function e2ee(
     const ws = new WebSocket(`${wsURL}/security/auth`);
 
     setLoadingState?.("Determining SRP group...");
-    let state: CommsState = {
-        stage: CommsStage.WAITING_FOR_SRP_GROUP,
+    let state: E2EEState = {
+        stage: E2EEStage.GET_SRP_GROUP,
         negotiationIter: 0,
     };
 
@@ -111,15 +111,15 @@ export async function e2ee(
         ws.addEventListener("message", async (event) => {
             const data = event.data;
             try {
-                if (state.stage === CommsStage.WAITING_FOR_SRP_GROUP) {
+                if (state.stage === E2EEStage.GET_SRP_GROUP) {
                     const srpBits = parseInt(data.toString());
                     state.srpGroup = getSRPGroup(srpBits);
-                    state.stage = CommsStage.WAITING_FOR_SERVER_PUB;
+                    state.stage = E2EEStage.GET_SERVER_PUBLIC_VALUE;
                     console.debug(`Server is using ${state.srpGroup.bits}-bit SRP group`);
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_SERVER_PUB) {
+                if (state.stage === E2EEStage.GET_SERVER_PUBLIC_VALUE) {
                     // Receive server's public value
                     const serverPub = bufferToNumber(Buffer.from(await data.arrayBuffer(), "binary"));
                     if (serverPub % state.srpGroup!.prime === 0n) {
@@ -149,11 +149,11 @@ export async function e2ee(
                     const { priv, pub } = state.srpGroup!.generateClientValues();
                     state.values.client = { priv, pub };
                     ws.send(numberToBuffer(pub));
-                    state.stage = CommsStage.WAITING_FOR_CLIENT_VALUE_RESPONSE;
+                    state.stage = E2EEStage.CHECK_CLIENT_VALUE;
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_CLIENT_VALUE_RESPONSE) {
+                if (state.stage === E2EEStage.CHECK_CLIENT_VALUE) {
                     if (data.toString() !== "OK") {
                         console.log(data.toString());
                         console.debug("Server rejected client's public value, retrying");
@@ -162,11 +162,11 @@ export async function e2ee(
                         ws.send(numberToBuffer(pub));
                         return;
                     }
-                    state.stage = CommsStage.WAITING_FOR_SHARED_U_CHECK;
+                    state.stage = E2EEStage.SHARED_VALUE_CHECK;
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_SHARED_U_CHECK) {
+                if (state.stage === E2EEStage.SHARED_VALUE_CHECK) {
                     // Check shared U value
                     const sharedU = state.srpGroup!.computeU(state.values!.client!.pub, state.values!.server!.pub);
                     if (data.toString() !== "U is OK" || sharedU === 0n) {
@@ -208,11 +208,11 @@ export async function e2ee(
                     ws.send(m1Client);
 
                     state.values!.m1 = m1Client;
-                    state.stage = CommsStage.WAITING_FOR_M1;
+                    state.stage = E2EEStage.M1_CHECK;
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_M1) {
+                if (state.stage === E2EEStage.M1_CHECK) {
                     if (data.toString() !== "OK") {
                         const errorMsg = data.toString().substring(4); // Remove leading "ERR: "
                         ws.close();
@@ -231,11 +231,11 @@ export async function e2ee(
                         return;
                     }
 
-                    state.stage = CommsStage.WAITING_FOR_M2;
+                    state.stage = E2EEStage.M2_CHECK;
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_M2) {
+                if (state.stage === E2EEStage.M2_CHECK) {
                     const m2Server = Buffer.from(await data.arrayBuffer(), "binary");
                     const m2Client = state.srpGroup!.generateM2(
                         state.values!.client!.pub,
@@ -254,11 +254,11 @@ export async function e2ee(
                         return;
                     }
                     ws.send("OK");
-                    state.stage = CommsStage.WAITING_FOR_AUTH_TOKEN;
+                    state.stage = E2EEStage.GET_AUTH_TOKEN;
                     return;
                 }
 
-                if (state.stage === CommsStage.WAITING_FOR_AUTH_TOKEN) {
+                if (state.stage === E2EEStage.GET_AUTH_TOKEN) {
                     const auth_token_data = JSON.parse(data.toString());
                     const nonce = Buffer.from(auth_token_data.nonce, "base64");
                     const token = Buffer.from(auth_token_data.token, "base64");
