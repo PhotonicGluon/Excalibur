@@ -23,6 +23,17 @@ from excalibur_server.src.security.token.auth import generate_auth_token
 MAX_ITER_COUNT = 3
 
 
+@router.get("/group-size", response_model=int)
+def get_group_size() -> int:
+    """
+    Gets the size of the SRP group.
+
+    In particular, this returns the number of bits in the group's modulus.
+    """
+
+    return SRP_GROUP.bits
+
+
 @router.websocket("/auth")
 async def auth_endpoint(websocket: WebSocket):
     """
