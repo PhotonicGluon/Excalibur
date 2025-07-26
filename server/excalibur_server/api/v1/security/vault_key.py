@@ -44,7 +44,7 @@ def check_vault_key_endpoint():
 )
 def get_vault_key_endpoint():
     """
-    Endpoint that returns the encrypted vault key as a Base64-encoded ExEF stream.
+    Endpoint that returns the encrypted vault key as an ExEF stream.
     """
 
     if not check_vault_key():
@@ -74,7 +74,8 @@ def set_vault_key_endpoint(
     key_enc: Annotated[
         bytes,
         Body(
-            description="Encrypted vault key as an ExEF stream. The vault key should have been encrypted using the Account Unlock Key (AUK)."
+            description="Encrypted vault key as an ExEF stream. The vault key should have been encrypted using the Account Unlock Key (AUK).",
+            media_type="application/octet-stream",
         ),
     ],
 ):
