@@ -11,8 +11,8 @@ from .meta import SUMMARY, TITLE, VERSION
 
 NO_LOG_ENDPOINTS = ["/api/v1/well-known/heartbeat"]
 
-TOKEN_CAPACITY = 50
-TOKEN_REFILL_RATE = 5
+TOKEN_CAPACITY = 20
+TOKEN_REFILL_RATE = 1
 
 # Add logging filter
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
