@@ -1,4 +1,6 @@
 import { PrivacyScreen } from "@capacitor/privacy-screen";
+import { ScreenOrientation } from "@capacitor/screen-orientation";
+import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
 import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
@@ -39,20 +41,30 @@ setupIonicReact();
 
 PrivacyScreen.enable();
 
-const App: React.FC = () => (
-    <IonApp>
-        <ProvideAuth>
-            <IonReactRouter>
-                <IonRouterOutlet>
-                    <Route exact path="/login" component={Login} />
-                    <PrivateRoute path="/files/*" component={FileExplorer} />
-                    <PrivateRoute path="/settings" component={Settings} />
-                    <Route path="/credits" component={Credits} />
-                    <Redirect exact from="/" to="/login" />
-                </IonRouterOutlet>
-            </IonReactRouter>
-        </ProvideAuth>
-    </IonApp>
-);
+const App: React.FC = () => {
+    // Lock screen orientation to portrait
+    useEffect(() => {
+        ScreenOrientation.lock({ orientation: "portrait" }).catch((error: any) => {
+            console.warn(error);
+        });
+    });
+
+    // Render app
+    return (
+        <IonApp>
+            <ProvideAuth>
+                <IonReactRouter>
+                    <IonRouterOutlet>
+                        <Route exact path="/login" component={Login} />
+                        <PrivateRoute path="/files/*" component={FileExplorer} />
+                        <PrivateRoute path="/settings" component={Settings} />
+                        <Route path="/credits" component={Credits} />
+                        <Redirect exact from="/" to="/login" />
+                    </IonRouterOutlet>
+                </IonReactRouter>
+            </ProvideAuth>
+        </IonApp>
+    );
+};
 
 export default App;
