@@ -12,6 +12,7 @@
         "keysize",
         "listdir",
         "maskito",
+        "mimetypes",
         "popover",
         "powmod",
         "priv",

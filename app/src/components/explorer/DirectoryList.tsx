@@ -81,6 +81,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             name={item.name}
                             fullpath={item.fullpath}
                             type={item.type}
+                            mimetype={item.type === "file" ? item.mimetype : undefined}
                             size={item.type === "file" ? item.size : undefined}
                             onDelete={props.onDelete}
                             setShowDialog={props.setShowDialog}

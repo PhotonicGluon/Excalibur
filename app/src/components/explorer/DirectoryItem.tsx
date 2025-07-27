@@ -18,11 +18,12 @@ import {
     IonRow,
     useIonRouter,
 } from "@ionic/react";
-import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons";
+import { folderOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
+import { mimetypeToIcon } from "@lib/mimetypes";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
@@ -178,7 +179,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     <IonGrid>
                         <IonRow className="ion-align-items-center">
                             <IonCol className="flex items-center">
-                                <IonIcon className="size-6" icon={isFile ? documentTextOutline : folderOutline} />
+                                <IonIcon
+                                    className="size-6"
+                                    icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
+                                />
                                 <div className="pl-4">
                                     <IonLabel>
                                         {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
