@@ -61,8 +61,6 @@ import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 
-import logo from "@assets/icon.png";
-
 const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
@@ -484,22 +482,13 @@ const FileExplorer: React.FC = () => {
                 <IonHeader>
                     <IonToolbar className="ion-padding-top min-h-16">
                         <IonTitle>
-                            <div className="flex items-center">
-                                {!isPlatform("ios") && <img className="size-8" src={logo} alt="Excalibur logo" />}
-                                <IonText className="pl-2">Excalibur</IonText>
-                            </div>
+                            <IonText className="font-bold [font-variant:small-caps]">Excalibur</IonText>
                         </IonTitle>
                     </IonToolbar>
                 </IonHeader>
                 <IonContent>
                     {/* Actions */}
                     <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center">
-                        <IonItem button={true} onClick={() => handleLogout()}>
-                            <IonLabel>
-                                <IonIcon icon={logOutOutline} size="large" />
-                                <IonText className="pl-2">Logout</IonText>
-                            </IonLabel>
-                        </IonItem>
                         <IonItem
                             button={true}
                             onClick={() => {
@@ -522,6 +511,12 @@ const FileExplorer: React.FC = () => {
                             <IonLabel>
                                 <IonIcon icon={informationCircleOutline} size="large" />
                                 <IonText className="pl-2">Credits</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem button={true} onClick={() => handleLogout()}>
+                            <IonLabel>
+                                <IonIcon icon={logOutOutline} size="large" />
+                                <IonText className="pl-2">Logout</IonText>
                             </IonLabel>
                         </IonItem>
                     </IonList>
