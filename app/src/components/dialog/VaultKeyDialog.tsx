@@ -85,7 +85,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     // Render
     return (
         <IonModal
-            className="flex min-h-172 flex-col"
+            className="min-h-172"
             id="vault-key-modal"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}
@@ -93,8 +93,8 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
             handle={false} // Hide drag handle for cleaner look
         >
             <IonContent className="flex h-172 flex-col">
-                <IonHeader className="ion-no-border">
-                    <IonToolbar>
+                <IonHeader>
+                    <IonToolbar className="!pt-0">
                         <IonTitle>Vault Key</IonTitle>
                         <IonButtons slot="end">
                             <IonButton onClick={props.onDidDismiss}>

@@ -2,8 +2,3 @@ ion-modal#progress-indicator-modal {
     --height: 25%;
     --width: max(50%, 350px);
 }
-
-ion-modal#progress-indicator-modal::part(backdrop) {
-    background: rgba(0, 0, 0);
-    opacity: 1;
-}

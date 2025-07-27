@@ -69,6 +69,7 @@ function useProvideAuth(): AuthProvider {
             const connected = await heartbeat(apiURL, token, HEARTBEAT_RETRY_COUNT, HEARTBEAT_RETRY_INTERVAL);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
+                // TODO: Can we display a toast to inform the user why they were kicked back?
                 console.debug("Heartbeat failed, sending back to login screen");
                 window.location.href = "/login";
                 return;
