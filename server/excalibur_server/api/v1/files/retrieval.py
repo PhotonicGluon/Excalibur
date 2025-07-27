@@ -68,7 +68,7 @@ def listdir_endpoint(
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
-    contents = listdir(user_path, with_exef_header=with_exef_header)
+    contents = listdir(user_path, include_exef_size=with_exef_header)
     if contents is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 

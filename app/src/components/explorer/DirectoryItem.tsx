@@ -22,16 +22,17 @@ import { documentTextOutline, folderOutline, trashOutline } from "ionicons/icons
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
-import { FileLike } from "@lib/files/structures";
+import { File, FileLike } from "@lib/files/structures";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth";
 
-interface ContainerProps extends FileLike {
-    /** Size of the item, in bytes */
-    size?: number;
+type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
+interface ContainerProps extends FileLikePartial {
+    /** Whether to keep the `.exef` extension when displaying the name */
+    keepExEF?: boolean;
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when the dialog is closed */
@@ -54,7 +55,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Functions
     /**
-     * Handles the user clicking on a directory item.
+     * Handles the user clicking on an item.
      */
     async function onClickItem() {
         if (!isFile) {
@@ -161,9 +162,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     /**
-     * Handles the user clicking the delete button on a directory item.
-     *
-     * Calls the {@link onDelete} callback with the path of the item and whether it is a directory.
+     * Handles the user clicking the delete button an item.
      */
     async function onClickDelete() {
         await props.onDelete(props.fullpath, !isFile);
@@ -181,7 +180,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             <IonCol className="flex items-center">
                                 <IonIcon className="size-6" icon={isFile ? documentTextOutline : folderOutline} />
                                 <div className="pl-4">
-                                    <IonLabel>{props.name}</IonLabel>
+                                    <IonLabel>
+                                        {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
+                                    </IonLabel>
                                     {props.size !== undefined && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}
                                 </div>
                             </IonCol>
