@@ -13,7 +13,7 @@ export async function checkAPIUrl(
     timeout: number = 5,
 ): Promise<{ reachable: boolean; validAPIUrl: boolean; error?: string }> {
     try {
-        const response = await fetch(apiURL, { signal: AbortSignal.timeout(timeout * 1000) });
+        const response = await fetch(`${apiURL}/well-known/version`, { signal: AbortSignal.timeout(timeout * 1000) });
         switch (response.status) {
             case 200:
                 return { reachable: true, validAPIUrl: true };
@@ -72,7 +72,8 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
             return { success: false };
     }
 
-    return { success: true, version: await response.text() };
+    const data = await response.json();
+    return { success: true, version: data.version };
 }
 
 /**

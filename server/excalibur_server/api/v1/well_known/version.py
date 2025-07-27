@@ -1,23 +1,20 @@
-from fastapi import status
-from fastapi.responses import PlainTextResponse
-
-from excalibur_server.api.meta import VERSION
+from excalibur_server.api.meta import VERSION, COMMIT
 from excalibur_server.api.v1.well_known import router
+from pydantic import BaseModel
+
+
+class VersionResponse(BaseModel):
+    version: str
+    commit: str | None
 
 
 @router.get(
     "/version",
     summary="Get server version",
-    responses={
-        status.HTTP_200_OK: {
-            "content": {"text/plain": {"example": VERSION}},
-        },
-    },
-    response_class=PlainTextResponse,
 )
-async def version_endpoint() -> str:
+async def version_endpoint() -> VersionResponse:
     """
-    Returns the version of the server.
+    Returns the version (and commit) of the server.
     """
 
-    return VERSION
+    return VersionResponse(version=VERSION, commit=COMMIT)

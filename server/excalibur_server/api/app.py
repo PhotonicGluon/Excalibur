@@ -47,9 +47,3 @@ app.add_middleware(
 from excalibur_server.api.v1.app import app as api_v1
 
 app.mount("/v1", api_v1)
-
-
-# Define other routes
-@app.get("/")
-def index_page():
-    return f"Excalibur Server, version {VERSION}"

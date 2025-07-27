@@ -106,13 +106,13 @@ const Login: React.FC = () => {
             return;
         }
         console.debug(`Received values: ${JSON.stringify(values)}`);
-
-        // Show loading spinner
         setIsLoading(true);
 
         // Check connectivity to the server
-        setLoadingState("Checking connectivity...");
-        const connectionResult = await checkAPIUrl(values.server);
+        const apiURL = `${values.server}/api/v1`;
+        console.debug(`Checking connectivity to ${apiURL}...`);
+
+        const connectionResult = await checkAPIUrl(apiURL);
         if (!connectionResult.reachable) {
             setIsLoading(false);
             console.error(`Could not reach ${values.server}: ${connectionResult.error}`);
@@ -140,8 +140,6 @@ const Login: React.FC = () => {
             });
             return;
         }
-
-        const apiURL = `${values.server}/api/v1`;
 
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
