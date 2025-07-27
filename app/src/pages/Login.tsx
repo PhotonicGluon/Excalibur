@@ -15,7 +15,7 @@ import {
     useIonToast,
 } from "@ionic/react";
 
-import { checkConnection } from "@lib/network";
+import { checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { checkSecurityDetails, checkVaultKey, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
@@ -112,10 +112,10 @@ const Login: React.FC = () => {
 
         // Check connectivity to the server
         setLoadingState("Checking connectivity...");
-        const connectionResult = await checkConnection(values.server);
-        if (!connectionResult.success) {
+        const connectionResult = await checkAPIUrl(values.server);
+        if (!connectionResult.reachable) {
             setIsLoading(false);
-            console.error(connectionResult.error);
+            console.error(`Could not reach ${values.server}: ${connectionResult.error}`);
 
             let error = connectionResult.error;
             if (error === "Failed to fetch") {
@@ -126,6 +126,16 @@ const Login: React.FC = () => {
                 header: "Connection Failure",
                 subHeader: `Could not connect to ${values.server}`,
                 message: error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        if (!connectionResult.validAPIUrl) {
+            setIsLoading(false);
+            presentAlert({
+                header: "Connection Failure",
+                subHeader: "Invalid API URL",
+                message: connectionResult.error,
                 buttons: ["OK"],
             });
             return;

@@ -1,25 +1,35 @@
 /**
- * Checks if the given URL is reachable.
+ * Checks if the given API url is valid.
  *
- * @param url The URL to check.
- * @param timeout The timeout in seconds.
- * @returns A promise which resolves to an object with a success boolean and optionally an error message
+ * @param apiURL The API URL to check
+ * @param timeout Number of seconds to wait for a response before timing out
+ * @returns A promise that resolves to an object with three properties:
+ *      - `reachable`: Whether the server is reachable
+ *      - `validAPIUrl`: Whether the URL is a valid API URL
+ *      - `error`: An optional error message
  */
-export async function checkConnection(url: string, timeout: number = 5): Promise<{ success: boolean; error?: string }> {
-    // Try to connect
+export async function checkAPIUrl(
+    apiURL: string,
+    timeout: number = 5,
+): Promise<{ reachable: boolean; validAPIUrl: boolean; error?: string }> {
     try {
-        await fetch(url, { signal: AbortSignal.timeout(timeout * 1000) });
-        return { success: true };
+        const response = await fetch(apiURL, { signal: AbortSignal.timeout(timeout * 1000) });
+        switch (response.status) {
+            case 200:
+                return { reachable: true, validAPIUrl: true };
+            default:
+                return { reachable: true, validAPIUrl: false, error: "Given URL does not correspond to an API server" };
+        }
     } catch (e: unknown) {
-        return { success: false, error: (e as Error).message };
+        return { reachable: false, validAPIUrl: false, error: (e as Error).message };
     }
 }
 
 /**
  * Checks if the authentication token is valid.
  *
- * @param apiURL The API URL.
- * @param token The authentication token.
+ * @param apiURL The API URL
+ * @param token The authentication token
  * @returns A promise which resolves to an object with a success boolean and optionally a boolean
  *      describing whether the authentication token is still valid
  */
@@ -48,9 +58,9 @@ export async function heartbeat(apiURL: string, token: string): Promise<{ succes
 /**
  * Gets the server version.
  *
- * @param apiURL The API URL.
+ * @param apiURL The API URL
  * @returns A promise which resolves to an object with a success boolean and optionally the server
- *      version.
+ *      version
  */
 export async function getServerVersion(apiURL: string): Promise<{ success: boolean; version?: string }> {
     const response = await fetch(`${apiURL}/well-known/version`);
@@ -68,11 +78,11 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
 /**
  * Gets the server time.
  *
- * @param apiURL The API URL.
+ * @param apiURL The API URL
  * @returns A promise which resolves to an object with a success boolean and optionally the server
- *      time.
+ *      time as a Date object
  */
-export async function getServerTime(apiURL: string): Promise<{ success: boolean; time?: string }> {
+export async function getServerTime(apiURL: string): Promise<{ success: boolean; time?: Date }> {
     const response = await fetch(`${apiURL}/well-known/clock`);
     switch (response.status) {
         case 200:
@@ -82,5 +92,6 @@ export async function getServerTime(apiURL: string): Promise<{ success: boolean;
             return { success: false };
     }
 
-    return { success: true, time: await response.text() };
+    const isoTime = await response.text();
+    return { success: true, time: new Date(isoTime) };
 }

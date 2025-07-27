@@ -61,7 +61,7 @@ function useProvideAuth(): AuthProvider {
 
         const serverVersion = versionResponse.version!;
         const serverTime = timeResponse.time!;
-        const deltaTime = new Date(serverTime).getTime() - new Date().getTime();
+        const deltaTime = serverTime.getTime() - new Date().getTime();
         setServerInfo({ version: serverVersion, deltaTime });
 
         // Set up heartbeat interval
