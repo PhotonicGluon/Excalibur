@@ -338,6 +338,12 @@ const Login: React.FC = () => {
                                         fill="solid"
                                         placeholder="My secure password!"
                                         type="password"
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter") {
+                                                event.preventDefault();
+                                                onLoginButtonClick();
+                                            }
+                                        }}
                                     >
                                         <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                     </IonInput>
