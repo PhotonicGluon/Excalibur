@@ -24,7 +24,7 @@ const Credits: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="ion-padding-horizontal bg-gray-50 dark:bg-gray-900">
+            <IonContent className="ion-padding-horizontal [--item-bg:theme(colors.neutral.100)] dark:[--item-bg:theme(colors.neutral.900)]">
                 <div className="mx-auto max-w-full py-4">
                     <IonText color="medium" className="mb-6 block text-sm">
                         Excalibur was made possible by these open-source frameworks and libraries.
@@ -33,11 +33,11 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Frameworks & Libraries
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3">
+                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://ionicframework.com/"
                             target="_blank"
                         >
@@ -55,9 +55,9 @@ const Credits: React.FC = () => {
                         </IonItem>
 
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://capacitorjs.com/"
                             target="_blank"
                         >
@@ -73,9 +73,9 @@ const Credits: React.FC = () => {
                         </IonItem>
 
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://reactjs.org/"
                             target="_blank"
                         >
@@ -94,11 +94,11 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Fonts
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3">
+                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://fonts.google.com/specimen/Inter"
                             target="_blank"
                         >
@@ -113,9 +113,9 @@ const Credits: React.FC = () => {
                             </IonLabel>
                         </IonItem>
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://fonts.google.com/specimen/Fira+Code"
                             target="_blank"
                         >
@@ -134,11 +134,11 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Icons
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3">
+                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
                         <IonItem
+                            className="[--background:var(--item-bg)]"
                             button
                             detail={false}
-                            className="rounded-lg bg-white shadow-sm dark:bg-gray-800"
                             href="https://ionicons.com/"
                             target="_blank"
                         >

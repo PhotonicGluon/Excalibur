@@ -131,12 +131,10 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                                 value={localVaultKey}
                             ></IonTextarea>
                         </div>
-                        <IonText color="warning">
-                            <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none md:text-base">
-                                Consider taking a screenshot and printing out a copy of the vault key, storing it in a
-                                secure location.
-                            </p>
-                        </IonText>
+                        <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none text-yellow-700 md:text-base dark:text-yellow-600">
+                            Consider taking a screenshot and printing out a copy of the vault key, storing it in a
+                            secure location.
+                        </p>
                     </details>
                 </div>
             </IonContent>
