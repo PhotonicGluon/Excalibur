@@ -604,7 +604,7 @@ const FileExplorer: React.FC = () => {
                     </IonRefresher>
 
                     {/* Breadcrumb */}
-                    <IonBreadcrumbs className="pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+                    <IonBreadcrumbs className="ml-1 pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
                         <IonBreadcrumb routerLink="/files/" routerDirection="back">
                             <IonIcon slot="" icon={home} />
                             <IonIcon slot="separator" icon={chevronForward} />
