@@ -32,8 +32,11 @@ import { useAuth } from "@components/auth";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {
+    /** Whether the item is on an even row */
+    oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
     keepExEF?: boolean;
+
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when the dialog is closed */
@@ -172,36 +175,46 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Render
     return (
-        <IonItemSliding ref={slideRef} className="w-full">
-            {/* Main item content */}
-            <IonItem button={true} onClick={() => onClickItem()}>
-                <div className="flex h-16 w-full items-center">
-                    <IonGrid>
-                        <IonRow className="ion-align-items-center">
-                            <IonCol className="flex items-center">
-                                <IonIcon
-                                    className="size-6"
-                                    icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
-                                />
-                                <div className="pl-4">
-                                    <IonLabel>
-                                        {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
-                                    </IonLabel>
-                                    {props.size !== undefined && <IonNote>{bytesToHumanReadable(props.size)}</IonNote>}
-                                </div>
-                            </IonCol>
-                        </IonRow>
-                    </IonGrid>
-                </div>
-            </IonItem>
+        <div
+            className={
+                props.oddRow
+                    ? "[--item-bg:theme(colors.neutral.50)] dark:[--item-bg:theme(colors.neutral.900)]"
+                    : "[--item-bg:theme(colors.neutral.200)] dark:[--item-bg:inherit]"
+            }
+        >
+            <IonItemSliding ref={slideRef} className="w-full bg-(--item-bg)">
+                {/* Main item content */}
+                <IonItem className="[--background:var(--item-bg)]" button={true} onClick={() => onClickItem()}>
+                    <div className="flex h-16 w-full items-center">
+                        <IonGrid>
+                            <IonRow className="ion-align-items-center">
+                                <IonCol className="flex items-center">
+                                    <IonIcon
+                                        className="size-6"
+                                        icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
+                                    />
+                                    <div className="pl-4">
+                                        <IonLabel>
+                                            {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
+                                        </IonLabel>
+                                        {props.size !== undefined && (
+                                            <IonNote>{bytesToHumanReadable(props.size)}</IonNote>
+                                        )}
+                                    </div>
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
+                    </div>
+                </IonItem>
 
-            {/* Slide options */}
-            <IonItemOptions side="end">
-                <IonItemOption color="danger" onClick={() => onClickDelete()}>
-                    <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
-                </IonItemOption>
-            </IonItemOptions>
-        </IonItemSliding>
+                {/* Slide options */}
+                <IonItemOptions side="end">
+                    <IonItemOption color="danger" onClick={() => onClickDelete()}>
+                        <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
+                    </IonItemOption>
+                </IonItemOptions>
+            </IonItemSliding>
+        </div>
     );
 };
 

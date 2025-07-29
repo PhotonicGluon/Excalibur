@@ -72,12 +72,13 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             </IonGrid>
 
             {/* Items List */}
-            <IonList lines="none">
+            <IonList lines="none" className="!bg-transparent">
                 {props.items &&
                     props.items.length > 0 &&
                     sortItems().map((item, idx) => (
                         <DirectoryItem
                             key={idx}
+                            oddRow={idx % 2 === 0} // Treat row of index 0 as the first odd row
                             name={item.name}
                             fullpath={item.fullpath}
                             type={item.type}
