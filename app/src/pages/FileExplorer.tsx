@@ -488,7 +488,10 @@ const FileExplorer: React.FC = () => {
                 </IonHeader>
                 <IonContent>
                     {/* Actions */}
-                    <IonList lines="none" className="[&_ion-label]:!flex [&_ion-label]:!items-center">
+                    <IonList
+                        lines="none"
+                        className="!bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:!flex [&_ion-label]:!items-center"
+                    >
                         <IonItem
                             button={true}
                             onClick={() => {
@@ -522,7 +525,7 @@ const FileExplorer: React.FC = () => {
                     </IonList>
 
                     {/* Info */}
-                    <div className="ion-padding-start ion-padding-end pt-4 *:m-0 *:block">
+                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block">
                         <IonText color="medium" className="text-xs md:text-sm">
                             App version: <span className="font-mono">{packageInfo.version}</span>
                         </IonText>

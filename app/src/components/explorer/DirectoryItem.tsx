@@ -215,8 +215,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         <div
             className={
                 props.oddRow
-                    ? "[--item-bg:theme(colors.neutral.50)] dark:[--item-bg:theme(colors.neutral.900)]"
-                    : "[--item-bg:theme(colors.neutral.200)] dark:[--item-bg:theme(colors.neutral.800)]"
+                    ? "[--item-bg:theme(colors.neutral.50/0)]" // Transparent
+                    : "[--item-bg:theme(colors.neutral.200/50%)] dark:[--item-bg:theme(colors.neutral.900/50%)]"
             }
         >
             <IonItemSliding ref={slideRef} className="w-full bg-(--item-bg)">
