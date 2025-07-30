@@ -93,7 +93,7 @@ export async function e2ee(
     const ws = new WebSocket(`${wsURL}/security/auth`);
 
     setLoadingState?.("Determining SRP group...");
-    let state: E2EEState = {
+    const state: E2EEState = {
         stage: E2EEStage.GET_SRP_GROUP,
         negotiationIter: 0,
     };

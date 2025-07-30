@@ -194,7 +194,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     ],
                 });
                 return;
-            } catch {}
+            } catch {
+                // File does not exist; nothing else to do
+            }
         }
 
         await handleDownload();

@@ -44,7 +44,7 @@ PrivacyScreen.enable();
 const App: React.FC = () => {
     // Lock screen orientation to portrait
     useEffect(() => {
-        ScreenOrientation.lock({ orientation: "portrait" }).catch((error: any) => {
+        ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
             console.warn(error);
         });
     });
