@@ -1,4 +1,3 @@
-import pytest
 
 from .exef import ExEF
 from .structures import Header, Footer

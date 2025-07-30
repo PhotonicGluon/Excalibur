@@ -33,7 +33,8 @@ def delete_endpoint(
     """
     Deletes a file or directory.
 
-    If deleting a directory, you need to specify the `as_dir` parameter. All files and subdirectories will be deleted as well.
+    If deleting a directory, you need to specify the `as_dir` parameter. All files and
+    subdirectories will be deleted as well.
     """
 
     # Check for any attempts at path traversal

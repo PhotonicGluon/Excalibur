@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from fastapi import APIRouter
 
 router = APIRouter(
@@ -5,6 +6,6 @@ router = APIRouter(
 )
 
 # Include all well-known endpoints
-from .heartbeat import heartbeat_endpoint
-from .version import version_endpoint
-from .clock import clock_endpoint
+from .clock import clock_endpoint as clock_endpoint
+from .heartbeat import heartbeat_endpoint as heartbeat_endpoint
+from .version import version_endpoint as version_endpoint

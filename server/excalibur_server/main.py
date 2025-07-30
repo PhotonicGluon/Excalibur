@@ -25,7 +25,8 @@ def start_server(host: str, port: int, debug: bool, encrypt_responses: bool = Tr
 
     if not encrypt_responses:
         warnings.warn(
-            "Encryption is disabled. This WILL break any code that requires the response to be encrypted on the client side.",
+            "Encryption is disabled."
+            "This WILL break any code that requires the response to be encrypted on the client side.",
             RuntimeWarning,
         )
         os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0"

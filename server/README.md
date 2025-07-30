@@ -20,7 +20,7 @@ pipx install [PATH_TO_WHEEL_FILE]
 First install [the `uv` package manager](https://docs.astral.sh/uv/). Then install dependencies by running
 
 ```bash
-uv sync --group test
+uv sync --group dev,test
 ```
 
 Validate that everything is installed correctly by running
@@ -41,4 +41,18 @@ If using debug mode, run
 
 ```bash
 uv run excalibur start --debug
+```
+
+### Linting
+
+Run
+
+```bash
+uv run ruff check
+```
+
+To automatically fix linting errors, run
+
+```bash
+uv run ruff check --fix
 ```

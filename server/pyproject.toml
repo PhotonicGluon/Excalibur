@@ -1,6 +1,6 @@
 [project]
 name = "excalibur-server"
-version = "0.1.0a5"
+version = "0.1.0a6"
 description = "An encrypted file server."
 readme = "README.md"
 authors = [{ name = "The-Photons" }]
@@ -25,6 +25,7 @@ dependencies = [
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
+dev = ["ruff>=0.12.7"]
 test = ["httpx>=0.28.1", "pytest>=8.4.1"]
 
 [build-system]
@@ -36,6 +37,12 @@ module-name = "excalibur_server"
 module-root = ""
 
 [tool.uv.workspace]
-members = [
-    "dist/excalibur-server-test",
+members = ["dist/excalibur-server-test"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = [
+    "E501", # line-too-long
 ]
