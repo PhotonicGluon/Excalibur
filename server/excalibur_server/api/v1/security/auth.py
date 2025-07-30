@@ -8,16 +8,8 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
 
 from excalibur_server.api.v1.security import router
-from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_GROUP
+from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
 from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE, get_security_details
-from excalibur_server.src.security.srp import (
-    compute_premaster_secret,
-    compute_server_public_value,
-    compute_u,
-    generate_m1,
-    generate_m2,
-    premaster_to_master,
-)
 from excalibur_server.src.security.token.auth import generate_auth_token
 
 MAX_ITER_COUNT = 3
@@ -31,7 +23,7 @@ def get_group_size() -> int:
     In particular, this returns the number of bits in the group's modulus.
     """
 
-    return SRP_GROUP.bits
+    return SRP_HANDLER.bits
 
 
 @router.websocket("/auth")
@@ -59,7 +51,7 @@ async def auth_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         # Send server's SRP group size
-        await websocket.send_text(str(SRP_GROUP.bits))
+        await websocket.send_text(str(SRP_HANDLER.bits))
 
         # Compute server's ephemeral values
         b_priv = None
@@ -73,7 +65,7 @@ async def auth_endpoint(websocket: WebSocket):
         client_accepted = False
         iter_count = 0
         while not client_accepted and iter_count < MAX_ITER_COUNT:
-            b_priv, b_pub = compute_server_public_value(SRP_GROUP, verifier, private_value=b_priv)
+            b_priv, b_pub = SRP_HANDLER.compute_server_public_value(verifier, private_value=b_priv)
             await websocket.send_bytes(long_to_bytes(b_pub))
 
             # Await client's response
@@ -94,19 +86,19 @@ async def auth_endpoint(websocket: WebSocket):
             a_pub = bytes_to_long(await websocket.receive_bytes())
 
             # Check given client public value
-            if a_pub % SRP_GROUP.prime != 0:
+            if a_pub % SRP_HANDLER.prime != 0:
                 await websocket.send_text("OK")
                 break
             else:
                 await websocket.send_text("ERR: Client public value is illegal; A mod N cannot be 0")
                 iter_count += 1
 
-        if a_pub % SRP_GROUP.prime == 0:
+        if a_pub % SRP_HANDLER.prime == 0:
             await websocket.close()
             return
 
         # Check shared U value
-        u = compute_u(SRP_GROUP, a_pub, b_pub)
+        u = SRP_HANDLER.compute_u(a_pub, b_pub)
         if u == 0:
             await websocket.send_text("ERR: Shared U value is zero")
             await websocket.close()
@@ -114,8 +106,8 @@ async def auth_endpoint(websocket: WebSocket):
         await websocket.send_text("U is OK")
 
         # Compute server's master value
-        premaster = compute_premaster_secret(SRP_GROUP, a_pub, b_priv, u, verifier)
-        master_server = premaster_to_master(SRP_GROUP, premaster)
+        premaster = SRP_HANDLER.compute_premaster_secret(a_pub, b_priv, u, verifier)
+        master_server = SRP_HANDLER.premaster_to_master(premaster)
 
         # Wait for client's M1 value
         srp_salt = security_details.srp_salt
@@ -124,7 +116,7 @@ async def auth_endpoint(websocket: WebSocket):
             and os.environ.get("EXCALIBUR_SERVER_TEST_SRP_SALT") is not None
         ):
             srp_salt = b64decode(os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"])
-        m1_server = generate_m1(SRP_GROUP, srp_salt, a_pub, b_pub, master_server)
+        m1_server = SRP_HANDLER.generate_m1(srp_salt, a_pub, b_pub, master_server)
         m1_client = await websocket.receive_bytes()
 
         if m1_client != m1_server:
@@ -135,7 +127,7 @@ async def auth_endpoint(websocket: WebSocket):
         await websocket.send_text("OK")
 
         # Generate M2 for client to verify
-        m2 = generate_m2(a_pub, m1_server, master_server)
+        m2 = SRP_HANDLER.generate_m2(a_pub, m1_server, master_server)
         await websocket.send_bytes(m2)
         if await websocket.receive_text() != "OK":
             await websocket.close()

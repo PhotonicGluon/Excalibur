@@ -8,16 +8,15 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.src.security.consts import SRP_GROUP
-from excalibur_server.src.security.srp import SRPGroup, premaster_to_master
+from excalibur_server.src.security.consts import SRP_HANDLER
+from excalibur_server.src.security.srp import SRPGroup
 
-if SRP_GROUP != SRPGroup.SMALL:
-    pytest.skip("Skipping SRP tests as group is different", allow_module_level=True)
+if SRP_HANDLER.group != SRPGroup.SMALL:
+    pytest.skip("Skipping authentication tests as group is different", allow_module_level=True)
 
 # Values from RFC5054, Appendix B
-GROUP = SRPGroup.SMALL
 S = int("BEB25379 D1A8581E B5A72767 3A2441EE".replace(" ", ""), 16)
-N, G = GROUP.prime, GROUP.generator
+N, G = SRP_HANDLER.prime, SRP_HANDLER.generator
 K = int("7556AA04 5AEF2CDD 07ABAF0F 665C3E81 8913186F".replace(" ", ""), 16)
 V = int(
     "7E273DE8 696FFC4F 4E337D05 B4B375BE B0DDE156 9E8FA00A 9886D812 9BADA1F1 822223CA 1A605B53 0E379BA4 729FDC59 F105B478 7E5186F5 C671085A 1447B52A 48CF1970 B4FB6F84 00BBF4CE BFBB1681 52E08AB5 EA53D15C 1AFF87B2 B9DA6E04 E058AD51 CC72BFC9 033B564E 26480D78 E955A5E2 9E7AB245 DB2BE315 E2099AFB".replace(  # noqa: E501
@@ -61,7 +60,7 @@ os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"] = b64encode(long_to_bytes(S)).decod
 def test_group_establishment():
     with client.websocket_connect("/api/v1/security/auth") as ws:
         data = ws.receive_text()
-        assert data == str(SRP_GROUP.bits)
+        assert data == str(SRP_HANDLER.bits)
 
 
 def test_auth_negotiation():
@@ -90,7 +89,7 @@ def test_auth_negotiation():
         # Check received auth token
         auth_token_data = json.loads(ws.receive_text())
         cipher = AES.new(
-            premaster_to_master(SRPGroup.SMALL, PREMASTER_SECRET),
+            SRP_HANDLER.premaster_to_master(PREMASTER_SECRET),
             AES.MODE_GCM,
             nonce=b64decode(auth_token_data["nonce"]),
         )
