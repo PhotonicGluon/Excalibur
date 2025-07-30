@@ -28,7 +28,6 @@ import {
     IonTitle,
     IonToolbar,
     RefresherEventDetail,
-    isPlatform,
     useIonAlert,
     useIonRouter,
     useIonToast,

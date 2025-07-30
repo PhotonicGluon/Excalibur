@@ -195,7 +195,7 @@ export default class ExEF {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {
-                        controller.enqueue(cipher.final()); // TODO: Is this correct?
+                        controller.enqueue(cipher.final());
                         break;
                     }
                     const encBlock = cipher.update(value);

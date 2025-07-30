@@ -15,7 +15,7 @@ pipx install [PATH_TO_WHEEL_FILE]
 > [!NOTE]
 > These instructions are for development purposes only.
 
-### Installation
+### Setup
 
 First install [the `uv` package manager](https://docs.astral.sh/uv/). Then install dependencies by running
 
