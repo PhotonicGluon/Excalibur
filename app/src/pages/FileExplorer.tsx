@@ -324,13 +324,14 @@ const FileExplorer: React.FC = () => {
                         handler: () => {
                             presentToast({
                                 message: "File upload cancelled",
-                                duration: 3000,
+                                duration: 2000,
                                 color: "warning",
                             });
                         },
                     },
                     {
                         text: "Yes",
+                        role: "confirm",
                         handler: () => {
                             force = true;
                             handleFileUpload(rawFile);
@@ -639,11 +640,14 @@ const FileExplorer: React.FC = () => {
                     {directoryContents && (
                         <DirectoryList
                             {...directoryContents!}
-                            onDelete={onDeleteItem}
-                            setShowDialog={setShowProgressDialog}
-                            setDialogMessage={setDialogMessage}
-                            setProgress={setUploadProgress}
-                            presentToast={presentToast}
+                            feedbackMethods={{
+                                onDelete: onDeleteItem,
+                                setShowDialog: setShowProgressDialog,
+                                setDialogMessage: setDialogMessage,
+                                setProgress: setUploadProgress,
+                                presentAlert: presentAlert,
+                                presentToast: presentToast,
+                            }}
                         />
                     )}
                 </IonContent>

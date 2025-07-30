@@ -1,23 +1,16 @@
 import { useState } from "react";
 
-import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow, ToastOptions } from "@ionic/react";
+import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
 import { Directory, FileLike } from "@lib/files/structures";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
+import { UIFeedbackMethods } from "@components/explorer/types";
 
 interface ContainerProps extends Omit<Directory, "fullpath"> {
-    /** Function to call when deletion is requested */
-    onDelete: (path: string, isDir: boolean) => Promise<void>;
-    /** Function to call when the dialog is closed */
-    setShowDialog: (showing: boolean) => void;
-    /** Set the message to be displayed in the dialog */
-    setDialogMessage: (title: string) => void;
-    /** Set the progress of the dialog */
-    setProgress: (progress: number | null) => void;
-    /** Present a toast */
-    presentToast: (options: ToastOptions) => void;
+    /** Methods for UI feedback */
+    feedbackMethods: UIFeedbackMethods;
 }
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -84,11 +77,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             type={item.type}
                             mimetype={item.type === "file" ? item.mimetype : undefined}
                             size={item.type === "file" ? item.size : undefined}
-                            onDelete={props.onDelete}
-                            setShowDialog={props.setShowDialog}
-                            setDialogMessage={props.setDialogMessage}
-                            setProgress={props.setProgress}
-                            presentToast={props.presentToast}
+                            feedbackMethods={props.feedbackMethods}
                         />
                     ))}
                 {!(props.items && props.items.length > 0) && (
