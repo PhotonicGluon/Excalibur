@@ -45,4 +45,5 @@ line-length = 120
 [tool.ruff.lint]
 extend-select = [
     "E501", # line-too-long
+    "C901", # too-complex
 ]

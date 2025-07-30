@@ -1,5 +1,6 @@
 import warnings
 from base64 import b64decode
+from typing import Awaitable, Callable
 
 from Crypto.Cipher import AES
 from starlette.datastructures import MutableHeaders
@@ -89,7 +90,7 @@ class EncryptionHandler:
     # Magic methods
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         """
-        Handles the request
+        Handles the request.
 
         :param scope: The scope
         :param receive: The receive function
@@ -99,157 +100,12 @@ class EncryptionHandler:
         self._scope = scope
         self._receive = receive
         self._send = send
+        self._exef: ExEF | None = None
 
-        # # Try to set the E2EE key using the scope headers
+        # Try to set the E2EE key using the scope headers
         self._set_e2ee_key(MutableHeaders(scope=scope))
-        exef: ExEF | None = None
 
-        async def receive_wrapper() -> Message:
-            nonlocal exef
-
-            message = await receive()
-
-            # Check if the incoming request needs to be decrypted
-            if not self.route_data.encrypted_body:
-                return message
-
-            headers = MutableHeaders(scope=self._scope)
-            if headers.get("X-Encrypted", "false") == "false":
-                return message
-
-            # Try to set the E2EE key using the scope headers
-            if self._e2ee_key is None:
-                self._set_e2ee_key(MutableHeaders(scope=scope))
-                if self._e2ee_key is None:
-                    # We wanted to decrypt but no key was found...
-                    self._to_raise_credentials_exception = True
-                    return
-            if exef is None:
-                exef = ExEF(self._e2ee_key)
-
-            # Decrypt body
-            decrypted_body = b""
-            while decrypted_body == b"":
-                encrypted_body: bytes = message.get("body", b"")
-                exef.decryptor.update(encrypted_body)
-                decrypted_body = exef.decryptor.get()
-
-                if decrypted_body == b"":
-                    message = await receive()
-
-            if exef.decryptor.fully_processed:
-                exef.decryptor.verify()
-
-            message["body"] = decrypted_body
-
-            # Update headers
-            headers = MutableHeaders(raw=self._scope["headers"])
-            headers["Content-Length"] = str(len(decrypted_body))
-            if "X-Content-Type" in headers:
-                headers["Content-Type"] = headers["X-Content-Type"]
-                del headers["X-Content-Type"]
-            if "X-Encrypted" in headers:
-                del headers["X-Encrypted"]
-
-            self._scope["headers"] = headers.raw
-
-            return message
-
-        async def send_wrapper(message: Message) -> None:
-            """
-            Handles the outgoing response.
-
-            :param message: The message to be sent
-            """
-
-            nonlocal exef
-
-            if self._to_raise_credentials_exception:
-                return await self._raise_credentials_exception()
-
-            # Check if need to encrypt response
-            if not self._should_encrypt_response:
-                await send(message)
-                return
-
-            message_type = message["type"]
-            if message_type == "http.response.start" and message["status"] in self.route_data.excluded_statuses:
-                self._should_encrypt_response = False
-                await send(message)
-                return
-
-            if self._e2ee_key is None:
-                # Try again using the headers
-                self._set_e2ee_key(MutableHeaders(scope=message))
-
-                if self._e2ee_key is None:
-                    # Wanted to encrypt but still no key found
-                    return await self._raise_credentials_exception()
-
-            if exef is None and not self._started_response:
-                exef = ExEF(self._e2ee_key)
-
-            # Encrypt response
-            message_type = message["type"]
-            if message_type == "http.response.start":
-                # Don't send the initial message until we've determined how to modify the outgoing headers correctly
-                self._initial_message = message
-                self._started_response = False
-
-                # Get content length of the new message
-                headers = MutableHeaders(raw=message["headers"])
-                content_length = headers.get("Content-Length")
-                if content_length is None:
-                    raise ValueError("Content-Length header not found")
-                content_length = int(content_length)
-                new_content_length = content_length + ExEF.additional_size
-
-                # Set headers
-                headers["Content-Type"] = "application/octet-stream"
-                headers["Content-Length"] = str(new_content_length)
-                headers["Access-Control-Expose-Headers"] = "X-Encrypted"
-                headers["X-Encrypted"] = "true"
-
-                self._initial_message["headers"] = headers.raw
-
-                # Set parameters
-                exef.encryptor.set_params(length=content_length)
-
-                # Now send the message
-                await self._send(self._initial_message)
-                return
-            if message_type == "http.response.body":
-                # Encrypt body
-                plaintext_body = message.get("body", b"")
-                exef.encryptor.update(plaintext_body)
-
-                # Determine what we need to send
-                to_send = None
-                if not self._started_response:
-                    # Need to send both header and the initial body
-                    header = exef.encryptor.get()
-                    encrypted_body = exef.encryptor.get()
-                    to_send = header + encrypted_body
-                else:
-                    # Just need to send the body
-                    encrypted_body = exef.encryptor.get()
-                    to_send = encrypted_body
-
-                if exef.encryptor.fully_processed:
-                    footer = exef.encryptor.get()
-                    to_send += footer
-
-                message["body"] = to_send
-
-                # Update headers
-                message["headers"] = self._initial_message["headers"]
-
-                # Send message
-                if not self._started_response:
-                    self._started_response = True
-                await self._send(message)
-
-        await self.app(scope, receive_wrapper, send_wrapper)
+        await self.app(scope, self._receive_wrapper(scope), self._send_wrapper())
 
     # Helper functions
     async def _raise_credentials_exception(self) -> None:
@@ -299,3 +155,182 @@ class EncryptionHandler:
 
         # Update cache
         self._e2ee_key = e2ee_key
+
+    async def _decrypt_request(self, message: Message) -> Message:
+        """
+        Decrypts the request.
+
+        :param message: The message to decrypt
+        :return: The decrypted message
+        """
+
+        # Decrypt body
+        decrypted_body = b""
+        while decrypted_body == b"":
+            encrypted_body: bytes = message.get("body", b"")
+            self._exef.decryptor.update(encrypted_body)
+            decrypted_body = self._exef.decryptor.get()
+
+            if decrypted_body == b"":
+                message = await self._receive()
+
+        if self._exef.decryptor.fully_processed:
+            self._exef.decryptor.verify()
+
+        message["body"] = decrypted_body
+
+        # Update headers
+        headers = MutableHeaders(raw=self._scope["headers"])
+        headers["Content-Length"] = str(len(decrypted_body))
+        if "X-Content-Type" in headers:
+            headers["Content-Type"] = headers["X-Content-Type"]
+            del headers["X-Content-Type"]
+        if "X-Encrypted" in headers:
+            del headers["X-Encrypted"]
+
+        self._scope["headers"] = headers.raw
+
+        return message
+
+    async def _encrypt_response(self, message: Message):
+        """
+        Encrypts the response and send it.
+
+        :param message: The message to encrypt
+        """
+
+        # Encrypt response
+        message_type = message["type"]
+        if message_type == "http.response.start":
+            # Don't send the initial message until we've determined how to modify the outgoing headers correctly
+            self._initial_message = message
+            self._started_response = False
+
+            # Get content length of the new message
+            headers = MutableHeaders(raw=message["headers"])
+            content_length = headers.get("Content-Length")
+            if content_length is None:
+                raise ValueError("Content-Length header not found")
+            content_length = int(content_length)
+            new_content_length = content_length + ExEF.additional_size
+
+            # Set headers
+            headers["Content-Type"] = "application/octet-stream"
+            headers["Content-Length"] = str(new_content_length)
+            headers["Access-Control-Expose-Headers"] = "X-Encrypted"
+            headers["X-Encrypted"] = "true"
+
+            self._initial_message["headers"] = headers.raw
+
+            # Set parameters
+            self._exef.encryptor.set_params(length=content_length)
+
+            # Now send the message
+            await self._send(self._initial_message)
+            return
+        if message_type == "http.response.body":
+            # Encrypt body
+            plaintext_body = message.get("body", b"")
+            self._exef.encryptor.update(plaintext_body)
+
+            # Determine what we need to send
+            to_send = None
+            if not self._started_response:
+                # Need to send both header and the initial body
+                header = self._exef.encryptor.get()
+                encrypted_body = self._exef.encryptor.get()
+                to_send = header + encrypted_body
+            else:
+                # Just need to send the body
+                encrypted_body = self._exef.encryptor.get()
+                to_send = encrypted_body
+
+            if self._exef.encryptor.fully_processed:
+                footer = self._exef.encryptor.get()
+                to_send += footer
+
+            message["body"] = to_send
+
+            # Update headers
+            message["headers"] = self._initial_message["headers"]
+
+            # Send message
+            if not self._started_response:
+                self._started_response = True
+            await self._send(message)
+
+    def _receive_wrapper(self, scope: Scope) -> Callable[[], Awaitable[Message]]:
+        """
+        Wrapper for the receive function.
+
+        :param scope: The scope
+        :return: The receive function, which decrypts the request if needed
+        """
+
+        async def wrapper() -> Message:
+            message = await self._receive()
+
+            # Check if the incoming request needs to be decrypted
+            if not self.route_data.encrypted_body:
+                return message
+
+            headers = MutableHeaders(scope=self._scope)
+            if headers.get("X-Encrypted", "false") == "false":
+                return message
+
+            # Try to set the E2EE key using the scope headers
+            if self._e2ee_key is None:
+                self._set_e2ee_key(MutableHeaders(scope=scope))
+                if self._e2ee_key is None:
+                    # We wanted to decrypt but no key was found...
+                    self._to_raise_credentials_exception = True
+                    return message
+            if self._exef is None:
+                self._exef = ExEF(self._e2ee_key)
+
+            return await self._decrypt_request(message)
+
+        return wrapper
+
+    def _send_wrapper(self) -> Callable[[Message], Awaitable[None]]:
+        """
+        Wrapper for the send function.
+
+        :return: The send function, which encrypts the response if needed
+        """
+
+        async def wrapper(message: Message) -> None:
+            """
+            Handles the outgoing response.
+
+            :param message: The message to be sent
+            """
+
+            if self._to_raise_credentials_exception:
+                return await self._raise_credentials_exception()
+
+            # Check if need to encrypt response
+            if not self._should_encrypt_response:
+                await self._send(message)
+                return
+
+            message_type = message["type"]
+            if message_type == "http.response.start" and message["status"] in self.route_data.excluded_statuses:
+                self._should_encrypt_response = False
+                await self._send(message)
+                return
+
+            if self._e2ee_key is None:
+                # Try again using the headers
+                self._set_e2ee_key(MutableHeaders(scope=message))
+
+                if self._e2ee_key is None:
+                    # Wanted to encrypt but still no key found
+                    return await self._raise_credentials_exception()
+
+            if self._exef is None and not self._started_response:
+                self._exef = ExEF(self._e2ee_key)
+
+            await self._encrypt_response(message)
+
+        return wrapper
