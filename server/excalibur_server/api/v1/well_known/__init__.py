@@ -1,9 +1,7 @@
 # ruff: noqa: E402
 from fastapi import APIRouter
 
-router = APIRouter(
-    tags=["well-known"],
-)
+router = APIRouter(tags=["well-known"])
 
 # Include all well-known endpoints
 from .clock import clock_endpoint as clock_endpoint

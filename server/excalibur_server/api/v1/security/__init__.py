@@ -3,7 +3,13 @@ from fastapi import APIRouter
 
 router = APIRouter(tags=["security"])
 
-from .auth import auth_endpoint as auth_endpoint
+
+# Include authentication endpoints' router
+from .auth import router as auth_router
+
+router.include_router(auth_router, prefix="/auth")
+
+# Add other endpoints
 from .security_details import check_security_details_endpoint as check_security_details_endpoint
 from .security_details import get_security_details_endpoint as get_security_details_endpoint
 from .security_details import set_security_details_endpoint as set_security_details_endpoint

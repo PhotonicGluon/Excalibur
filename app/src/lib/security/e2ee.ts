@@ -90,7 +90,7 @@ export async function e2ee(
 
     // Perform SRP handshake
     const wsURL = apiURL.replace("http", "ws");
-    const ws = new WebSocket(`${wsURL}/security/auth`);
+    const ws = new WebSocket(`${wsURL}/security/auth/`);
 
     setLoadingState?.("Determining SRP group...");
     const state: E2EEState = {

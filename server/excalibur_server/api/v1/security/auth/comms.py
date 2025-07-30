@@ -7,7 +7,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
 
-from excalibur_server.api.v1.security import router
+from excalibur_server.api.v1.security.auth import router
 from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
 from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE, get_security_details
 from excalibur_server.src.security.token.auth import generate_auth_token
@@ -15,21 +15,10 @@ from excalibur_server.src.security.token.auth import generate_auth_token
 MAX_ITER_COUNT = 3
 
 
-@router.get("/group-size", response_model=int)
-def get_group_size() -> int:
+@router.websocket("/")
+async def comms_endpoint(websocket: WebSocket):
     """
-    Gets the size of the SRP group.
-
-    In particular, this returns the number of bits in the group's modulus.
-    """
-
-    return SRP_HANDLER.bits
-
-
-@router.websocket("/auth")
-async def auth_endpoint(websocket: WebSocket):
-    """
-    Endpoint that handles the authentication of incoming requests.
+    Endpoint that handles the authentication communication of incoming requests.
 
     Uses an adapted SRP protocol from RFC 5054 section 2.2, which can be found at
         https://datatracker.ietf.org/doc/html/rfc5054#section-2.2

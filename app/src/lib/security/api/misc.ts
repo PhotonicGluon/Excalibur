@@ -9,7 +9,7 @@ import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
  */
 export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; error?: string }> {
     try {
-        return fetch(`${apiURL}/security/group-size`).then(async (res) => {
+        return fetch(`${apiURL}/security/auth/group-size`).then(async (res) => {
             const groupSize = parseInt(await res.text());
             return { group: getSRPGroup(groupSize) };
         });
