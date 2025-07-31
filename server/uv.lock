@@ -75,17 +75,20 @@ wheels = [
 
 [[package]]
 name = "excalibur-server"
-version = "0.1.0a6"
+version = "0.1.0a7"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "cachetools" },
     { name = "fastapi" },
     { name = "gitpython" },
+    { name = "packaging" },
     { name = "pycryptodome" },
     { name = "pydantic" },
     { name = "pyjwt" },
     { name = "python-multipart" },
+    { name = "semver" },
+    { name = "toml" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "websockets" },
@@ -106,10 +109,13 @@ requires-dist = [
     { name = "cachetools", specifier = ">=6.1.0" },
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "gitpython", specifier = ">=3.1.45" },
+    { name = "packaging", specifier = ">=25.0" },
     { name = "pycryptodome", specifier = ">=3.23.0" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "semver", specifier = ">=3.0.4" },
+    { name = "toml", specifier = ">=0.10.2" },
     { name = "typer", specifier = ">=0.16.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0" },
     { name = "websockets", specifier = ">=15.0.1" },
@@ -519,6 +525,15 @@ wheels = [
 ]
 
 [[package]]
+name = "semver"
+version = "3.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/d1/d3159231aec234a59dd7d601e9dd9fe96f3afff15efd33c1070019b26132/semver-3.0.4.tar.gz", hash = "sha256:afc7d8c584a5ed0a11033af086e8af226a9c0b206f313e0301f8dd7b6b589602", size = 269730, upload-time = "2025-01-24T13:19:27.617Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/24/4d91e05817e92e3a61c8a21e08fd0f390f5301f1c448b137c57c4bc6e543/semver-3.0.4-py3-none-any.whl", hash = "sha256:9c824d87ba7f7ab4a1890799cec8596f15c1241cb473404ea1cb0c55e4b04746", size = 17912, upload-time = "2025-01-24T13:19:24.949Z" },
+]
+
+[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -556,6 +571,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/57/d062573f391d062710d4088fa1369428c38d51460ab6fedff920efef932e/starlette-0.47.2.tar.gz", hash = "sha256:6ae9aa5db235e4846decc1e7b79c4f346adf41e9777aebeb49dfd09bbd7023d8", size = 2583948, upload-time = "2025-07-20T17:31:58.522Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/1f/b876b1f83aef204198a42dc101613fefccb32258e5428b5f9259677864b4/starlette-0.47.2-py3-none-any.whl", hash = "sha256:c5847e96134e5c5371ee9fac6fdf1a67336d5815e09eb2a01fdb57a351ef915b", size = 72984, upload-time = "2025-07-20T17:31:56.738Z" },
+]
+
+[[package]]
+name = "toml"
+version = "0.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
 ]
 
 [[package]]

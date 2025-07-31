@@ -3,6 +3,7 @@
         "**/__pycache__": true,
         ".pytest_cache": true,
         ".python-version": true,
+        ".ruff_cache": true,
         ".venv": true
     },
     "cSpell.words": [

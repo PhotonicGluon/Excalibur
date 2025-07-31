@@ -2,7 +2,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.api.meta import VERSION, COMMIT
+from excalibur_server.meta import COMMIT, VERSION
 
 client = TestClient(app)
 

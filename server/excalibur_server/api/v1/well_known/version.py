@@ -1,6 +1,7 @@
-from excalibur_server.api.meta import VERSION, COMMIT
-from excalibur_server.api.v1.well_known import router
 from pydantic import BaseModel
+
+from excalibur_server.api.v1.well_known import router
+from excalibur_server.meta import COMMIT, VERSION
 
 
 class VersionResponse(BaseModel):

@@ -1,0 +1,2 @@
+# Add semver conditions to this list to allow backwards compatibility
+backwards_compatible = []

@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from excalibur_server.api.cors import ALLOW_ORIGINS
+from excalibur_server.meta import SUMMARY, TITLE, VERSION
 from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 from .log_filters import EndpointFilter
-from .meta import SUMMARY, TITLE, VERSION
 
 NO_LOG_ENDPOINTS = ["/api/v1/well-known/heartbeat"]
 

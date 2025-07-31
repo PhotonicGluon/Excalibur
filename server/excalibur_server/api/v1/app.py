@@ -4,8 +4,8 @@ import os
 
 from fastapi import FastAPI
 
-from excalibur_server.api.meta import SUMMARY, TITLE
 from excalibur_server.consts import MAX_FILE_SIZE
+from excalibur_server.meta import SUMMARY, TITLE
 
 from .meta import TAGS
 
