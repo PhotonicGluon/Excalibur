@@ -1,3 +1,5 @@
+import packageInfo from "@root/package.json";
+
 /**
  * Checks if the given API url is valid.
  *
@@ -22,6 +24,32 @@ export async function checkAPIUrl(
         }
     } catch (e: unknown) {
         return { reachable: false, validAPIUrl: false, error: (e as Error).message };
+    }
+}
+
+/**
+ * Checks if the API is compatible with the current version of Excalibur.
+ *
+ * @param apiURL The API URL
+ * @returns A promise which resolves to an object with a valid boolean
+ */
+export async function checkAPICompatibility(apiURL: string): Promise<{ valid: boolean }> {
+    try {
+        const response = await fetch(`${apiURL}/well-known/compatible?version=${packageInfo.version}`, {
+            method: "GET",
+        });
+        switch (response.status) {
+            case 200:
+                // Continue with normal flow
+                break;
+            default:
+                return { valid: false };
+        }
+
+        const valid = await response.json();
+        return { valid: valid };
+    } catch {
+        return { valid: false };
     }
 }
 

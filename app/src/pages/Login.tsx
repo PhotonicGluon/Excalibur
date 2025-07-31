@@ -15,7 +15,7 @@ import {
     useIonToast,
 } from "@ionic/react";
 
-import { checkAPIUrl } from "@lib/network";
+import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { checkSecurityDetails, checkVaultKey, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
@@ -136,6 +136,18 @@ const Login: React.FC = () => {
                 header: "Connection Failure",
                 subHeader: "Invalid API URL",
                 message: connectionResult.error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        // Check API compatibility
+        const compatibilityResult = await checkAPICompatibility(apiURL);
+        if (!compatibilityResult.valid) {
+            setIsLoading(false);
+            presentAlert({
+                header: "Incompatible API",
+                message: "This server is not compatible with this version of Excalibur.",
                 buttons: ["OK"],
             });
             return;
