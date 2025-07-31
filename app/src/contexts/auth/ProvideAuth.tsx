@@ -4,7 +4,7 @@ import { heartbeat as _heartbeat } from "@root/src/lib/network";
 
 import { getServerTime, getServerVersion } from "@lib/network";
 
-import { AuthProvider, ServerInfo, authContext } from "@contexts/auth";
+import { AuthProvider, ServerInfo, authContext } from "./context";
 
 const HEARTBEAT_INTERVAL = 15; // Interval between successful heartbeats, in seconds
 const HEARTBEAT_RETRY_COUNT = 5; // Number of times to retry heartbeat on failure

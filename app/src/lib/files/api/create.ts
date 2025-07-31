@@ -1,4 +1,4 @@
-import { AuthProvider } from "@components/auth";
+import { AuthProvider } from "@contexts/auth";
 
 /**
  * Uploads a file to the given path.

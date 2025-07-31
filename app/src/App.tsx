@@ -27,7 +27,8 @@ import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import "@ionic/react/css/typography.css";
 
-import { PrivateRoute, ProvideAuth } from "@components/auth";
+import { PrivateRoute } from "@components/auth/PrivateRoute";
+import { ProvideAuth } from "@contexts/auth";
 
 /* App pages */
 import Credits from "@pages/Credits";

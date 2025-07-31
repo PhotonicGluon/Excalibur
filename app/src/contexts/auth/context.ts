@@ -33,6 +33,6 @@ export const authContext = createContext<AuthProvider>(null!);
  *
  * @returns The current authentication state.
  */
-export function useAuth() {
+export function useAuth(): AuthProvider {
     return useContext(authContext);
 }
