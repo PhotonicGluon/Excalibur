@@ -49,8 +49,6 @@ import {
 import ExEF from "@lib/exef";
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
-import Preferences from "@lib/preferences";
-import { DEFAULT_SETTINGS_VALUES, EncryptionChunkSize } from "@lib/preferences/settings";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
 
@@ -59,6 +57,7 @@ import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 import { useAuth } from "@contexts/auth";
+import { useSettings } from "@contexts/settings";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -73,6 +72,9 @@ const FileExplorer: React.FC = () => {
     const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.token!);
     const tokenExpiry = new Date(expTimestamp * 1000);
 
+    // Get settings
+    const settings = useSettings();
+
     // States
     const router = useIonRouter();
 
@@ -86,10 +88,6 @@ const FileExplorer: React.FC = () => {
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
-
-    const [encryptionChunkSize, setEncryptionChunkSize] = useState<EncryptionChunkSize>(
-        DEFAULT_SETTINGS_VALUES.encryptionChunkSize,
-    );
 
     // Functions
     /**
@@ -200,11 +198,11 @@ const FileExplorer: React.FC = () => {
             const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
-                    for (let i = 0; i < rawFileSize / encryptionChunkSize; i++) {
+                    for (let i = 0; i < rawFileSize / settings.encryptionChunkSize; i++) {
                         controller.enqueue(
                             rawFileData.subarray(
-                                i * encryptionChunkSize,
-                                i * encryptionChunkSize + encryptionChunkSize,
+                                i * settings.encryptionChunkSize,
+                                i * settings.encryptionChunkSize + settings.encryptionChunkSize,
                             ),
                         );
                     }
@@ -463,13 +461,6 @@ const FileExplorer: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Retrieve settings
-        Preferences.get("encryptionChunkSize").then((value) => {
-            if (value) {
-                setEncryptionChunkSize(parseInt(value) as EncryptionChunkSize);
-            }
-        });
-
         // Refresh directory contents
         refreshContents(false);
     }, [requestedPath, refreshContents]);
