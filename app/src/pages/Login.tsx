@@ -23,8 +23,8 @@ import generateKey from "@lib/security/keygen";
 import { createVaultKey, retrieveVaultKey } from "@lib/security/vault";
 import { validateURL } from "@lib/validators";
 
-import { useAuth } from "@components/auth";
 import URLInput from "@components/inputs/URLInput";
+import { useAuth } from "@contexts/auth";
 
 import logo from "@assets/icon.png";
 

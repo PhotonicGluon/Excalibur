@@ -10,7 +10,7 @@ const config = {
     importOrder: [
         "^(?:@root|@ionic|ionicons)/(.*)$",
         "^@lib/(.*)$",
-        "^@components/(.*)$",
+        "^(?:@components|@contexts)/(.*)$",
         "^@pages/(.*)$",
         "^@theme/(.*)$",
         "^@assets/(.*)$",

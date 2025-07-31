@@ -28,8 +28,8 @@ import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
-import { useAuth } from "@components/auth";
 import { UIFeedbackMethods } from "@components/explorer/types";
+import { useAuth } from "@contexts/auth";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {

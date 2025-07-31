@@ -55,10 +55,10 @@ import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
 
 import Countdown from "@components/Countdown";
-import { useAuth } from "@components/auth";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
+import { useAuth } from "@contexts/auth";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
