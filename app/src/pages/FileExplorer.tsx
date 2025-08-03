@@ -301,26 +301,32 @@ const FileExplorer: React.FC = () => {
         const eventualPath = `${requestedPath}/${rawFile.name}` + ".exef"; // The uploaded file has this extension
         const checkResponse = await checkPath(auth, eventualPath);
         if (!checkResponse.success) {
-            if (checkResponse.error === "Illegal or invalid path") {
-                presentToast({
-                    message: "Illegal or invalid file name",
-                    duration: 3000,
-                    color: "danger",
-                });
-            } else if (checkResponse.error === "Path too long") {
-                presentToast({
-                    message: "File path too long",
-                    duration: 3000,
-                    color: "danger",
-                });
-            } else {
-                presentToast({
-                    message: `Failed to check file path: ${checkResponse.error}`,
-                    duration: 3000,
-                    color: "danger",
-                });
+            switch (checkResponse.error) {
+                case "Path not found":
+                    // This is good -- the file doesn't exist, so we can just carry on
+                    break;
+                case "Illegal or invalid path":
+                    presentToast({
+                        message: "Illegal or invalid file name",
+                        duration: 3000,
+                        color: "danger",
+                    });
+                    return;
+                case "Path too long":
+                    presentToast({
+                        message: "File path too long",
+                        duration: 3000,
+                        color: "danger",
+                    });
+                    return;
+                default:
+                    presentToast({
+                        message: "Failed to check file path: Unknown error",
+                        duration: 3000,
+                        color: "danger",
+                    });
+                    return;
             }
-            return;
         }
         if (checkResponse.success && checkResponse.type === "file") {
             // File exists, ask if want to override
