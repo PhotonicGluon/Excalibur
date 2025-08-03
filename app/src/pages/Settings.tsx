@@ -34,7 +34,7 @@ const Settings: React.FC = () => {
 
     // States
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [localSettings, setLocalSettings] = useState<SettingsPreferenceValues>(settings);
+    const [initialSettings] = useState<SettingsPreferenceValues>(settings);
 
     // Functions
     function onBackButton() {
@@ -51,6 +51,11 @@ const Settings: React.FC = () => {
                         text: "Leave",
                         role: "destructive",
                         handler: () => {
+                            // Revert settings back
+                            console.log(`Initial settings: ${JSON.stringify(initialSettings)}`);
+                            settings.change(initialSettings);
+
+                            // Go back
                             router.goBack();
                         },
                     },
@@ -78,7 +83,6 @@ const Settings: React.FC = () => {
             cryptoChunkSize,
         };
         console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
-        setLocalSettings(newSettings);
         settings.save(newSettings);
 
         // Report success
@@ -118,10 +122,10 @@ const Settings: React.FC = () => {
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select theme"
-                                value={localSettings.theme}
+                                value={settings.theme}
                                 onIonChange={(e) => {
-                                    setLocalSettings({
-                                        ...localSettings,
+                                    settings.change({
+                                        ...settings,
                                         theme: e.detail.value as Theme,
                                     });
                                     setHasUnsavedChanges(true);
@@ -142,10 +146,10 @@ const Settings: React.FC = () => {
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select chunk size"
-                                value={localSettings.cryptoChunkSize.toString()}
+                                value={settings.cryptoChunkSize.toString()}
                                 onIonChange={(e) => {
-                                    setLocalSettings({
-                                        ...localSettings,
+                                    settings.change({
+                                        ...settings,
                                         cryptoChunkSize: parseInt(e.detail.value) as CryptoChunkSize,
                                     });
                                     setHasUnsavedChanges(true);

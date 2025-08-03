@@ -4,6 +4,10 @@ import { SettingsPreferenceValues } from "@lib/preferences/settings";
 
 export interface SettingsProvider extends SettingsPreferenceValues {
     /**
+     * Changes the current settings.
+     */
+    change: (settings: SettingsPreferenceValues) => void;
+    /**
      * Saves the current settings to storage.
      */
     save: (settings: SettingsPreferenceValues) => Promise<void>;

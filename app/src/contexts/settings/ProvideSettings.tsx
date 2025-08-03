@@ -20,10 +20,14 @@ function useProvideSettings(): SettingsProvider {
     const [theme, setTheme] = useState<Theme>(DEFAULT_SETTINGS_VALUES.theme);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
 
-    async function saveFunc(settings: SettingsPreferenceValues) {
-        console.debug("Saving settings...");
+    function changeFunc(settings: SettingsPreferenceValues) {
         setTheme(settings.theme);
         setCryptoChunkSize(settings.cryptoChunkSize);
+    }
+
+    async function saveFunc(settings: SettingsPreferenceValues) {
+        console.debug("Saving settings...");
+        changeFunc(settings);
         await Preferences.set(settings);
     }
 
@@ -46,6 +50,7 @@ function useProvideSettings(): SettingsProvider {
     return {
         theme,
         cryptoChunkSize,
+        change: changeFunc,
         save: saveFunc,
     };
 }
