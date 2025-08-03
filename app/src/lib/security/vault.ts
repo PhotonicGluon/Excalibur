@@ -64,8 +64,12 @@ export async function retrieveVaultKey(
     const encryptedVaultKey = vaultKeyResponse.encryptedKey!;
 
     console.debug("Decrypting obtained vault key...");
-    const vaultKey = ExEF.decrypt(auk, encryptedVaultKey.encryptedKey);
-
-    console.debug(`Vault key: ${vaultKey.toString("hex")}`);
-    return vaultKey;
+    try {
+        const vaultKey = ExEF.decrypt(auk, encryptedVaultKey.encryptedKey);
+        console.debug(`Vault key: ${vaultKey.toString("hex")}`);
+        return vaultKey;
+    } catch (error: unknown) {
+        onError(`Could not decrypt vault key: ${(error as Error).message}`);
+        return null;
+    }
 }
