@@ -1,6 +1,6 @@
 [project]
 name = "excalibur-server"
-version = "0.1.0a7"
+version = "0.1.0a8"
 description = "An encrypted file server."
 readme = "README.md"
 authors = [{ name = "The-Photons" }]
@@ -19,7 +19,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "semver>=3.0.4",
     "toml>=0.10.2",
-    "typer>=0.16.0",
+    "typer~=0.15.4",             # TODO: Update to 0.16.x once the "no_args_is_help causing extra Error box popping up" is fixed
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]

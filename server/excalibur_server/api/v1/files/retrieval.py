@@ -7,7 +7,7 @@ from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
-from excalibur_server.src.path import validate_path
+from excalibur_server.src.path import check_path_subdir
 
 
 @router.get(
@@ -32,7 +32,7 @@ async def download_file_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -64,7 +64,7 @@ def listdir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

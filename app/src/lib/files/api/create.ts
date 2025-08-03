@@ -41,6 +41,8 @@ export async function uploadFile(
             return { success: false, error: "File already exists (and `force` is not set)" };
         case 413:
             return { success: false, error: "File too large" };
+        case 414:
+            return { success: false, error: "File path too long" };
         case 417:
             return { success: false, error: "Uploaded file needs to end with `.exef`" };
         case 422:
@@ -85,6 +87,8 @@ export async function mkdir(
             return { success: false, error: "Illegal or invalid path" };
         case 409:
             return { success: false, error: "Directory already exists" };
+        case 414:
+            return { success: false, error: "Directory path too long" };
         case 422:
             return { success: false, error: "Validation error" };
         default:
