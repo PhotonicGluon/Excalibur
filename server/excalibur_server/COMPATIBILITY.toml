@@ -1,2 +1,2 @@
 # Add semver versions and/or conditions to this list to allow backwards compatibility
-backwards_compatible = ["0.1.0-alpha.7"]
+backwards_compatible = []

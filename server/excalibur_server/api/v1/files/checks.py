@@ -4,7 +4,7 @@ from fastapi import HTTPException, Path, Query, Response, status
 
 from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER, MAX_FILE_SIZE
-from excalibur_server.src.path import validate_path
+from excalibur_server.src.path import check_path_length, check_path_subdir
 
 
 @router.head(
@@ -15,6 +15,7 @@ from excalibur_server.src.path import validate_path
         status.HTTP_202_ACCEPTED: {"description": "Directory exists"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
+        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Path too long"},
     },
 )
 async def check_path_endpoint(
@@ -26,10 +27,15 @@ async def check_path_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
+    # Check path length
+    if not check_path_length(user_path):
+        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="Path too long")
+
+    # Now we can check existence
     if not user_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
@@ -81,7 +87,7 @@ async def check_dir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

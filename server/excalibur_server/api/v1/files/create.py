@@ -8,7 +8,7 @@ from fastapi.responses import PlainTextResponse
 from excalibur_server.api.v1.files import router
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
-from excalibur_server.src.path import validate_path
+from excalibur_server.src.path import check_path_subdir, check_path_length
 
 
 @router.post(
@@ -23,6 +23,7 @@ from excalibur_server.src.path import validate_path
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
         status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {"description": "File too large"},
+        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "File path too long"},
         status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,
@@ -44,15 +45,19 @@ async def upload_file_endpoint(
         )
 
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
     if not (user_path.exists() and user_path.is_dir()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    # Check if file already exists
+    # Check file path length
     file_path = user_path / file.filename
+    if not check_path_length(file_path):
+        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
+
+    # Check if file already exists
     if not force and file_path.exists():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
@@ -78,6 +83,7 @@ async def upload_file_endpoint(
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
+        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Directory path too long"},
     },
     status_code=status.HTTP_201_CREATED,
     response_class=PlainTextResponse,
@@ -88,8 +94,12 @@ async def create_directory_endpoint(
     ],
     name: Annotated[str, Body(description="The name of the new directory")],
 ):
+    """
+    Creates a new directory.
+    """
+
     # Check for any attempts at path traversal
-    user_path, valid = validate_path(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(path, FILES_FOLDER)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -97,14 +107,18 @@ async def create_directory_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
     # Check if new directory causes issues
-    dir_path, valid = validate_path(name, user_path)
+    dir_path, valid = check_path_subdir(name, user_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Illegal or invalid directory name")
 
-    # Check if file already exists
+    # Check if directory already exists
     dir_path = user_path / name
     if dir_path.exists():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
+
+    # Check directory path length
+    if not check_path_length(dir_path):
+        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="Directory path too long")
 
     # Create the directory
     dir_path.mkdir(parents=True)

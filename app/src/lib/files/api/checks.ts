@@ -27,6 +27,8 @@ export async function checkPath(
             return { success: false, error: "Path not found" };
         case 406:
             return { success: false, error: "Illegal or invalid path" };
+        case 414:
+            return { success: false, error: "Path too long" };
         default:
             return { success: false, error: "Unknown error" };
     }
