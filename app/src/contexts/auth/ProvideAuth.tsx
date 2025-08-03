@@ -69,7 +69,7 @@ function useProvideAuth(): AuthProvider {
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
-    const loginFunc = async (apiURL: string, token: string, e2eeKey: Buffer) => {
+    async function loginFunc(apiURL: string, token: string, e2eeKey: Buffer) {
         // Set state variables
         setApiURL(apiURL);
         setE2EEKey(e2eeKey);
@@ -102,9 +102,9 @@ function useProvideAuth(): AuthProvider {
             }
         }, HEARTBEAT_INTERVAL * 1000);
         setHeartbeatInterval(interval);
-    };
+    }
 
-    const logoutFunc = async () => {
+    async function logoutFunc() {
         // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);
 
@@ -114,7 +114,7 @@ function useProvideAuth(): AuthProvider {
         setVaultKey(null);
         setServerInfo(null);
         setToken(null);
-    };
+    }
 
     return {
         apiURL,

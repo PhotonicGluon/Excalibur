@@ -198,11 +198,11 @@ const FileExplorer: React.FC = () => {
             const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
-                    for (let i = 0; i < rawFileSize / settings.encryptionChunkSize; i++) {
+                    for (let i = 0; i < rawFileSize / settings.cryptoChunkSize; i++) {
                         controller.enqueue(
                             rawFileData.subarray(
-                                i * settings.encryptionChunkSize,
-                                i * settings.encryptionChunkSize + settings.encryptionChunkSize,
+                                i * settings.cryptoChunkSize,
+                                i * settings.cryptoChunkSize + settings.cryptoChunkSize,
                             ),
                         );
                     }

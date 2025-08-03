@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
 import Preferences from "@lib/preferences";
-import { DEFAULT_SETTINGS_VALUES, EncryptionChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
+import { CryptoChunkSize, DEFAULT_SETTINGS_VALUES, SettingsPreferenceValues } from "@lib/preferences/settings";
 
-import { settingsContext } from "./context";
+import { SettingsProvider, settingsContext } from "./context";
 
 export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const settings = useProvideSettings();
@@ -15,23 +15,28 @@ export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ child
  *
  * @returns An object with the current settings.
  */
-function useProvideSettings(): SettingsPreferenceValues {
+function useProvideSettings(): SettingsProvider {
     // States
-    const [encryptionChunkSize, setEncryptionChunkSize] = useState<EncryptionChunkSize>(
-        DEFAULT_SETTINGS_VALUES.encryptionChunkSize,
-    );
+    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
+
+    async function saveFunc(settings: SettingsPreferenceValues) {
+        console.debug("Saving settings...");
+        setCryptoChunkSize(settings.cryptoChunkSize);
+        await Preferences.set(settings);
+    }
 
     // Retrieve settings
     useEffect(() => {
-        Preferences.get("encryptionChunkSize").then((value) => {
+        Preferences.get("cryptoChunkSize").then((value) => {
             if (value) {
-                console.debug(`Encryption chunk size: ${value}`);
-                setEncryptionChunkSize(parseInt(value) as EncryptionChunkSize);
+                console.debug(`Crypto chunk size: ${value}`);
+                setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
             }
         });
     }, []);
 
     return {
-        encryptionChunkSize,
+        cryptoChunkSize: cryptoChunkSize,
+        save: saveFunc,
     };
 }

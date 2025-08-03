@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
     IonButton,
@@ -19,10 +19,10 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import Preferences from "@lib/preferences";
-import { DEFAULT_SETTINGS_VALUES, EncryptionChunkSize } from "@lib/preferences/settings";
+import { CryptoChunkSize } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
+import { useSettings } from "@contexts/settings";
 
 const Settings: React.FC = () => {
     const router = useIonRouter();
@@ -30,12 +30,12 @@ const Settings: React.FC = () => {
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
+    const settings = useSettings();
+
     // States
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    const [encryptionChunkSize, setEncryptionChunkSize] = useState<EncryptionChunkSize>(
-        DEFAULT_SETTINGS_VALUES.encryptionChunkSize,
-    );
+    const [encryptionChunkSize, setEncryptionChunkSize] = useState<CryptoChunkSize>(settings.cryptoChunkSize);
 
     // Functions
     function onBackButton() {
@@ -70,11 +70,11 @@ const Settings: React.FC = () => {
 
         // Update encryption chunk size
         const encryptionChunkSize = parseInt(
-            (document.getElementById("encryption-chunk-size")! as HTMLIonSelectElement).value,
-        ) as EncryptionChunkSize;
+            (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
+        ) as CryptoChunkSize;
         console.log(`Got new encryption chunk size: ${encryptionChunkSize}`);
         setEncryptionChunkSize(encryptionChunkSize);
-        Preferences.set({ encryptionChunkSize: encryptionChunkSize });
+        settings.save({ cryptoChunkSize: encryptionChunkSize });
 
         // Report success
         setHasUnsavedChanges(false);
@@ -85,16 +85,6 @@ const Settings: React.FC = () => {
             color: "success",
         });
     }
-
-    // Effects
-    useEffect(() => {
-        // Retrieve settings
-        Preferences.get("encryptionChunkSize").then((value) => {
-            if (value) {
-                setEncryptionChunkSize(parseInt(value) as EncryptionChunkSize);
-            }
-        });
-    }, []);
 
     // Render
     return (
@@ -116,16 +106,16 @@ const Settings: React.FC = () => {
                 {/* Settings list */}
                 <IonList>
                     <SettingsItem
-                        label={<IonLabel>Encryption Chunk Size</IonLabel>}
+                        label={<IonLabel>Crypto Chunk Size</IonLabel>}
                         input={
                             <IonSelect
-                                id="encryption-chunk-size"
+                                id="crypto-chunk-size"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select chunk size"
                                 value={encryptionChunkSize.toString()}
                                 onIonChange={(e) => {
-                                    setEncryptionChunkSize(parseInt(e.detail.value) as EncryptionChunkSize);
+                                    setEncryptionChunkSize(parseInt(e.detail.value) as CryptoChunkSize);
                                     setHasUnsavedChanges(true);
                                 }}
                             >
