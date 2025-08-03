@@ -21,7 +21,7 @@ import "@ionic/react/css/padding.css";
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
  */
-import "@ionic/react/css/palettes/dark.system.css";
+import "@ionic/react/css/palettes/dark.class.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
@@ -29,7 +29,7 @@ import "@ionic/react/css/typography.css";
 
 import { PrivateRoute } from "@components/auth/PrivateRoute";
 import { ProvideAuth } from "@contexts/auth";
-import { ProvideSettings } from "@contexts/settings";
+import { useSettings } from "@contexts/settings";
 
 /* App pages */
 import Credits from "@pages/Credits";
@@ -39,33 +39,62 @@ import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
 
+// Set up app
 setupIonicReact();
-
 PrivacyScreen.enable();
 
+// Helper functions
+function toggleDarkPalette(shouldAdd: boolean) {
+    document.documentElement.classList.toggle("ion-palette-dark", shouldAdd);
+}
+
+// App component
 const App: React.FC = () => {
-    // Lock screen orientation to portrait
+    // States
+    const settings = useSettings();
+
+    // TODO: Use preferences
+    document.documentElement.classList.toggle("ion-palette-dark", true);
+
+    // Effects
     useEffect(() => {
+        // Lock screen orientation to portrait
         ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
             console.warn(error);
         });
     });
 
+    useEffect(() => {
+        // Set app theme
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+        toggleDarkPalette((prefersDark.matches && settings.theme === "system") || settings.theme === "dark");
+
+        // Set up listeners for changes to the prefers-color-scheme media query
+        const setDarkPaletteFromMediaQuery = (mediaQuery: MediaQueryListEvent) => {
+            toggleDarkPalette((mediaQuery.matches && settings.theme === "system") || settings.theme === "dark");
+        };
+
+        // Listen for changes to the prefers-color-scheme media query
+        prefersDark.addEventListener("change", setDarkPaletteFromMediaQuery);
+
+        return () => {
+            prefersDark.removeEventListener("change", setDarkPaletteFromMediaQuery);
+        };
+    }, [settings.theme]);
+
     // Render app
     return (
         <IonApp>
             <ProvideAuth>
-                <ProvideSettings>
-                    <IonReactRouter>
-                        <IonRouterOutlet>
-                            <Route exact path="/login" component={Login} />
-                            <PrivateRoute path="/files/*" component={FileExplorer} />
-                            <PrivateRoute path="/settings" component={Settings} />
-                            <Route path="/credits" component={Credits} />
-                            <Redirect exact from="/" to="/login" />
-                        </IonRouterOutlet>
-                    </IonReactRouter>
-                </ProvideSettings>
+                <IonReactRouter>
+                    <IonRouterOutlet>
+                        <Route exact path="/login" component={Login} />
+                        <PrivateRoute path="/files/*" component={FileExplorer} />
+                        <PrivateRoute path="/settings" component={Settings} />
+                        <Route path="/credits" component={Credits} />
+                        <Redirect exact from="/" to="/login" />
+                    </IonRouterOutlet>
+                </IonReactRouter>
             </ProvideAuth>
         </IonApp>
     );

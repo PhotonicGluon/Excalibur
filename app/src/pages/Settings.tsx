@@ -19,7 +19,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { CryptoChunkSize } from "@lib/preferences/settings";
+import { CryptoChunkSize, SettingsPreferenceValues, Theme } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@contexts/settings";
@@ -34,8 +34,7 @@ const Settings: React.FC = () => {
 
     // States
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-    const [encryptionChunkSize, setEncryptionChunkSize] = useState<CryptoChunkSize>(settings.cryptoChunkSize);
+    const [localSettings, setLocalSettings] = useState<SettingsPreferenceValues>(settings);
 
     // Functions
     function onBackButton() {
@@ -68,13 +67,19 @@ const Settings: React.FC = () => {
     function onSaveSettings() {
         console.debug("Saving settings...");
 
-        // Update encryption chunk size
-        const encryptionChunkSize = parseInt(
+        // Get final data
+        const theme = (document.getElementById("theme")! as HTMLIonSelectElement).value as Theme;
+        const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
-        console.log(`Got new encryption chunk size: ${encryptionChunkSize}`);
-        setEncryptionChunkSize(encryptionChunkSize);
-        settings.save({ cryptoChunkSize: encryptionChunkSize });
+
+        const newSettings: SettingsPreferenceValues = {
+            theme,
+            cryptoChunkSize,
+        };
+        console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
+        setLocalSettings(newSettings);
+        settings.save(newSettings);
 
         // Report success
         setHasUnsavedChanges(false);
@@ -106,6 +111,30 @@ const Settings: React.FC = () => {
                 {/* Settings list */}
                 <IonList>
                     <SettingsItem
+                        label={<IonLabel>Theme</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="theme"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select theme"
+                                value={localSettings.theme}
+                                onIonChange={(e) => {
+                                    setLocalSettings({
+                                        ...localSettings,
+                                        theme: e.detail.value as Theme,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="system">System</IonSelectOption>
+                                <IonSelectOption value="light">Light</IonSelectOption>
+                                <IonSelectOption value="dark">Dark</IonSelectOption>
+                            </IonSelect>
+                        }
+                    />
+
+                    <SettingsItem
                         label={<IonLabel>Crypto Chunk Size</IonLabel>}
                         input={
                             <IonSelect
@@ -113,9 +142,12 @@ const Settings: React.FC = () => {
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select chunk size"
-                                value={encryptionChunkSize.toString()}
+                                value={localSettings.cryptoChunkSize.toString()}
                                 onIonChange={(e) => {
-                                    setEncryptionChunkSize(parseInt(e.detail.value) as CryptoChunkSize);
+                                    setLocalSettings({
+                                        ...localSettings,
+                                        cryptoChunkSize: parseInt(e.detail.value) as CryptoChunkSize,
+                                    });
                                     setHasUnsavedChanges(true);
                                 }}
                             >

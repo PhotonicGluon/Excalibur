@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Preferences from "@lib/preferences";
-import { CryptoChunkSize, DEFAULT_SETTINGS_VALUES, SettingsPreferenceValues } from "@lib/preferences/settings";
+import { CryptoChunkSize, DEFAULT_SETTINGS_VALUES, SettingsPreferenceValues, Theme } from "@lib/preferences/settings";
 
 import { SettingsProvider, settingsContext } from "./context";
 
@@ -17,16 +17,24 @@ export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ child
  */
 function useProvideSettings(): SettingsProvider {
     // States
+    const [theme, setTheme] = useState<Theme>(DEFAULT_SETTINGS_VALUES.theme);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
 
     async function saveFunc(settings: SettingsPreferenceValues) {
         console.debug("Saving settings...");
+        setTheme(settings.theme);
         setCryptoChunkSize(settings.cryptoChunkSize);
         await Preferences.set(settings);
     }
 
     // Retrieve settings
     useEffect(() => {
+        Preferences.get("theme").then((value) => {
+            if (value) {
+                console.debug(`Theme: ${value}`);
+                setTheme(value as Theme);
+            }
+        });
         Preferences.get("cryptoChunkSize").then((value) => {
             if (value) {
                 console.debug(`Crypto chunk size: ${value}`);
@@ -36,7 +44,8 @@ function useProvideSettings(): SettingsProvider {
     }, []);
 
     return {
-        cryptoChunkSize: cryptoChunkSize,
+        theme,
+        cryptoChunkSize,
         save: saveFunc,
     };
 }
