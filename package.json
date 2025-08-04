@@ -1,0 +1,16 @@
+{
+    "name": "excalibur-monorepo",
+    "private": true,
+    "scripts": {
+        "start:server": "cd server && uv run excalibur start --port 8888",
+        "start:app": "cd app && npm run dev",
+        "cy:open": "cd app && npx cypress open",
+        "cy:run": "cd app && npx cypress run",
+        "test:unit": "cd app && npm run test:unit",
+        "test:e2e": "start-server-and-test start:server http://localhost:8888/api/v1/well-known/heartbeat \"start-server-and-test start:app http://localhost:5173 cy:run\""
+    },
+    "devDependencies": {
+        "cypress": "^14.5.3",
+        "start-server-and-test": "^2.0.13"
+    }
+}

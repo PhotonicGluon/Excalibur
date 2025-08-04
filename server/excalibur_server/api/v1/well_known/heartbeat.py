@@ -10,6 +10,7 @@ from excalibur_server.src.security.token import API_TOKEN_HEADER, check_auth_tok
 HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type": "text/plain"}
 
 
+@router.head("/heartbeat")
 @router.get(
     "/heartbeat",
     summary="Health check",
