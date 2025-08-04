@@ -1,6 +1,6 @@
 import React from "react";
 
-import { IonCol, IonGrid, IonItem, IonRow } from "@ionic/react";
+import { IonCol, IonRow } from "@ionic/react";
 
 interface SettingsItemProps {
     label: React.ReactNode;

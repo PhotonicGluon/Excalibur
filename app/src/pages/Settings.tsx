@@ -21,7 +21,13 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { CryptoChunkSize, FileSizeUnits, SettingsPreferenceValues, Theme } from "@lib/preferences/settings";
+import {
+    CryptoChunkSize,
+    FileSizeUnits,
+    RowAlternatingColours,
+    SettingsPreferenceValues,
+    Theme,
+} from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@contexts/settings";
@@ -76,6 +82,8 @@ const Settings: React.FC = () => {
 
         // Get final data
         const theme = (document.getElementById("theme")! as HTMLIonSelectElement).value as Theme;
+        const rowAlternatingColours = (document.getElementById("row-alternating-colours")! as HTMLIonSelectElement)
+            .value as RowAlternatingColours;
         const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
@@ -84,8 +92,9 @@ const Settings: React.FC = () => {
 
         const newSettings: SettingsPreferenceValues = {
             theme,
-            cryptoChunkSize,
+            rowAlternatingColours,
             fileSizeUnits,
+            cryptoChunkSize,
         };
         console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
         settings.save(newSettings);
@@ -151,6 +160,29 @@ const Settings: React.FC = () => {
                             </IonSelect>
                         }
                     />
+                    <SettingsItem
+                        label={<IonLabel>Row Alternating Colours</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="row-alternating-colours"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select row alternating colours"
+                                value={settings.rowAlternatingColours}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        rowAlternatingColours: e.detail.value as RowAlternatingColours,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="off">Off</IonSelectOption>
+                                <IonSelectOption value="normal">Normal</IonSelectOption>
+                                <IonSelectOption value="inverted">Inverted</IonSelectOption>
+                            </IonSelect>
+                        }
+                    ></SettingsItem>
                     <SettingsItem
                         label={<IonLabel>File Size Units</IonLabel>}
                         input={

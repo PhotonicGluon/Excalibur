@@ -215,14 +215,18 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     // Render
+    let rowColourClass = "";
+    if (settings.rowAlternatingColours !== "off") {
+        const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
+        const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
+        if (settings.rowAlternatingColours === "normal") {
+            rowColourClass = props.oddRow ? lighter : darker;
+        } else {
+            rowColourClass = props.oddRow ? darker : lighter;
+        }
+    }
     return (
-        <div
-            className={
-                props.oddRow
-                    ? "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]"
-                    : "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]"
-            }
-        >
+        <div className={rowColourClass}>
             <IonItemSliding ref={slideRef} className="w-full bg-(--item-bg)">
                 {/* Main item content */}
                 <IonItem className="[--background:var(--item-bg)]" button={true} onClick={() => onClickItem()}>

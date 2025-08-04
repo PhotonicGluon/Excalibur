@@ -5,6 +5,7 @@ import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
     FileSizeUnits,
+    RowAlternatingColours,
     SettingsPreferenceValues,
     Theme,
 } from "@lib/preferences/settings";
@@ -24,13 +25,17 @@ export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ child
 function useProvideSettings(): SettingsProvider {
     // States
     const [theme, setTheme] = useState<Theme>(DEFAULT_SETTINGS_VALUES.theme);
-    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
+    const [rowAlternatingColours, setRowAlternatingColours] = useState<RowAlternatingColours>(
+        DEFAULT_SETTINGS_VALUES.rowAlternatingColours,
+    );
     const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(DEFAULT_SETTINGS_VALUES.fileSizeUnits);
+    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
 
     function changeFunc(settings: SettingsPreferenceValues) {
         setTheme(settings.theme);
-        setCryptoChunkSize(settings.cryptoChunkSize);
+        setRowAlternatingColours(settings.rowAlternatingColours);
         setFileSizeUnits(settings.fileSizeUnits);
+        setCryptoChunkSize(settings.cryptoChunkSize);
     }
 
     async function saveFunc(settings: SettingsPreferenceValues) {
@@ -47,10 +52,10 @@ function useProvideSettings(): SettingsProvider {
                 setTheme(value as Theme);
             }
         });
-        Preferences.get("cryptoChunkSize").then((value) => {
+        Preferences.get("rowAlternatingColours").then((value) => {
             if (value) {
-                console.debug(`Crypto chunk size: ${value}`);
-                setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
+                console.debug(`Row alternating colours: ${value}`);
+                setRowAlternatingColours(value as RowAlternatingColours);
             }
         });
         Preferences.get("fileSizeUnits").then((value) => {
@@ -59,12 +64,19 @@ function useProvideSettings(): SettingsProvider {
                 setFileSizeUnits(value as FileSizeUnits);
             }
         });
+        Preferences.get("cryptoChunkSize").then((value) => {
+            if (value) {
+                console.debug(`Crypto chunk size: ${value}`);
+                setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
+            }
+        });
     }, []);
 
     return {
         theme,
-        cryptoChunkSize,
+        rowAlternatingColours,
         fileSizeUnits,
+        cryptoChunkSize,
         change: changeFunc,
         save: saveFunc,
     };
