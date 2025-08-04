@@ -19,7 +19,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { CryptoChunkSize, SettingsPreferenceValues, Theme } from "@lib/preferences/settings";
+import { CryptoChunkSize, FileSizeUnits, SettingsPreferenceValues, Theme } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@contexts/settings";
@@ -77,10 +77,13 @@ const Settings: React.FC = () => {
         const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
+        const fileSizeUnits = (document.getElementById("file-size-units")! as HTMLIonSelectElement)
+            .value as FileSizeUnits;
 
         const newSettings: SettingsPreferenceValues = {
             theme,
             cryptoChunkSize,
+            fileSizeUnits,
         };
         console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
         settings.save(newSettings);
@@ -161,6 +164,29 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="262144">256 KiB</IonSelectOption>
                                 <IonSelectOption value="524288">512 KiB</IonSelectOption>
                                 <IonSelectOption value="1048576">1 MiB</IonSelectOption>
+                            </IonSelect>
+                        }
+                    />
+
+                    <SettingsItem
+                        label={<IonLabel>File Size Units</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="file-size-units"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select file size units"
+                                value={settings.fileSizeUnits}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        fileSizeUnits: e.detail.value as FileSizeUnits,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="si">KB, MB, GB</IonSelectOption>
+                                <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
                             </IonSelect>
                         }
                     />

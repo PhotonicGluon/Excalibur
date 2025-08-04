@@ -30,6 +30,7 @@ import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { UIFeedbackMethods } from "@components/explorer/types";
 import { useAuth } from "@contexts/auth";
+import { useSettings } from "@contexts/settings";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {
@@ -45,10 +46,13 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const feedbackMethods = props.feedbackMethods;
     const isFile = props.type === "file";
 
+    // Contexts
+    const auth = useAuth();
+    const settings = useSettings();
+    const router = useIonRouter();
+
     // States
     const slideRef = useRef<HTMLIonItemSlidingElement>(null);
-    const auth = useAuth();
-    const router = useIonRouter();
 
     // Functions
     /**
@@ -235,7 +239,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                             {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
                                         </IonLabel>
                                         {props.size !== undefined && (
-                                            <IonNote>{bytesToHumanReadable(props.size)}</IonNote>
+                                            <IonNote>
+                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits === "iec")}
+                                            </IonNote>
                                         )}
                                     </div>
                                 </IonCol>
