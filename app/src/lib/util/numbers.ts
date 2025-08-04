@@ -1,3 +1,5 @@
+import { FileSizeUnits } from "@lib/preferences/settings";
+
 /**
  * Pads a number with leading zeros to ensure it has at least the specified length.
  *
@@ -12,22 +14,38 @@ export function padNumber(num: number, length: number): string {
 /**
  * Converts a given number of bytes into a human-readable format.
  *
- * @param bytes The number of bytes.
- * @param use1024Units If true, the units will be 1024-based (KiB, MiB, GiB) instead of 1000-based
- *      (KB, MB, GB).
+ * @param bytes The number of bytes
+ * @param units The units to use. `iec` for 1024-based (KiB, MiB, GiB) and `si` for 1000-based
+ *      (KB, MB, GB). Defaults to `iec`
  * @returns A string like "4.00 KiB", "1.00 GB", etc.
  */
-export function bytesToHumanReadable(bytes: number, use1024Units?: boolean): string {
+export function bytesToHumanReadable(bytes: number, units: FileSizeUnits = "iec"): string {
     const prefixes = ["", "K", "M", "G"];
-    const multiple = use1024Units ? 1024 : 1000;
+    const multiple = units === "iec" ? 1024 : 1000;
     const origBytes = bytes;
 
+    // Find the unit index
     let unitIndex = 0;
     while (bytes >= multiple) {
         bytes /= multiple;
         unitIndex++;
     }
 
-    const unit = `${prefixes[unitIndex]}${origBytes >= multiple && use1024Units ? "i" : ""}B`;
+    // Generate unit string
+    let unit: string;
+    if (unitIndex === 0) {
+        unit = "B";
+    } else if (units === "iec") {
+        unit = `${prefixes[unitIndex]}iB`;
+    } else {
+        if (unitIndex === 1) {
+            // Kilo needs to be lowercase as per SI unit standard
+            unit = "kB";
+        } else {
+            unit = `${prefixes[unitIndex]}B`;
+        }
+    }
+
+    // Format file size and return
     return `${origBytes < multiple ? bytes : bytes.toFixed(2)} ${unit}`;
 }

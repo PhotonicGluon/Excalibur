@@ -240,7 +240,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                         </IonLabel>
                                         {props.size !== undefined && (
                                             <IonNote>
-                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits === "iec")}
+                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
                                             </IonNote>
                                         )}
                                     </div>

@@ -185,7 +185,7 @@ const Settings: React.FC = () => {
                                     setHasUnsavedChanges(true);
                                 }}
                             >
-                                <IonSelectOption value="si">KB, MB, GB</IonSelectOption>
+                                <IonSelectOption value="si">kB, MB, GB</IonSelectOption>
                                 <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
                             </IonSelect>
                         }
