@@ -6,7 +6,7 @@
     "type": "module",
     "description": "An app that interacts with an encrypted file server",
     "scripts": {
-        "dev": "vite",
+        "dev": "vite --port 8888",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "cy:open": "cypress open",
@@ -55,6 +55,7 @@
         "@vitejs/plugin-legacy": "^7.1.0",
         "@vitejs/plugin-react": "^4.7.0",
         "eslint": "^9.32.0",
+        "eslint-plugin-cypress": "^5.1.0",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-react-refresh": "^0.4.20",

@@ -382,7 +382,7 @@ const Login: React.FC = () => {
                                 </IonCheckbox>
                             </div>
 
-                            <IonButton className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
+                            <IonButton id="login-button" className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
                                 Log In
                             </IonButton>
                         </form>
