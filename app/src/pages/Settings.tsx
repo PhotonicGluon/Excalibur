@@ -3,12 +3,14 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
+    IonCol,
     IonContent,
     IonGrid,
     IonHeader,
     IonIcon,
     IonLabel,
     IonPage,
+    IonRow,
     IonSelect,
     IonSelectOption,
     IonTitle,
@@ -116,7 +118,16 @@ const Settings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal pt-2">
+                <IonGrid className="ion-padding-horizontal -mt-2 [&_h2]:!mt-4 [&_h2]:!text-lg [&_h2]:!leading-none [&_h2]:!font-bold">
+                    {/* Interface */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2>Interface</h2>
+                                <p>Settings that affect the interface of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
                     <SettingsItem
                         label={<IonLabel>Theme</IonLabel>}
                         input={
@@ -140,7 +151,38 @@ const Settings: React.FC = () => {
                             </IonSelect>
                         }
                     />
+                    <SettingsItem
+                        label={<IonLabel>File Size Units</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="file-size-units"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select file size units"
+                                value={settings.fileSizeUnits}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        fileSizeUnits: e.detail.value as FileSizeUnits,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="si">kB, MB, GB</IonSelectOption>
+                                <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
+                            </IonSelect>
+                        }
+                    />
 
+                    {/* Operations */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2>Operations</h2>
+                                <p>Affects the operations of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
                     <SettingsItem
                         label={<IonLabel>Crypto Chunk Size</IonLabel>}
                         input={
@@ -164,29 +206,6 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="262144">256 KiB</IonSelectOption>
                                 <IonSelectOption value="524288">512 KiB</IonSelectOption>
                                 <IonSelectOption value="1048576">1 MiB</IonSelectOption>
-                            </IonSelect>
-                        }
-                    />
-
-                    <SettingsItem
-                        label={<IonLabel>File Size Units</IonLabel>}
-                        input={
-                            <IonSelect
-                                id="file-size-units"
-                                interface="popover"
-                                fill="outline"
-                                placeholder="Select file size units"
-                                value={settings.fileSizeUnits}
-                                onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        fileSizeUnits: e.detail.value as FileSizeUnits,
-                                    });
-                                    setHasUnsavedChanges(true);
-                                }}
-                            >
-                                <IonSelectOption value="si">kB, MB, GB</IonSelectOption>
-                                <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
                             </IonSelect>
                         }
                     />
