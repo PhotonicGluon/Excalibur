@@ -53,16 +53,13 @@ const App: React.FC = () => {
     // States
     const settings = useSettings();
 
-    // TODO: Use preferences
-    document.documentElement.classList.toggle("ion-palette-dark", true);
-
     // Effects
     useEffect(() => {
         // Lock screen orientation to portrait
         ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
             console.warn(error);
         });
-    });
+    }, []);
 
     useEffect(() => {
         // Set app theme
