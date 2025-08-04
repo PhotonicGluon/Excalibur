@@ -87,7 +87,7 @@ const App: React.FC = () => {
                     <IonRouterOutlet>
                         <Route exact path="/login" component={Login} />
                         <PrivateRoute path="/files/*" component={FileExplorer} />
-                        <PrivateRoute path="/settings" component={Settings} />
+                        <Route path="/settings" component={Settings} />
                         <Route path="/credits" component={Credits} />
                         <Redirect exact from="/" to="/login" />
                     </IonRouterOutlet>

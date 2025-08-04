@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 
 import {
     IonButton,
+    IonButtons,
     IonCheckbox,
     IonContent,
+    IonIcon,
     IonInput,
     IonInputPasswordToggle,
     IonLabel,
@@ -14,6 +16,7 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
+import { settings } from "ionicons/icons";
 
 import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
@@ -327,6 +330,13 @@ const Login: React.FC = () => {
     return (
         <IonPage>
             <IonContent class="w-full">
+                {/* Settings button */}
+                <IonButtons className="ion-padding-top absolute left-1">
+                    <IonButton color="medium" onClick={() => router.push("/settings")}>
+                        <IonIcon icon={settings} slot="icon-only"></IonIcon>
+                    </IonButton>
+                </IonButtons>
+
                 {/* Main container */}
                 <div className="flex h-full items-center justify-center">
                     <div className="mx-auto flex w-4/5 flex-col pt-4">
