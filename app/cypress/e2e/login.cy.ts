@@ -4,6 +4,12 @@ describe("Check Login Page Contents", () => {
         cy.url().should("include", "/login");
     });
 
+    it("should have basic navigation", () => {
+        cy.visit("/login");
+
+        cy.get(".ion-padding-top > .ion-color").should("exist"); // Settings button
+    });
+
     it("should have login form", () => {
         cy.visit("/login");
 
