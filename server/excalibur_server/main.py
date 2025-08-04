@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 
 import uvicorn
@@ -55,4 +56,4 @@ def reset_server():
 
     # Remove the files folder
     if os.path.exists(ROOT_FOLDER):
-        os.rmdir(ROOT_FOLDER)
+        shutil.rmtree(ROOT_FOLDER)
