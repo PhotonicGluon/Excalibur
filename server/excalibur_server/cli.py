@@ -49,7 +49,16 @@ def start_api_server(
 
 
 @app.command(name="reset")
-def reset_api_server():
+def reset_api_server(
+    delete: Annotated[
+        bool,
+        typer.Option(
+            "-y",
+            "--yes",
+            help="Whether to confirm the reset. This is required to prevent accidental resets.",
+        ),
+    ] = False,
+):
     """
     Reset API server.
 
@@ -57,6 +66,12 @@ def reset_api_server():
     """
 
     from excalibur_server.main import reset_server
+
+    if not delete:
+        delete = typer.confirm("Are you sure you want to reset the server?")
+
+    if not delete:
+        raise typer.Abort()
 
     reset_server()
 
