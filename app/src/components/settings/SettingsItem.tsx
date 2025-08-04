@@ -9,18 +9,12 @@ interface SettingsItemProps {
 
 const SettingsItem: React.FC<SettingsItemProps> = (props) => {
     return (
-        <IonItem>
-            <div className="flex w-full items-center">
-                <IonGrid>
-                    <IonRow>
-                        <IonCol size="3" className="flex items-center">
-                            {props.label}
-                        </IonCol>
-                        <IonCol className="flex items-center">{props.input}</IonCol>
-                    </IonRow>
-                </IonGrid>
-            </div>
-        </IonItem>
+        <IonRow>
+            <IonCol size="3" className="flex items-center">
+                {props.label}
+            </IonCol>
+            <IonCol className="flex items-center">{props.input}</IonCol>
+        </IonRow>
     );
 };
 

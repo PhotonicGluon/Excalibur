@@ -4,10 +4,10 @@ import {
     IonButton,
     IonButtons,
     IonContent,
+    IonGrid,
     IonHeader,
     IonIcon,
     IonLabel,
-    IonList,
     IonPage,
     IonSelect,
     IonSelectOption,
@@ -113,7 +113,7 @@ const Settings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonList>
+                <IonGrid className="ion-padding-horizontal pt-2">
                     <SettingsItem
                         label={<IonLabel>Theme</IonLabel>}
                         input={
@@ -164,12 +164,12 @@ const Settings: React.FC = () => {
                             </IonSelect>
                         }
                     />
-                </IonList>
+                </IonGrid>
 
                 {/* Save button */}
                 <IonButton
                     expand="block"
-                    className="ion-padding"
+                    className="ion-padding-horizontal"
                     onClick={onSaveSettings}
                     disabled={!hasUnsavedChanges}
                 >
