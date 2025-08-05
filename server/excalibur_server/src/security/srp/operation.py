@@ -52,7 +52,17 @@ class SRP:
 
         return self.group.bits
 
-    # Methods
+    # Public methods
+    def compute_verifier(self, key: int) -> int:
+        """
+        Compute the verifier value.
+
+        :param key: key value
+        :return: verifier value
+        """
+
+        return pow(self.group.generator, key, self.group.prime)
+
     def compute_server_public_value(self, verifier: int, private_value: int | None = None) -> tuple[int, int]:
         """
         Compute the server public value, B.

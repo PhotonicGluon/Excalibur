@@ -31,8 +31,12 @@ def reset_server(
     if not delete:
         raise typer.Abort()
 
+    _reset_server()
+
+    typer.secho("Server reset.", fg="green")
+
+
+def _reset_server():
     # Remove the files folder
     if os.path.exists(ROOT_FOLDER):
         shutil.rmtree(ROOT_FOLDER)
-
-    typer.secho("Server reset.", fg="green")
