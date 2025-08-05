@@ -18,9 +18,10 @@ def main(version: Annotated[bool, typer.Option("--version", "-v", help="Show Exc
         typer.echo(metadata.version("excalibur-server"))
 
 
+from .init_server import init_server as init_server
+from .setup_server import setup_server as setup_server
 from .start_server import start_server as start_server
 from .reset_server import reset_server as reset_server
-from .init_server import init_server as init_server
 from .run_tests import run_tests as run_tests
 
 

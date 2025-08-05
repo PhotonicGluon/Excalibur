@@ -35,3 +35,33 @@
 //     }
 //   }
 // }
+
+export {};
+
+Cypress.Commands.add("login", (serverURL: string, password: string) => {
+    cy.session(
+        serverURL,
+        () => {
+            cy.exec("cd .. && npm run server:setup-for-test");
+            cy.visit("/login");
+
+            cy.get("#server-input > .input-wrapper").type(serverURL);
+            cy.get("#password-input > .input-wrapper").type(password);
+            cy.get("#login-button").click();
+        },
+        {
+            validate: () => {
+                cy.url().should("include", "/files/");
+            },
+            cacheAcrossSpecs: true,
+        },
+    );
+});
+
+declare global {
+    namespace Cypress {
+        interface Chainable {
+            login(serverURL: string, password: string): Chainable<void>;
+        }
+    }
+}

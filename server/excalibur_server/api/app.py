@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,12 +38,13 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# Add rate limit middleware
-app.add_middleware(
-    RateLimitMiddleware,
-    capacity=TOKEN_CAPACITY,
-    refill_rate=TOKEN_REFILL_RATE,
-)
+# Add rate limit middleware if not debugging
+if not os.getenv("EXCALIBUR_SERVER_DEBUG"):
+    app.add_middleware(
+        RateLimitMiddleware,
+        capacity=TOKEN_CAPACITY,
+        refill_rate=TOKEN_REFILL_RATE,
+    )
 
 # Mount other apps
 from excalibur_server.api.v1.app import app as api_v1  # noqa: E402
