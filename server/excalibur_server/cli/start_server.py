@@ -1,22 +1,35 @@
 import os
-import shutil
 import warnings
+from typing import Annotated
 
+import typer
 import uvicorn
 
+from excalibur_server.cli import app
 from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
 
 
-def start_server(host: str, port: int, debug: bool, encrypt_responses: bool = True, delay_responses_duration: int = 0):
+@app.command(name="start")
+def start_server(
+    host: Annotated[str, typer.Option(help="Host for the server to listen on.")] = "0.0.0.0",
+    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 8000,
+    debug: Annotated[bool, typer.Option(help="Whether to run the server in debug mode.")] = False,
+    encrypt_responses: Annotated[
+        bool,
+        typer.Option(
+            "-e/-E",
+            "--encrypt-responses/--no-encrypt-responses",
+            help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
+        ),
+    ] = True,
+    delay_responses_duration: Annotated[
+        float, typer.Option("-d", "--delay-responses-duration", help="Duration to delay responses, in seconds.")
+    ] = 0,
+):
     """
-    Starts the API server.
+    Start API server.
 
-    :param host: Host for the server to listen on.
-    :param port: Port for the server to listen on.
-    :param debug: Whether to run the server in debug mode.
-    :param encrypt_responses: Whether to encrypt responses. It is recommended to only disable
-        encryption for debugging purposes.
-    :param delay_responses_duration: Duration to delay responses, in seconds.
+    This starts the API server.
     """
 
     # Set environment variables
@@ -47,13 +60,3 @@ def start_server(host: str, port: int, debug: bool, encrypt_responses: bool = Tr
         reload_dirs=[os.path.dirname(__file__)],
         reload_excludes=["examples/*"],
     )
-
-
-def reset_server():
-    """
-    Resets the API server.
-    """
-
-    # Remove the files folder
-    if os.path.exists(ROOT_FOLDER):
-        shutil.rmtree(ROOT_FOLDER)
