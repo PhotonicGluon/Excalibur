@@ -82,19 +82,17 @@ const App: React.FC = () => {
 
     // Render app
     return (
-        <Contexts>
-            <IonApp>
-                <IonReactRouter>
-                    <IonRouterOutlet>
-                        <Route exact path="/login" component={Login} />
-                        <PrivateRoute path="/files/*" component={FileExplorer} />
-                        <Route path="/settings" component={Settings} />
-                        <Route path="/credits" component={Credits} />
-                        <Redirect exact from="/" to="/login" />
-                    </IonRouterOutlet>
-                </IonReactRouter>
-            </IonApp>
-        </Contexts>
+        <IonApp>
+            <IonReactRouter>
+                <IonRouterOutlet>
+                    <Route exact path="/login" component={Login} />
+                    <PrivateRoute path="/files/*" component={FileExplorer} />
+                    <Route path="/settings" component={Settings} />
+                    <Route path="/credits" component={Credits} />
+                    <Redirect exact from="/" to="/login" />
+                </IonRouterOutlet>
+            </IonReactRouter>
+        </IonApp>
     );
 };
 

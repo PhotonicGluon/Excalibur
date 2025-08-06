@@ -28,7 +28,6 @@ import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
 import { useAuth } from "@contexts/auth";
-import { useVault } from "@contexts/vault";
 
 import logo from "@assets/icon.png";
 
@@ -44,7 +43,6 @@ interface LoginValues {
 const Login: React.FC = () => {
     // States
     const auth = useAuth();
-    const vault = useVault();
     const router = useIonRouter();
 
     // States
@@ -288,8 +286,7 @@ const Login: React.FC = () => {
             // Errors already handled in `retrieveVaultKey()`
             return;
         }
-
-        vault.setKey(vaultKey);
+        auth.setVaultKey(vaultKey);
 
         // Update preferences
         Preferences.set({

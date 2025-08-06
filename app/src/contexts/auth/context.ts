@@ -21,10 +21,14 @@ export interface AuthProvider {
     authInfo: AuthInfo | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
+    /** Vault key, retrieved upon login */
+    vaultKey: Buffer | null;
     /** Function to log into the server */
     login: (apiURL: string, e2eeData: E2EEData) => Promise<void>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
+    /** Function to set the vault key */
+    setVaultKey: (vaultKey: Buffer) => void;
 }
 
 export const authContext = createContext<AuthProvider>(null!);

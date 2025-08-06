@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { heartbeat as _heartbeat, getServerTime, getServerVersion } from "@lib/network";
 import { E2EEData } from "@lib/security/e2ee";
+import { retrieveVaultKey } from "@lib/security/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
@@ -48,6 +49,7 @@ function useProvideAuth(): AuthProvider {
     // States
     const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+    const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
@@ -84,6 +86,11 @@ function useProvideAuth(): AuthProvider {
         const serverInfo = { version: serverVersion, deltaTime };
         setAuthInfo(authInfo);
         setServerInfo(serverInfo);
+        setVaultKey(vaultKey);
+
+        // // Save to local storage
+        // localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
+        // localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
     async function logoutFunc() {
@@ -93,14 +100,70 @@ function useProvideAuth(): AuthProvider {
         // Clear state
         setAuthInfo(null);
         setServerInfo(null);
+        setVaultKey(null);
 
+        // // Remove from local storage
+        // localStorage.removeItem("authInfo");
+        // localStorage.removeItem("serverInfo");
     }
+
+    // // Effects
+    // useEffect(() => {
+    //     // Check if local storage has auth info
+    //     const storedAuthInfo = localStorage.getItem("authInfo");
+    //     const storedServerInfo = localStorage.getItem("serverInfo");
+    //     if (!storedAuthInfo || !storedServerInfo) {
+    //         return;
+    //     }
+
+    //     // Set context
+    //     const authInfo = deserializeAuthInfo(storedAuthInfo);
+    //     const serverInfo = JSON.parse(storedServerInfo);
+    //     setAuthInfo(authInfo);
+    //     setServerInfo(serverInfo);
+
+    //     // Get vault key
+    //     retrieveVaultKey(authInfo.apiURL, authInfo.e2eeData, (error) => {
+    //         console.error(error);
+    //     }).then((resp) => {
+    //         if (!resp) {
+    //             console.error("Failed to retrieve vault key");
+    //             return;
+    //         }
+    //         vault?.setKey(resp);
+    //     });
+    // }, []);
 
     // Return data
     return {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
+        vaultKey: vaultKey!,
         login: loginFunc,
         logout: logoutFunc,
+        setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),
+    };
+}
+
+function serializeAuthInfo(data: AuthInfo) {
+    return JSON.stringify({
+        apiURL: data.apiURL,
+        e2eeData: {
+            key: data.e2eeData.key.toString("hex"),
+            auk: data.e2eeData.auk.toString("hex"),
+            token: data.e2eeData.token,
+        },
+    });
+}
+
+function deserializeAuthInfo(data: string): AuthInfo {
+    const parsed = JSON.parse(data);
+    return {
+        apiURL: parsed.apiURL,
+        e2eeData: {
+            key: Buffer.from(parsed.e2eeData.key, "hex"),
+            auk: Buffer.from(parsed.e2eeData.auk, "hex"),
+            token: parsed.e2eeData.token,
+        },
     };
 }

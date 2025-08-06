@@ -58,7 +58,6 @@ import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryList from "@components/explorer/DirectoryList";
 import { useAuth } from "@contexts/auth";
 import { useSettings } from "@contexts/settings";
-import { useVault } from "@contexts/vault";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -71,7 +70,6 @@ const FileExplorer: React.FC = () => {
     // Get contexts
     const auth = useAuth();
     const settings = useSettings();
-    const vault = useVault();
 
     // Get token expiry
     const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.e2eeData.token);
@@ -197,7 +195,7 @@ const FileExplorer: React.FC = () => {
             const encryptedFileSize = rawFileSize + ExEF.additionalSize;
 
             // Encrypt the file using a stream
-            const exef = new ExEF(vault.key!);
+            const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
                     for (let i = 0; i < rawFileSize / settings.cryptoChunkSize; i++) {
