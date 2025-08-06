@@ -1,6 +1,6 @@
 import { MaskitoOptions, maskitoTransform } from "@maskito/core";
 import { useMaskito } from "@maskito/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {
@@ -41,9 +41,6 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     // Contexts
     const auth = useAuth();
 
-    // Preprocess vault key so that it is easier to read
-    const vaultKeyRaw = auth.vaultKey!.toString("hex").toLocaleUpperCase();
-
     // States
     const vaultKeyMaskOptions: MaskitoOptions = {
         mask: generateVaultKeyMask(),
@@ -52,7 +49,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
 
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
-    const [localVaultKey, setLocalVaultKey] = useState(maskitoTransform(vaultKeyRaw, vaultKeyMaskOptions));
+    const [localVaultKey, setLocalVaultKey] = useState("");
 
     // Functions
     /**
@@ -82,6 +79,12 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     function markTouched() {
         setIsTouched(true);
     }
+
+    // Effects
+    useEffect(() => {
+        const vaultKeyRaw = auth.vaultKey ? auth.vaultKey!.toString("hex").toLocaleUpperCase() : "";
+        setLocalVaultKey(maskitoTransform(vaultKeyRaw, vaultKeyMaskOptions));
+    }, [auth.vaultKey]);
 
     // Render
     return (

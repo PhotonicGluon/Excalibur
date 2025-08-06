@@ -88,9 +88,9 @@ function useProvideAuth(): AuthProvider {
         setServerInfo(serverInfo);
         setVaultKey(vaultKey);
 
-        // // Save to local storage
-        // localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
-        // localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
+        // Save to local storage
+        localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
+        localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
     async function logoutFunc() {
@@ -102,37 +102,37 @@ function useProvideAuth(): AuthProvider {
         setServerInfo(null);
         setVaultKey(null);
 
-        // // Remove from local storage
-        // localStorage.removeItem("authInfo");
-        // localStorage.removeItem("serverInfo");
+        // Remove from local storage
+        localStorage.removeItem("authInfo");
+        localStorage.removeItem("serverInfo");
     }
 
-    // // Effects
-    // useEffect(() => {
-    //     // Check if local storage has auth info
-    //     const storedAuthInfo = localStorage.getItem("authInfo");
-    //     const storedServerInfo = localStorage.getItem("serverInfo");
-    //     if (!storedAuthInfo || !storedServerInfo) {
-    //         return;
-    //     }
+    // Effects
+    useEffect(() => {
+        // Check if local storage has auth info
+        const storedAuthInfo = localStorage.getItem("authInfo");
+        const storedServerInfo = localStorage.getItem("serverInfo");
+        if (!storedAuthInfo || !storedServerInfo) {
+            return;
+        }
 
-    //     // Set context
-    //     const authInfo = deserializeAuthInfo(storedAuthInfo);
-    //     const serverInfo = JSON.parse(storedServerInfo);
-    //     setAuthInfo(authInfo);
-    //     setServerInfo(serverInfo);
+        // Set context
+        const authInfo = deserializeAuthInfo(storedAuthInfo);
+        const serverInfo = JSON.parse(storedServerInfo);
+        setAuthInfo(authInfo);
+        setServerInfo(serverInfo);
 
-    //     // Get vault key
-    //     retrieveVaultKey(authInfo.apiURL, authInfo.e2eeData, (error) => {
-    //         console.error(error);
-    //     }).then((resp) => {
-    //         if (!resp) {
-    //             console.error("Failed to retrieve vault key");
-    //             return;
-    //         }
-    //         vault?.setKey(resp);
-    //     });
-    // }, []);
+        // Get vault key
+        retrieveVaultKey(authInfo.apiURL, authInfo.e2eeData, (error) => {
+            console.error(error);
+        }).then((resp) => {
+            if (!resp) {
+                console.error("Failed to retrieve vault key");
+                return;
+            }
+            setVaultKey(resp);
+        });
+    }, []);
 
     // Return data
     return {
