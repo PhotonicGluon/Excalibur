@@ -44,5 +44,7 @@ describe("Handle Auth Process", () => {
 
     it("should handle login gracefully", () => {
         cy.login("http://127.0.0.1:8989", "Password");
+        cy.visit("/files/");
+        cy.url().should("not.include", "/login");
     });
 });
