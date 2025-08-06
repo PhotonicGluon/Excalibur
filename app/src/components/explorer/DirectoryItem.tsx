@@ -31,6 +31,7 @@ import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 import { UIFeedbackMethods } from "@components/explorer/types";
 import { useAuth } from "@contexts/auth";
 import { useSettings } from "@contexts/settings";
+import { useVault } from "@contexts/vault";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {
@@ -49,6 +50,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     // Contexts
     const auth = useAuth();
     const settings = useSettings();
+    const vault = useVault();
     const router = useIonRouter();
 
     // States
@@ -104,7 +106,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 fileData = await processor.processStream(
                     // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                     Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                    auth.authInfo!.e2eeKey,
+                    vault.key!,
                     fileSize,
                     // `proxy()` ensures the callback function works across threads
                     Comlink.proxy(feedbackMethods.setProgress),

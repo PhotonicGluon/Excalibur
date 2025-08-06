@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { heartbeat as _heartbeat } from "@root/src/lib/network";
-
-import { getServerTime, getServerVersion } from "@lib/network";
+import { heartbeat as _heartbeat, getServerTime, getServerVersion } from "@lib/network";
+import { E2EEData } from "@lib/security/e2ee";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
@@ -46,11 +45,13 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  * @returns An object with the authentication data
  */
 function useProvideAuth(): AuthProvider {
+    // States
     const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
-    async function loginFunc(apiURL: string, token: string, e2eeKey: Buffer) {
+    // Handlers
+    async function loginFunc(apiURL: string, e2eeData: E2EEData) {
         // Get server info
         const versionResponse = await getServerVersion(apiURL);
         const timeResponse = await getServerTime(apiURL);
@@ -65,13 +66,9 @@ function useProvideAuth(): AuthProvider {
         const serverTime = timeResponse.time!;
         const deltaTime = serverTime.getTime() - new Date().getTime();
 
-        // Update state
-        setAuthInfo({ apiURL, e2eeKey, token });
-        setServerInfo({ version: serverVersion, deltaTime });
-
         // Set up heartbeat interval
         const interval = setInterval(async () => {
-            const connected = await heartbeat(apiURL, token);
+            const connected = await heartbeat(apiURL, e2eeData.token);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 // TODO: Can we display a toast to inform the user why they were kicked back?
@@ -81,17 +78,25 @@ function useProvideAuth(): AuthProvider {
             }
         }, HEARTBEAT_INTERVAL * 1000);
         setHeartbeatInterval(interval);
+
+        // Update state
+        const authInfo = { apiURL, e2eeData };
+        const serverInfo = { version: serverVersion, deltaTime };
+        setAuthInfo(authInfo);
+        setServerInfo(serverInfo);
     }
 
     async function logoutFunc() {
+        // Stop checking for heartbeat
+        clearInterval(heartbeatInterval!);
+
         // Clear state
         setAuthInfo(null);
         setServerInfo(null);
 
-        // Stop checking for heartbeat
-        clearInterval(heartbeatInterval!);
     }
 
+    // Return data
     return {
         authInfo: authInfo!,
         serverInfo: serverInfo!,

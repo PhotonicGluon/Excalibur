@@ -74,7 +74,7 @@ const FileExplorer: React.FC = () => {
     const vault = useVault();
 
     // Get token expiry
-    const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.token);
+    const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.e2eeData.token);
     const tokenExpiry = new Date(expTimestamp * 1000);
 
     // States
