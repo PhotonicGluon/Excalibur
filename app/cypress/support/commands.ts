@@ -5,8 +5,6 @@ Cypress.Commands.add("login", (serverURL: string, password: string) => {
     cy.session(
         serverURL,
         () => {
-            // Set up
-            cy.exec("cd .. && npm run server:setup-for-test");
             cy.visit("/login");
 
             // Login using form
