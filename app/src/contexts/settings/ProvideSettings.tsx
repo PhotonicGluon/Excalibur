@@ -20,7 +20,7 @@ export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ child
 /**
  * Hook to provide the settings to the app.
  *
- * @returns An object with the current settings.
+ * @returns An object with the current settings
  */
 function useProvideSettings(): SettingsProvider {
     // States

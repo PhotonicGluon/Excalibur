@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, createContext, useContext } from "react";
+import { createContext, useContext } from "react";
 
 export interface ServerInfo {
     /** Server version*/
@@ -12,8 +12,6 @@ export interface AuthProvider {
     apiURL: string | null;
     /** Key used for end-to-end encryption */
     e2eeKey: Buffer | null;
-    /** Key used to encrypt data in the vault */
-    vaultKey: Buffer | null;
     /** The current authentication token */
     token: string | null;
     /** Server info, retrieved upon login */
@@ -22,8 +20,6 @@ export interface AuthProvider {
     login: (apiURL: string, token: string, e2eeKey: Buffer) => Promise<void>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
-    /** Function to set the vault key */
-    setVaultKey: Dispatch<SetStateAction<Buffer<ArrayBufferLike> | null>>;
 }
 
 export const authContext = createContext<AuthProvider>(null!);
