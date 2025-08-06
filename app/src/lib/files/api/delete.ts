@@ -21,10 +21,10 @@ export async function deleteItem(
     force?: boolean,
 ): Promise<{ success: boolean; error?: string; deletedType?: ItemType }> {
     const response = await fetch(
-        `${auth.apiURL}/files/delete/${path}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
+        `${auth.authInfo!.apiURL}/files/delete/${path}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
         {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${auth.token}` },
+            headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
         },
     );
     switch (response.status) {

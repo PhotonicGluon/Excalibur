@@ -17,13 +17,13 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
-            "@root/*": ["./*"],
             "@assets/*": ["./resources/*"],
             "@components/*": ["./src/components/*"],
             "@contexts/*": ["./src/contexts/*"],
             "@lib/*": ["./src/lib/*"],
             "@pages/*": ["./src/pages/*"],
-            "@theme/*": ["./src/theme/*"]
+            "@theme/*": ["./src/theme/*"],
+            "@root/*": ["./*"]
         },
         "types": ["vitest/globals"]
     },

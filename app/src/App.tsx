@@ -28,7 +28,6 @@ import "@ionic/react/css/text-transformation.css";
 import "@ionic/react/css/typography.css";
 
 import { PrivateRoute } from "@components/auth/PrivateRoute";
-import { ProvideAuth } from "@contexts/auth";
 import { useSettings } from "@contexts/settings";
 
 /* App pages */
@@ -39,7 +38,7 @@ import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
 
-import { ProvideVault } from "./contexts/vault";
+import Contexts from "./Contexts";
 
 // Set up app
 setupIonicReact();
@@ -83,21 +82,19 @@ const App: React.FC = () => {
 
     // Render app
     return (
-        <IonApp>
-            <ProvideAuth>
+        <Contexts>
+            <IonApp>
                 <IonReactRouter>
                     <IonRouterOutlet>
-                        <ProvideVault>
-                            <Route exact path="/login" component={Login} />
-                            <PrivateRoute path="/files/*" component={FileExplorer} />
-                        </ProvideVault>
+                        <Route exact path="/login" component={Login} />
+                        <PrivateRoute path="/files/*" component={FileExplorer} />
                         <Route path="/settings" component={Settings} />
                         <Route path="/credits" component={Credits} />
                         <Redirect exact from="/" to="/login" />
                     </IonRouterOutlet>
                 </IonReactRouter>
-            </ProvideAuth>
-        </IonApp>
+            </IonApp>
+        </Contexts>
     );
 };
 

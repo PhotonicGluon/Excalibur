@@ -31,6 +31,7 @@ import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 import { UIFeedbackMethods } from "@components/explorer/types";
 import { useAuth } from "@contexts/auth";
 import { useSettings } from "@contexts/settings";
+import { useVault } from "@contexts/vault";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {
@@ -49,6 +50,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     // Contexts
     const auth = useAuth();
     const settings = useSettings();
+    const vault = useVault();
     const router = useIonRouter();
 
     // States
@@ -104,7 +106,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 fileData = await processor.processStream(
                     // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                     Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                    auth.vaultKey!,
+                    vault.key!,
                     fileSize,
                     // `proxy()` ensures the callback function works across threads
                     Comlink.proxy(feedbackMethods.setProgress),
@@ -215,15 +217,19 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     // Render
-    let rowColourClass = "";
-    if (settings.rowAlternatingColours !== "off") {
-        const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
-        const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
-        if (settings.rowAlternatingColours === "normal") {
+    const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
+    const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
+    let rowColourClass;
+    switch (settings.rowAlternatingColours) {
+        case "off":
+            rowColourClass = lighter;
+            break;
+        case "normal":
             rowColourClass = props.oddRow ? lighter : darker;
-        } else {
+            break;
+        case "inverted":
             rowColourClass = props.oddRow ? darker : lighter;
-        }
+            break;
     }
     return (
         <div className={rowColourClass}>

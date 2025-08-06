@@ -1,6 +1,6 @@
 import { MaskitoOptions, maskitoTransform } from "@maskito/core";
 import { useMaskito } from "@maskito/react";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { useState } from "react";
 
 import { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {

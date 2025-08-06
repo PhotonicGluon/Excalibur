@@ -1,23 +1,28 @@
 import { createContext, useContext } from "react";
 
+import { E2EEData } from "@lib/security/e2ee";
+
+export interface AuthInfo {
+    /** API URL */
+    apiURL: string;
+    /** End-to-end encryption data */
+    e2eeData: E2EEData;
+}
+
 export interface ServerInfo {
-    /** Server version*/
+    /** Server version */
     version: string;
     /** Delta of time between server and client */
     deltaTime: number;
 }
 
 export interface AuthProvider {
-    /** API URL */
-    apiURL: string | null;
-    /** Key used for end-to-end encryption */
-    e2eeKey: Buffer | null;
-    /** The current authentication token */
-    token: string | null;
+    /** Authentication info, set upon login */
+    authInfo: AuthInfo | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
     /** Function to log into the server */
-    login: (apiURL: string, token: string, e2eeKey: Buffer) => Promise<void>;
+    login: (apiURL: string, e2eeData: E2EEData) => Promise<void>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
 }

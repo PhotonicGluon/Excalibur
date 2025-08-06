@@ -7,9 +7,9 @@ import { bufferToNumber, numberToBuffer } from "@lib/util";
 
 const MAX_ITER_COUNT = 3;
 
-interface E2EEData {
+export interface E2EEData {
     /** Bilaterally agreed symmetric key to encrypt communications */
-    e2eeKey: Buffer;
+    key: Buffer;
     /** Account unlock key (AUK) */
     auk: Buffer;
     /** Authentication token */
@@ -270,7 +270,7 @@ export async function e2ee(
                     const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);
                     state.authToken = plaintext.toString("utf-8");
 
-                    resolve({ e2eeKey: state.master!, auk: auk, token: state.authToken });
+                    resolve({ key: state.master!, auk: auk, token: state.authToken });
                     return;
                 }
             } catch (e: unknown) {
