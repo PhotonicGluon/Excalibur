@@ -215,15 +215,19 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     // Render
-    let rowColourClass = "";
-    if (settings.rowAlternatingColours !== "off") {
-        const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
-        const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
-        if (settings.rowAlternatingColours === "normal") {
+    const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
+    const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
+    let rowColourClass;
+    switch (settings.rowAlternatingColours) {
+        case "off":
+            rowColourClass = lighter;
+            break;
+        case "normal":
             rowColourClass = props.oddRow ? lighter : darker;
-        } else {
+            break;
+        case "inverted":
             rowColourClass = props.oddRow ? darker : lighter;
-        }
+            break;
     }
     return (
         <div className={rowColourClass}>
