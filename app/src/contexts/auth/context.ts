@@ -1,19 +1,24 @@
 import { createContext, useContext } from "react";
 
+export interface AuthInfo {
+    /** API URL */
+    apiURL: string;
+    /** Key used for end-to-end encryption */
+    e2eeKey: Buffer;
+    /** The current authentication token */
+    token: string;
+}
+
 export interface ServerInfo {
-    /** Server version*/
+    /** Server version */
     version: string;
     /** Delta of time between server and client */
     deltaTime: number;
 }
 
 export interface AuthProvider {
-    /** API URL */
-    apiURL: string | null;
-    /** Key used for end-to-end encryption */
-    e2eeKey: Buffer | null;
-    /** The current authentication token */
-    token: string | null;
+    /** Authentication info, set upon login */
+    authInfo: AuthInfo | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
     /** Function to log into the server */

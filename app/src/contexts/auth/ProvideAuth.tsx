@@ -4,7 +4,7 @@ import { heartbeat as _heartbeat } from "@root/src/lib/network";
 
 import { getServerTime, getServerVersion } from "@lib/network";
 
-import { AuthProvider, ServerInfo, authContext } from "./context";
+import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
 const HEARTBEAT_INTERVAL = 15; // Interval between successful heartbeats, in seconds
 const HEARTBEAT_RETRY_COUNT = 5; // Number of times to retry heartbeat on failure
@@ -46,18 +46,11 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  * @returns An object with the authentication data
  */
 function useProvideAuth(): AuthProvider {
-    const [apiURL, setApiURL] = useState<string | null>(null);
-    const [e2eeKey, setE2EEKey] = useState<Buffer | null>(null);
-    const [token, setToken] = useState<string | null>(null);
+    const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     async function loginFunc(apiURL: string, token: string, e2eeKey: Buffer) {
-        // Set state variables
-        setApiURL(apiURL);
-        setE2EEKey(e2eeKey);
-        setToken(token);
-
         // Get server info
         const versionResponse = await getServerVersion(apiURL);
         const timeResponse = await getServerTime(apiURL);
@@ -71,6 +64,9 @@ function useProvideAuth(): AuthProvider {
         const serverVersion = versionResponse.version!;
         const serverTime = timeResponse.time!;
         const deltaTime = serverTime.getTime() - new Date().getTime();
+
+        // Update state
+        setAuthInfo({ apiURL, e2eeKey, token });
         setServerInfo({ version: serverVersion, deltaTime });
 
         // Set up heartbeat interval
@@ -88,21 +84,17 @@ function useProvideAuth(): AuthProvider {
     }
 
     async function logoutFunc() {
+        // Clear state
+        setAuthInfo(null);
+        setServerInfo(null);
+
         // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);
-
-        // Clear state
-        setApiURL(null);
-        setE2EEKey(null);
-        setServerInfo(null);
-        setToken(null);
     }
 
     return {
-        apiURL,
-        e2eeKey,
-        token,
-        serverInfo,
+        authInfo: authInfo!,
+        serverInfo: serverInfo!,
         login: loginFunc,
         logout: logoutFunc,
     };

@@ -12,9 +12,9 @@ export async function checkPath(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
-    const response = await fetch(`${auth.apiURL}/files/check/path/${path}`, {
+    const response = await fetch(`${auth.authInfo!.apiURL}/files/check/path/${path}`, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
     switch (response.status) {
         case 200:
@@ -48,9 +48,9 @@ export async function checkSize(
     auth: AuthProvider,
     size: number,
 ): Promise<{ success: boolean; error?: string; isTooLarge?: boolean }> {
-    const response = await fetch(`${auth.apiURL}/files/check/size?size=${size}`, {
+    const response = await fetch(`${auth.authInfo!.apiURL}/files/check/size?size=${size}`, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
     switch (response.status) {
         case 200:
@@ -80,9 +80,9 @@ export async function checkDir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; isEmpty?: boolean }> {
-    const response = await fetch(`${auth.apiURL}/files/check/dir/${path}`, {
+    const response = await fetch(`${auth.authInfo!.apiURL}/files/check/dir/${path}`, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
     switch (response.status) {
         case 200:

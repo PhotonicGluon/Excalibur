@@ -104,7 +104,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 fileData = await processor.processStream(
                     // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                     Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                    auth.vaultKey!,
+                    auth.authInfo!.e2eeKey,
                     fileSize,
                     // `proxy()` ensures the callback function works across threads
                     Comlink.proxy(feedbackMethods.setProgress),
