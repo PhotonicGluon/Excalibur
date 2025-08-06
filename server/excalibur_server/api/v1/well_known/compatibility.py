@@ -34,6 +34,6 @@ def compatible_endpoint(
     try:
         parsed_version = Version.parse(version)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid version")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid version '{version}'")
 
     return check_compatibility(parsed_version)

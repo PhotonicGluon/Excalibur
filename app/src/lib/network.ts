@@ -35,9 +35,12 @@ export async function checkAPIUrl(
  */
 export async function checkAPICompatibility(apiURL: string): Promise<{ valid: boolean }> {
     try {
-        const response = await fetch(`${apiURL}/well-known/compatible?version=${packageInfo.version}`, {
-            method: "GET",
-        });
+        const response = await fetch(
+            `${apiURL}/well-known/compatible?version=${encodeURIComponent(packageInfo.version)}`,
+            {
+                method: "GET",
+            },
+        );
         switch (response.status) {
             case 200:
                 // Continue with normal flow
