@@ -35,21 +35,6 @@ async function heartbeat(apiURL: string, token: string): Promise<boolean> {
     return false;
 }
 
-/**
- * A component that provides the authentication state to the rest of the app.
- *
- * @remarks This component wraps the entire app and provides the authentication state to all
- *      components via the `useAuth` hook.
- *
- * @example
- * function App() {
- *     return (
- *         <ProvideAuth>
- *             <Routes />
- *         </ProvideAuth>
- *     );
- * }
- */
 export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const auth = useProvideAuth();
     return <authContext.Provider value={auth}>{children}</authContext.Provider>;
@@ -58,13 +43,11 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
 /**
  * Hook to provide the authentication state to the app.
  *
- * @returns An object with the current authentication token and a function to authenticate
- *      with the server.
+ * @returns An object with the authentication data
  */
 function useProvideAuth(): AuthProvider {
     const [apiURL, setApiURL] = useState<string | null>(null);
     const [e2eeKey, setE2EEKey] = useState<Buffer | null>(null);
-    const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
@@ -111,7 +94,6 @@ function useProvideAuth(): AuthProvider {
         // Clear state
         setApiURL(null);
         setE2EEKey(null);
-        setVaultKey(null);
         setServerInfo(null);
         setToken(null);
     }
@@ -119,11 +101,9 @@ function useProvideAuth(): AuthProvider {
     return {
         apiURL,
         e2eeKey,
-        vaultKey,
         token,
         serverInfo,
         login: loginFunc,
         logout: logoutFunc,
-        setVaultKey,
     };
 }

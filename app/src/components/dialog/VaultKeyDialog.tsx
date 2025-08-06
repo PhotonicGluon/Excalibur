@@ -17,6 +17,8 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
+import { useVault } from "@contexts/vault";
+
 import "./VaultKeyDialog.css";
 
 function generateVaultKeyMask() {
@@ -31,17 +33,16 @@ function generateVaultKeyMask() {
 interface VaultKeyDialogProps {
     /** Whether the dialog is open */
     isOpen: boolean;
-    /** Decrypted vault key */
-    vaultKey: Buffer;
-    /** Function to set the vault key */
-    setVaultKey: Dispatch<SetStateAction<Buffer<ArrayBufferLike> | null>>;
     /** Callback when the dialog is dismissed */
     onDidDismiss?: () => void;
 }
 
 const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
+    // Contexts
+    const vault = useVault();
+
     // Preprocess vault key so that it is easier to read
-    const vaultKeyRaw = props.vaultKey.toString("hex").toLocaleUpperCase();
+    const vaultKeyRaw = vault.key!.toString("hex").toLocaleUpperCase();
 
     // States
     const vaultKeyMaskOptions: MaskitoOptions = {
@@ -67,7 +68,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
         const possibleNewKey = currVal.replaceAll(" ", "").toLocaleLowerCase();
         if (possibleNewKey.length === 64) {
             const newVaultKey = Buffer.from(possibleNewKey, "hex");
-            props.setVaultKey(newVaultKey);
+            vault.setKey(newVaultKey);
             console.debug(`Changed vault key to ${newVaultKey.toString("hex")}`);
             setIsValid(true);
         } else {

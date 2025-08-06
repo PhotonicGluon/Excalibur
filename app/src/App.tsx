@@ -39,6 +39,8 @@ import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
 
+import { ProvideVault } from "./contexts/vault";
+
 // Set up app
 setupIonicReact();
 PrivacyScreen.enable();
@@ -85,8 +87,10 @@ const App: React.FC = () => {
             <ProvideAuth>
                 <IonReactRouter>
                     <IonRouterOutlet>
-                        <Route exact path="/login" component={Login} />
-                        <PrivateRoute path="/files/*" component={FileExplorer} />
+                        <ProvideVault>
+                            <Route exact path="/login" component={Login} />
+                            <PrivateRoute path="/files/*" component={FileExplorer} />
+                        </ProvideVault>
                         <Route path="/settings" component={Settings} />
                         <Route path="/credits" component={Credits} />
                         <Redirect exact from="/" to="/login" />
