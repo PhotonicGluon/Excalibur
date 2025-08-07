@@ -388,13 +388,33 @@ const FileExplorer: React.FC = () => {
 
                         // Check if folder exists
                         const checkResponse = await checkPath(auth, `${requestedPath}/${folderName}`);
-                        if (!checkResponse.success && checkResponse.error === "Illegal or invalid path") {
-                            presentToast({
-                                message: "Illegal or invalid folder name",
-                                duration: 3000,
-                                color: "danger",
-                            });
-                            return;
+                        if (!checkResponse.success) {
+                            switch (checkResponse.error) {
+                                case "Path not found":
+                                    // This is good -- the folder doesn't exist, so we can just carry on
+                                    break;
+                                case "Illegal or invalid path":
+                                    presentToast({
+                                        message: "Illegal or invalid folder name",
+                                        duration: 3000,
+                                        color: "danger",
+                                    });
+                                    return;
+                                case "Path too long":
+                                    presentToast({
+                                        message: "Folder path too long",
+                                        duration: 3000,
+                                        color: "danger",
+                                    });
+                                    return;
+                                default:
+                                    presentToast({
+                                        message: "Failed to check folder path: Unknown error",
+                                        duration: 3000,
+                                        color: "danger",
+                                    });
+                                    return;
+                            }
                         }
                         if (checkResponse.success && checkResponse.type === "directory") {
                             presentToast({
