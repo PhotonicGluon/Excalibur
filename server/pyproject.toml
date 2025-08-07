@@ -1,12 +1,10 @@
+[build-system]
+requires = ["uv_build>=0.8.0,<0.9"]
+build-backend = "uv_build"
+
 [project]
 name = "excalibur-server"
 version = "0.1.0a10"
-description = "An encrypted file server."
-readme = "README.md"
-authors = [{ name = "The-Photons" }]
-license = "GPL-3.0-or-later"
-requires-python = ">=3.11"
-
 dependencies = [
     "aiofiles>=24.1.0",
     "cachetools>=6.1.0",
@@ -23,6 +21,18 @@ dependencies = [
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
+requires-python = ">=3.11"
+authors = [
+    { name = "PhotonicGluon", "email" = "25820201+PhotonicGluon@users.noreply.github.com" },
+]
+description = "An encrypted file server."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+[project.urls]
+Repository = "https://github.com/PhotonicGluon/Excalibur.git"
+Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 
 [project.scripts]
 excalibur = "excalibur_server.cli:app"
@@ -30,10 +40,6 @@ excalibur = "excalibur_server.cli:app"
 [dependency-groups]
 dev = ["ruff>=0.12.7"]
 test = ["httpx>=0.28.1", "pytest>=8.4.1"]
-
-[build-system]
-requires = ["uv_build>=0.8.0,<0.9"]
-build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"

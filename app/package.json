@@ -1,10 +1,22 @@
 {
     "name": "excalibur",
-    "private": true,
-    "license": "GPL-3.0-or-later",
     "version": "0.1.0-alpha.10",
-    "type": "module",
     "description": "An app that interacts with an encrypted file server",
+    "homepage": "https://github.com/PhotonicGluon/Excalibur",
+    "bugs": {
+        "url": "https://github.com/PhotonicGluon/Excalibur/issues"
+    },
+    "license": "GPL-3.0-or-later",
+    "author": {
+        "name": "PhotonicGluon",
+        "email": "25820201+PhotonicGluon@users.noreply.github.com",
+        "url": "https://github.com/PhotonicGluon"
+    },
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/PhotonicGluon/Excalibur.git"
+    },
     "scripts": {
         "dev": "vite --port 8888",
         "build": "tsc && vite build",
@@ -72,5 +84,9 @@
         "vite": "~7.0.6",
         "vite-plugin-node-polyfills": "^0.24.0",
         "vitest": "^3.2.4"
-    }
+    },
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "private": true
 }
