@@ -9,8 +9,8 @@
             "path": "server"
         },
         {
-            "name": "Documentation",
-            "path": "docs"
+            "name": "Website",
+            "path": "website"
         },
         {
             "name": "Root",
@@ -34,12 +34,13 @@
             "**/.DS_Store": true,
             "**/Thumbs.db": true,
             "app": true,
+            "website": true,
             "server": true
         },
         "files.insertFinalNewline": true,
         "[markdown]": {
             "editor.defaultFormatter": "yzhang.markdown-all-in-one"
-        },
+        }
     },
     "extensions": {
         "recommendations": [
