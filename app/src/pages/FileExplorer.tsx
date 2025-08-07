@@ -55,6 +55,7 @@ import { updateAndYield } from "@lib/util";
 import Countdown from "@components/Countdown";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
+import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
 import { useAuth } from "@contexts/auth";
 import { useSettings } from "@contexts/settings";
@@ -63,9 +64,6 @@ const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
-
-    // Generate breadcrumbs to render
-    const breadcrumbPaths = requestedPath.split("/").filter((p) => p !== ".");
 
     // Get contexts
     const auth = useAuth();
@@ -633,22 +631,7 @@ const FileExplorer: React.FC = () => {
                     </IonRefresher>
 
                     {/* Breadcrumb */}
-                    <IonBreadcrumbs className="ml-1 pt-1" maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
-                        <IonBreadcrumb routerLink="/files/" routerDirection="back">
-                            <IonIcon slot="" icon={home} />
-                            <IonIcon slot="separator" icon={chevronForward} />
-                        </IonBreadcrumb>
-                        {breadcrumbPaths.map((fragment, idx) => (
-                            <IonBreadcrumb
-                                key={idx}
-                                routerLink={`/files/${breadcrumbPaths.slice(0, idx + 1).join("/")}`}
-                                routerDirection="back"
-                            >
-                                {fragment}
-                                <IonIcon slot="separator" icon={chevronForward} />
-                            </IonBreadcrumb>
-                        ))}
-                    </IonBreadcrumbs>
+                    <DirectoryBreadcrumbs className="ml-1 pt-1" path={requestedPath} />
 
                     {/* Fab button */}
                     <IonFab slot="fixed" vertical="bottom" horizontal="end">
