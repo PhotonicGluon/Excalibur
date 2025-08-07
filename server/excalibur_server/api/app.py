@@ -1,19 +1,15 @@
 import logging
-import os
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-from excalibur_server.api.cors import ALLOW_ORIGINS
+from excalibur_server.api.middlewares import add_middleware
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
-from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 from .log_filters import EndpointFilter
+from .meta import TAGS
+from .routes import files_router, security_router, well_known_router
 
-NO_LOG_ENDPOINTS = ["/api/v1/well-known/heartbeat"]
-
-TOKEN_CAPACITY = 20
-TOKEN_REFILL_RATE = 1
+NO_LOG_ENDPOINTS = ["/api/well-known/heartbeat"]
 
 # Add logging filter
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
@@ -24,29 +20,14 @@ app = FastAPI(
     title=TITLE,
     summary=SUMMARY,
     version=VERSION,
-    description="To access a specific version's API, use `/api/v1/...`. To access the documentation "
-    "for a specific version, use `/api/v1/docs`.",
+    openapi_tags=TAGS,
     root_path="/api",
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOW_ORIGINS,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_credentials=True,
-)
+# Add middlewares
+add_middleware(app)
 
-# Add rate limit middleware if not debugging
-if not os.getenv("EXCALIBUR_SERVER_DEBUG"):
-    app.add_middleware(
-        RateLimitMiddleware,
-        capacity=TOKEN_CAPACITY,
-        refill_rate=TOKEN_REFILL_RATE,
-    )
-
-# Mount other apps
-from excalibur_server.api.v1.app import app as api_v1  # noqa: E402
-
-app.mount("/v1", api_v1)
+# Include routes
+app.include_router(files_router, prefix="/files")
+app.include_router(security_router, prefix="/security")
+app.include_router(well_known_router, prefix="/well-known")

@@ -4,7 +4,7 @@ from fastapi import Depends, Response, status
 from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
-from excalibur_server.api.v1.well_known import router
+from excalibur_server.api.routes.well_known import router
 from excalibur_server.src.security.token import API_TOKEN_HEADER, check_auth_token
 
 HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type": "text/plain"}

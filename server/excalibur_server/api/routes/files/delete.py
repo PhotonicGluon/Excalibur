@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import HTTPException, Path, Query, status
 from fastapi.responses import Response
 
-from excalibur_server.api.v1.files import router
+from excalibur_server.api.routes.files import router
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.path import check_path_subdir
 

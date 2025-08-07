@@ -46,7 +46,7 @@ Change the `host` IP to restrict it.
 >   - Powershell: `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 >   - Command Prompt: `set JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 
-First amend [`cors.py`](../server/excalibur_server/api/cors.py) in the `server` directory:
+First amend [`middlewares.py`](../server/excalibur_server/api/middlewares.py) in the `server` directory:
 
 ```python
 ALLOW_ORIGINS = [

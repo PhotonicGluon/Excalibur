@@ -10,7 +10,7 @@ client = TestClient(app)
 
 def test_clock():
     """Test the clock endpoint with GET request."""
-    response = client.get("/api/v1/well-known/clock")
+    response = client.get("/api/well-known/clock")
     assert response.status_code == status.HTTP_200_OK
 
     response_time = datetime.fromisoformat(response.text)

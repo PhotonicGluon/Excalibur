@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import HTTPException, Query, status
 from semver.version import Version
 
-from excalibur_server.api.v1.well_known import router
+from excalibur_server.api.routes.well_known import router
 from excalibur_server.src.compatibility import check_compatibility
 
 

@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Body, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.v1.security import router
+from excalibur_server.api.routes.security import router
 from excalibur_server.src.security.token import check_credentials
 from excalibur_server.src.security.vault_key import EncryptedVaultKey, check_vault_key, get_vault_key, set_vault_key
 

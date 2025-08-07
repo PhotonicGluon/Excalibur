@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.v1.well_known import router
+from excalibur_server.api.routes.well_known import router
 
 
 @router.get(

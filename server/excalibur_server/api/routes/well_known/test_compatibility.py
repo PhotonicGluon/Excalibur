@@ -9,7 +9,7 @@ client = TestClient(app)
 def _send_compatibility_request(version: str):
     """Send a compatibility request."""
 
-    return client.get(f"/api/v1/well-known/compatible?version={version}")
+    return client.get(f"/api/well-known/compatible?version={version}")
 
 
 def test_compatibility_normal():

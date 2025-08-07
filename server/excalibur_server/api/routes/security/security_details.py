@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Body, HTTPException, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.v1.security import router
+from excalibur_server.api.routes.security import router
 from excalibur_server.src.security.security_details import (
     SECURITY_DETAILS_FILE,
     SecurityDetails,
