@@ -12,7 +12,7 @@ from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
 @app.command(name="start")
 def start_server(
     host: Annotated[str, typer.Option(help="Host for the server to listen on.")] = "0.0.0.0",
-    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 8000,
+    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 8888,
     debug: Annotated[bool, typer.Option(help="Whether to run the server in debug mode.")] = False,
     encrypt_responses: Annotated[
         bool,

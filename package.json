@@ -10,11 +10,12 @@
         "server:setup-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"npm run server:setup\"",
         "server:start": "cd server && uv run excalibur start --port 8989 --debug",
         "server:start-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"npm run server:setup-for-test && npm run server:start\"",
+        "server:post-test-reset": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"cd server && uv run excalibur reset -y\"",
         "cy:open": "cd app && npx cypress open",
         "cy:run": "cd app && npx cypress run",
         "test:unit": "cd app && npm run test:unit-run",
         "test:server": "cd server && uv run excalibur test",
-        "test:e2e": "start-server-and-test server:start-for-test http://localhost:8989/api/well-known/heartbeat \"start-server-and-test app:start http://localhost:5173 cy:run\"",
+        "test:e2e": "start-server-and-test server:start-for-test http://localhost:8989/api/well-known/heartbeat \"start-server-and-test app:start http://localhost:5173 cy:run && npm run server:post-test-reset\"",
         "test:all": "npm run test:unit && npm run test:server && npm run test:e2e"
     },
     "devDependencies": {

@@ -113,7 +113,7 @@ const Login: React.FC = () => {
         setIsLoading(true);
 
         // Check connectivity to the server
-        const apiURL = `${values.server}/api/v1`;
+        const apiURL = `${values.server}/api`;
         console.debug(`Checking connectivity to ${apiURL}...`);
 
         const connectionResult = await checkAPIUrl(apiURL);

@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.1.0-alpha.10",
+    "version": "0.1.0-alpha.11",
     "description": "An app that interacts with an encrypted file server",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
@@ -18,7 +18,7 @@
         "url": "git+https://github.com/PhotonicGluon/Excalibur.git"
     },
     "scripts": {
-        "dev": "vite --port 8888",
+        "dev": "vite --port 8100",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "cy:open": "cypress open",
