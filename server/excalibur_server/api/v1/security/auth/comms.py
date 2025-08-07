@@ -15,7 +15,7 @@ from excalibur_server.src.security.token.auth import generate_auth_token
 MAX_ITER_COUNT = 3
 
 
-@router.websocket("/")
+@router.websocket("")
 async def comms_endpoint(websocket: WebSocket):
     """
     Endpoint that handles the authentication communication of incoming requests.

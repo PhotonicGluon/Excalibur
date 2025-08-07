@@ -9,10 +9,14 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.security.consts import SRP_HANDLER
+from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE
 from excalibur_server.src.security.srp import SRPGroup
 
 if SRP_HANDLER.group != SRPGroup.SMALL:
     pytest.skip("Skipping authentication tests as group is different", allow_module_level=True)
+
+if not SECURITY_DETAILS_FILE.exists():
+    pytest.skip("Skipping authentication tests as security details file does not exist", allow_module_level=True)
 
 # Values from RFC5054, Appendix B
 S = int("BEB25379 D1A8581E B5A72767 3A2441EE".replace(" ", ""), 16)
@@ -58,13 +62,13 @@ os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"] = b64encode(long_to_bytes(S)).decod
 
 
 def test_group_establishment():
-    with client.websocket_connect("/api/v1/security/auth/") as ws:
+    with client.websocket_connect("/api/v1/security/auth") as ws:
         data = ws.receive_text()
         assert data == str(SRP_HANDLER.bits)
 
 
 def test_auth_negotiation():
-    with client.websocket_connect("/api/v1/security/auth/") as ws:
+    with client.websocket_connect("/api/v1/security/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 
@@ -98,7 +102,7 @@ def test_auth_negotiation():
 
 
 def test_abort_on_invalid_client_public_value():
-    with client.websocket_connect("/api/v1/security/auth/") as ws:
+    with client.websocket_connect("/api/v1/security/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 
@@ -112,7 +116,7 @@ def test_abort_on_invalid_client_public_value():
 
 
 def test_abort_on_invalid_client_m1():
-    with client.websocket_connect("/api/v1/security/auth/") as ws:
+    with client.websocket_connect("/api/v1/security/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 
