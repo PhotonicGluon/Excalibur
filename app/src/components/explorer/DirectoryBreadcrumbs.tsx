@@ -21,7 +21,11 @@ const DirectoryBreadcrumbs: React.FC<ContainerProps> = (props) => {
                 const routerLink = idx === 0 ? "/files/" : `/files/${breadcrumbPaths.slice(1, idx + 1).join("/")}`;
                 return (
                     <IonBreadcrumb key={idx} routerLink={routerLink} routerDirection="back">
-                        {idx === 0 ? <IonIcon slot="" icon={home} /> : <span>{fragment}</span>}
+                        {idx === 0 ? (
+                            <IonIcon slot="" icon={home} />
+                        ) : (
+                            <span className="max-w-64 truncate">{fragment}</span>
+                        )}
                         <IonIcon slot="separator" icon={chevronForward} />
                     </IonBreadcrumb>
                 );

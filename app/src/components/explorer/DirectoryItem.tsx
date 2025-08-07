@@ -243,7 +243,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                         icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
                                     />
                                     <div className="pl-4">
-                                        <IonLabel>
+                                        <IonLabel className="max-w-92 truncate">
                                             {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
                                         </IonLabel>
                                         {props.size !== undefined && (
