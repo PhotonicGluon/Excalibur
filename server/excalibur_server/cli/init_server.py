@@ -3,6 +3,7 @@ from typing import Annotated
 import typer
 
 from excalibur_server.cli import app
+from excalibur_server.cli.db import upgrade
 
 
 @app.command(name="init")
@@ -24,3 +25,8 @@ def init_server(
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
     os.makedirs(FILES_FOLDER, exist_ok=True)
+
+    # Initialize the database
+    upgrade(revision="head")  # Upgrade the database to the latest revision
+
+    typer.secho("Server initialized.", fg="green")
