@@ -104,7 +104,7 @@ const Settings: React.FC = () => {
         console.debug("Settings saved successfully");
         presentToast({
             message: "Settings saved successfully",
-            duration: 3000,
+            duration: 2000,
             color: "success",
         });
     }

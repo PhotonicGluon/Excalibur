@@ -98,7 +98,7 @@ const FileExplorer: React.FC = () => {
         // Show toast
         presentToast({
             message: "You have been logged out.",
-            duration: 3000,
+            duration: 2000,
         });
 
         // Navigate back to login
@@ -125,7 +125,7 @@ const FileExplorer: React.FC = () => {
             if (!response.success) {
                 presentToast({
                     message: response.error,
-                    duration: 3000,
+                    duration: 2000,
                     color: "danger",
                 });
                 return;
@@ -182,7 +182,7 @@ const FileExplorer: React.FC = () => {
             if (!rawFileData) {
                 presentToast({
                     message: "Failed to get file contents",
-                    duration: 3000,
+                    duration: 2000,
                     color: "danger",
                 });
                 setShowProgressDialog(false);
@@ -235,7 +235,7 @@ const FileExplorer: React.FC = () => {
             if (!uploadResponse.success) {
                 presentToast({
                     message: `Failed to upload file: ${uploadResponse.error}`,
-                    duration: 3000,
+                    duration: 2000,
                     color: "danger",
                 });
                 setShowProgressDialog(false);
@@ -246,7 +246,7 @@ const FileExplorer: React.FC = () => {
             refreshContents(false);
             presentToast({
                 message: "File uploaded",
-                duration: 3000,
+                duration: 2000,
                 color: "success",
             });
             setShowProgressDialog(false);
@@ -266,7 +266,7 @@ const FileExplorer: React.FC = () => {
             }
             presentToast({
                 message: `Failed to pick file: ${message}`,
-                duration: 3000,
+                duration: 2000,
                 color: "danger",
             });
             return;
@@ -279,7 +279,7 @@ const FileExplorer: React.FC = () => {
         if (!checkSizeResponse.success) {
             presentToast({
                 message: `Failed to check file size: ${checkSizeResponse.error}`,
-                duration: 3000,
+                duration: 2000,
                 color: "danger",
             });
             setShowProgressDialog(false);
@@ -288,7 +288,7 @@ const FileExplorer: React.FC = () => {
         if (checkSizeResponse.isTooLarge) {
             presentToast({
                 message: "File too large",
-                duration: 3000,
+                duration: 2000,
                 color: "danger",
             });
             setShowProgressDialog(false);
@@ -306,21 +306,21 @@ const FileExplorer: React.FC = () => {
                 case "Illegal or invalid path":
                     presentToast({
                         message: "Illegal or invalid file name",
-                        duration: 3000,
+                        duration: 2000,
                         color: "danger",
                     });
                     return;
                 case "Path too long":
                     presentToast({
                         message: "File path too long",
-                        duration: 3000,
+                        duration: 2000,
                         color: "danger",
                     });
                     return;
                 default:
                     presentToast({
                         message: "Failed to check file path: Unknown error",
-                        duration: 3000,
+                        duration: 2000,
                         color: "danger",
                     });
                     return;
@@ -378,7 +378,7 @@ const FileExplorer: React.FC = () => {
                         if (folderName === "") {
                             presentToast({
                                 message: "Folder name cannot be empty",
-                                duration: 3000,
+                                duration: 2000,
                                 color: "danger",
                             });
                             return;
@@ -394,21 +394,21 @@ const FileExplorer: React.FC = () => {
                                 case "Illegal or invalid path":
                                     presentToast({
                                         message: "Illegal or invalid folder name",
-                                        duration: 3000,
+                                        duration: 2000,
                                         color: "danger",
                                     });
                                     return;
                                 case "Path too long":
                                     presentToast({
                                         message: "Folder path too long",
-                                        duration: 3000,
+                                        duration: 2000,
                                         color: "danger",
                                     });
                                     return;
                                 default:
                                     presentToast({
                                         message: "Failed to check folder path: Unknown error",
-                                        duration: 3000,
+                                        duration: 2000,
                                         color: "danger",
                                     });
                                     return;
@@ -417,7 +417,7 @@ const FileExplorer: React.FC = () => {
                         if (checkResponse.success && checkResponse.type === "directory") {
                             presentToast({
                                 message: "Folder already exists",
-                                duration: 3000,
+                                duration: 2000,
                                 color: "danger",
                             });
                             return;
@@ -428,7 +428,7 @@ const FileExplorer: React.FC = () => {
                         if (!mkdirResponse.success) {
                             presentToast({
                                 message: `Failed to create folder: ${mkdirResponse.error}`,
-                                duration: 3000,
+                                duration: 2000,
                                 color: "danger",
                             });
                             return;
@@ -437,7 +437,7 @@ const FileExplorer: React.FC = () => {
                         refreshContents(false);
                         presentToast({
                             message: "Folder created",
-                            duration: 3000,
+                            duration: 2000,
                         });
                     },
                 },
@@ -457,7 +457,7 @@ const FileExplorer: React.FC = () => {
             if (!dirResponse.success) {
                 presentToast({
                     message: `Failed to delete item: ${dirResponse.error}`,
-                    duration: 3000,
+                    duration: 2000,
                     color: "danger",
                 });
                 return;
@@ -485,7 +485,7 @@ const FileExplorer: React.FC = () => {
         if (!deleteResponse.success) {
             presentToast({
                 message: `Failed to delete item: ${deleteResponse.error}`,
-                duration: 3000,
+                duration: 2000,
                 color: "danger",
             });
         }
@@ -493,7 +493,7 @@ const FileExplorer: React.FC = () => {
         refreshContents(false);
         presentToast({
             message: `Deleted ${isDir ? "directory" : "file"}`,
-            duration: 3000,
+            duration: 2000,
         });
     }
 
