@@ -16,8 +16,11 @@
         "keysize",
         "maxfail",
         "priv",
+        "repr",
         "secho",
-        "sqlalchemy"
+        "sessionmaker",
+        "sqlalchemy",
+        "sqlmodel"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"

@@ -1,12 +1,9 @@
-import json
 from base64 import b64decode, b64encode
-from pathlib import Path
 
 from pydantic import BaseModel, field_serializer
 
-from excalibur_server.consts import ROOT_FOLDER
-
-SECURITY_DETAILS_FILE = ROOT_FOLDER / "security.details"
+from excalibur_server.src.db.operations import add_user, get_user, is_user
+from excalibur_server.src.db.tables.user import User
 
 
 class SecurityDetails(BaseModel):
@@ -41,28 +38,43 @@ class SecurityDetailsWithVerifier(SecurityDetails):
         )
 
 
-def get_security_details(security_details_file: Path = SECURITY_DETAILS_FILE) -> SecurityDetailsWithVerifier:
+def check_security_details():
     """
-    Reads the security details from the given file.
+    Checks if the security details exist.
+    """
 
-    :param security_details_file: The file to read from. Defaults to `SECURITY_DETAILS_FILE`
-    :raises FileNotFoundError: If the file does not exist
+    return is_user("security_details")
+
+
+def get_security_details() -> SecurityDetailsWithVerifier:
+    """
+    Reads the security details from the database.
+
+    Assumes that the security details exist.
+
     :return: The read security details
     """
 
-    with open(security_details_file, "r") as f:
-        return SecurityDetailsWithVerifier.from_base64s(json.loads(f.read()))
+    user = get_user("security_details")
+    return SecurityDetailsWithVerifier(
+        auk_salt=user.auk_salt,
+        srp_salt=user.srp_salt,
+        verifier=user.verifier,
+    )
 
 
-def set_security_details(
-    security_details: SecurityDetailsWithVerifier, security_details_file: Path = SECURITY_DETAILS_FILE
-):
+def set_security_details(security_details: SecurityDetailsWithVerifier):
     """
-    Writes the given security details to the given file.
+    Writes the given security details to the database.
 
     :param security_details: The security details to write
-    :param security_details_file: The file to write to. Defaults to `SECURITY_DETAILS_FILE`
     """
 
-    with open(security_details_file, "w") as f:
-        f.write(security_details.model_dump_json())
+    add_user(
+        User(
+            username="security_details",
+            auk_salt=security_details.auk_salt,
+            srp_salt=security_details.srp_salt,
+            verifier=security_details.verifier,
+        )
+    )

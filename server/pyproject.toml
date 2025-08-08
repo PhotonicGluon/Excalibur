@@ -18,6 +18,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "semver>=3.0.4",
     "sqlalchemy>=2.0.42",
+    "sqlmodel>=0.0.24",
     "toml>=0.10.2",
     "typer~=0.15.4", # TODO: Update to 0.16.x once the "no_args_is_help causing extra Error box popping up" is fixed
     "uvicorn[standard]>=0.35.0",
@@ -40,7 +41,10 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ruff>=0.12.7"]
+dev = [
+    "ipython>=9.4.0",
+    "ruff>=0.12.7",
+]
 test = ["httpx>=0.28.1", "pytest>=8.4.1"]
 
 [tool.uv.build-backend]

@@ -9,7 +9,7 @@ from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
 
 from excalibur_server.api.routes.security.auth import router
 from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
-from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE, SecurityDetails, get_security_details
+from excalibur_server.src.security.security_details import SecurityDetails, get_security_details
 from excalibur_server.src.security.token.auth import generate_auth_token
 
 MAX_ITER_COUNT = 3
@@ -26,7 +26,7 @@ async def comms_endpoint(websocket: WebSocket):
 
     # Get necessary data from server
     try:
-        security_details = get_security_details(SECURITY_DETAILS_FILE)
+        security_details = get_security_details()
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Security details not found")
 

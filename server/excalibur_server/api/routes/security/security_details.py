@@ -7,14 +7,15 @@ from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.security import router
 from excalibur_server.src.security.security_details import (
-    SECURITY_DETAILS_FILE,
     SecurityDetails,
     SecurityDetailsWithVerifier,
+    check_security_details,
     get_security_details,
     set_security_details,
 )
 
 
+# TODO: Edit this endpoint
 @router.head(
     "/details",
     summary="Check Security Details Existence",
@@ -28,7 +29,7 @@ def check_security_details_endpoint():
     Endpoint that checks if the security details file exists.
     """
 
-    if not SECURITY_DETAILS_FILE.exists():
+    if not check_security_details():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security details file not found")
 
     return
@@ -49,7 +50,7 @@ def get_security_details_endpoint():
     This does not return the verifier for the SRP handshake.
     """
 
-    if not SECURITY_DETAILS_FILE.exists():
+    if not check_security_details():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Security details file not found")
 
     # Get raw security details
@@ -82,7 +83,7 @@ def set_security_details_endpoint(
     Endpoint that enrols the verifier.
     """
 
-    if SECURITY_DETAILS_FILE.exists():
+    if check_security_details():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Security details file already exists")
 
     try:

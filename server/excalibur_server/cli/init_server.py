@@ -9,6 +9,7 @@ from excalibur_server.cli.db import upgrade
 @app.command(name="init")
 def init_server(
     reset: Annotated[bool, typer.Option("--reset", "-r", help="Reset the server.")] = False,
+    with_db: Annotated[bool, typer.Option("--with-db", "-d", help="Initialize the database.")] = True,
 ):
     """
     Initializes the API server.
@@ -27,6 +28,7 @@ def init_server(
     os.makedirs(FILES_FOLDER, exist_ok=True)
 
     # Initialize the database
-    upgrade(revision="head")  # Upgrade the database to the latest revision
+    if with_db:
+        upgrade(revision="head")  # Upgrade the database to the latest revision
 
     typer.secho("Server initialized.", fg="green")

@@ -1,15 +1,13 @@
-from sqlalchemy import String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-
-from .base import Base
+from sqlmodel import Field, SQLModel
 
 
-class User(Base):
-    __tablename__ = "User"
+class User(SQLModel, table=True):
+    """
+    A user in the database.
+    """
 
-    uuid: Mapped[str] = mapped_column(String(36), nullable=False, primary_key=True)
-    username: Mapped[str] = mapped_column(Text(), nullable=False, unique=True)
-
-    # Magic methods
-    def __repr__(self) -> str:
-        return f"User<{self.uuid!r}>"
+    username: str = Field(primary_key=True)
+    auk_salt: bytes = Field(nullable=False)
+    srp_salt: bytes = Field(nullable=False)
+    verifier: bytes = Field(nullable=False)
+    key_enc: bytes | None = Field(nullable=True)  # TODO: Remove nullable=True

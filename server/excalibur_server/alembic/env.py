@@ -18,9 +18,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Add your model's MetaData object here for 'autogenerate' support
-from excalibur_server.src.db.tables import Base
+from excalibur_server.src.db.tables import SQLModel
 
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # Other values from the config, defined by the needs of env.py, can be acquired
 # my_important_option = config.get_main_option("my_important_option")
