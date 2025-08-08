@@ -72,6 +72,9 @@ export async function downloadFile(
     }
 
     const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
-    const dataStream = ExEF.decryptStream(auth.authInfo!.e2eeData.key!, response.body!);
+    const dataStream =
+        response.headers.get("X-Encrypted") === "true"
+            ? ExEF.decryptStream(auth.authInfo!.e2eeData.key!, response.body!)
+            : response.body!;
     return { success: true, fileSize: fileSize, dataStream: dataStream };
 }

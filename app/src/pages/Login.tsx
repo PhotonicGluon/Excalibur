@@ -172,7 +172,7 @@ const Login: React.FC = () => {
                             console.debug("Security details setup cancelled.");
                             presentToast({
                                 message: "Security details setup cancelled",
-                                duration: 3000,
+                                duration: 2000,
                                 color: "warning",
                             });
                         },
@@ -189,7 +189,7 @@ const Login: React.FC = () => {
                                 setIsLoading(false);
                                 presentToast({
                                     message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
-                                    duration: 3000,
+                                    duration: 2000,
                                     color: "danger",
                                 });
                                 return;
