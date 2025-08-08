@@ -7,7 +7,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
 
-from excalibur_server.api.routes.security.auth import router
+from excalibur_server.api.routes.auth import router
 from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
 from excalibur_server.src.security.security_details import SecurityDetails, get_security_details
 from excalibur_server.src.security.token.auth import generate_auth_token

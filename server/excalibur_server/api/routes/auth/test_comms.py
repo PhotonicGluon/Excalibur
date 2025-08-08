@@ -58,13 +58,13 @@ os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"] = b64encode(long_to_bytes(S)).decod
 
 
 def test_group_establishment():
-    with client.websocket_connect("/api/security/auth") as ws:
+    with client.websocket_connect("/api/auth") as ws:
         data = ws.receive_text()
         assert data == str(SRP_HANDLER.bits)
 
 
 def test_auth_negotiation():
-    with client.websocket_connect("/api/security/auth") as ws:
+    with client.websocket_connect("/api/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 
@@ -98,7 +98,7 @@ def test_auth_negotiation():
 
 
 def test_abort_on_invalid_client_public_value():
-    with client.websocket_connect("/api/security/auth") as ws:
+    with client.websocket_connect("/api/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 
@@ -112,7 +112,7 @@ def test_abort_on_invalid_client_public_value():
 
 
 def test_abort_on_invalid_client_m1():
-    with client.websocket_connect("/api/security/auth") as ws:
+    with client.websocket_connect("/api/auth") as ws:
         # Get SRP group size
         ws.receive_text()
 

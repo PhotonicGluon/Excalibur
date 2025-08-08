@@ -18,12 +18,13 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
+import ExEF from "@lib/exef";
 import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
-import { checkSecurityDetails, checkVaultKey, getGroup, setUpSecurityDetails } from "@lib/security/api";
+import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
-import { createVaultKey, retrieveVaultKey } from "@lib/security/vault";
+import { retrieveVaultKey } from "@lib/security/vault";
 import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";
@@ -197,21 +198,32 @@ const Login: React.FC = () => {
 
                             console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
-                            // Set up security details
+                            // Set up account unlock key (AUK) and vault key
+                            console.debug("Creating new AUK and vault key");
                             const aukSalt = randomBytes(32);
-                            const srpSalt = randomBytes(32);
-
+                            const auk = await generateKey(values.password, aukSalt);
                             console.debug(
-                                `Created salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`,
-                            );
-                            const key = await generateKey(values.password, srpSalt);
-                            console.log(
-                                `Generated key '${key.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
+                                `Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`,
                             );
 
-                            const verifier = srpGroup.generateVerifier(key);
+                            const vaultKey = randomBytes(32);
+                            console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
+                            const exef = new ExEF(auk);
+                            const encryptedVaultKey = exef.encrypt(vaultKey);
 
-                            await setUpSecurityDetails(apiURL, aukSalt, srpSalt, verifier);
+                            // Set up SRP key
+                            console.debug("Creating new SRP key");
+
+                            const srpSalt = randomBytes(32);
+                            const srpKey = await generateKey(values.password, srpSalt);
+                            console.debug(
+                                `Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
+                            );
+
+                            const srpVerifier = srpGroup.generateVerifier(srpKey);
+
+                            // Set up security details
+                            await setUpSecurityDetails(apiURL, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
                             console.debug("Security details set up");
                             presentToast({
                                 message: "Security details set up. Please log in again.",
@@ -257,22 +269,6 @@ const Login: React.FC = () => {
         console.log(`Logged in; using token: ${e2eeData.token}`);
 
         // Handle vault key
-        if (!(await checkVaultKey(apiURL, e2eeData.token)).success) {
-            const vaultKeyCreated = await createVaultKey(apiURL, e2eeData, (error) => {
-                console.error(error);
-                setIsLoading(false);
-                presentAlert({
-                    header: "Vault Key Failure",
-                    message: error,
-                    buttons: ["OK"],
-                });
-            });
-            if (!vaultKeyCreated) {
-                // Errors already handled in `createVaultKey()`
-                return;
-            }
-        }
-
         const vaultKey = await retrieveVaultKey(apiURL, e2eeData, (error) => {
             console.error(error);
             setIsLoading(false);

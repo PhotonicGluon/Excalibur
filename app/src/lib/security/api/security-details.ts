@@ -7,7 +7,7 @@ import { numberToBuffer } from "@lib/util";
  * @returns Whether the security details is set up.
  */
 export async function checkSecurityDetails(apiURL: string) {
-    const response = await fetch(`${apiURL}/security/details`, {
+    const response = await fetch(`${apiURL}/users/check/security_details`, {
         method: "HEAD",
     });
     if (response.status === 404) {
@@ -31,7 +31,7 @@ export async function getSecurityDetails(apiURL: string): Promise<{
     srpSalt?: Buffer;
     error?: string;
 }> {
-    const response = await fetch(`${apiURL}/security/details`, {
+    const response = await fetch(`${apiURL}/users/security/security_details`, {
         method: "GET",
     });
     if (response.status === 404) {
@@ -60,23 +60,26 @@ export async function setUpSecurityDetails(
     aukSalt: Buffer,
     srpSalt: Buffer,
     verifier: bigint,
+    encryptedVaultKey: Buffer,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${apiURL}/security/details`, {
+    const response = await fetch(`${apiURL}/users/add/security_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             auk_salt: aukSalt.toString("base64"),
             srp_salt: srpSalt.toString("base64"),
             verifier: numberToBuffer(verifier).toString("base64"),
+            key_enc: encryptedVaultKey.toString("base64"),
         }),
     });
+    // TODO: Edit
     switch (response.status) {
+        case 201:
+            return { success: true };
         case 409:
             return { success: false, error: "Security details file already exists" };
         case 422:
             return { success: false, error: "Invalid base64 string" };
-        case 201:
-            return { success: true };
         default:
             return { success: false, error: "Unknown error" };
     }

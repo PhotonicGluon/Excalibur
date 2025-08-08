@@ -7,7 +7,7 @@ from excalibur_server.meta import SUMMARY, TITLE, VERSION
 
 from .log_filters import EndpointFilter
 from .meta import TAGS
-from .routes import files_router, security_router, well_known_router
+from .routes import auth_router, files_router, users_router, well_known_router
 
 NO_LOG_ENDPOINTS = ["/api/well-known/heartbeat"]
 
@@ -28,6 +28,7 @@ app = FastAPI(
 add_middleware(app)
 
 # Include routes
+app.include_router(auth_router, prefix="/auth")
+app.include_router(users_router, prefix="/users")
 app.include_router(files_router, prefix="/files")
-app.include_router(security_router, prefix="/security")
 app.include_router(well_known_router, prefix="/well-known")

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from excalibur_server.api.routes.security.auth import router
+from excalibur_server.api.routes.auth import router
 from excalibur_server.src.security.consts import SRP_HANDLER
 from excalibur_server.src.security.srp import SRPGroup
 
