@@ -21,14 +21,16 @@ import { useAuth } from "@contexts/auth";
 
 import "./VaultKeyDialog.css";
 
-function generateVaultKeyMask() {
-    const mask = [];
-    for (let i = 0; i < 15; i++) {
-        mask.push(...Array(4).fill(/[0-9A-Fa-f]/), " ");
-    }
-    mask.push(...Array(4).fill(/[0-9A-Fa-f]/));
-    return mask;
-}
+const VAULT_KEY_MASK_OPTIONS: MaskitoOptions = {
+    mask: (() => {
+        const mask = [];
+        for (let i = 0; i < 15; i++) {
+            mask.push(...Array(4).fill(/[0-9A-Fa-f]/), " ");
+        }
+        mask.push(...Array(4).fill(/[0-9A-Fa-f]/));
+        return mask;
+    })(),
+};
 
 interface VaultKeyDialogProps {
     /** Whether the dialog is open */
@@ -42,10 +44,8 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     const auth = useAuth();
 
     // States
-    const vaultKeyMaskOptions: MaskitoOptions = {
-        mask: generateVaultKeyMask(),
-    };
-    const vaultKeyMask = useMaskito({ options: vaultKeyMaskOptions });
+
+    const vaultKeyMask = useMaskito({ options: VAULT_KEY_MASK_OPTIONS });
 
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
@@ -83,7 +83,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     // Effects
     useEffect(() => {
         const vaultKeyRaw = auth.vaultKey ? auth.vaultKey!.toString("hex").toLocaleUpperCase() : "";
-        setLocalVaultKey(maskitoTransform(vaultKeyRaw, vaultKeyMaskOptions));
+        setLocalVaultKey(maskitoTransform(vaultKeyRaw, VAULT_KEY_MASK_OPTIONS));
     }, [auth.vaultKey]);
 
     // Render

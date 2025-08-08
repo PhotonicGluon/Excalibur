@@ -5,8 +5,6 @@ import { useParams } from "react-router";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
 import {
-    IonBreadcrumb,
-    IonBreadcrumbs,
     IonButton,
     IonButtons,
     IonContent,
@@ -35,11 +33,9 @@ import {
 import packageInfo from "@root/package.json";
 import {
     add,
-    chevronForward,
     documentOutline,
     ellipsisVertical,
     folderOutline,
-    home,
     informationCircleOutline,
     keyOutline,
     logOutOutline,

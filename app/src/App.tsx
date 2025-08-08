@@ -38,8 +38,6 @@ import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
 
-import Contexts from "./Contexts";
-
 // Set up app
 setupIonicReact();
 PrivacyScreen.enable();
