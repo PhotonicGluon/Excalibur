@@ -3,7 +3,7 @@ from base64 import b64decode, b64encode
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.src.db.operations import add_user, get_user, is_user
-from excalibur_server.src.db.tables.user import User
+from excalibur_server.src.db.tables import User
 
 
 class SecurityDetails(BaseModel):

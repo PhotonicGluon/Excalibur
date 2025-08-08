@@ -1,12 +1,14 @@
-import binascii
+from base64 import b64encode
 from typing import Annotated
 
 from fastapi import Body, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.security import router
+from excalibur_server.src.db.operations import get_vault_key, is_vault_key, set_vault_key
 from excalibur_server.src.security.token import check_credentials
-from excalibur_server.src.security.vault_key import EncryptedVaultKey, check_vault_key, get_vault_key, set_vault_key
+
+# TODO: Check if this module is redundant
 
 
 @router.head(
@@ -15,20 +17,20 @@ from excalibur_server.src.security.vault_key import EncryptedVaultKey, check_vau
     dependencies=[Depends(check_credentials)],
     responses={
         status.HTTP_200_OK: {
-            "description": "Vault key file exists",
+            "description": "Vault key exists",
             "content": None,
         },
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
-        status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Vault key not found"},
     },
 )
 def check_vault_key_endpoint():
     """
-    Endpoint that checks if the vault key file exists.
+    Endpoint that checks if the vault key exists.
     """
 
-    if not check_vault_key():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
+    if not is_vault_key():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key not found")
 
 
 @router.get(
@@ -37,9 +39,8 @@ def check_vault_key_endpoint():
     dependencies=[Depends(check_credentials)],
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
-        status.HTTP_404_NOT_FOUND: {"description": "Vault key file not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Vault key not found"},
     },
-    response_model=EncryptedVaultKey,
     tags=["encrypted"],
 )
 def get_vault_key_endpoint():
@@ -47,10 +48,10 @@ def get_vault_key_endpoint():
     Endpoint that returns the encrypted vault key as an ExEF stream.
     """
 
-    if not check_vault_key():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key file not found")
+    if not is_vault_key():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vault key not found")
 
-    return get_vault_key()
+    return {"key_enc": b64encode(get_vault_key()).decode("utf-8")}  # TODO: Change
 
 
 @router.post(
@@ -64,8 +65,7 @@ def get_vault_key_endpoint():
             "content": {"text/plain": {"example": "Vault key set", "schema": None}},
         },
         status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
-        status.HTTP_409_CONFLICT: {"description": "Vault key file already exists"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid base64 string"},
+        status.HTTP_409_CONFLICT: {"description": "Vault key already exists"},
     },
     response_class=PlainTextResponse,
     tags=["encrypted"],
@@ -84,12 +84,9 @@ def set_vault_key_endpoint(
     Endpoint that sets the vault key.
     """
 
-    if check_vault_key():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Vault key file already exists")
+    if is_vault_key():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Vault key already exists")
 
-    try:
-        set_vault_key(key_enc)
-    except binascii.Error as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
+    set_vault_key(key_enc)
 
     return "Vault key set"
