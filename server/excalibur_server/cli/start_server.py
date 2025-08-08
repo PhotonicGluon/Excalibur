@@ -1,5 +1,6 @@
 import os
 import warnings
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -57,6 +58,6 @@ def start_server(
         host=host,
         port=port,
         reload=debug,
-        reload_dirs=[os.path.dirname(__file__)],
+        reload_dirs=[Path(__file__).parent.parent],
         reload_excludes=["examples/*"],
     )
