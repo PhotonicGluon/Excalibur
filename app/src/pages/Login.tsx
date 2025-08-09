@@ -258,8 +258,9 @@ const Login: React.FC = () => {
 
         // Log into the server using the UUID and master key
         console.debug("Logging in...");
+        const authInfo = { apiURL: apiURL, username: values.username, ...e2eeData };
         try {
-            await auth.login(apiURL, values.username, e2eeData);
+            await auth.login(authInfo);
         } catch (error) {
             console.error(`Could not log in: ${error}`);
             setIsLoading(false);
@@ -270,10 +271,10 @@ const Login: React.FC = () => {
             });
             return;
         }
-        console.log(`Logged in; using token: ${e2eeData.token}`);
+        console.log(`Logged in; using token: ${authInfo.token}`);
 
         // Handle vault key
-        const vaultKey = await retrieveVaultKey(apiURL, values.username, e2eeData, (error) => {
+        const vaultKey = await retrieveVaultKey(authInfo, (error) => {
             console.error(error);
             setIsLoading(false);
             presentAlert({

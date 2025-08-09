@@ -24,7 +24,7 @@ export async function deleteItem(
         `${auth.authInfo!.apiURL}/files/delete/${path}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
         {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
+            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         },
     );
     switch (response.status) {

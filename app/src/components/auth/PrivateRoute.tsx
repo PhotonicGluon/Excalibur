@@ -10,8 +10,6 @@ export const PrivateRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
     const auth = useAuth();
     const location = useLocation();
     return (
-        <Route {...rest}>
-            {auth.authInfo?.e2eeData.token ? children : <Redirect from={location.pathname} to="/login" />}
-        </Route>
+        <Route {...rest}>{auth.authInfo?.token ? children : <Redirect from={location.pathname} to="/login" />}</Route>
     );
 };

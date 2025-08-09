@@ -53,10 +53,10 @@ function useProvideAuth(): AuthProvider {
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
-    async function loginFunc(apiURL: string, username: string, e2eeData: E2EEData) {
+    async function loginFunc(authInfo: AuthInfo) {
         // Get server info
-        const versionResponse = await getServerVersion(apiURL);
-        const timeResponse = await getServerTime(apiURL);
+        const versionResponse = await getServerVersion(authInfo.apiURL);
+        const timeResponse = await getServerTime(authInfo.apiURL);
         if (!versionResponse.success || !timeResponse.success) {
             // Failed to retrieve info; kick back to login screen
             console.debug("Failed to retrieve info, sending back to login screen");
@@ -70,7 +70,7 @@ function useProvideAuth(): AuthProvider {
 
         // Set up heartbeat interval
         const interval = setInterval(async () => {
-            const connected = await heartbeat(apiURL, e2eeData.token);
+            const connected = await heartbeat(authInfo.apiURL, authInfo.token);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 // TODO: Can we display a toast to inform the user why they were kicked back?
@@ -82,7 +82,6 @@ function useProvideAuth(): AuthProvider {
         setHeartbeatInterval(interval);
 
         // Update state
-        const authInfo = { apiURL, username, e2eeData };
         const serverInfo = { version: serverVersion, deltaTime };
         setAuthInfo(authInfo);
         setServerInfo(serverInfo);
@@ -123,7 +122,7 @@ function useProvideAuth(): AuthProvider {
         setServerInfo(serverInfo);
 
         // Get vault key
-        retrieveVaultKey(authInfo.apiURL, authInfo.username, authInfo.e2eeData, (error) => {
+        retrieveVaultKey(authInfo, (error) => {
             console.error(error);
         }).then((resp) => {
             if (!resp) {
@@ -148,11 +147,10 @@ function useProvideAuth(): AuthProvider {
 function serializeAuthInfo(data: AuthInfo) {
     return JSON.stringify({
         apiURL: data.apiURL,
-        e2eeData: {
-            key: data.e2eeData.key.toString("hex"),
-            auk: data.e2eeData.auk.toString("hex"),
-            token: data.e2eeData.token,
-        },
+        username: data.username,
+        key: data.key.toString("hex"),
+        auk: data.auk.toString("hex"),
+        token: data.token,
     });
 }
 
@@ -161,10 +159,8 @@ function deserializeAuthInfo(data: string): AuthInfo {
     return {
         apiURL: parsed.apiURL,
         username: parsed.username,
-        e2eeData: {
-            key: Buffer.from(parsed.e2eeData.key, "hex"),
-            auk: Buffer.from(parsed.e2eeData.auk, "hex"),
-            token: parsed.e2eeData.token,
-        },
+        key: Buffer.from(parsed.key, "hex"),
+        auk: Buffer.from(parsed.auk, "hex"),
+        token: parsed.token,
     };
 }

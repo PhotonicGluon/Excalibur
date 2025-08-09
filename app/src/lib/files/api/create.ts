@@ -24,7 +24,7 @@ export async function uploadFile(
     // Send the request
     const response = await fetch(`${auth.authInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: formData,
     });
     switch (response.status) {
@@ -70,7 +70,7 @@ export async function mkdir(
 ): Promise<{ success: boolean; error?: string }> {
     const response = await fetch(`${auth.authInfo!.apiURL}/files/mkdir/${path}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: name,
     });
     switch (response.status) {
