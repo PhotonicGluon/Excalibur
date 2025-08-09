@@ -21,10 +21,11 @@ import { settings } from "ionicons/icons";
 import ExEF from "@lib/exef";
 import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
-import { addUser, checkUser, getGroup } from "@lib/security/api";
+import { getGroup } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
-import { retrieveVaultKey } from "@lib/security/vault";
+import { addUser, checkUser } from "@lib/users/api";
+import { retrieveVaultKey } from "@lib/users/vault";
 import { validateURL } from "@lib/validators";
 
 import URLInput from "@components/inputs/URLInput";

@@ -1,3 +1,4 @@
+import ExEF from "@lib/exef";
 import { numberToBuffer } from "@lib/util";
 
 /**
@@ -49,6 +50,42 @@ export async function getSecurityDetails(
         aukSalt: Buffer.from(data["auk_salt"], "base64"),
         srpSalt: Buffer.from(data["srp_salt"], "base64"),
     };
+}
+
+/**
+ * Retrieves the vault key from the server.
+ *
+ * @param apiURL The URL of the API server to query
+ * @param username The username to retrieve the vault key for
+ * @param token Authentication token for accessing the server
+ * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
+ * @returns A promise which resolves to an object containing the success status, an optional error
+ *      message, and an optional encrypted vault key
+ */
+export async function getVaultKey(
+    apiURL: string,
+    username: string,
+    token: string,
+    e2eeKey: Buffer,
+): Promise<{ success: boolean; error?: string; encryptedKey?: Buffer }> {
+    // Fetch the vault key
+    const response = await fetch(`${apiURL}/users/vault/${username}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    switch (response.status) {
+        case 200:
+            break; // Continue with normal flow
+        case 401:
+            return { success: false, error: "Unauthorized" };
+        case 404:
+            return { success: false, error: "Vault key file not found" };
+        default:
+            return { success: false, error: "Unknown error" };
+    }
+
+    const data = await ExEF.decryptResponse<{ key_enc: string }>(e2eeKey, response);
+    return { success: true, encryptedKey: Buffer.from(data.key_enc, "base64") };
 }
 
 /**

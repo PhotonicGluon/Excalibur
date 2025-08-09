@@ -1,8 +1,8 @@
 import { createDecipheriv } from "crypto";
 
-import { getSecurityDetails } from "@lib/security/api";
 import generateKey from "@lib/security/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
+import { getSecurityDetails } from "@lib/users/api";
 import { bufferToNumber, numberToBuffer } from "@lib/util";
 
 const MAX_ITER_COUNT = 3;

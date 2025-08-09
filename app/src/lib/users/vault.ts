@@ -1,5 +1,5 @@
 import ExEF from "@lib/exef";
-import { getVaultKey } from "@lib/security/api";
+import { getVaultKey } from "@lib/users/api";
 
 import { AuthInfo } from "@contexts/auth";
 
@@ -25,7 +25,7 @@ export async function retrieveVaultKey(
 
     console.debug("Decrypting obtained vault key...");
     try {
-        const vaultKey = ExEF.decrypt(authInfo.auk, encryptedVaultKey.encryptedKey);
+        const vaultKey = ExEF.decrypt(authInfo.auk, encryptedVaultKey);
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
         return vaultKey;
     } catch (error: unknown) {

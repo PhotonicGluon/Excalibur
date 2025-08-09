@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { heartbeat as _heartbeat, getServerTime, getServerVersion } from "@lib/network";
-import { E2EEData } from "@lib/security/e2ee";
-import { retrieveVaultKey } from "@lib/security/vault";
+import { retrieveVaultKey } from "@lib/users/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
