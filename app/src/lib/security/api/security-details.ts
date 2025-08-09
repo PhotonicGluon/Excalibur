@@ -1,13 +1,14 @@
 import { numberToBuffer } from "@lib/util";
 
 /**
- * Checks if the security details is set up on the server.
+ * Checks if the user exists on the server.
  *
- * @param apiURL The URL of the Excalibur API.
- * @returns Whether the security details is set up.
+ * @param apiURL The URL of the Excalibur API
+ * @param username The username to check
+ * @returns Whether the user exists
  */
-export async function checkSecurityDetails(apiURL: string) {
-    const response = await fetch(`${apiURL}/users/check/security_details`, {
+export async function checkUser(apiURL: string, username: string): Promise<boolean> {
+    const response = await fetch(`${apiURL}/users/check/${username}`, {
         method: "HEAD",
     });
     if (response.status === 404) {
@@ -20,22 +21,26 @@ export async function checkSecurityDetails(apiURL: string) {
 /**
  * Retrieves the security details from the server.
  *
- * @param apiURL The URL of the API server to query.
+ * @param apiURL The URL of the API server to query
+ * @param username The username to retrieve security details for
  * @returns A promise which resolves to an object containing the success status, optional AUK and
  *      SRP salts as `Buffer`s, and an optional error message. If the security details file is not
- *      found, success is `false` and an error message is provided.
+ *      found, success is `false` and an error message is provided
  */
-export async function getSecurityDetails(apiURL: string): Promise<{
-    success: boolean;
-    aukSalt?: Buffer;
-    srpSalt?: Buffer;
-    error?: string;
-}> {
-    const response = await fetch(`${apiURL}/users/security/security_details`, {
+export async function getSecurityDetails(
+    apiURL: string,
+    username: string,
+): Promise<{ success: boolean; aukSalt?: Buffer; srpSalt?: Buffer; error?: string }> {
+    const response = await fetch(`${apiURL}/users/security/${username}`, {
         method: "GET",
     });
-    if (response.status === 404) {
-        return { success: false, error: "Security details file not found" };
+    switch (response.status) {
+        case 200:
+            break;
+        case 404:
+            return { success: false, error: "Security details file not found" };
+        default:
+            return { success: false, error: "Unknown error" };
     }
 
     const data = await response.json();
@@ -47,22 +52,28 @@ export async function getSecurityDetails(apiURL: string): Promise<{
 }
 
 /**
- * Sets up the security details on the server.
+ * Adds a new user to the server.
  *
- * @param apiURL The URL of the API server to query.
- * @param aukSalt The account unlock key (AUK) salt to set up.
- * @param srpSalt The SRP handshake salt to set up.
- * @param verifier The SRP verifier to set up.
- * @returns A promise which resolves to an object with a success boolean and optionally an error message.
+ * Assumes that the user has not already been set up.
+ *
+ * @param apiURL The URL of the API server to query
+ * @param username The username to set up security details for
+ * @param aukSalt The account unlock key (AUK) salt to set up
+ * @param srpSalt The SRP handshake salt to set up
+ * @param verifier The SRP verifier to set up
+ * @param encryptedVaultKey The vault key that was encrypted using the AUK
+ * @returns A promise which resolves to an object with a success boolean and optionally an error
+ *      message
  */
-export async function setUpSecurityDetails(
+export async function addUser(
     apiURL: string,
+    username: string,
     aukSalt: Buffer,
     srpSalt: Buffer,
     verifier: bigint,
     encryptedVaultKey: Buffer,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${apiURL}/users/add/security_details`, {
+    const response = await fetch(`${apiURL}/users/add/${username}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,12 +83,11 @@ export async function setUpSecurityDetails(
             key_enc: encryptedVaultKey.toString("base64"),
         }),
     });
-    // TODO: Edit
     switch (response.status) {
         case 201:
             return { success: true };
         case 409:
-            return { success: false, error: "Security details file already exists" };
+            return { success: false, error: "User already exists" };
         case 422:
             return { success: false, error: "Invalid base64 string" };
         default:

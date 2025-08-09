@@ -56,7 +56,8 @@ interface E2EEState {
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
  * @param apiURL The HTTP(S) URL of the API server to query
- * @param password The password to use for key generation
+ * @param username The username to log in as
+ * @param password The password for logging in
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -64,6 +65,7 @@ interface E2EEState {
  */
 export async function e2ee(
     apiURL: string,
+    username: string,
     password: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
@@ -71,7 +73,7 @@ export async function e2ee(
 ): Promise<E2EEData | undefined> {
     // Get security details
     setLoadingState?.("Loading security details...");
-    const securityDetailsResponse = await getSecurityDetails(apiURL);
+    const securityDetailsResponse = await getSecurityDetails(apiURL, username);
     if (!securityDetailsResponse.success) {
         stopLoading?.();
         showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);

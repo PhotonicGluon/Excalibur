@@ -53,7 +53,7 @@ function useProvideAuth(): AuthProvider {
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
-    async function loginFunc(apiURL: string, e2eeData: E2EEData) {
+    async function loginFunc(apiURL: string, username: string, e2eeData: E2EEData) {
         // Get server info
         const versionResponse = await getServerVersion(apiURL);
         const timeResponse = await getServerTime(apiURL);
@@ -82,7 +82,7 @@ function useProvideAuth(): AuthProvider {
         setHeartbeatInterval(interval);
 
         // Update state
-        const authInfo = { apiURL, e2eeData };
+        const authInfo = { apiURL, username, e2eeData };
         const serverInfo = { version: serverVersion, deltaTime };
         setAuthInfo(authInfo);
         setServerInfo(serverInfo);
@@ -123,7 +123,7 @@ function useProvideAuth(): AuthProvider {
         setServerInfo(serverInfo);
 
         // Get vault key
-        retrieveVaultKey(authInfo.apiURL, authInfo.e2eeData, (error) => {
+        retrieveVaultKey(authInfo.apiURL, authInfo.username, authInfo.e2eeData, (error) => {
             console.error(error);
         }).then((resp) => {
             if (!resp) {
@@ -160,6 +160,7 @@ function deserializeAuthInfo(data: string): AuthInfo {
     const parsed = JSON.parse(data);
     return {
         apiURL: parsed.apiURL,
+        username: parsed.username,
         e2eeData: {
             key: Buffer.from(parsed.e2eeData.key, "hex"),
             auk: Buffer.from(parsed.e2eeData.auk, "hex"),

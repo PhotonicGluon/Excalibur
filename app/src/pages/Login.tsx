@@ -21,7 +21,7 @@ import { settings } from "ionicons/icons";
 import ExEF from "@lib/exef";
 import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
-import { checkSecurityDetails, getGroup, setUpSecurityDetails } from "@lib/security/api";
+import { addUser, checkUser, getGroup } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
 import { retrieveVaultKey } from "@lib/security/vault";
@@ -35,7 +35,9 @@ import logo from "@assets/icon.png";
 interface LoginValues {
     /** URL to the server */
     server: string;
-    /** Password to the server */
+    /** Username to log in as */
+    username: string;
+    /** Password for the user */
     password: string;
     /** Whether to save the password */
     savePassword: boolean;
@@ -69,11 +71,12 @@ const Login: React.FC = () => {
         server = server.replace(/\/$/, ""); // Remove trailing slash
         inputs[0].value = server;
 
-        const password = inputs[1].value! as string;
+        const username = inputs[1].value! as string;
+        const password = inputs[2].value! as string;
         const savePassword = checkboxes[0].checked! as boolean;
 
         // Form values
-        return { server: server, password: password, savePassword: savePassword };
+        return { server: server, username: username, password: password, savePassword: savePassword };
     }
 
     /**
@@ -82,9 +85,9 @@ const Login: React.FC = () => {
      * @param values The values from the form
      * @returns Whether the values are valid
      */
-    function validateValues({ server, password }: LoginValues) {
+    function validateValues({ server, username, password }: LoginValues) {
         // Check all filled
-        if (server === "" || password === "") {
+        if (server === "" || username === "" || password === "") {
             return false;
         }
 
@@ -160,7 +163,7 @@ const Login: React.FC = () => {
 
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
-        if (!(await checkSecurityDetails(apiURL))) {
+        if (!(await checkUser(apiURL, values.username))) {
             setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Set Up",
@@ -223,7 +226,7 @@ const Login: React.FC = () => {
                             const srpVerifier = srpGroup.generateVerifier(srpKey);
 
                             // Set up security details
-                            await setUpSecurityDetails(apiURL, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
+                            await addUser(apiURL, values.username, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
                             console.debug("Security details set up");
                             presentToast({
                                 message: "Security details set up. Please log in again.",
@@ -240,6 +243,7 @@ const Login: React.FC = () => {
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
             apiURL,
+            values.username,
             values.password,
             () => setIsLoading(false),
             setLoadingState,
@@ -255,7 +259,7 @@ const Login: React.FC = () => {
         // Log into the server using the UUID and master key
         console.debug("Logging in...");
         try {
-            await auth.login(apiURL, e2eeData);
+            await auth.login(apiURL, values.username, e2eeData);
         } catch (error) {
             console.error(`Could not log in: ${error}`);
             setIsLoading(false);
@@ -269,7 +273,7 @@ const Login: React.FC = () => {
         console.log(`Logged in; using token: ${e2eeData.token}`);
 
         // Handle vault key
-        const vaultKey = await retrieveVaultKey(apiURL, e2eeData, (error) => {
+        const vaultKey = await retrieveVaultKey(apiURL, values.username, e2eeData, (error) => {
             console.error(error);
             setIsLoading(false);
             presentAlert({
@@ -287,6 +291,7 @@ const Login: React.FC = () => {
         // Update preferences
         Preferences.set({
             server: values.server,
+            username: values.username,
             password: values.savePassword ? values.password : "",
             savePassword: values.savePassword,
         });
@@ -304,6 +309,11 @@ const Login: React.FC = () => {
             if (!result) return;
             console.debug(`Got existing server URL from preferences: ${result}`);
             document.querySelector("#server-input")!.setAttribute("value", result!);
+        });
+        Preferences.get("username").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing username from preferences: ${result}`);
+            document.querySelector("#username-input")!.setAttribute("value", result!);
         });
         Preferences.get("password").then((result) => {
             if (!result) return;
@@ -346,6 +356,19 @@ const Login: React.FC = () => {
                             <div className="flex flex-col gap-3">
                                 <div className="h-18">
                                     <URLInput id="server-input" label="Server URL" />
+                                </div>
+                                <div className="h-18">
+                                    <IonInput
+                                        id="username-input"
+                                        label="Username"
+                                        labelPlacement="stacked"
+                                        fill="solid"
+                                        placeholder="MyCoolUsername"
+                                        type="text"
+                                        // TODO: Use actual username
+                                        value="security_details"
+                                        disabled
+                                    ></IonInput>
                                 </div>
                                 <div className="h-18">
                                     <IonInput

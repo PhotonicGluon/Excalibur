@@ -9,6 +9,7 @@ export interface EncryptedVaultKey {
  * Retrieves the vault key from the server.
  *
  * @param apiURL The URL of the API server to query
+ * @param username The username to retrieve the vault key for
  * @param token Authentication token for accessing the server
  * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
  * @returns A promise which resolves to an object containing the success status, an optional error
@@ -16,11 +17,12 @@ export interface EncryptedVaultKey {
  */
 export async function getVaultKey(
     apiURL: string,
+    username: string,
     token: string,
     e2eeKey: Buffer,
 ): Promise<{ success: boolean; error?: string; encryptedKey?: EncryptedVaultKey }> {
     // Fetch the vault key
-    const response = await fetch(`${apiURL}/users/vault/security_details`, {
+    const response = await fetch(`${apiURL}/users/vault/${username}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
     });
