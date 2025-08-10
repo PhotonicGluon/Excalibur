@@ -20,15 +20,10 @@ def _vault_key_callback(value: str) -> str:
     return value
 
 
-# TODO: Change name
-@app.command(name="setup")
-def setup_server(
-    username: Annotated[
-        str, typer.Option(help="Username for the API server.", prompt=True)
-    ] = "security_details",  # TODO: Remove default
-    password: Annotated[
-        str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)
-    ] = ...,
+@app.command(name="add-user")
+def add_user(
+    username: Annotated[str, typer.Option(help="Username for the API server.", prompt=True)],
+    password: Annotated[str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)],
     vault_key: Annotated[
         str,
         typer.Option(
@@ -37,35 +32,24 @@ def setup_server(
             confirmation_prompt=True,
             callback=_vault_key_callback,
         ),
-    ] = ...,
-    reset: Annotated[bool, typer.Option("--reset", "-r", help="Reset the server.")] = False,
+    ],
 ):
     """
-    Sets up the API server.
+    Adds a user to the API server.
 
-    Adds the required security details and vault key to the server.
+    Assumes the server has been initialized.
     """
 
-    import os
     from base64 import b64decode
 
     import typer
     from Crypto.Random import get_random_bytes
     from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-    from excalibur_server.cli.reset_server import _reset_server
-    from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
     from excalibur_server.src.exef.exef import ExEF
     from excalibur_server.src.security.consts import SRP_HANDLER
     from excalibur_server.src.security.keygen import generate_key
     from excalibur_server.src.users import add_user, User
-
-    if reset:
-        _reset_server()
-
-    # Make the folders
-    os.makedirs(ROOT_FOLDER, exist_ok=True)
-    os.makedirs(FILES_FOLDER, exist_ok=True)
 
     # Generate salts and keys
     auk_salt = get_random_bytes(16)
@@ -85,11 +69,11 @@ def setup_server(
     add_user(
         User(
             username=username,
-            auk_key=auk_key,
-            srp_key=srp_key,
+            auk_salt=auk_salt,
+            srp_salt=srp_salt,
             verifier=verifier,
-            vault_key_enc=vault_key_enc,
+            key_enc=vault_key_enc,
         )
     )
 
-    typer.secho("Server initialized.", fg="green")
+    typer.secho(f"Added '{username}' to the database.", fg="green")
