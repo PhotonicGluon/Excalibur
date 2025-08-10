@@ -68,7 +68,7 @@ async def comms_endpoint(websocket: WebSocket):
             return
 
         # Send the auth token for client to use
-        await _send_auth_token(websocket, master_server)
+        await _send_auth_token(websocket, user.username, master_server)
 
         # Finally, close connection
         await websocket.close()
@@ -78,10 +78,10 @@ async def comms_endpoint(websocket: WebSocket):
 
 async def _get_user(websocket: WebSocket) -> User | None:
     """
-    Get the user details of the user.
+    Get the user details.
 
-    :param websocket: The WebSocket connection to the client
-    :return: The username of the user, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :return: the user, or None if the computation fails
     """
 
     username = await websocket.receive_text()
@@ -99,9 +99,9 @@ async def _compute_ephemeral_values(websocket: WebSocket, verifier: int) -> tupl
     """
     Compute the server's ephemeral values.
 
-    :param websocket: The WebSocket connection to the client
-    :param verifier: The verifier to use for the SRP protocol
-    :return: A tuple of the server's private and public values, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :param verifier: the verifier to use for the SRP protocol
+    :return: a tuple of the server's private and public values, or None if the computation fails
     """
 
     # Check if we are running tests
@@ -136,8 +136,8 @@ async def _get_client_public_value(websocket: WebSocket) -> int | None:
     """
     Get the client's public value.
 
-    :param websocket: The WebSocket connection to the client
-    :return: The client's public value, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :return: the client's public value, or None if the computation fails
     """
 
     iter_count = 0
@@ -163,10 +163,10 @@ async def _check_shared_u(websocket: WebSocket, a_pub: int, b_pub: int) -> int |
     """
     Check the shared U value.
 
-    :param websocket: The WebSocket connection to the client
-    :param a_pub: The client's public value
-    :param b_pub: The server's public value
-    :return: The shared U value, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :param a_pub: the client's public value
+    :param b_pub: the server's public value
+    :return: the shared U value, or None if the computation fails
     """
 
     u = SRP_HANDLER.compute_u(a_pub, b_pub)
@@ -184,11 +184,11 @@ async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: 
 
     Checks the received client's M1 value. If valid, sends the server's M2 value for the client to check.
 
-    :param websocket: The WebSocket connection to the client
-    :param security_details: The security details of the server
-    :param a_pub: The client's public value
-    :param b_pub: The server's public value
-    :param master_server: The server's master value
+    :param websocket: the WebSocket connection to the client
+    :param user: the user
+    :param a_pub: the client's public value
+    :param b_pub: the server's public value
+    :param master_server: the server's master value
     :return: True if the M values are valid, False otherwise
     """
 
@@ -217,17 +217,18 @@ async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: 
     return True
 
 
-async def _send_auth_token(websocket: WebSocket, master: bytes) -> None:
+async def _send_auth_token(websocket: WebSocket, username: str, master: bytes) -> None:
     """
     Send the authentication token to the client.
 
     Encrypts the authentication token using the master value and sends it to the client.
 
-    :param websocket: The WebSocket connection to the client
-    :param master: The master value to use for the authentication token
+    :param username: the username
+    :param websocket: the WebSocket connection to the client
+    :param master: the master value to use for the authentication token
     """
 
-    auth_token = generate_auth_token(master, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
+    auth_token = generate_auth_token(username, master, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
 
     cipher = AES.new(master, AES.MODE_GCM)
     auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))

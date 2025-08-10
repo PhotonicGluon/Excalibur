@@ -140,7 +140,7 @@ class EncryptionHandler:
         if auth[0] != "Bearer" or len(auth) != 2:
             return
 
-        token = decode_token(auth[1])
+        token = decode_token(auth[1], KEY)
         if token is None:
             return
         e2ee_data = token["e2ee"]
