@@ -29,7 +29,7 @@ def generate_auth_token(e2ee_key: bytes, expiry_timestamp: float) -> str:
     cipher = AES.new(KEY, AES.MODE_GCM)
     return generate_token(
         {
-            "sub": "excalibur",
+            "sub": "security_details",  # TODO: Replace with actual user
             "e2ee": {
                 "nonce": b64encode(cipher.nonce).decode("utf-8"),
                 "key": b64encode(cipher.encrypt(e2ee_key)).decode("utf-8"),

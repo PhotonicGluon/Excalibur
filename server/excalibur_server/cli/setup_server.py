@@ -20,9 +20,15 @@ def _vault_key_callback(value: str) -> str:
     return value
 
 
+# TODO: Change name
 @app.command(name="setup")
 def setup_server(
-    password: Annotated[str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)],
+    username: Annotated[
+        str, typer.Option(help="Username for the API server.", prompt=True)
+    ] = "security_details",  # TODO: Remove default
+    password: Annotated[
+        str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)
+    ] = ...,
     vault_key: Annotated[
         str,
         typer.Option(
@@ -31,7 +37,7 @@ def setup_server(
             confirmation_prompt=True,
             callback=_vault_key_callback,
         ),
-    ],
+    ] = ...,
     reset: Annotated[bool, typer.Option("--reset", "-r", help="Reset the server.")] = False,
 ):
     """
@@ -52,8 +58,7 @@ def setup_server(
     from excalibur_server.src.exef.exef import ExEF
     from excalibur_server.src.security.consts import SRP_HANDLER
     from excalibur_server.src.security.keygen import generate_key
-    from excalibur_server.src.security.security_details import SecurityDetailsWithVerifier, set_security_details
-    from excalibur_server.src.security.vault_key import set_vault_key
+    from excalibur_server.src.users import add_user, User
 
     if reset:
         _reset_server()
@@ -62,9 +67,6 @@ def setup_server(
     os.makedirs(ROOT_FOLDER, exist_ok=True)
     os.makedirs(FILES_FOLDER, exist_ok=True)
 
-    # Preprocess vault key
-    vault_key: bytes = b64decode(vault_key)
-
     # Generate salts and keys
     auk_salt = get_random_bytes(16)
     auk_key = generate_key(password, auk_salt)
@@ -72,12 +74,22 @@ def setup_server(
     srp_salt = get_random_bytes(16)
     srp_key = generate_key(password, srp_salt)
 
-    # Set security details
+    # Generate SRP verifier
     verifier = long_to_bytes(SRP_HANDLER.compute_verifier(bytes_to_long(srp_key)))
-    set_security_details(SecurityDetailsWithVerifier(auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier))
 
-    # Set vault key
+    # Encrypt vault key
+    vault_key: bytes = b64decode(vault_key)
     vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
-    set_vault_key(vault_key_enc)
+
+    # Create user
+    add_user(
+        User(
+            username=username,
+            auk_key=auk_key,
+            srp_key=srp_key,
+            verifier=verifier,
+            vault_key_enc=vault_key_enc,
+        )
+    )
 
     typer.secho("Server initialized.", fg="green")

@@ -15,17 +15,6 @@ def _get_session() -> Session:
     return Session()
 
 
-def is_user(username: str) -> bool:
-    """
-    Checks if a user exists in the database.
-
-    :param username: The username to check
-    :return: Whether the user exists
-    """
-
-    return get_user(username) is not None
-
-
 def add_user(user: User):
     """
     Adds a user to the database.
@@ -56,14 +45,6 @@ def get_user(username: str) -> User | None:
             return user
 
 
-def is_vault_key() -> bool:
-    """
-    TODO: Change
-    """
-
-    return get_user("security_details").key_enc is not None
-
-
 def set_vault_key(key_enc: bytes):
     """
     TODO: Change
@@ -72,11 +53,3 @@ def set_vault_key(key_enc: bytes):
     with _get_session() as session:
         with session.begin():
             session.get(User, "security_details").key_enc = key_enc
-
-
-def get_vault_key() -> bytes | None:
-    """
-    TODO: Change
-    """
-
-    return get_user("security_details").key_enc

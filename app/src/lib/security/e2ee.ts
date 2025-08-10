@@ -17,6 +17,7 @@ export interface E2EEData {
 }
 
 enum E2EEStage {
+    CHECK_USERNAME,
     GET_SRP_GROUP,
     GET_SRP_SALT,
     GET_SERVER_PUBLIC_VALUE,
@@ -94,9 +95,9 @@ export async function e2ee(
     const wsURL = apiURL.replace("http", "ws");
     const ws = new WebSocket(`${wsURL}/auth`);
 
-    setLoadingState?.("Determining SRP group...");
+    setLoadingState?.("Checking username...");
     const state: E2EEState = {
-        stage: E2EEStage.GET_SRP_GROUP,
+        stage: E2EEStage.CHECK_USERNAME,
         negotiationIter: 0,
     };
 
@@ -110,9 +111,27 @@ export async function e2ee(
             reject(e);
         });
 
+        ws.addEventListener("open", () => {
+            console.log(`Connected to server; sending username '${username}'`);
+            ws.send(username);
+        });
+
         ws.addEventListener("message", async (event) => {
             const data = event.data;
             try {
+                if (state.stage === E2EEStage.CHECK_USERNAME) {
+                    if (data.toString() !== "OK") {
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
+                        reject("Server rejected username");
+                        return;
+                    }
+                    setLoadingState?.("Determining SRP group...");
+                    state.stage = E2EEStage.GET_SRP_GROUP;
+                    return;
+                }
+
                 if (state.stage === E2EEStage.GET_SRP_GROUP) {
                     const srpBits = parseInt(data.toString());
                     state.srpGroup = getSRPGroup(srpBits);

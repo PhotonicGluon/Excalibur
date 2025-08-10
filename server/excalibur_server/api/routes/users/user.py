@@ -7,9 +7,8 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.api.routes.users import router
-from excalibur_server.src.db.operations import add_user, get_user, is_user
-from excalibur_server.src.db.tables import User
 from excalibur_server.src.security.token import check_credentials
+from excalibur_server.src.users import User, add_user, get_user, is_user
 
 
 class SecurityDetails(BaseModel):

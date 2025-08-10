@@ -2,8 +2,7 @@ from base64 import b64decode, b64encode
 
 from pydantic import BaseModel, field_serializer
 
-from excalibur_server.src.db.operations import add_user, get_user, is_user
-from excalibur_server.src.db.tables import User
+from excalibur_server.src.users import get_user
 
 
 class SecurityDetails(BaseModel):
@@ -38,14 +37,6 @@ class SecurityDetailsWithVerifier(SecurityDetails):
         )
 
 
-def check_security_details():
-    """
-    Checks if the security details exist.
-    """
-
-    return is_user("security_details")
-
-
 def get_security_details() -> SecurityDetailsWithVerifier:
     """
     Reads the security details from the database.
@@ -60,21 +51,4 @@ def get_security_details() -> SecurityDetailsWithVerifier:
         auk_salt=user.auk_salt,
         srp_salt=user.srp_salt,
         verifier=user.verifier,
-    )
-
-
-def set_security_details(security_details: SecurityDetailsWithVerifier):
-    """
-    Writes the given security details to the database.
-
-    :param security_details: The security details to write
-    """
-
-    add_user(
-        User(
-            username="security_details",
-            auk_salt=security_details.auk_salt,
-            srp_salt=security_details.srp_salt,
-            verifier=security_details.verifier,
-        )
     )
