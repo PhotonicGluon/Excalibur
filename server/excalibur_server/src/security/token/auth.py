@@ -57,19 +57,19 @@ def check_auth_token(token: str) -> bool:
     return True
 
 
-def check_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> bool:
+def get_credentials(credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER)) -> str:
     """
-    Checks the validity of the authorization credentials.
+    Gets the authorization credentials.
 
     :param credentials: authorization credentials included as the "Bearer" header
     :raises CREDENTIALS_EXCEPTION: if the token is missing or invalid
-    :return: `True` if credentials are valid
+    :return: the username
     """
 
     if not credentials:
         raise CREDENTIALS_EXCEPTION
 
-    check = check_auth_token(credentials.credentials)
-    if not check:
+    decoded = decode_token(credentials.credentials, KEY)
+    if decoded is None:
         raise CREDENTIALS_EXCEPTION
-    return True
+    return decoded["sub"]

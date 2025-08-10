@@ -43,13 +43,3 @@ def get_user(username: str) -> User | None:
             if user is not None:
                 user = user.model_copy()  # So that we can avoid session issues
             return user
-
-
-def set_vault_key(key_enc: bytes):
-    """
-    TODO: Change
-    """
-
-    with _get_session() as session:
-        with session.begin():
-            session.get(User, "security_details").key_enc = key_enc

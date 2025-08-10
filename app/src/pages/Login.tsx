@@ -367,9 +367,6 @@ const Login: React.FC = () => {
                                         fill="solid"
                                         placeholder="MyCoolUsername"
                                         type="text"
-                                        // TODO: Use actual username
-                                        value="security_details"
-                                        disabled
                                     ></IonInput>
                                 </div>
                                 <div className="h-18">

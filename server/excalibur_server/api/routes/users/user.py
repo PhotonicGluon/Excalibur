@@ -7,7 +7,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.api.routes.users import router
-from excalibur_server.src.security.token import check_credentials
+from excalibur_server.src.security.token import get_credentials
 from excalibur_server.src.users import User, add_user, get_user, is_user
 
 
@@ -80,7 +80,7 @@ def get_user_security_endpoint(username: Annotated[str, Path(description="The us
 @router.get(
     "/vault/{username}",
     summary="Get User Vault Key",
-    dependencies=[Depends(check_credentials)],
+    dependencies=[Depends(get_credentials)],
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},
     },
@@ -135,5 +135,6 @@ def add_user_endpoint(
     except binascii.Error as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 
-    add_user(User(username=username, auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier, key_enc=key_enc))
+    user = User(username=username, auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier, key_enc=key_enc)
+    add_user(user)
     return "User added"

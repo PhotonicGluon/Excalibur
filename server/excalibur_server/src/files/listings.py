@@ -6,23 +6,26 @@ from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
 
 
-def get_fullpath(path: Path):
+def get_fullpath(username: str, path: Path):
     """
-    Resolves the given path and returns its relative path to `FILES_FOLDER` as a POSIX-style path string.
+    Resolves the given path and returns its relative path to `FILES_FOLDER` as a POSIX-style path
+    string.
 
+    :param username: The username of the user.
     :param path: The path to resolve.
     :return: A POSIX-style path string relative to `FILES_FOLDER`.
     """
 
-    return path.resolve().relative_to(FILES_FOLDER).as_posix()
+    return path.resolve().relative_to(FILES_FOLDER / username).as_posix()
 
 
-def listdir(path: Path, include_exef_size: bool = False) -> Directory | None:
+def listdir(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:
     """
     Lists the contents of a directory.
 
     Will ignore any file that is not an ExEF file.
 
+    :param username: The username of the user.
     :param path: The path to list.
     :param include_exef_size: Whether to include the additional ExEF size in file sizes.
     :returns: A `Directory` object with a list of `File` and `Directory` objects, or `None` if the
@@ -34,7 +37,7 @@ def listdir(path: Path, include_exef_size: bool = False) -> Directory | None:
 
     items = []
     for item in path.iterdir():
-        fullpath = get_fullpath(path / item)
+        fullpath = get_fullpath(username, path / item)
 
         if item.is_dir():
             items.append(Directory(name=item.name, fullpath=fullpath))
@@ -49,4 +52,4 @@ def listdir(path: Path, include_exef_size: bool = False) -> Directory | None:
             mimetype, _ = mimetypes.guess_type(fullpath.removesuffix(".exef"), strict=True)
             items.append(File(name=item.name, fullpath=fullpath, size=size, mimetype=mimetype))
 
-    return Directory(name=path.name, fullpath=get_fullpath(path), items=items)
+    return Directory(name=path.name, fullpath=get_fullpath(username, path), items=items)
