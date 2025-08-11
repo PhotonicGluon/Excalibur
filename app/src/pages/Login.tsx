@@ -378,11 +378,10 @@ const Login: React.FC = () => {
                                     </IonInput>
                                 </div>
 
-                                {/* FIXME: Still kinda buggy for persistence setting */}
                                 <IonCheckbox id="save-password-checkbox" labelPlacement="end">
-                                    <div className="flex flex-col">
-                                        <IonLabel>Save password</IonLabel>
-                                        <IonLabel color="danger" className="-mt-1 text-xs">
+                                    <div className="w-full *:block *:leading-none">
+                                        <IonLabel className="text-base">Save password</IonLabel>
+                                        <IonLabel color="danger" className="text-xs text-wrap">
                                             This is not recommended for security reasons.
                                         </IonLabel>
                                     </div>
