@@ -9,7 +9,7 @@ describe("Check Login Page Contents", () => {
     });
 
     it("should have basic navigation", () => {
-        cy.get(".ion-padding-top > .ion-color").should("exist"); // Settings button
+        cy.get("#settings-button").should("exist");
     });
 
     it("should have login form", () => {

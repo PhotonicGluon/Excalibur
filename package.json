@@ -13,6 +13,7 @@
         "server:post-test-reset": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"cd server && uv run excalibur reset -y\"",
         "cy:open": "cd app && npx cypress open",
         "cy:run": "cd app && npx cypress run",
+        "cy:e2e": "start-server-and-test server:start-for-test http://localhost:8989/api/well-known/heartbeat \"start-server-and-test app:start http://localhost:5173 cy:open && npm run server:post-test-reset\"",
         "test:unit": "cd app && npm run test:unit-run",
         "test:server": "cd server && uv run excalibur test",
         "test:e2e": "start-server-and-test server:start-for-test http://localhost:8989/api/well-known/heartbeat \"start-server-and-test app:start http://localhost:5173 cy:run && npm run server:post-test-reset\"",

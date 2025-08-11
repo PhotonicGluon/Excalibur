@@ -335,7 +335,7 @@ const Login: React.FC = () => {
                 <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
                     <IonButtons slot="start">
                         {/* Settings button */}
-                        <IonButton color="medium" onClick={() => router.push("/settings")}>
+                        <IonButton id="settings-button" color="medium" onClick={() => router.push("/settings")}>
                             <IonIcon className="size-6" slot="icon-only" icon={settings}></IonIcon>
                         </IonButton>
                     </IonButtons>
