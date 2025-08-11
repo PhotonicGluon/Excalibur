@@ -513,7 +513,7 @@ const FileExplorer: React.FC = () => {
             <IonPage id="main-content">
                 {/* Header content */}
                 <IonHeader>
-                    <IonToolbar className="flex">
+                    <IonToolbar>
                         <IonButtons className="w-24" slot="start">
                             <IonMenuButton onClick={() => menuController.open()} />
                         </IonButtons>
