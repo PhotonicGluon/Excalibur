@@ -33,13 +33,17 @@
             "**/CVS": true,
             "**/.DS_Store": true,
             "**/Thumbs.db": true,
+            "node_modules": true,
             "app": true,
             "website": true,
             "server": true
         },
         "files.insertFinalNewline": true,
+        "[json]": {
+            "editor.defaultFormatter": "vscode.json-language-features"
+        },
         "[markdown]": {
-            "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
         }
     },
     "extensions": {
