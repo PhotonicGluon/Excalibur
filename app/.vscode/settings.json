@@ -20,15 +20,31 @@
         "updaters"
     ],
     "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always",
+            "source.fixAll": "explicit"
+        }
     },
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always",
+            "source.fixAll": "explicit"
+        }
     },
     "[javascriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always",
+            "source.fixAll": "explicit"
+        }
     },
     "[typescriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always",
+            "source.fixAll": "explicit"
+        }
     }
 }

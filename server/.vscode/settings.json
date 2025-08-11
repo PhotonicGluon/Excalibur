@@ -21,6 +21,7 @@
         "sessionmaker",
         "sqlalchemy",
         "sqlmodel"
+        "vite"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"

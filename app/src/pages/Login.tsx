@@ -6,12 +6,14 @@ import {
     IonButtons,
     IonCheckbox,
     IonContent,
+    IonHeader,
     IonIcon,
     IonInput,
     IonInputPasswordToggle,
     IonLabel,
     IonLoading,
     IonPage,
+    IonToolbar,
     useIonAlert,
     useIonRouter,
     useIonToast,
@@ -336,21 +338,27 @@ const Login: React.FC = () => {
     // Render
     return (
         <IonPage>
-            <IonContent class="w-full">
-                {/* Settings button */}
-                <IonButtons className="ion-padding-top absolute left-1">
-                    <IonButton color="medium" onClick={() => router.push("/settings")}>
-                        <IonIcon icon={settings} slot="icon-only"></IonIcon>
-                    </IonButton>
-                </IonButtons>
+            {/* Header content */}
+            <IonHeader>
+                <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
+                    <IonButtons slot="start">
+                        {/* Settings button */}
+                        <IonButton color="medium" onClick={() => router.push("/settings")}>
+                            <IonIcon className="size-6" slot="icon-only" icon={settings}></IonIcon>
+                        </IonButton>
+                    </IonButtons>
+                </IonToolbar>
+            </IonHeader>
 
+            {/* Body content */}
+            <IonContent fullscreen>
                 {/* Main container */}
                 <div className="flex h-full items-center justify-center">
-                    <div className="mx-auto flex w-4/5 flex-col pt-4">
+                    <div className="mx-auto flex w-4/5 flex-col">
                         {/* Branding */}
                         <div className="flex flex-col items-center">
                             <img src={logo} className="size-36" alt="Excalibur logo" />
-                            <h1 className="!-mt-4 !font-bold">Login</h1>
+                            <h1 className="-mt-4 mb-2 text-2xl font-bold">Login</h1>
                         </div>
 
                         {/* Form */}
@@ -388,11 +396,10 @@ const Login: React.FC = () => {
                                     </IonInput>
                                 </div>
 
-                                {/* FIXME: Still kinda buggy for persistence setting */}
                                 <IonCheckbox id="save-password-checkbox" labelPlacement="end">
-                                    <div className="flex flex-col">
-                                        <IonLabel>Save password</IonLabel>
-                                        <IonLabel color="danger" className="-mt-1 text-xs">
+                                    <div className="w-full *:block *:leading-none">
+                                        <IonLabel className="text-base">Save password</IonLabel>
+                                        <IonLabel color="danger" className="text-xs text-wrap">
                                             This is not recommended for security reasons.
                                         </IonLabel>
                                     </div>

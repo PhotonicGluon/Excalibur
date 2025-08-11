@@ -114,7 +114,7 @@ const Settings: React.FC = () => {
         <IonPage>
             {/* Header content */}
             <IonHeader>
-                <IonToolbar className="ion-padding-top flex">
+                <IonToolbar>
                     <IonButtons slot="start">
                         <IonButton onClick={onBackButton}>
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
@@ -161,13 +161,13 @@ const Settings: React.FC = () => {
                         }
                     />
                     <SettingsItem
-                        label={<IonLabel>Row Alternating Colours</IonLabel>}
+                        label={<IonLabel>Row Highlight</IonLabel>}
                         input={
                             <IonSelect
                                 id="row-alternating-colours"
                                 interface="popover"
                                 fill="outline"
-                                placeholder="Select row alternating colours"
+                                placeholder="Select highlight colours"
                                 value={settings.rowAlternatingColours}
                                 onIonChange={(e) => {
                                     settings.change({

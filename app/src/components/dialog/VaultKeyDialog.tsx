@@ -1,8 +1,5 @@
-import { MaskitoOptions, maskitoTransform } from "@maskito/core";
-import { useMaskito } from "@maskito/react";
 import React, { useEffect, useState } from "react";
 
-import { IonTextareaCustomEvent, TextareaInputEventDetail } from "@ionic/core";
 import {
     IonButton,
     IonButtons,
@@ -11,26 +8,15 @@ import {
     IonIcon,
     IonModal,
     IonText,
-    IonTextarea,
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
+import GridInput from "@components/inputs/GridInput";
 import { useAuth } from "@contexts/auth";
 
 import "./VaultKeyDialog.css";
-
-const VAULT_KEY_MASK_OPTIONS: MaskitoOptions = {
-    mask: (() => {
-        const mask = [];
-        for (let i = 0; i < 15; i++) {
-            mask.push(...Array(4).fill(/[0-9A-Fa-f]/), " ");
-        }
-        mask.push(...Array(4).fill(/[0-9A-Fa-f]/));
-        return mask;
-    })(),
-};
 
 interface VaultKeyDialogProps {
     /** Whether the dialog is open */
@@ -44,10 +30,6 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     const auth = useAuth();
 
     // States
-
-    const vaultKeyMask = useMaskito({ options: VAULT_KEY_MASK_OPTIONS });
-
-    const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
     const [localVaultKey, setLocalVaultKey] = useState("");
 
@@ -57,8 +39,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
      *
      * @param event The change event
      */
-    function onChangeVaultKeyInput(event: IonTextareaCustomEvent<TextareaInputEventDetail>) {
-        const currVal = (event.detail.value || "").toLocaleUpperCase();
+    function onChangeVaultKeyInput(currVal: string) {
         setLocalVaultKey(currVal);
         setIsValid(undefined);
 
@@ -73,17 +54,11 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
         }
     }
 
-    /**
-     * Marks the vault key input as touched.
-     */
-    function markTouched() {
-        setIsTouched(true);
-    }
-
     // Effects
     useEffect(() => {
         const vaultKeyRaw = auth.vaultKey ? auth.vaultKey!.toString("hex").toLocaleUpperCase() : "";
-        setLocalVaultKey(maskitoTransform(vaultKeyRaw, VAULT_KEY_MASK_OPTIONS));
+
+        setLocalVaultKey(vaultKeyRaw);
     }, [auth.vaultKey]);
 
     // Render
@@ -119,23 +94,15 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                         <summary className="ion-text-wrap" style={{ cursor: "pointer", userSelect: "none" }}>
                             Reveal vault key
                         </summary>
-                        <div className="flex w-full items-center justify-center">
-                            <IonTextarea
-                                className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} m-0 px-4 !font-mono !text-lg md:!text-2xl`}
-                                placeholder="Vault Key"
-                                rows={4}
-                                ref={(vaultKeyRef) => {
-                                    if (vaultKeyRef) {
-                                        vaultKeyRef.getInputElement().then((input) => vaultKeyMask(input));
-                                    }
-                                }}
-                                errorText="Invalid vault key"
-                                onIonInput={(e) => onChangeVaultKeyInput(e)}
-                                onIonBlur={() => markTouched()}
-                                value={localVaultKey}
-                            ></IonTextarea>
+                        <div className="flex flex-col items-center">
+                            <GridInput value={localVaultKey} onChange={onChangeVaultKeyInput}></GridInput>
+                            {isValid === false && (
+                                <IonText color="danger" className="-mt-1 mb-2 text-center">
+                                    Invalid vault key
+                                </IonText>
+                            )}
                         </div>
-                        <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none text-yellow-700 md:text-base dark:text-yellow-600">
+                        <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none text-yellow-600 md:text-base">
                             Consider taking a screenshot and printing out a copy of the vault key, storing it in a
                             secure location.
                         </p>

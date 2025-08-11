@@ -16,7 +16,7 @@ const Credits: React.FC = () => {
     return (
         <IonPage>
             <IonHeader>
-                <IonToolbar className="ion-padding-top flex">
+                <IonToolbar>
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/"></IonBackButton>
                     </IonButtons>
