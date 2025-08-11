@@ -342,7 +342,7 @@ const Login: React.FC = () => {
                         {/* Branding */}
                         <div className="flex flex-col items-center">
                             <img src={logo} className="size-36" alt="Excalibur logo" />
-                            <h1 className="!-mt-4 !font-bold">Login</h1>
+                            <h1 className="-mt-4 mb-2 text-2xl font-bold">Login</h1>
                         </div>
 
                         {/* Form */}

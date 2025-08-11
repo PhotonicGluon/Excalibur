@@ -25,7 +25,6 @@ import "@ionic/react/css/palettes/dark.class.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
-import "@ionic/react/css/typography.css";
 
 import { PrivateRoute } from "@components/auth/PrivateRoute";
 import { useSettings } from "@contexts/settings";
