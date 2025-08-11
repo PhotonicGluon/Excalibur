@@ -48,3 +48,30 @@ describe("Handle Auth Process", () => {
         cy.url().should("not.include", "/login");
     });
 });
+
+describe("Check Validation", () => {
+    describe("Check if inputs are filled", () => {
+        ["server-input", "password-input"].forEach((input) => {
+            it(`should check if ${input} is filled`, () => {
+                cy.visit("/login");
+
+                cy.get(`#${input}`).type("http://some-text.com");
+                cy.get("#login-button").click();
+                cy.get(".alert-head").should("exist");
+                cy.get(".alert-head").should("have.text", "Invalid Values");
+            });
+        });
+    });
+
+    it("should validate server URL", () => {
+        cy.visit("/login");
+        cy.get("#server-input").type("invalid-url");
+        cy.get("#password-input").type("some-password");
+        cy.get(".input-bottom").should("exist");
+        cy.get(".input-bottom").should("have.text", "Invalid URL");
+
+        cy.get("#login-button").click();
+        cy.get(".alert-head").should("exist");
+        cy.get(".alert-head").should("have.text", "Invalid Values");
+    });
+});

@@ -28,7 +28,7 @@ describe("Check File Page Operations", () => {
         cy.get(".alert-head").should("have.text", "Enter Folder Name");
 
         // Enter test folder name
-        cy.get(".alert-input-wrapper").click();
+        cy.get(".alert-input-wrapper").click().wait(100); // For the focus to appear
         cy.get(".alert-input-wrapper").type("My Test Folder");
 
         // Click confirm
