@@ -16,9 +16,10 @@ def init_server(
     """
 
     import os
+    import shutil
 
     from excalibur_server.cli.reset_server import _reset_server
-    from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
+    from excalibur_server.consts import CONFIG_TEMPLATE_FILE, FILES_FOLDER, ROOT_FOLDER
 
     if reset:
         _reset_server()
@@ -30,5 +31,10 @@ def init_server(
     # Initialize the database
     if with_db:
         upgrade(revision="head")  # Upgrade the database to the latest revision
+
+    # Create config file
+    config_path = ROOT_FOLDER / "config.toml"
+    if not config_path.exists():
+        shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
     typer.secho("Server initialized.", fg="green")
