@@ -38,5 +38,12 @@ def reset_server(
 
 def _reset_server():
     # Remove the files folder
-    if os.path.exists(ROOT_FOLDER):
-        shutil.rmtree(ROOT_FOLDER)
+    if not os.path.exists(ROOT_FOLDER):
+        return
+
+    shutil.rmtree(
+        ROOT_FOLDER,
+        onerror=lambda _, path, exception_info: typer.secho(
+            f"Failed to remove {path}: {exception_info[1]}", fg="yellow"
+        ),
+    )

@@ -32,7 +32,7 @@ describe("Check File Page Operations", () => {
 
         // Enter test folder name
         const folderName = `Test Folder ${Date.now()}`;
-        cy.get(".alert-input-wrapper").click().wait(100); // Need to wait to properly focus on the input
+        cy.get(".alert-input-wrapper").click().wait(100); // For the focus to appear
         cy.get(".alert-input-wrapper").type(folderName);
 
         // Click confirm
