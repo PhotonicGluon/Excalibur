@@ -18,23 +18,29 @@ def init_server(
     import os
     import shutil
 
-    from excalibur_server.cli.reset_server import _reset_server
-    from excalibur_server.consts import CONFIG_TEMPLATE_FILE, FILES_FOLDER, ROOT_FOLDER
+    from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
 
+    config_path = ROOT_FOLDER / "config.toml"
+    os.makedirs(ROOT_FOLDER, exist_ok=True)
+
+    if not config_path.exists():
+        shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
+
+    # Handle resetting
     if reset:
+        from excalibur_server.cli.reset_server import _reset_server
+
         _reset_server()
+        shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
+
+    # Obtain config
+    from excalibur_server.src.config import CONFIG
 
     # Make the folders
-    os.makedirs(ROOT_FOLDER, exist_ok=True)
-    os.makedirs(FILES_FOLDER, exist_ok=True)
+    os.makedirs(CONFIG.server.vault_folder, exist_ok=True)
 
     # Initialize the database
     if with_db:
         upgrade(revision="head")  # Upgrade the database to the latest revision
-
-    # Create config file
-    config_path = ROOT_FOLDER / "config.toml"
-    if not config_path.exists():
-        shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
     typer.secho("Server initialized.", fg="green")

@@ -1,22 +1,22 @@
 import mimetypes
 from pathlib import Path
 
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
 
 
 def get_fullpath(username: str, path: Path):
     """
-    Resolves the given path and returns its relative path to `FILES_FOLDER` as a POSIX-style path
+    Resolves the given path and returns its relative path to the vault folder as a POSIX-style path
     string.
 
     :param username: The username of the user.
     :param path: The path to resolve.
-    :return: A POSIX-style path string relative to `FILES_FOLDER`.
+    :return: A POSIX-style path string relative to the vault folder.
     """
 
-    return path.resolve().relative_to(FILES_FOLDER / username).as_posix()
+    return path.resolve().relative_to(CONFIG.server.vault_folder / username).as_posix()
 
 
 def listdir(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:

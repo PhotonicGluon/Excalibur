@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.responses import Response
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_subdir
 from excalibur_server.src.security.token import get_credentials
 
@@ -41,7 +41,7 @@ def delete_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -49,7 +49,7 @@ def delete_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
     # Check if user is trying to delete root directory
-    if user_path == FILES_FOLDER:
+    if user_path == CONFIG.server.vault_folder / PathlibPath(username):
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
     # Handle deletion

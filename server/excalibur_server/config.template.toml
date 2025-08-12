@@ -2,6 +2,9 @@
 version = 1
 
 [server]
+# The vault folder
+vault_folder = "vault"
+
 # The maximum file size, in bytes, that can be uploaded
 max_file_size = 52_428_800 # 50 MiB
 

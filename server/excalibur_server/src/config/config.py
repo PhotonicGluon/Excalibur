@@ -1,16 +1,9 @@
 from pydantic import field_validator
-
-from pydantic_settings import (
-    BaseSettings,
-    PydanticBaseSettingsSource,
-    SettingsConfigDict,
-    TomlConfigSettingsSource,
-)
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, TomlConfigSettingsSource
 
 from excalibur_server.consts import CONFIG_FILE
 from excalibur_server.src.config.api import API
 from excalibur_server.src.config.server import Server
-
 
 SETTINGS_VERSION = 1
 

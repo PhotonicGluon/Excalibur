@@ -1,4 +1,4 @@
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import add_user as _add_user
 from excalibur_server.src.db.operations import get_user as _get_user
 from excalibur_server.src.db.tables import User
@@ -25,7 +25,7 @@ def add_user(user: User):
     """
 
     # Create new user directory
-    (FILES_FOLDER / user.username).mkdir(parents=True)
+    (CONFIG.server.vault_folder / user.username).mkdir(parents=True)
 
     # Add user to database
     _add_user(user)

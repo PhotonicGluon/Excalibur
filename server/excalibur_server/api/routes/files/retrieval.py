@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.responses import FileResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.path import check_path_subdir
@@ -35,7 +35,7 @@ async def download_file_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -68,7 +68,7 @@ def listdir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

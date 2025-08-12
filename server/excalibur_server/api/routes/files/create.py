@@ -7,7 +7,7 @@ from fastapi.params import Body
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.consts import FILES_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
 from excalibur_server.src.path import check_path_length, check_path_subdir
 from excalibur_server.src.security.token import get_credentials
@@ -48,7 +48,7 @@ async def upload_file_endpoint(
         )
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -103,7 +103,7 @@ async def create_directory_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
