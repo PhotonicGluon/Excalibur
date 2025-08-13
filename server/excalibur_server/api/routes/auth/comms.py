@@ -8,9 +8,10 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
+from excalibur_server.src.config import CONFIG
+from excalibur_server.src.security.consts import SRP_HANDLER
 from excalibur_server.src.security.token.auth import generate_auth_token
-from excalibur_server.src.users import get_user, is_user, User
+from excalibur_server.src.users import User, get_user
 
 MAX_ITER_COUNT = 3
 
@@ -228,7 +229,9 @@ async def _send_auth_token(websocket: WebSocket, username: str, master: bytes) -
     :param master: the master value to use for the authentication token
     """
 
-    auth_token = generate_auth_token(username, master, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
+    auth_token = generate_auth_token(
+        username, master, datetime.now(tz=timezone.utc).timestamp() + CONFIG.api.login_validity_time
+    )
 
     cipher = AES.new(master, AES.MODE_GCM)
     auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))

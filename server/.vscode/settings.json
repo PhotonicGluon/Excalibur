@@ -13,6 +13,7 @@
         "encryptor",
         "exef",
         "fastapi",
+        "hexsha",
         "keygen",
         "keysize",
         "maxfail",

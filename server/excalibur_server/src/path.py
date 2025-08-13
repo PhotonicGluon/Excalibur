@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def check_path_subdir(path: Path, root_directory: Path) -> tuple[Path, bool]:

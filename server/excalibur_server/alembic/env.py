@@ -5,12 +5,11 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from excalibur_server.consts import ROOT_FOLDER
+from excalibur_server.src.config import CONFIG
 
 # This is the Alembic Config object, which provides access to the values within the .ini file in use
 config = context.config
-config.set_main_option(
-    "sqlalchemy.url", "sqlite:///" + ROOT_FOLDER.relative_to(ROOT_FOLDER.parent).as_posix() + "/excalibur.db"
-)
+config.set_main_option("sqlalchemy.url", "sqlite:///" + (ROOT_FOLDER / CONFIG.server.database_file).as_posix())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically

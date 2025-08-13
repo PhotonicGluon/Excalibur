@@ -6,7 +6,7 @@ class EndpointFilter(logging.Filter):
     Filter out log records containing specific endpoints.
     """
 
-    def __init__(self, excluded_endpoints: list[str], name: str = "") -> None:
+    def __init__(self, excluded_endpoints: list[str] = ..., name: str = "") -> None:
         """
         Constructor
 

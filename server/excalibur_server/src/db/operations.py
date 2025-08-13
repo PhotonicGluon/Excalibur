@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from excalibur_server.consts import ROOT_FOLDER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.tables import User
 
 
@@ -10,7 +11,7 @@ def _get_session() -> Session:
     Creates and returns a new SQLAlchemy Session.
     """
 
-    engine = create_engine("sqlite:///" + ROOT_FOLDER.relative_to(ROOT_FOLDER.parent).as_posix() + "/excalibur.db")
+    engine = create_engine("sqlite:///" + (ROOT_FOLDER / CONFIG.server.database_file).as_posix())
     Session = sessionmaker(bind=engine)
     return Session()
 

@@ -1,4 +1,4 @@
-from .auth import API_TOKEN_HEADER, CREDENTIALS_EXCEPTION, check_auth_token, get_credentials, generate_auth_token
+from .auth import API_TOKEN_HEADER, CREDENTIALS_EXCEPTION, check_auth_token, generate_auth_token, get_credentials
 from .jwt import decode_token, generate_token
 
 __all__ = [

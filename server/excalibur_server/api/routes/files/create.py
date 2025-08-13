@@ -8,7 +8,6 @@ from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
 from excalibur_server.src.path import check_path_length, check_path_subdir
 from excalibur_server.src.security.token import get_credentials
 
@@ -68,7 +67,7 @@ async def upload_file_endpoint(
 
     # Save the file
     async with aiofiles.open(file_path, "wb") as out_file:
-        while content := await file.read(FILE_PROCESS_CHUNK_SIZE):
+        while content := await file.read(CONFIG.server.file_process_chunk_size):
             await out_file.write(content)
 
     return "File uploaded"

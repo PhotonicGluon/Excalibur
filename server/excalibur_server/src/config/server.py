@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_validator
 
 class Server(BaseModel):
     vault_folder: Path
+    database_file: Path
     max_file_size: int
     file_process_chunk_size: int
 

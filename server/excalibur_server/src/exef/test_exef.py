@@ -1,7 +1,5 @@
-
 from .exef import ExEF
-from .structures import Header, Footer
-
+from .structures import Footer, Header
 
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
