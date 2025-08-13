@@ -43,7 +43,12 @@ from .init_server import init_server as init_server
 from .start_server import start_server as start_server
 from .add_user import add_user as add_user
 from .reset_server import reset_server as reset_server
-from .run_tests import run_tests as run_tests
+
+# Since tests may be excluded from the build, we need to handle the import like this
+try:
+    from .run_tests import run_tests as run_tests
+except ImportError:
+    pass
 
 
 __all__ = ["app"]
