@@ -17,7 +17,7 @@ export async function listdir(
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
     const response = await fetch(`${auth.authInfo!.apiURL}/files/list/${path}`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
     switch (response.status) {
         case 200:
@@ -35,7 +35,7 @@ export async function listdir(
             return { success: false, error: "Unknown error" };
     }
 
-    const directory = await ExEF.decryptResponse<Directory>(auth.authInfo!.e2eeData.key, response);
+    const directory = await ExEF.decryptResponse<Directory>(auth.authInfo!.key, response);
     return { success: true, directory };
 }
 
@@ -53,7 +53,7 @@ export async function downloadFile(
 ): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
     const response = await fetch(`${auth.authInfo!.apiURL}/files/download/${path}`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
+        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
     switch (response.status) {
         case 200:
@@ -74,7 +74,7 @@ export async function downloadFile(
     const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
     const dataStream =
         response.headers.get("X-Encrypted") === "true"
-            ? ExEF.decryptStream(auth.authInfo!.e2eeData.key!, response.body!)
+            ? ExEF.decryptStream(auth.authInfo!.key!, response.body!)
             : response.body!;
     return { success: true, fileSize: fileSize, dataStream: dataStream };
 }

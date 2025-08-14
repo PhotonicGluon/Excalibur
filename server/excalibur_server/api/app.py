@@ -4,16 +4,15 @@ from fastapi import FastAPI
 
 from excalibur_server.api.middlewares import add_middleware
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
+from excalibur_server.src.config import CONFIG
 
 from .log_filters import EndpointFilter
 from .meta import TAGS
-from .routes import files_router, security_router, well_known_router
-
-NO_LOG_ENDPOINTS = ["/api/well-known/heartbeat"]
+from .routes import auth_router, files_router, users_router, well_known_router
 
 # Add logging filter
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
-uvicorn_access_logger.addFilter(EndpointFilter(NO_LOG_ENDPOINTS))
+uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.no_log))
 
 # Define app
 app = FastAPI(
@@ -28,6 +27,7 @@ app = FastAPI(
 add_middleware(app)
 
 # Include routes
+app.include_router(auth_router, prefix="/auth")
+app.include_router(users_router, prefix="/users")
 app.include_router(files_router, prefix="/files")
-app.include_router(security_router, prefix="/security")
 app.include_router(well_known_router, prefix="/well-known")

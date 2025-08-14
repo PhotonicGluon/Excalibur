@@ -4,25 +4,15 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from excalibur_server.consts import MAX_FILE_SIZE
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
-
-ALLOW_ORIGINS = [
-    "capacitor://localhost",  # Capacitor on iOS
-    "http://localhost",  # Capacitor on Android
-    "http://localhost:5173",  # Vite development server
-    "http://localhost:8100",  # Local development server for Ionic
-]
-
-TOKEN_CAPACITY = 20
-TOKEN_REFILL_RATE = 1
 
 
 def add_middleware(app: FastAPI):
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=ALLOW_ORIGINS,
+        allow_origins=CONFIG.api.allow_origins,
         allow_methods=["*"],
         allow_headers=["*"],
         allow_credentials=True,
@@ -32,8 +22,8 @@ def add_middleware(app: FastAPI):
     if not os.getenv("EXCALIBUR_SERVER_DEBUG"):
         app.add_middleware(
             RateLimitMiddleware,
-            capacity=TOKEN_CAPACITY,
-            refill_rate=TOKEN_REFILL_RATE,
+            capacity=CONFIG.api.rate_limit.capacity,
+            refill_rate=CONFIG.api.rate_limit.refill_rate,
         )
     # Add artificial delay
     artificial_delay = float(os.environ.get("EXCALIBUR_SERVER_DELAY_RESPONSES", 0))
@@ -54,4 +44,4 @@ def add_middleware(app: FastAPI):
     # Add a file size limit middleware
     from excalibur_server.src.middleware import LimitUploadSizeMiddleware
 
-    app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=MAX_FILE_SIZE)
+    app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=CONFIG.server.max_file_size)

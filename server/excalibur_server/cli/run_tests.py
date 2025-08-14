@@ -24,7 +24,7 @@ def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verb
 
     from excalibur_server.cli.init_server import init_server
 
-    init_server(reset=False)
+    init_server(reset=False, with_db=False)
 
     args = ["--maxfail", "0", "-rs"]
     if verbose > 0:

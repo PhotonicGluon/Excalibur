@@ -1,14 +1,15 @@
+from pathlib import Path as PathlibPath
 from typing import Annotated
 
 import aiofiles
-from fastapi import File, HTTPException, Path, Query, UploadFile, status
+from fastapi import Depends, File, HTTPException, Path, Query, UploadFile, status
 from fastapi.params import Body
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.consts import FILES_FOLDER
-from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
-from excalibur_server.src.path import check_path_subdir, check_path_length
+from excalibur_server.src.config import CONFIG
+from excalibur_server.src.path import check_path_length, check_path_subdir
+from excalibur_server.src.security.token import get_credentials
 
 
 @router.post(
@@ -30,6 +31,7 @@ from excalibur_server.src.path import check_path_subdir, check_path_length
     response_class=PlainTextResponse,
 )
 async def upload_file_endpoint(
+    username: Annotated[str, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
     file: Annotated[UploadFile, File(description="The *encrypted* file to upload. Should end with `.exef`")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
@@ -45,7 +47,7 @@ async def upload_file_endpoint(
         )
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -65,7 +67,7 @@ async def upload_file_endpoint(
 
     # Save the file
     async with aiofiles.open(file_path, "wb") as out_file:
-        while content := await file.read(FILE_PROCESS_CHUNK_SIZE):
+        while content := await file.read(CONFIG.server.file_process_chunk_size):
             await out_file.write(content)
 
     return "File uploaded"
@@ -89,6 +91,7 @@ async def upload_file_endpoint(
     response_class=PlainTextResponse,
 )
 async def create_directory_endpoint(
+    username: Annotated[str, Depends(get_credentials)],
     path: Annotated[
         str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
     ],
@@ -99,7 +102,7 @@ async def create_directory_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

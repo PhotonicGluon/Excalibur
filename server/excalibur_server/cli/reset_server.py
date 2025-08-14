@@ -5,7 +5,6 @@ from typing import Annotated
 import typer
 
 from excalibur_server.cli import app
-from excalibur_server.consts import ROOT_FOLDER
 
 
 @app.command(name="reset")
@@ -37,6 +36,8 @@ def reset_server(
 
 
 def _reset_server():
+    from excalibur_server.consts import ROOT_FOLDER
+
     # Remove the files folder
     if not os.path.exists(ROOT_FOLDER):
         return

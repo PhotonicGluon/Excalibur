@@ -2,11 +2,11 @@ import { createContext, useContext } from "react";
 
 import { E2EEData } from "@lib/security/e2ee";
 
-export interface AuthInfo {
+export interface AuthInfo extends E2EEData {
     /** API URL */
     apiURL: string;
-    /** End-to-end encryption data */
-    e2eeData: E2EEData;
+    /** Username */
+    username: string;
 }
 
 export interface ServerInfo {
@@ -24,7 +24,7 @@ export interface AuthProvider {
     /** Vault key, retrieved upon login */
     vaultKey: Buffer | null;
     /** Function to log into the server */
-    login: (apiURL: string, e2eeData: E2EEData) => Promise<void>;
+    login: (authInfo: AuthInfo) => Promise<void>;
     /** Function to log out of the server */
     logout: () => Promise<void>;
     /** Function to set the vault key */

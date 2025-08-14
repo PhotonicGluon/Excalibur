@@ -4,10 +4,7 @@
     "scripts": {
         "update": "npx npm-check-updates --peer -u && cd app && npm run update && cd ../server && uv lock --upgrade && cd ../website && npm run update",
         "app:start": "cd app && npx vite dev --port 5173",
-        "server:re-init": "cd server && uv run excalibur init -r",
-        "server:re-init-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"npm run server:re-init\"",
-        "server:setup": "cd server && uv run excalibur setup --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0= --reset",
-        "server:setup-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"npm run server:setup\"",
+        "server:setup-for-test": "cd server && cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"uv run excalibur init -r && uv run excalibur add-user --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=\"",
         "server:start": "cd server && uv run excalibur start --port 8989 --debug",
         "server:start-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"npm run server:setup-for-test && npm run server:start\"",
         "server:post-test-reset": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"cd server && uv run excalibur reset -y\"",

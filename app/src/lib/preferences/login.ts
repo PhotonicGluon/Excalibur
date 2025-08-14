@@ -3,7 +3,9 @@
  */
 export interface LoginPreferenceValues {
     /** URL to the server */
-    server?: string;
+    server: string;
+    /** Username to log in as */
+    username: string;
     /**
      * Password for logging in.
      *

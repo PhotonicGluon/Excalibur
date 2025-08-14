@@ -1,0 +1,43 @@
+###########################################
+#                                         #
+#   Excalibur Server Configuration File   #
+#                                         #
+###########################################
+
+# Config file version. DO NOT EDIT THIS FIELD!
+version = 1
+
+[server]
+# The vault folder relative to the root folder
+vault_folder = "vault"
+
+# The database file path, relative to the root folder
+database_file = "excalibur.db"
+
+# The maximum file size, in bytes, that can be uploaded
+max_file_size = 52_428_800 # 50 MiB
+
+# The chunk size, in bytes, to use when processing files (e.g., saving to disk)
+file_process_chunk_size = 4096 # 4 KiB
+
+[api]
+# How long a login session lasts, in seconds
+login_validity_time = 3600
+
+# The API endpoints to not log
+no_log = ["/api/well-known/heartbeat"]
+
+# The allowed origins for CORS
+allow_origins = [
+    "capacitor://localhost", # Capacitor on iOS
+    "http://localhost",      # Capacitor on Android
+    "http://localhost:5173", # Vite development server
+    "http://localhost:8100", # Local development server for Ionic
+]
+
+[api.rate_limit]
+# The capacity of the rate limiter
+capacity = 20
+
+# The refill rate of the rate limiter, in tokens per second
+refill_rate = 1

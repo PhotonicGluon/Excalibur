@@ -1,13 +1,8 @@
-import os
-import warnings
-from pathlib import Path
 from typing import Annotated
 
 import typer
-import uvicorn
 
 from excalibur_server.cli import app
-from excalibur_server.consts import FILES_FOLDER, ROOT_FOLDER
 
 
 @app.command(name="start")
@@ -33,6 +28,15 @@ def start_server(
     This starts the API server.
     """
 
+    import os
+    import warnings
+    from pathlib import Path
+
+    import uvicorn
+
+    from excalibur_server.consts import ROOT_FOLDER
+    from excalibur_server.src.config import CONFIG
+
     # Set environment variables
     if debug:
         warnings.warn("Debug mode is enabled.", RuntimeWarning)
@@ -50,7 +54,7 @@ def start_server(
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
-    os.makedirs(FILES_FOLDER, exist_ok=True)
+    os.makedirs(CONFIG.server.vault_folder, exist_ok=True)
 
     # Start server
     uvicorn.run(

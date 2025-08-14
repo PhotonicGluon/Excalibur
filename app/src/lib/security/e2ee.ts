@@ -1,8 +1,8 @@
 import { createDecipheriv } from "crypto";
 
-import { getSecurityDetails } from "@lib/security/api";
 import generateKey from "@lib/security/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
+import { getSecurityDetails } from "@lib/users/api";
 import { bufferToNumber, numberToBuffer } from "@lib/util";
 
 const MAX_ITER_COUNT = 3;
@@ -17,6 +17,7 @@ export interface E2EEData {
 }
 
 enum E2EEStage {
+    CHECK_USERNAME,
     GET_SRP_GROUP,
     GET_SRP_SALT,
     GET_SERVER_PUBLIC_VALUE,
@@ -56,7 +57,8 @@ interface E2EEState {
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
  * @param apiURL The HTTP(S) URL of the API server to query
- * @param password The password to use for key generation
+ * @param username The username to log in as
+ * @param password The password for logging in
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -64,6 +66,7 @@ interface E2EEState {
  */
 export async function e2ee(
     apiURL: string,
+    username: string,
     password: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
@@ -71,7 +74,7 @@ export async function e2ee(
 ): Promise<E2EEData | undefined> {
     // Get security details
     setLoadingState?.("Loading security details...");
-    const securityDetailsResponse = await getSecurityDetails(apiURL);
+    const securityDetailsResponse = await getSecurityDetails(apiURL, username);
     if (!securityDetailsResponse.success) {
         stopLoading?.();
         showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);
@@ -90,11 +93,11 @@ export async function e2ee(
 
     // Perform SRP handshake
     const wsURL = apiURL.replace("http", "ws");
-    const ws = new WebSocket(`${wsURL}/security/auth`);
+    const ws = new WebSocket(`${wsURL}/auth`);
 
-    setLoadingState?.("Determining SRP group...");
+    setLoadingState?.("Checking username...");
     const state: E2EEState = {
-        stage: E2EEStage.GET_SRP_GROUP,
+        stage: E2EEStage.CHECK_USERNAME,
         negotiationIter: 0,
     };
 
@@ -108,9 +111,27 @@ export async function e2ee(
             reject(e);
         });
 
+        ws.addEventListener("open", () => {
+            console.log(`Connected to server; sending username '${username}'`);
+            ws.send(username);
+        });
+
         ws.addEventListener("message", async (event) => {
             const data = event.data;
             try {
+                if (state.stage === E2EEStage.CHECK_USERNAME) {
+                    if (data.toString() !== "OK") {
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
+                        reject("Server rejected username");
+                        return;
+                    }
+                    setLoadingState?.("Determining SRP group...");
+                    state.stage = E2EEStage.GET_SRP_GROUP;
+                    return;
+                }
+
                 if (state.stage === E2EEStage.GET_SRP_GROUP) {
                     const srpBits = parseInt(data.toString());
                     state.srpGroup = getSRPGroup(srpBits);

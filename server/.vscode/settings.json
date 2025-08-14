@@ -9,20 +9,24 @@
     "cSpell.words": [
         "asgi",
         "decryptor",
+        "dotenv",
         "encryptor",
         "exef",
         "fastapi",
+        "hexsha",
         "keygen",
         "keysize",
         "maxfail",
         "priv",
+        "repr",
         "secho",
+        "sessionmaker",
+        "sqlalchemy",
+        "sqlmodel",
         "vite"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "black-formatter.args": [
-        "--line-length=120"
-    ]
+    "black-formatter.args": ["--line-length=120"]
 }

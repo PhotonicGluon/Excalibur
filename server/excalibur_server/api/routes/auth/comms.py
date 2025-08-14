@@ -5,12 +5,13 @@ from datetime import datetime, timezone
 
 from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
-from fastapi import HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import WebSocket, WebSocketDisconnect
 
-from excalibur_server.api.routes.security.auth import router
-from excalibur_server.src.security.consts import LOGIN_VALIDITY_TIME, SRP_HANDLER
-from excalibur_server.src.security.security_details import SECURITY_DETAILS_FILE, SecurityDetails, get_security_details
+from excalibur_server.api.routes.auth import router
+from excalibur_server.src.config import CONFIG
+from excalibur_server.src.security.consts import SRP_HANDLER
 from excalibur_server.src.security.token.auth import generate_auth_token
+from excalibur_server.src.users import User, get_user
 
 MAX_ITER_COUNT = 3
 
@@ -24,21 +25,22 @@ async def comms_endpoint(websocket: WebSocket):
         https://datatracker.ietf.org/doc/html/rfc5054#section-2.2
     """
 
-    # Get necessary data from server
-    try:
-        security_details = get_security_details(SECURITY_DETAILS_FILE)
-    except FileNotFoundError:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Security details not found")
-
-    verifier = bytes_to_long(security_details.verifier)
-    if (
-        os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
-        and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None
-    ):
-        verifier = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
-
     await websocket.accept()
     try:
+        # Get user details
+        user = await _get_user(websocket)
+        if user is None:
+            return
+
+        # Get verifier
+        if (
+            os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
+            and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None
+        ):
+            verifier = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
+        else:
+            verifier = bytes_to_long(user.verifier)
+
         # Send server's SRP group size
         await websocket.send_text(str(SRP_HANDLER.bits))
 
@@ -63,11 +65,11 @@ async def comms_endpoint(websocket: WebSocket):
         master_server = SRP_HANDLER.premaster_to_master(premaster)
 
         # Check M values
-        if not await _verify_m_values(websocket, security_details, a_pub, b_pub, master_server):
+        if not await _verify_m_values(websocket, user, a_pub, b_pub, master_server):
             return
 
         # Send the auth token for client to use
-        await _send_auth_token(websocket, master_server)
+        await _send_auth_token(websocket, user.username, master_server)
 
         # Finally, close connection
         await websocket.close()
@@ -75,13 +77,32 @@ async def comms_endpoint(websocket: WebSocket):
         pass
 
 
+async def _get_user(websocket: WebSocket) -> User | None:
+    """
+    Get the user details.
+
+    :param websocket: the WebSocket connection to the client
+    :return: the user, or None if the computation fails
+    """
+
+    username = await websocket.receive_text()
+    user = get_user(username)
+    if user is None:
+        await websocket.send_text("ERR: User does not exist")
+        await websocket.close()
+        return None
+
+    await websocket.send_text("OK")
+    return user
+
+
 async def _compute_ephemeral_values(websocket: WebSocket, verifier: int) -> tuple[int, int] | None:
     """
     Compute the server's ephemeral values.
 
-    :param websocket: The WebSocket connection to the client
-    :param verifier: The verifier to use for the SRP protocol
-    :return: A tuple of the server's private and public values, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :param verifier: the verifier to use for the SRP protocol
+    :return: a tuple of the server's private and public values, or None if the computation fails
     """
 
     # Check if we are running tests
@@ -116,8 +137,8 @@ async def _get_client_public_value(websocket: WebSocket) -> int | None:
     """
     Get the client's public value.
 
-    :param websocket: The WebSocket connection to the client
-    :return: The client's public value, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :return: the client's public value, or None if the computation fails
     """
 
     iter_count = 0
@@ -143,10 +164,10 @@ async def _check_shared_u(websocket: WebSocket, a_pub: int, b_pub: int) -> int |
     """
     Check the shared U value.
 
-    :param websocket: The WebSocket connection to the client
-    :param a_pub: The client's public value
-    :param b_pub: The server's public value
-    :return: The shared U value, or None if the computation fails
+    :param websocket: the WebSocket connection to the client
+    :param a_pub: the client's public value
+    :param b_pub: the server's public value
+    :return: the shared U value, or None if the computation fails
     """
 
     u = SRP_HANDLER.compute_u(a_pub, b_pub)
@@ -158,23 +179,21 @@ async def _check_shared_u(websocket: WebSocket, a_pub: int, b_pub: int) -> int |
     return u
 
 
-async def _verify_m_values(
-    websocket: WebSocket, security_details: SecurityDetails, a_pub: int, b_pub: int, master_server: bytes
-) -> bool:
+async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: int, master_server: bytes) -> bool:
     """
     Verify the M values.
 
     Checks the received client's M1 value. If valid, sends the server's M2 value for the client to check.
 
-    :param websocket: The WebSocket connection to the client
-    :param security_details: The security details of the server
-    :param a_pub: The client's public value
-    :param b_pub: The server's public value
-    :param master_server: The server's master value
+    :param websocket: the WebSocket connection to the client
+    :param user: the user
+    :param a_pub: the client's public value
+    :param b_pub: the server's public value
+    :param master_server: the server's master value
     :return: True if the M values are valid, False otherwise
     """
 
-    srp_salt = security_details.srp_salt
+    srp_salt = user.srp_salt
     if os.environ.get("EXCALIBUR_SERVER_DEBUG") == "1" and os.environ.get("EXCALIBUR_SERVER_TEST_SRP_SALT") is not None:
         srp_salt = b64decode(os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"])
 
@@ -199,17 +218,20 @@ async def _verify_m_values(
     return True
 
 
-async def _send_auth_token(websocket: WebSocket, master: bytes) -> None:
+async def _send_auth_token(websocket: WebSocket, username: str, master: bytes) -> None:
     """
     Send the authentication token to the client.
 
     Encrypts the authentication token using the master value and sends it to the client.
 
-    :param websocket: The WebSocket connection to the client
-    :param master: The master value to use for the authentication token
+    :param username: the username
+    :param websocket: the WebSocket connection to the client
+    :param master: the master value to use for the authentication token
     """
 
-    auth_token = generate_auth_token(master, datetime.now(tz=timezone.utc).timestamp() + LOGIN_VALIDITY_TIME)
+    auth_token = generate_auth_token(
+        username, master, datetime.now(tz=timezone.utc).timestamp() + CONFIG.api.login_validity_time
+    )
 
     cipher = AES.new(master, AES.MODE_GCM)
     auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))

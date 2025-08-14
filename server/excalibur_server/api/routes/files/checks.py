@@ -1,10 +1,12 @@
+from pathlib import Path as PathlibPath
 from typing import Annotated
 
-from fastapi import HTTPException, Path, Query, Response, status
+from fastapi import Depends, HTTPException, Path, Query, Response, status
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.consts import FILES_FOLDER, MAX_FILE_SIZE
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
+from excalibur_server.src.security.token import get_credentials
 
 
 @router.head(
@@ -19,6 +21,7 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
     },
 )
 async def check_path_endpoint(
+    username: Annotated[str, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
 ):
@@ -27,7 +30,7 @@ async def check_path_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -62,7 +65,7 @@ async def check_file_size_endpoint(
     Checks whether the given file size is acceptable.
     """
 
-    if size > MAX_FILE_SIZE:
+    if size > CONFIG.server.max_file_size:
         raise HTTPException(status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, detail="File size too large")
 
     response.status_code = status.HTTP_200_OK
@@ -79,6 +82,7 @@ async def check_file_size_endpoint(
     },
 )
 async def check_dir_endpoint(
+    username: Annotated[str, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
 ):
@@ -87,7 +91,7 @@ async def check_dir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, FILES_FOLDER)
+    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

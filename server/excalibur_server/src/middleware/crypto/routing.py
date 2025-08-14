@@ -26,14 +26,14 @@ FILES_ROUTING_TREE = RoutingTree(
         ),
     },
 )
-SECURITY_ROUTING_TREE = RoutingTree(
-    segment="security",
+USERS_ROUTING_TREE = RoutingTree(
+    segment="users",
     subtrees={
-        "vault-key": RoutingTree(
-            segment="vault-key",
+        "vault": RoutingTree(
+            segment="vault",
+            has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
-                "POST": EncryptedRoute(),
             },
         ),
     },
@@ -43,6 +43,6 @@ ROUTING_TREE = RoutingTree(
     segment="api",
     subtrees={
         "files": FILES_ROUTING_TREE,
-        "security": SECURITY_ROUTING_TREE,
+        "users": USERS_ROUTING_TREE,
     },
 )
