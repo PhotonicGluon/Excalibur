@@ -44,7 +44,12 @@
         },
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
-        }
+        },
+        "cSpell.words": [
+            "pipx",
+            "showcontent",
+            "towncrier"
+        ]
     },
     "extensions": {
         "recommendations": [
