@@ -25,7 +25,7 @@ def add_user(user: User):
     """
 
     # Create new user directory
-    (CONFIG.server.vault_folder / user.username).mkdir(parents=True)
+    (CONFIG.server.vault_folder / user.username).mkdir(parents=True, exist_ok=True)
 
     # Add user to database
     _add_user(user)

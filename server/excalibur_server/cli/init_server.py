@@ -20,17 +20,18 @@ def init_server(
 
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
 
-    config_path = ROOT_FOLDER / "config.toml"
-    os.makedirs(ROOT_FOLDER, exist_ok=True)
-
-    if not config_path.exists():
-        shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
-
     # Handle resetting
     if reset:
         from excalibur_server.cli.reset_server import _reset_server
 
         _reset_server()
+
+    # Make the root folder
+    os.makedirs(ROOT_FOLDER, exist_ok=True)
+
+    # Copy the config file
+    config_path = ROOT_FOLDER / "config.toml"
+    if not config_path.exists():
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
     # Obtain config
