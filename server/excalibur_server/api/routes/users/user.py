@@ -99,6 +99,7 @@ def get_user_vault_endpoint(username: Annotated[str, Path(description="The usern
     return EncryptedVaultKey(key_enc=user.key_enc)
 
 
+# TODO: Should we secure this endpoint?
 @router.post(
     "/add/{username}",
     summary="Add User",
@@ -135,6 +136,10 @@ def add_user_endpoint(
     except binascii.Error as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 
-    user = User(username=username, auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier, key_enc=key_enc)
+    try:
+        user = User(username=username, auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier, key_enc=key_enc)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{e}")
+
     add_user(user)
     return "User added"

@@ -1,7 +1,6 @@
 from typing import Annotated
 
 import typer
-
 from alembic import command
 
 from . import CLI_DIR, get_alembic_config
