@@ -35,13 +35,7 @@ async def comms_endpoint(websocket: WebSocket):
         srp_handler = SRP(user.srp_group)
 
         # Get verifier
-        if (
-            os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
-            and os.environ.get("EXCALIBUR_SERVER_TEST_VERIFIER") is not None
-        ):
-            verifier = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
-        else:
-            verifier = bytes_to_long(user.srp_verifier)
+        verifier = _get_verifier(user)
 
         # Send server's SRP group size
         await websocket.send_text(str(srp_handler.bits))
@@ -98,6 +92,33 @@ async def _get_user(websocket: WebSocket) -> User | None:
     return user
 
 
+def _get_verifier(user: User) -> int:
+    """
+    Get the verifier for the user.
+
+    The extraction of the verifier from the user object is done this way so that we can monkeypatch
+    it in tests.
+
+    :param user: the user
+    :return: the verifier
+    """
+
+    return bytes_to_long(user.srp_verifier)
+
+
+def _get_b_priv() -> int | None:
+    """
+    Get the server's private value.
+
+    The extraction of the verifier from the user object is done this way so that we can monkeypatch
+    it in tests.
+
+    :return: the verifier
+    """
+
+    return None
+
+
 async def _compute_ephemeral_values(websocket: WebSocket, srp_handler: SRP, verifier: int) -> tuple[int, int] | None:
     """
     Compute the server's ephemeral values.
@@ -108,11 +129,8 @@ async def _compute_ephemeral_values(websocket: WebSocket, srp_handler: SRP, veri
     :return: a tuple of the server's private and public values, or None if the computation fails
     """
 
-    # Check if we are running tests
-    b_priv = None
+    b_priv = _get_b_priv()
     b_pub = 0
-    if os.environ.get("EXCALIBUR_SERVER_DEBUG") == "1" and os.environ.get("EXCALIBUR_SERVER_TEST_B_PRIV") is not None:
-        b_priv = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"]))
 
     # Compute server's ephemeral values
     client_accepted = False

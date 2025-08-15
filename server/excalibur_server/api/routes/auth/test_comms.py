@@ -1,6 +1,5 @@
 import json
-import os
-from base64 import b64decode, b64encode
+from base64 import b64decode
 
 import pytest
 from Crypto.Cipher import AES
@@ -8,15 +7,12 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.src.security.consts import SRP_HANDLER
-from excalibur_server.src.users import is_user
-
-if not is_user("security_details"):  # TODO: Mock a database that has these values?
-    pytest.skip("Skipping authentication tests as `security_details` user does not exist", allow_module_level=True)
+from excalibur_server.src.security.srp import SRP, SRPGroup
+from excalibur_server.src.users import User
 
 # Values from RFC5054, Appendix B
 S = int("BEB25379 D1A8581E B5A72767 3A2441EE".replace(" ", ""), 16)
-N, G = SRP_HANDLER.prime, SRP_HANDLER.generator
+N, G = SRPGroup.SMALL.prime, SRPGroup.SMALL.generator
 K = int("7556AA04 5AEF2CDD 07ABAF0F 665C3E81 8913186F".replace(" ", ""), 16)
 V = int(
     "7E273DE8 696FFC4F 4E337D05 B4B375BE B0DDE156 9E8FA00A 9886D812 9BADA1F1 822223CA 1A605B53 0E379BA4 729FDC59 F105B478 7E5186F5 C671085A 1447B52A 48CF1970 B4FB6F84 00BBF4CE BFBB1681 52E08AB5 EA53D15C 1AFF87B2 B9DA6E04 E058AD51 CC72BFC9 033B564E 26480D78 E955A5E2 9E7AB245 DB2BE315 E2099AFB".replace(  # noqa: E501
@@ -50,47 +46,78 @@ PREMASTER_SECRET = int(
 M1 = int("D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replace(" ", ""), 16)
 M2 = int("53EEEE88 4F3309A0 6645299F F457AAD0 FB724151 B872B44F 2382F52D C0D0E820".replace(" ", ""), 16)
 
+# Create a test user
+TEST_USER = User(
+    username="srp_test_user",
+    auk_salt=b"Doesn't Matter",
+    srp_group=SRPGroup.SMALL,
+    srp_salt=long_to_bytes(S),
+    srp_verifier=long_to_bytes(V),
+    key_enc=b"Doesn't Matter",
+)
+
+SRP_HANDLER = SRP(SRPGroup.SMALL)
+
+
+# Mock functions
+def mock_get_user(username: str):
+    if username == "srp_test_user":
+        return TEST_USER
+    return None
+
+
+def mock_is_user(username: str):
+    return username == "srp_test_user"
+
+
+# Pytest fixture to apply the mocks
+@pytest.fixture(autouse=True)
+def mock_test_user(monkeypatch: pytest.MonkeyPatch):
+    # Note that we monkeypatch the destination, not the source
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.get_user", mock_get_user)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms._get_verifier", lambda _: V)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms._get_b_priv", lambda: B_PRIV)
+    yield
+
+
+# Run tests
 client = TestClient(app)
-os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
-os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"] = b64encode(long_to_bytes(V)).decode("UTF-8")
-os.environ["EXCALIBUR_SERVER_TEST_B_PRIV"] = b64encode(long_to_bytes(B_PRIV)).decode("UTF-8")
-os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"] = b64encode(long_to_bytes(S)).decode("UTF-8")
 
 
 def test_group_establishment():
     with client.websocket_connect("/api/auth") as ws:
-        ws.send_text("security_details")
-        assert ws.receive_text() == "OK"
+        ws.send_text("srp_test_user")
+        assert ws.receive_text() == "OK", "Failed to find user"
 
         data = ws.receive_text()
-        assert data == str(SRP_HANDLER.bits)
+        assert data == str(SRP_HANDLER.bits), "Failed to receive group size"
 
 
 def test_auth_negotiation():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("security_details")
-        assert ws.receive_text() == "OK"
+        ws.send_text("srp_test_user")
+        assert ws.receive_text() == "OK", "Failed to find user"
 
         # Get SRP group size
         ws.receive_text()
 
         # Receive server's public value
         b_pub = bytes_to_long(ws.receive_bytes())
-        assert b_pub == B_PUB
+        assert b_pub == B_PUB, "Server sent incorrect public value"
         ws.send_text("OK")
 
         # Send client's public value
         ws.send_bytes(long_to_bytes(A_PUB))
-        assert ws.receive_text() == "OK"
+        assert ws.receive_text() == "OK", "Server rejected acceptable client public value"
 
         # The shared U value should be valid
-        assert ws.receive_text() == "U is OK"
+        assert ws.receive_text() == "U is OK", "Failed to compute shared U value"
 
         # Check M values
         ws.send_bytes(long_to_bytes(M1))
-        assert ws.receive_text() == "OK"
-        assert ws.receive_bytes() == long_to_bytes(M2)
+        assert ws.receive_text() == "OK", "Server failed to verify client's M1 value"
+        assert ws.receive_bytes() == long_to_bytes(M2), "Server failed to send correct M2 value"
         ws.send_text("OK")
 
         # Check received auth token
@@ -107,13 +134,13 @@ def test_auth_negotiation():
 def test_abort_on_invalid_username():
     with client.websocket_connect("/api/auth") as ws:
         ws.send_text("fake_username")
-        assert ws.receive_text() == "ERR: User does not exist"
+        assert ws.receive_text() == "ERR: User does not exist", "Failed to deny user"
 
 
 def test_abort_on_invalid_client_public_value():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("security_details")
+        ws.send_text("srp_test_user")
         ws.receive_text()
 
         # Get SRP group size
@@ -125,13 +152,15 @@ def test_abort_on_invalid_client_public_value():
 
         # Send client's INVALID public value
         ws.send_bytes(b"\x00")
-        assert ws.receive_text() == "ERR: Client public value is illegal; A mod N cannot be 0"
+        assert (
+            ws.receive_text() == "ERR: Client public value is illegal; A mod N cannot be 0"
+        ), "Failed to deny invalid client public value"
 
 
 def test_abort_on_invalid_client_m1():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("security_details")
+        ws.send_text("srp_test_user")
         ws.receive_text()
 
         # Get SRP group size
@@ -150,4 +179,4 @@ def test_abort_on_invalid_client_m1():
 
         # Send WRONG M1
         ws.send_bytes(long_to_bytes(12345))
-        assert ws.receive_text() == "ERR: M1 values do not match"
+        assert ws.receive_text() == "ERR: M1 values do not match", "Failed to deny invalid client M1"
