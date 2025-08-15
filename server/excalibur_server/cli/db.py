@@ -13,6 +13,30 @@ db_app = typer.Typer(no_args_is_help=True, help="Wrappers for Alembic commands."
 
 # Add commands
 @db_app.command()
+def ui():
+    """
+    Starts the DuckDB UI server.
+    """
+
+    import time
+
+    from duckdb import sql
+
+    typer.secho("Starting...", fg="yellow")
+    sql("CALL start_ui_server();")
+    typer.secho("DuckUI server started on http://localhost:4213/", fg="cyan")
+
+    try:
+        while True:
+            time.sleep(1)
+    finally:
+        typer.secho("Stopping DuckDB UI server...", fg="yellow")
+        sql("CALL stop_ui_server();")
+        typer.secho("DuckDB UI server stopped.", fg="green")
+        typer.Exit(0)
+
+
+@db_app.command()
 def upgrade(
     revision: Annotated[str, typer.Option(help="The revision to upgrade to.")] = "head",
     sql: Annotated[bool, typer.Option(help="Whether to use SQL mode")] = False,

@@ -11,7 +11,7 @@ def _get_session() -> Session:
     Creates and returns a new SQLAlchemy Session.
     """
 
-    engine = create_engine("sqlite:///" + (ROOT_FOLDER / CONFIG.server.database_file).as_posix())
+    engine = create_engine("duckdb:///" + (ROOT_FOLDER / CONFIG.server.database_file).as_posix())
     Session = sessionmaker(bind=engine)
     return Session()
 

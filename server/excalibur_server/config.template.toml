@@ -12,7 +12,7 @@ version = 1
 vault_folder = "vault"
 
 # The database file path, relative to the root folder
-database_file = "excalibur.db"
+database_file = "excalibur.duckdb"
 
 # The maximum file size, in bytes, that can be uploaded
 max_file_size = 52_428_800 # 50 MiB
