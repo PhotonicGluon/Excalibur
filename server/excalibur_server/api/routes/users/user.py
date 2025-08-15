@@ -7,6 +7,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.api.routes.users import router
+from excalibur_server.src.security.consts import SRP_HANDLER
 from excalibur_server.src.security.token import get_credentials
 from excalibur_server.src.users import User, add_user, get_user, is_user
 
@@ -137,7 +138,14 @@ def add_user_endpoint(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid base64 string: {e}")
 
     try:
-        user = User(username=username, auk_salt=auk_salt, srp_salt=srp_salt, verifier=verifier, key_enc=key_enc)
+        user = User(
+            username=username,
+            auk_salt=auk_salt,
+            srp_group=SRP_HANDLER.bits,
+            srp_salt=srp_salt,
+            srp_verifier=verifier,
+            key_enc=key_enc,
+        )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{e}")
 

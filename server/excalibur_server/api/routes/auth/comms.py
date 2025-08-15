@@ -39,7 +39,7 @@ async def comms_endpoint(websocket: WebSocket):
         ):
             verifier = bytes_to_long(b64decode(os.environ["EXCALIBUR_SERVER_TEST_VERIFIER"]))
         else:
-            verifier = bytes_to_long(user.verifier)
+            verifier = bytes_to_long(user.srp_verifier)
 
         # Send server's SRP group size
         await websocket.send_text(str(SRP_HANDLER.bits))

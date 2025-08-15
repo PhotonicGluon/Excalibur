@@ -49,7 +49,7 @@ def add_user(
     from excalibur_server.src.exef.exef import ExEF
     from excalibur_server.src.security.consts import SRP_HANDLER
     from excalibur_server.src.security.keygen import generate_key
-    from excalibur_server.src.users import add_user, User
+    from excalibur_server.src.users import User, add_user
 
     # Generate salts and keys
     auk_salt = get_random_bytes(16)
@@ -70,8 +70,9 @@ def add_user(
         User(
             username=username,
             auk_salt=auk_salt,
+            srp_group=SRP_HANDLER.bits,
             srp_salt=srp_salt,
-            verifier=verifier,
+            srp_verifier=verifier,
             key_enc=vault_key_enc,
         )
     )
