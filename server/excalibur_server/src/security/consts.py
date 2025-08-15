@@ -5,7 +5,7 @@ from excalibur_server.src.security.srp import SRP, SRPGroup
 
 LOGIN_VALIDITY_TIME = 3600  # 1 hour
 
-SRP_HANDLER = SRP(SRPGroup.SMALL)
+SRP_HANDLER = SRP(SRPGroup.LARGE)
 
 KEYSIZE = 256  # In bits
 if is_debug():

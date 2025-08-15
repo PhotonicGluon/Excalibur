@@ -7,7 +7,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_serializer
 
 from excalibur_server.api.routes.users import router
-from excalibur_server.src.security.consts import SRP_HANDLER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.security.token import get_credentials
 from excalibur_server.src.users import User, add_user, get_user, is_user
 
@@ -141,7 +141,7 @@ def add_user_endpoint(
         user = User(
             username=username,
             auk_salt=auk_salt,
-            srp_group=SRP_HANDLER.bits,
+            srp_group=CONFIG.server.srp_group,
             srp_salt=srp_salt,
             srp_verifier=verifier,
             key_enc=key_enc,

@@ -1,7 +1,7 @@
 from typing import Literal
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.security.consts import SRP_HANDLER
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.security.srp import SRPGroup
 
 SRPGroupBits = Literal[*{group.bits for group in SRPGroup}]
@@ -15,4 +15,4 @@ def get_group_size_endpoint() -> SRPGroupBits:
     In particular, this returns the number of bits in the group's modulus.
     """
 
-    return SRP_HANDLER.bits
+    return CONFIG.server.srp_group.bits

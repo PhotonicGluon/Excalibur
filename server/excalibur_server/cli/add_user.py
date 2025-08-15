@@ -46,10 +46,13 @@ def add_user(
     from Crypto.Random import get_random_bytes
     from Crypto.Util.number import bytes_to_long, long_to_bytes
 
+    from excalibur_server.src.config import CONFIG
     from excalibur_server.src.exef.exef import ExEF
-    from excalibur_server.src.security.consts import SRP_HANDLER
     from excalibur_server.src.security.keygen import generate_key
+    from excalibur_server.src.security.srp import SRP
     from excalibur_server.src.users import User, add_user
+
+    srp_handler = SRP(CONFIG.server.srp_group)
 
     # Generate salts and keys
     auk_salt = get_random_bytes(16)
@@ -59,7 +62,7 @@ def add_user(
     srp_key = generate_key(password, srp_salt)
 
     # Generate SRP verifier
-    verifier = long_to_bytes(SRP_HANDLER.compute_verifier(bytes_to_long(srp_key)))
+    verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))
 
     # Encrypt vault key
     vault_key: bytes = b64decode(vault_key)
@@ -70,7 +73,7 @@ def add_user(
         User(
             username=username,
             auk_salt=auk_salt,
-            srp_group=SRP_HANDLER.bits,
+            srp_group=CONFIG.server.srp_group,
             srp_salt=srp_salt,
             srp_verifier=verifier,
             key_enc=vault_key_enc,

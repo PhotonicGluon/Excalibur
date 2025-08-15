@@ -19,6 +19,9 @@ class SRP:
 
         self.group = group
 
+    def __repr__(self) -> str:
+        return f"SRP({self.group})"
+
     # Properties
     @property
     def prime(self) -> int:

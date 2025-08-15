@@ -14,6 +14,10 @@ vault_folder = "vault"
 # The database file path, relative to the root folder
 database_file = "excalibur.duckdb"
 
+# SRP group size
+# Valid values (case insensitive): "small", "medium", "large"
+srp_group = "medium"
+
 # The maximum file size, in bytes, that can be uploaded
 max_file_size = 52_428_800 # 50 MiB
 

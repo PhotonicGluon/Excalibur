@@ -9,11 +9,8 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.security.consts import SRP_HANDLER
-from excalibur_server.src.security.srp import SRPGroup
 from excalibur_server.src.users import is_user
 
-if SRP_HANDLER.group != SRPGroup.SMALL:
-    pytest.skip("Skipping authentication tests as group is different", allow_module_level=True)
 if not is_user("security_details"):  # TODO: Mock a database that has these values?
     pytest.skip("Skipping authentication tests as `security_details` user does not exist", allow_module_level=True)
 

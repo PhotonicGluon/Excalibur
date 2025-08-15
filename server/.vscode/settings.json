@@ -10,6 +10,7 @@
         "asgi",
         "decryptor",
         "dotenv",
+        "duckdb",
         "encryptor",
         "exef",
         "fastapi",

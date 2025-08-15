@@ -9,7 +9,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.security.consts import SRP_HANDLER
+from excalibur_server.src.security.srp import SRP
 from excalibur_server.src.security.token.auth import generate_auth_token
 from excalibur_server.src.users import User, get_user
 
@@ -32,6 +32,8 @@ async def comms_endpoint(websocket: WebSocket):
         if user is None:
             return
 
+        srp_handler = SRP(user.srp_group)
+
         # Get verifier
         if (
             os.environ.get("EXCALIBUR_SERVER_DEBUG", "0") == "1"
@@ -42,30 +44,30 @@ async def comms_endpoint(websocket: WebSocket):
             verifier = bytes_to_long(user.srp_verifier)
 
         # Send server's SRP group size
-        await websocket.send_text(str(SRP_HANDLER.bits))
+        await websocket.send_text(str(srp_handler.bits))
 
         # Compute server's ephemeral values
-        result = await _compute_ephemeral_values(websocket, verifier)
+        result = await _compute_ephemeral_values(websocket, srp_handler, verifier)
         if result is None:
             return
         b_priv, b_pub = result
 
         # Next, await client's public value
-        a_pub = await _get_client_public_value(websocket)
+        a_pub = await _get_client_public_value(websocket, srp_handler)
         if a_pub is None:
             return
 
         # Check shared U value
-        u = await _check_shared_u(websocket, a_pub, b_pub)
+        u = await _check_shared_u(websocket, srp_handler, a_pub, b_pub)
         if u is None:
             return
 
         # Compute server's master value
-        premaster = SRP_HANDLER.compute_premaster_secret(a_pub, b_priv, u, verifier)
-        master_server = SRP_HANDLER.premaster_to_master(premaster)
+        premaster = srp_handler.compute_premaster_secret(a_pub, b_priv, u, verifier)
+        master_server = srp_handler.premaster_to_master(premaster)
 
         # Check M values
-        if not await _verify_m_values(websocket, user, a_pub, b_pub, master_server):
+        if not await _verify_m_values(websocket, srp_handler, user, a_pub, b_pub, master_server):
             return
 
         # Send the auth token for client to use
@@ -96,11 +98,12 @@ async def _get_user(websocket: WebSocket) -> User | None:
     return user
 
 
-async def _compute_ephemeral_values(websocket: WebSocket, verifier: int) -> tuple[int, int] | None:
+async def _compute_ephemeral_values(websocket: WebSocket, srp_handler: SRP, verifier: int) -> tuple[int, int] | None:
     """
     Compute the server's ephemeral values.
 
     :param websocket: the WebSocket connection to the client
+    :param srp_handler: the SRP handler to use for the SRP protocol
     :param verifier: the verifier to use for the SRP protocol
     :return: a tuple of the server's private and public values, or None if the computation fails
     """
@@ -115,7 +118,7 @@ async def _compute_ephemeral_values(websocket: WebSocket, verifier: int) -> tupl
     client_accepted = False
     iter_count = 0
     while not client_accepted and iter_count < MAX_ITER_COUNT:
-        b_priv, b_pub = SRP_HANDLER.compute_server_public_value(verifier, private_value=b_priv)
+        b_priv, b_pub = srp_handler.compute_server_public_value(verifier, private_value=b_priv)
         await websocket.send_bytes(long_to_bytes(b_pub))
 
         # Await client's response
@@ -133,11 +136,12 @@ async def _compute_ephemeral_values(websocket: WebSocket, verifier: int) -> tupl
     return b_priv, b_pub
 
 
-async def _get_client_public_value(websocket: WebSocket) -> int | None:
+async def _get_client_public_value(websocket: WebSocket, srp_handler: SRP) -> int | None:
     """
     Get the client's public value.
 
     :param websocket: the WebSocket connection to the client
+    :param srp_handler: the SRP handler to use for the SRP protocol
     :return: the client's public value, or None if the computation fails
     """
 
@@ -146,31 +150,32 @@ async def _get_client_public_value(websocket: WebSocket) -> int | None:
         a_pub = bytes_to_long(await websocket.receive_bytes())
 
         # Check given client public value
-        if a_pub % SRP_HANDLER.prime != 0:
+        if a_pub % srp_handler.prime != 0:
             await websocket.send_text("OK")
             break
         else:
             await websocket.send_text("ERR: Client public value is illegal; A mod N cannot be 0")
             iter_count += 1
 
-    if a_pub % SRP_HANDLER.prime == 0:
+    if a_pub % srp_handler.prime == 0:
         await websocket.close()
         return
 
     return a_pub
 
 
-async def _check_shared_u(websocket: WebSocket, a_pub: int, b_pub: int) -> int | None:
+async def _check_shared_u(websocket: WebSocket, srp_handler: SRP, a_pub: int, b_pub: int) -> int | None:
     """
     Check the shared U value.
 
     :param websocket: the WebSocket connection to the client
+    :param srp_handler: the SRP handler to use for the SRP protocol
     :param a_pub: the client's public value
     :param b_pub: the server's public value
     :return: the shared U value, or None if the computation fails
     """
 
-    u = SRP_HANDLER.compute_u(a_pub, b_pub)
+    u = srp_handler.compute_u(a_pub, b_pub)
     if u == 0:
         await websocket.send_text("ERR: Shared U value is zero")
         await websocket.close()
@@ -179,13 +184,16 @@ async def _check_shared_u(websocket: WebSocket, a_pub: int, b_pub: int) -> int |
     return u
 
 
-async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: int, master_server: bytes) -> bool:
+async def _verify_m_values(
+    websocket: WebSocket, srp_handler: SRP, user: User, a_pub: int, b_pub: int, master_server: bytes
+) -> bool:
     """
     Verify the M values.
 
     Checks the received client's M1 value. If valid, sends the server's M2 value for the client to check.
 
     :param websocket: the WebSocket connection to the client
+    :param srp_handler: the SRP handler to use for the SRP protocol
     :param user: the user
     :param a_pub: the client's public value
     :param b_pub: the server's public value
@@ -198,7 +206,7 @@ async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: 
         srp_salt = b64decode(os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"])
 
     # Verify client's M1
-    m1_server = SRP_HANDLER.generate_m1(srp_salt, a_pub, b_pub, master_server)
+    m1_server = srp_handler.generate_m1(srp_salt, a_pub, b_pub, master_server)
     m1_client = await websocket.receive_bytes()
 
     if m1_client != m1_server:
@@ -209,7 +217,7 @@ async def _verify_m_values(websocket: WebSocket, user: User, a_pub: int, b_pub: 
     await websocket.send_text("OK")
 
     # Send server's M2 for client to check
-    m2 = SRP_HANDLER.generate_m2(a_pub, m1_server, master_server)
+    m2 = srp_handler.generate_m2(a_pub, m1_server, master_server)
     await websocket.send_bytes(m2)
     if await websocket.receive_text() != "OK":
         await websocket.close()
