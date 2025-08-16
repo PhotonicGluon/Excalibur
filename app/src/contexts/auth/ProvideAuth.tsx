@@ -46,20 +46,19 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  */
 function useProvideAuth(): AuthProvider {
     // States
+    const [apiURL, setAPIUrl] = useState<string | null>(null);
     const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
-    function setAPIUrl(apiURL: string) {
-        setAuthInfo({ ...authInfo!, apiURL });
-    }
-
     async function loginFunc(authInfo: AuthInfo) {
+        // TODO: Assert that `apiURL` is not null?
+
         // Get server info
-        const versionResponse = await getServerVersion(authInfo.apiURL);
-        const timeResponse = await getServerTime(authInfo.apiURL);
+        const versionResponse = await getServerVersion(apiURL!);
+        const timeResponse = await getServerTime(apiURL!);
         if (!versionResponse.success || !timeResponse.success) {
             // Failed to retrieve info; kick back to login screen
             console.debug("Failed to retrieve info, sending back to login screen");
@@ -73,7 +72,7 @@ function useProvideAuth(): AuthProvider {
 
         // Set up heartbeat interval
         const interval = setInterval(async () => {
-            const connected = await heartbeat(authInfo.apiURL, authInfo.token);
+            const connected = await heartbeat(apiURL!, authInfo.token);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 // TODO: Can we display a toast to inform the user why they were kicked back?
@@ -91,20 +90,25 @@ function useProvideAuth(): AuthProvider {
         setVaultKey(vaultKey);
 
         // Save to local storage
+        localStorage.setItem("apiURL", apiURL!);
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
-    async function logoutFunc() {
+    async function logoutFunc(full: boolean = false) {
         // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);
 
         // Clear state
-        setAuthInfo(null); // FIXME: The server URL should be kept...
+        if (full) {
+            setAPIUrl(null);
+        }
+        setAuthInfo(null);
         setServerInfo(null);
         setVaultKey(null);
 
         // Remove from local storage
+        localStorage.removeItem("apiURL");
         localStorage.removeItem("authInfo");
         localStorage.removeItem("serverInfo");
     }
@@ -112,20 +116,23 @@ function useProvideAuth(): AuthProvider {
     // Effects
     useEffect(() => {
         // Check if local storage has auth info
+        const storedAPIUrl = localStorage.getItem("apiURL");
         const storedAuthInfo = localStorage.getItem("authInfo");
         const storedServerInfo = localStorage.getItem("serverInfo");
-        if (!storedAuthInfo || !storedServerInfo) {
+        if (!storedAPIUrl || !storedAuthInfo || !storedServerInfo) {
             return;
         }
 
         // Set context
         const authInfo = deserializeAuthInfo(storedAuthInfo);
         const serverInfo = JSON.parse(storedServerInfo);
+
+        setAPIUrl(storedAPIUrl);
         setAuthInfo(authInfo);
         setServerInfo(serverInfo);
 
         // Get vault key
-        retrieveVaultKey(authInfo, (error) => {
+        retrieveVaultKey(apiURL!, authInfo, (error) => {
             console.error(error);
         }).then((resp) => {
             if (!resp) {
@@ -134,10 +141,11 @@ function useProvideAuth(): AuthProvider {
             }
             setVaultKey(resp);
         });
-    }, []);
+    }, [apiURL]);
 
     // Return data
     return {
+        apiURL: apiURL,
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
@@ -150,7 +158,6 @@ function useProvideAuth(): AuthProvider {
 
 function serializeAuthInfo(data: AuthInfo) {
     return JSON.stringify({
-        apiURL: data.apiURL,
         username: data.username,
         key: data.key.toString("hex"),
         auk: data.auk.toString("hex"),
@@ -161,7 +168,6 @@ function serializeAuthInfo(data: AuthInfo) {
 function deserializeAuthInfo(data: string): AuthInfo {
     const parsed = JSON.parse(data);
     return {
-        apiURL: parsed.apiURL,
         username: parsed.username,
         key: Buffer.from(parsed.key, "hex"),
         auk: Buffer.from(parsed.auk, "hex"),

@@ -22,7 +22,7 @@ export async function uploadFile(
     formData.append("file", file);
 
     // Send the request
-    const response = await fetch(`${auth.authInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`, {
+    const response = await fetch(`${auth.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: formData,
@@ -68,7 +68,7 @@ export async function mkdir(
     path: string,
     name: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${auth.authInfo!.apiURL}/files/mkdir/${path}`, {
+    const response = await fetch(`${auth.apiURL}/files/mkdir/${path}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: name,

@@ -3,8 +3,6 @@ import { createContext, useContext } from "react";
 import { E2EEData } from "@lib/security/e2ee";
 
 export interface AuthInfo extends E2EEData {
-    /** API URL */
-    apiURL: string;
     /** Username */
     username?: string;
 }
@@ -17,6 +15,8 @@ export interface ServerInfo {
 }
 
 export interface AuthProvider {
+    /** API URL */
+    apiURL: string | null;
     /** Authentication info, set upon login */
     authInfo: AuthInfo | null;
     /** Server info, retrieved upon login */
@@ -27,8 +27,12 @@ export interface AuthProvider {
     setAPIUrl: (apiURL: string) => void;
     /** Function to log into the server */
     login: (authInfo: AuthInfo) => Promise<void>;
-    /** Function to log out of the server */
-    logout: () => Promise<void>;
+    /**
+     * Function to log out of the server.
+     *
+     * @param full Whether to fully log out, including removing the saved API URL
+     */
+    logout: (full?: boolean) => Promise<void>;
     /** Function to set the vault key */
     setVaultKey: (vaultKey: Buffer) => void;
 }

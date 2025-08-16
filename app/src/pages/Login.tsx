@@ -107,7 +107,7 @@ const Login: React.FC = () => {
 
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
-        if (!(await checkUser(auth.authInfo!.apiURL, values.username))) {
+        if (!(await checkUser(auth.apiURL!, values.username))) {
             setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Set Up",
@@ -131,7 +131,7 @@ const Login: React.FC = () => {
                         handler: async () => {
                             // Get SRP group used for communication
                             setLoadingState("Determining SRP group...");
-                            const groupResponse = await getGroup(auth.authInfo!.apiURL);
+                            const groupResponse = await getGroup(auth.apiURL!);
                             const srpGroup = groupResponse.group;
                             if (!srpGroup) {
                                 setIsLoading(false);
@@ -171,7 +171,7 @@ const Login: React.FC = () => {
 
                             // Set up security details
                             await addUser(
-                                auth.authInfo!.apiURL,
+                                auth.apiURL!,
                                 values.username,
                                 aukSalt,
                                 srpSalt,
@@ -193,7 +193,7 @@ const Login: React.FC = () => {
 
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
-            auth.authInfo!.apiURL,
+            auth.apiURL!,
             values.username,
             values.password,
             () => setIsLoading(false),
@@ -209,7 +209,7 @@ const Login: React.FC = () => {
 
         // Log into the server using the UUID and master key
         console.debug("Logging in...");
-        const authInfo = { apiURL: auth.authInfo!.apiURL, username: values.username, ...e2eeData };
+        const authInfo = { username: values.username, ...e2eeData };
         try {
             await auth.login(authInfo);
         } catch (error) {
@@ -225,7 +225,7 @@ const Login: React.FC = () => {
         console.log(`Logged in; using token: ${authInfo.token}`);
 
         // Handle vault key
-        const vaultKey = await retrieveVaultKey(authInfo, (error) => {
+        const vaultKey = await retrieveVaultKey(auth.apiURL!, authInfo, (error) => {
             console.error(error);
             setIsLoading(false);
             presentAlert({
@@ -256,15 +256,6 @@ const Login: React.FC = () => {
     // Effects
     useEffect(() => {
         // Get existing values from preferences
-        Preferences.get("server").then((result) => {
-            if (!result) {
-                // Kick back to server choice
-                router.push("/server-choice", "forward", "replace");
-                return;
-            }
-            console.debug(`Got existing server URL from preferences: ${result}`);
-            document.querySelector("#server-input")!.setAttribute("value", result!);
-        });
         Preferences.get("username").then((result) => {
             if (!result) return;
             console.debug(`Got existing username from preferences: ${result}`);
