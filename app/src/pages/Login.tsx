@@ -114,7 +114,7 @@ const Login: React.FC = () => {
 
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
-        if (!(await checkUser(auth.apiURL!, values.username))) {
+        if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
             setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Set Up",
@@ -138,7 +138,7 @@ const Login: React.FC = () => {
                         handler: async () => {
                             // Get SRP group used for communication
                             setLoadingState("Determining SRP group...");
-                            const groupResponse = await getGroup(auth.apiURL!);
+                            const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
                             const srpGroup = groupResponse.group;
                             if (!srpGroup) {
                                 setIsLoading(false);
@@ -178,7 +178,7 @@ const Login: React.FC = () => {
 
                             // Set up security details
                             await addUser(
-                                auth.apiURL!,
+                                auth.serverInfo!.apiURL!,
                                 values.username,
                                 aukSalt,
                                 srpSalt,
@@ -200,7 +200,7 @@ const Login: React.FC = () => {
 
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
-            auth.apiURL!,
+            auth.serverInfo!.apiURL!,
             values.username,
             values.password,
             () => setIsLoading(false),
@@ -218,7 +218,7 @@ const Login: React.FC = () => {
         console.debug("Logging in...");
         const authInfo = { username: values.username, ...e2eeData };
         try {
-            await auth.login(authInfo);
+            await auth.login(auth.serverInfo!.apiURL!, authInfo);
         } catch (error) {
             console.error(`Could not log in: ${error}`);
             setIsLoading(false);
@@ -232,7 +232,7 @@ const Login: React.FC = () => {
         console.log(`Logged in; using token: ${authInfo.token}`);
 
         // Handle vault key
-        const vaultKey = await retrieveVaultKey(auth.apiURL!, authInfo, (error) => {
+        const vaultKey = await retrieveVaultKey(auth.serverInfo!.apiURL!, authInfo, (error) => {
             console.error(error);
             setIsLoading(false);
             presentAlert({

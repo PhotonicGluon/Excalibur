@@ -8,6 +8,8 @@ export interface AuthInfo extends E2EEData {
 }
 
 export interface ServerInfo {
+    /** API URL */
+    apiURL: string | null;
     /** Server version */
     version: string;
     /** Delta of time between server and client */
@@ -15,18 +17,16 @@ export interface ServerInfo {
 }
 
 export interface AuthProvider {
-    /** API URL */
-    apiURL: string | null;
     /** Authentication info, set upon login */
     authInfo: AuthInfo | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
     /** Vault key, retrieved upon login */
     vaultKey: Buffer | null;
-    /** Set the API URL */
-    setAPIUrl: (apiURL: string) => void;
+    /** Set the server info */
+    setServerInfo: (serverInfo: ServerInfo) => void;
     /** Function to log into the server */
-    login: (authInfo: AuthInfo) => Promise<void>;
+    login: (apiURL: string, authInfo: AuthInfo) => Promise<void>;
     /**
      * Function to log out of the server.
      *

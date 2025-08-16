@@ -14,7 +14,7 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
-import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
+import { checkAPICompatibility, checkAPIUrl, getServerTime, getServerVersion } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/validators";
 
@@ -109,13 +109,30 @@ const ServerChoice: React.FC = () => {
             return;
         }
 
+        // Get server info
+        const versionResponse = await getServerVersion(apiURL!);
+        const timeResponse = await getServerTime(apiURL!);
+        if (!versionResponse.success || !timeResponse.success) {
+            setIsLoading(false);
+            presentAlert({
+                header: "Connection Failure",
+                message: "Failed to retrieve info from the server.",
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        const serverVersion = versionResponse.version!;
+        const serverTime = timeResponse.time!;
+        const deltaTime = serverTime.getTime() - new Date().getTime();
+
         // Update preferences
         Preferences.set({
             server: serverURL,
         });
 
-        // Set API URL
-        auth.setAPIUrl(apiURL);
+        // Set server info
+        auth.setServerInfo({ apiURL, version: serverVersion, deltaTime });
 
         // Continue with login
         router.push("/login", "forward", "replace");
@@ -123,7 +140,6 @@ const ServerChoice: React.FC = () => {
     }
 
     // Effects
-    // TODO: Do we need this?
     useEffect(() => {
         // Get existing values from preferences
         Preferences.get("server").then((result) => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { heartbeat as _heartbeat, getServerTime, getServerVersion } from "@lib/network";
+import { heartbeat as _heartbeat } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
@@ -46,30 +46,18 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  */
 function useProvideAuth(): AuthProvider {
     // States
-    const [apiURL, setAPIUrl] = useState<string | null>(null);
     const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
-    async function loginFunc(authInfo: AuthInfo) {
-        // TODO: Assert that `apiURL` is not null?
+    function setServerInfoFunc(serverInfo: ServerInfo) {
+        setServerInfo(serverInfo);
+        localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
+    }
 
-        // Get server info
-        const versionResponse = await getServerVersion(apiURL!);
-        const timeResponse = await getServerTime(apiURL!);
-        if (!versionResponse.success || !timeResponse.success) {
-            // Failed to retrieve info; kick back to login screen
-            console.debug("Failed to retrieve info, sending back to login screen");
-            window.location.href = "/login";
-            return;
-        }
-
-        const serverVersion = versionResponse.version!;
-        const serverTime = timeResponse.time!;
-        const deltaTime = serverTime.getTime() - new Date().getTime();
-
+    async function loginFunc(apiURL: string, authInfo: AuthInfo) {
         // Set up heartbeat interval
         const interval = setInterval(async () => {
             const connected = await heartbeat(apiURL!, authInfo.token);
@@ -84,55 +72,45 @@ function useProvideAuth(): AuthProvider {
         setHeartbeatInterval(interval);
 
         // Update state
-        const serverInfo = { version: serverVersion, deltaTime };
         setAuthInfo(authInfo);
-        setServerInfo(serverInfo);
         setVaultKey(vaultKey);
 
         // Save to local storage
-        localStorage.setItem("apiURL", apiURL!);
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
-        localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
     async function logoutFunc(full: boolean = false) {
-        // Stop checking for heartbeat
         clearInterval(heartbeatInterval!);
 
-        // Clear state
         if (full) {
-            setAPIUrl(null);
+            setServerInfo(null);
+            localStorage.removeItem("serverInfo");
         }
-        setAuthInfo(null);
-        setServerInfo(null);
-        setVaultKey(null);
 
-        // Remove from local storage
-        localStorage.removeItem("apiURL");
+        setAuthInfo(null);
         localStorage.removeItem("authInfo");
-        localStorage.removeItem("serverInfo");
+
+        setVaultKey(null);
     }
 
     // Effects
     useEffect(() => {
         // Check if local storage has auth info
-        const storedAPIUrl = localStorage.getItem("apiURL");
         const storedAuthInfo = localStorage.getItem("authInfo");
         const storedServerInfo = localStorage.getItem("serverInfo");
-        if (!storedAPIUrl || !storedAuthInfo || !storedServerInfo) {
+        if (!storedAuthInfo || !storedServerInfo) {
             return;
         }
 
         // Set context
         const authInfo = deserializeAuthInfo(storedAuthInfo);
-        const serverInfo = JSON.parse(storedServerInfo);
+        const serverInfo: ServerInfo = JSON.parse(storedServerInfo);
 
-        setAPIUrl(storedAPIUrl);
         setAuthInfo(authInfo);
         setServerInfo(serverInfo);
 
         // Get vault key
-        retrieveVaultKey(apiURL!, authInfo, (error) => {
+        retrieveVaultKey(serverInfo.apiURL!, authInfo, (error) => {
             console.error(error);
         }).then((resp) => {
             if (!resp) {
@@ -141,15 +119,14 @@ function useProvideAuth(): AuthProvider {
             }
             setVaultKey(resp);
         });
-    }, [apiURL]);
+    }, []);
 
     // Return data
     return {
-        apiURL: apiURL,
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
-        setAPIUrl: setAPIUrl,
+        setServerInfo: setServerInfoFunc,
         login: loginFunc,
         logout: logoutFunc,
         setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),
