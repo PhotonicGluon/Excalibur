@@ -24,7 +24,7 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { logOutOutline, settingsOutline } from "ionicons/icons";
+import { informationCircleOutline, logOutOutline, settingsOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import Preferences from "@lib/preferences";
@@ -306,6 +306,19 @@ const Login: React.FC = () => {
                                 <IonText className="pl-2">Settings</IonText>
                             </IonLabel>
                         </IonItem>
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                router.push("/credits", "forward", "push");
+                                menuController.close();
+                            }}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={informationCircleOutline} size="large" />
+                                <IonText className="pl-2">Credits</IonText>
+                            </IonLabel>
+                        </IonItem>
+
                         <IonItem
                             button={true}
                             onClick={() => {
