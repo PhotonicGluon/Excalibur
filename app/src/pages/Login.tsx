@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { useEffect, useState } from "react";
 
+import { menuController } from "@ionic/core/components";
 import {
     IonButton,
     IonButtons,
@@ -10,15 +11,21 @@ import {
     IonIcon,
     IonInput,
     IonInputPasswordToggle,
+    IonItem,
     IonLabel,
+    IonList,
     IonLoading,
+    IonMenu,
+    IonMenuButton,
     IonPage,
+    IonText,
     IonToolbar,
     useIonAlert,
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { settings } from "ionicons/icons";
+import packageInfo from "@root/package.json";
+import { logOutOutline, settingsOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import Preferences from "@lib/preferences";
@@ -279,87 +286,136 @@ const Login: React.FC = () => {
 
     // Render
     return (
-        <IonPage>
-            {/* Header content */}
-            <IonHeader>
-                <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
-                    <IonButtons slot="start">
-                        {/* Settings button */}
-                        <IonButton id="settings-button" color="medium" onClick={() => router.push("/settings")}>
-                            <IonIcon className="size-6" slot="icon-only" icon={settings}></IonIcon>
-                        </IonButton>
-                    </IonButtons>
-                </IonToolbar>
-            </IonHeader>
+        <>
+            {/* Hamburger menu */}
+            <IonMenu type="overlay" contentId="main-content">
+                <IonContent>
+                    <IonList
+                        lines="none"
+                        className="!bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:!flex [&_ion-label]:!items-center"
+                    >
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                router.push("/settings", "forward", "push");
+                                menuController.close();
+                            }}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={settingsOutline} size="large" />
+                                <IonText className="pl-2">Settings</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                auth.logout(true); // Fully log out
+                                router.push("/", "back", "replace");
+                            }}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={logOutOutline} size="large" />
+                                <IonText className="pl-2">Change Server</IonText>
+                            </IonLabel>
+                        </IonItem>
+                    </IonList>
 
-            {/* Body content */}
-            <IonContent fullscreen>
-                {/* Main container */}
-                <div className="flex h-full items-center justify-center">
-                    <div className="mx-auto flex w-4/5 flex-col">
-                        {/* Branding */}
-                        <div className="flex flex-col items-center">
-                            <img src={logo} className="size-36" alt="Excalibur logo" />
-                            <h1 className="-mt-4 mb-2 text-2xl font-bold">Login</h1>
-                        </div>
+                    {/* Info */}
+                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block">
+                        <IonText color="medium" className="text-xs md:text-sm">
+                            App version: <span className="font-mono">{packageInfo.version}</span>
+                        </IonText>
+                        {/* TODO: Get server version */}
+                        {/* <IonText color="medium" className="text-xs md:text-sm">
+                            Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
+                        </IonText> */}
+                    </div>
+                </IonContent>
+            </IonMenu>
 
-                        {/* Form */}
-                        <form>
-                            <div className="flex flex-col gap-3">
-                                <div className="h-18">
-                                    <IonInput
-                                        id="username-input"
-                                        label="Username"
-                                        labelPlacement="stacked"
-                                        fill="solid"
-                                        placeholder="MyCoolUsername"
-                                        type="text"
-                                    ></IonInput>
-                                </div>
-                                <div className="h-18">
-                                    <IonInput
-                                        id="password-input"
-                                        label="Password"
-                                        labelPlacement="stacked"
-                                        fill="solid"
-                                        placeholder="My secure password!"
-                                        type="password"
-                                        onKeyDown={(event) => {
-                                            if (event.key === "Enter") {
-                                                event.preventDefault();
-                                                onLoginButtonClick();
-                                            }
-                                        }}
-                                    >
-                                        <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
-                                    </IonInput>
-                                </div>
+            <IonPage id="main-content">
+                {/* Header content */}
+                <IonHeader>
+                    <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
+                        <IonButtons slot="start">
+                            <IonMenuButton onClick={() => menuController.open()} />
+                        </IonButtons>
+                    </IonToolbar>
+                </IonHeader>
 
-                                <IonCheckbox id="save-password-checkbox" labelPlacement="end">
-                                    <div className="w-full *:block *:leading-none">
-                                        <IonLabel className="text-base">Save password</IonLabel>
-                                        <IonLabel color="danger" className="text-xs text-wrap">
-                                            This is not recommended for security reasons.
-                                        </IonLabel>
-                                    </div>
-                                </IonCheckbox>
+                {/* Body content */}
+                <IonContent fullscreen>
+                    {/* Main container */}
+                    <div className="flex h-full items-center justify-center">
+                        <div className="mx-auto flex w-4/5 flex-col">
+                            {/* Branding */}
+                            <div className="flex flex-col items-center">
+                                <img src={logo} className="size-36" alt="Excalibur logo" />
+                                <h1 className="-mt-4 mb-2 text-2xl font-bold">Login</h1>
                             </div>
 
-                            <IonButton id="login-button" className="mx-auto pt-4" onClick={() => onLoginButtonClick()}>
-                                Log In
-                            </IonButton>
-                        </form>
-                    </div>
-                </div>
+                            {/* Form */}
+                            <form>
+                                <div className="flex flex-col gap-3">
+                                    <div className="h-18">
+                                        <IonInput
+                                            id="username-input"
+                                            label="Username"
+                                            labelPlacement="stacked"
+                                            fill="solid"
+                                            placeholder="MyCoolUsername"
+                                            type="text"
+                                        ></IonInput>
+                                    </div>
+                                    <div className="h-18">
+                                        <IonInput
+                                            id="password-input"
+                                            label="Password"
+                                            labelPlacement="stacked"
+                                            fill="solid"
+                                            placeholder="My secure password!"
+                                            type="password"
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter") {
+                                                    event.preventDefault();
+                                                    onLoginButtonClick();
+                                                }
+                                            }}
+                                        >
+                                            <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
+                                        </IonInput>
+                                    </div>
 
-                {/* Loading indicator */}
-                <IonLoading
-                    className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
-                    isOpen={isLoading}
-                    message={loadingState}
-                ></IonLoading>
-            </IonContent>
-        </IonPage>
+                                    <IonCheckbox id="save-password-checkbox" labelPlacement="end">
+                                        <div className="w-full *:block *:leading-none">
+                                            <IonLabel className="text-base">Save password</IonLabel>
+                                            <IonLabel color="danger" className="text-xs text-wrap">
+                                                This is not recommended for security reasons.
+                                            </IonLabel>
+                                        </div>
+                                    </IonCheckbox>
+                                </div>
+
+                                <IonButton
+                                    id="login-button"
+                                    className="mx-auto pt-4"
+                                    onClick={() => onLoginButtonClick()}
+                                >
+                                    Log In
+                                </IonButton>
+                            </form>
+                        </div>
+                    </div>
+
+                    {/* Loading indicator */}
+                    <IonLoading
+                        className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
+                        isOpen={isLoading}
+                        message={loadingState}
+                    ></IonLoading>
+                </IonContent>
+            </IonPage>
+        </>
     );
 };
 
