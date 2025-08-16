@@ -24,7 +24,6 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import packageInfo from "@root/package.json";
 import { logOutOutline, settingsOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
@@ -35,6 +34,7 @@ import generateKey from "@lib/security/keygen";
 import { addUser, checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
+import Versions from "@components/Versions";
 import { useAuth } from "@contexts/auth";
 
 import logo from "@assets/icon.png";
@@ -320,16 +320,7 @@ const Login: React.FC = () => {
                         </IonItem>
                     </IonList>
 
-                    {/* Info */}
-                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block">
-                        <IonText color="medium" className="text-xs md:text-sm">
-                            App version: <span className="font-mono">{packageInfo.version}</span>
-                        </IonText>
-                        {/* TODO: Get server version */}
-                        {/* <IonText color="medium" className="text-xs md:text-sm">
-                            Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
-                        </IonText> */}
-                    </div>
+                    <Versions className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block" />
                 </IonContent>
             </IonMenu>
 

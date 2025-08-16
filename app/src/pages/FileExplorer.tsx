@@ -30,7 +30,6 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import packageInfo from "@root/package.json";
 import {
     add,
     documentOutline,
@@ -49,6 +48,7 @@ import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
 
 import Countdown from "@components/Countdown";
+import Versions from "@components/Versions";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
@@ -482,15 +482,7 @@ const FileExplorer: React.FC = () => {
                         </IonItem>
                     </IonList>
 
-                    {/* Info */}
-                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block">
-                        <IonText color="medium" className="text-xs md:text-sm">
-                            App version: <span className="font-mono">{packageInfo.version}</span>
-                        </IonText>
-                        <IonText color="medium" className="text-xs md:text-sm">
-                            Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
-                        </IonText>
-                    </div>
+                    <Versions className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block" />
                 </IonContent>
             </IonMenu>
 
