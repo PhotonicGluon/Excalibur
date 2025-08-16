@@ -85,7 +85,7 @@ const App: React.FC = () => {
             <IonReactRouter>
                 <IonRouterOutlet>
                     {/* Authentication */}
-                    <Redirect exact from="/" to="/welcome" />
+                    <Redirect exact from="/" to="/login" />
                     <Route exact path="/welcome" component={Welcome} />
                     <NeedServerURLRoute exact path="/login" component={Login} />
 

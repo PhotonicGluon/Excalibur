@@ -95,19 +95,33 @@ function useProvideAuth(): AuthProvider {
 
     // Effects
     useEffect(() => {
+        // Check if local storage has server info
+        const storedServerInfo = localStorage.getItem("serverInfo");
+        if (!storedServerInfo) {
+            return;
+        }
+
+        // Set context
+        const serverInfo: ServerInfo = JSON.parse(storedServerInfo);
+        setServerInfo(serverInfo);
+    }, []);
+
+    useEffect(() => {
         // Check if local storage has auth info
         const storedAuthInfo = localStorage.getItem("authInfo");
-        const storedServerInfo = localStorage.getItem("serverInfo");
-        if (!storedAuthInfo || !storedServerInfo) {
+        if (!storedAuthInfo) {
             return;
         }
 
         // Set context
         const authInfo = deserializeAuthInfo(storedAuthInfo);
-        const serverInfo: ServerInfo = JSON.parse(storedServerInfo);
-
         setAuthInfo(authInfo);
-        setServerInfo(serverInfo);
+    }, []);
+
+    useEffect(() => {
+        if (!authInfo || !serverInfo) {
+            return;
+        }
 
         // Get vault key
         retrieveVaultKey(serverInfo.apiURL!, authInfo, (error) => {
@@ -119,7 +133,7 @@ function useProvideAuth(): AuthProvider {
             }
             setVaultKey(resp);
         });
-    }, []);
+    }, [authInfo, serverInfo]);
 
     // Return data
     return {
