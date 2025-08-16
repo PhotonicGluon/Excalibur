@@ -323,7 +323,7 @@ const Login: React.FC = () => {
                             button={true}
                             onClick={() => {
                                 auth.logout(true); // Fully log out
-                                router.push("/", "back", "replace");
+                                router.push("/welcome", "forward", "replace");
                             }}
                         >
                             <IonLabel>

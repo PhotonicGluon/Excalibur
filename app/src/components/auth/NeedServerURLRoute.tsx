@@ -9,11 +9,7 @@ import { useAuth } from "@contexts/auth";
 const NeedServerURLRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
     const auth = useAuth();
     const location = useLocation();
-    return (
-        <Route {...rest}>
-            {auth.serverInfo ? children : <Redirect from={location.pathname} to="/server-choice" />}
-        </Route>
-    );
+    return <Route {...rest}>{auth.serverInfo ? children : <Redirect from={location.pathname} to="/welcome" />}</Route>;
 };
 
 export default NeedServerURLRoute;

@@ -21,7 +21,7 @@ import { validateURL } from "@lib/validators";
 import URLInput from "@components/inputs/URLInput";
 import { useAuth } from "@contexts/auth";
 
-const ServerChoice: React.FC = () => {
+const Welcome: React.FC = () => {
     // States
     const auth = useAuth();
     const router = useIonRouter();
@@ -208,4 +208,4 @@ const ServerChoice: React.FC = () => {
     );
 };
 
-export default ServerChoice;
+export default Welcome;
