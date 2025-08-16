@@ -1,0 +1,195 @@
+import { useEffect, useState } from "react";
+
+import {
+    IonButton,
+    IonButtons,
+    IonContent,
+    IonHeader,
+    IonIcon,
+    IonLoading,
+    IonPage,
+    IonToolbar,
+    useIonAlert,
+    useIonRouter,
+} from "@ionic/react";
+import { settings } from "ionicons/icons";
+
+import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
+import Preferences from "@lib/preferences";
+import { validateURL } from "@lib/validators";
+
+import URLInput from "@components/inputs/URLInput";
+import { useAuth } from "@contexts/auth";
+
+const ServerChoice: React.FC = () => {
+    // States
+    const auth = useAuth();
+    const router = useIonRouter();
+
+    // States
+    const [presentAlert] = useIonAlert();
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingState, setLoadingState] = useState("Checking connectivity...");
+
+    // Functions
+    /**
+     * Gets the server URL from the form.
+     *
+     * @returns The server URL
+     */
+    function getServerURL(): string {
+        const inputs = document.querySelectorAll("ion-input");
+        let server = inputs[0].value! as string;
+        server = server.replace(/\/$/, ""); // Remove trailing slash
+        inputs[0].value = server;
+        return server;
+    }
+
+    /**
+     * Handles the confirm button click event.
+     */
+    async function onConfirm() {
+        // Check values
+        const serverURL = getServerURL();
+        if (!validateURL(serverURL)) {
+            presentAlert({
+                header: "Invalid Values",
+                message: "Some values are missing or invalid.",
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.debug(`Received values: ${JSON.stringify(serverURL)}`);
+        setIsLoading(true);
+
+        // Check connectivity to the server
+        const apiURL = `${serverURL}/api`;
+        console.debug(`Checking connectivity to ${apiURL}...`);
+
+        const connectionResult = await checkAPIUrl(apiURL);
+        if (!connectionResult.reachable) {
+            setIsLoading(false);
+            console.error(`Could not reach ${serverURL}: ${connectionResult.error}`);
+
+            let error = connectionResult.error;
+            if (error === "Failed to fetch") {
+                error = "Please check your internet connection.";
+            }
+
+            presentAlert({
+                header: "Connection Failure",
+                subHeader: `Could not connect to ${serverURL}`,
+                message: error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        if (!connectionResult.validAPIUrl) {
+            setIsLoading(false);
+            presentAlert({
+                header: "Connection Failure",
+                subHeader: "Invalid API URL",
+                message: connectionResult.error,
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        // Check API compatibility
+        setLoadingState("Checking API compatibility...");
+        const compatibilityResult = await checkAPICompatibility(apiURL);
+        if (!compatibilityResult.valid) {
+            setIsLoading(false);
+            presentAlert({
+                header: "Incompatible API",
+                message: "This server is not compatible with this version of Excalibur.",
+                buttons: ["OK"],
+            });
+            return;
+        }
+
+        // Update preferences
+        Preferences.set({
+            server: serverURL,
+        });
+
+        // Set API URL
+        auth.setAPIUrl(apiURL);
+
+        // Continue with login
+        router.push("/login", "forward", "replace");
+        return;
+    }
+
+    // Effects
+    // TODO: Do we need this?
+    useEffect(() => {
+        // Get existing values from preferences
+        Preferences.get("server").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing server URL from preferences: ${result}`);
+            document.querySelector("#server-input")!.setAttribute("value", result!);
+        });
+    }, []);
+
+    // Render
+    return (
+        <IonPage>
+            {/* Header content */}
+            <IonHeader>
+                <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
+                    <IonButtons slot="start">
+                        {/* Settings button */}
+                        <IonButton id="settings-button" color="medium" onClick={() => router.push("/settings")}>
+                            <IonIcon className="size-6" slot="icon-only" icon={settings}></IonIcon>
+                        </IonButton>
+                    </IonButtons>
+                </IonToolbar>
+            </IonHeader>
+
+            {/* Body content */}
+            <IonContent fullscreen>
+                {/* Main container */}
+                <div className="flex h-full items-center justify-center">
+                    <div className="mx-auto flex w-4/5 flex-col">
+                        {/* Branding */}
+                        <div className="flex flex-col items-baseline">
+                            <h1 className="-mt-4 mb-2 text-2xl font-bold">Welcome</h1>
+                            <p className="text-sm text-wrap">Please enter the URL of your Excalibur server.</p>
+                        </div>
+
+                        {/* Form */}
+                        <form>
+                            <div className="h-18">
+                                <URLInput
+                                    id="server-input"
+                                    label="Server URL"
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                            event.preventDefault();
+                                            onConfirm();
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                            <IonButton id="confirm-button" className="mx-auto pt-4" onClick={() => onConfirm()}>
+                                Confirm
+                            </IonButton>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Loading indicator */}
+                <IonLoading
+                    className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
+                    isOpen={isLoading}
+                    message={loadingState}
+                ></IonLoading>
+            </IonContent>
+        </IonPage>
+    );
+};
+
+export default ServerChoice;

@@ -54,6 +54,8 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
             errorText="Invalid URL"
             onIonInput={(event) => validate(event)}
             onIonBlur={() => markTouched()}
+            onKeyDown={props.onKeyDown}
+            disabled={props.disabled}
         ></IonInput>
     );
 };

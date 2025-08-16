@@ -52,6 +52,10 @@ function useProvideAuth(): AuthProvider {
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
+    function setAPIUrl(apiURL: string) {
+        setAuthInfo({ ...authInfo!, apiURL });
+    }
+
     async function loginFunc(authInfo: AuthInfo) {
         // Get server info
         const versionResponse = await getServerVersion(authInfo.apiURL);
@@ -96,7 +100,7 @@ function useProvideAuth(): AuthProvider {
         clearInterval(heartbeatInterval!);
 
         // Clear state
-        setAuthInfo(null);
+        setAuthInfo(null); // FIXME: The server URL should be kept...
         setServerInfo(null);
         setVaultKey(null);
 
@@ -137,6 +141,7 @@ function useProvideAuth(): AuthProvider {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
+        setAPIUrl: setAPIUrl,
         login: loginFunc,
         logout: logoutFunc,
         setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),

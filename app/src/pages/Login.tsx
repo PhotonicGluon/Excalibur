@@ -21,23 +21,18 @@ import {
 import { settings } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
-import { checkAPICompatibility, checkAPIUrl } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { getGroup } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
 import generateKey from "@lib/security/keygen";
 import { addUser, checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
-import { validateURL } from "@lib/validators";
 
-import URLInput from "@components/inputs/URLInput";
 import { useAuth } from "@contexts/auth";
 
 import logo from "@assets/icon.png";
 
 interface LoginValues {
-    /** URL to the server */
-    server: string;
     /** Username to log in as */
     username: string;
     /** Password for the user */
@@ -70,16 +65,12 @@ const Login: React.FC = () => {
         const checkboxes = document.querySelectorAll("ion-checkbox");
 
         // Preprocess
-        let server = inputs[0].value! as string;
-        server = server.replace(/\/$/, ""); // Remove trailing slash
-        inputs[0].value = server;
-
-        const username = inputs[1].value! as string;
-        const password = inputs[2].value! as string;
+        const username = inputs[0].value! as string;
+        const password = inputs[1].value! as string;
         const savePassword = checkboxes[0].checked! as boolean;
 
         // Form values
-        return { server: server, username: username, password: password, savePassword: savePassword };
+        return { username: username, password: password, savePassword: savePassword };
     }
 
     /**
@@ -88,14 +79,9 @@ const Login: React.FC = () => {
      * @param values The values from the form
      * @returns Whether the values are valid
      */
-    function validateValues({ server, username, password }: LoginValues) {
+    function validateValues({ username, password }: LoginValues) {
         // Check all filled
-        if (server === "" || username === "" || password === "") {
-            return false;
-        }
-
-        // Check server URL
-        if (!validateURL(server)) {
+        if (username === "" || password === "") {
             return false;
         }
 
@@ -119,54 +105,9 @@ const Login: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(values)}`);
         setIsLoading(true);
 
-        // Check connectivity to the server
-        const apiURL = `${values.server}/api`;
-        console.debug(`Checking connectivity to ${apiURL}...`);
-
-        const connectionResult = await checkAPIUrl(apiURL);
-        if (!connectionResult.reachable) {
-            setIsLoading(false);
-            console.error(`Could not reach ${values.server}: ${connectionResult.error}`);
-
-            let error = connectionResult.error;
-            if (error === "Failed to fetch") {
-                error = "Please check your internet connection.";
-            }
-
-            presentAlert({
-                header: "Connection Failure",
-                subHeader: `Could not connect to ${values.server}`,
-                message: error,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        if (!connectionResult.validAPIUrl) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Connection Failure",
-                subHeader: "Invalid API URL",
-                message: connectionResult.error,
-                buttons: ["OK"],
-            });
-            return;
-        }
-
-        // Check API compatibility
-        const compatibilityResult = await checkAPICompatibility(apiURL);
-        if (!compatibilityResult.valid) {
-            setIsLoading(false);
-            presentAlert({
-                header: "Incompatible API",
-                message: "This server is not compatible with this version of Excalibur.",
-                buttons: ["OK"],
-            });
-            return;
-        }
-
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
-        if (!(await checkUser(apiURL, values.username))) {
+        if (!(await checkUser(auth.authInfo!.apiURL, values.username))) {
             setIsLoading(false);
             presentAlert({
                 header: "Security Details Not Set Up",
@@ -190,7 +131,7 @@ const Login: React.FC = () => {
                         handler: async () => {
                             // Get SRP group used for communication
                             setLoadingState("Determining SRP group...");
-                            const groupResponse = await getGroup(apiURL);
+                            const groupResponse = await getGroup(auth.authInfo!.apiURL);
                             const srpGroup = groupResponse.group;
                             if (!srpGroup) {
                                 setIsLoading(false);
@@ -229,7 +170,14 @@ const Login: React.FC = () => {
                             const srpVerifier = srpGroup.generateVerifier(srpKey);
 
                             // Set up security details
-                            await addUser(apiURL, values.username, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
+                            await addUser(
+                                auth.authInfo!.apiURL,
+                                values.username,
+                                aukSalt,
+                                srpSalt,
+                                srpVerifier,
+                                encryptedVaultKey,
+                            );
                             console.debug("Security details set up");
                             presentToast({
                                 message: "Security details set up. Please log in again.",
@@ -245,7 +193,7 @@ const Login: React.FC = () => {
 
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
-            apiURL,
+            auth.authInfo!.apiURL,
             values.username,
             values.password,
             () => setIsLoading(false),
@@ -261,7 +209,7 @@ const Login: React.FC = () => {
 
         // Log into the server using the UUID and master key
         console.debug("Logging in...");
-        const authInfo = { apiURL: apiURL, username: values.username, ...e2eeData };
+        const authInfo = { apiURL: auth.authInfo!.apiURL, username: values.username, ...e2eeData };
         try {
             await auth.login(authInfo);
         } catch (error) {
@@ -294,7 +242,6 @@ const Login: React.FC = () => {
 
         // Update preferences
         Preferences.set({
-            server: values.server,
             username: values.username,
             password: values.savePassword ? values.password : "",
             savePassword: values.savePassword,
@@ -310,7 +257,11 @@ const Login: React.FC = () => {
     useEffect(() => {
         // Get existing values from preferences
         Preferences.get("server").then((result) => {
-            if (!result) return;
+            if (!result) {
+                // Kick back to server choice
+                router.push("/server-choice", "forward", "replace");
+                return;
+            }
             console.debug(`Got existing server URL from preferences: ${result}`);
             document.querySelector("#server-input")!.setAttribute("value", result!);
         });
@@ -364,9 +315,6 @@ const Login: React.FC = () => {
                         {/* Form */}
                         <form>
                             <div className="flex flex-col gap-3">
-                                <div className="h-18">
-                                    <URLInput id="server-input" label="Server URL" />
-                                </div>
                                 <div className="h-18">
                                     <IonInput
                                         id="username-input"

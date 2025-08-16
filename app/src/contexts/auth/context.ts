@@ -6,7 +6,7 @@ export interface AuthInfo extends E2EEData {
     /** API URL */
     apiURL: string;
     /** Username */
-    username: string;
+    username?: string;
 }
 
 export interface ServerInfo {
@@ -23,6 +23,8 @@ export interface AuthProvider {
     serverInfo: ServerInfo | null;
     /** Vault key, retrieved upon login */
     vaultKey: Buffer | null;
+    /** Set the API URL */
+    setAPIUrl: (apiURL: string) => void;
     /** Function to log into the server */
     login: (authInfo: AuthInfo) => Promise<void>;
     /** Function to log out of the server */

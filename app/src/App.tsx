@@ -26,13 +26,15 @@ import "@ionic/react/css/structure.css";
 import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 
-import { PrivateRoute } from "@components/auth/PrivateRoute";
+import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
+import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@contexts/settings";
 
 /* App pages */
 import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
+import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
 
 import "@theme/variables.css";
@@ -82,11 +84,14 @@ const App: React.FC = () => {
         <IonApp>
             <IonReactRouter>
                 <IonRouterOutlet>
-                    <Route exact path="/login" component={Login} />
+                    <Route exact path="/welcome" component={ServerChoice} />
+                    <Redirect exact from="/server-choice" to="/welcome" />
+                    <NeedServerURLRoute exact path="/login" component={Login} />
+                    <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
                     <Route path="/settings" component={Settings} />
                     <Route path="/credits" component={Credits} />
-                    <Redirect exact from="/" to="/login" />
+                    <Redirect exact from="/" to="/welcome" />
                 </IonRouterOutlet>
             </IonReactRouter>
         </IonApp>
