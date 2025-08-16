@@ -136,8 +136,10 @@ const Login: React.FC = () => {
                         text: "Yes",
                         role: "confirm",
                         handler: async () => {
+                            // TODO: It feels like this 'hangs' for a while before any confirmation is shown to the user whenever this is triggered... can we add more feedback?
+
                             // Get SRP group used for communication
-                            setLoadingState("Determining SRP group...");
+                            setLoadingState("Determining SRP group..."); // FIXME: In fact these don't appear...
                             const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
                             const srpGroup = groupResponse.group;
                             if (!srpGroup) {

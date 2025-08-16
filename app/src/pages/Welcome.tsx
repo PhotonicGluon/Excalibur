@@ -14,7 +14,7 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
-import { checkAPICompatibility, checkAPIUrl, getServerTime, getServerVersion } from "@lib/network";
+import { checkAPIUrl, getServerTime, getServerVersion } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/validators";
 
@@ -63,16 +63,16 @@ const Welcome: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(serverURL)}`);
         setIsLoading(true);
 
-        // Check connectivity to the server
+        // Check validity of the server URL
         const apiURL = `${serverURL}/api`;
-        console.debug(`Checking connectivity to ${apiURL}...`);
 
-        const connectionResult = await checkAPIUrl(apiURL);
-        if (!connectionResult.reachable) {
+        console.debug(`Checking validity of ${apiURL}...`);
+        const checkResult = await checkAPIUrl(apiURL);
+        if (!checkResult.reachable) {
             setIsLoading(false);
-            console.error(`Could not reach ${serverURL}: ${connectionResult.error}`);
+            console.error(`Could not reach ${serverURL}: ${checkResult.error}`);
 
-            let error = connectionResult.error;
+            let error = checkResult.error;
             if (error === "Failed to fetch") {
                 error = "Please check your internet connection.";
             }
@@ -85,21 +85,17 @@ const Welcome: React.FC = () => {
             });
             return;
         }
-        if (!connectionResult.validAPIUrl) {
+        if (!checkResult.valid) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
                 subHeader: "Invalid API URL",
-                message: connectionResult.error,
+                message: checkResult.error,
                 buttons: ["OK"],
             });
             return;
         }
-
-        // Check API compatibility
-        setLoadingState("Checking API compatibility...");
-        const compatibilityResult = await checkAPICompatibility(apiURL);
-        if (!compatibilityResult.valid) {
+        if (!checkResult.compatible) {
             setIsLoading(false);
             presentAlert({
                 header: "Incompatible API",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { heartbeat as _heartbeat } from "@lib/network";
+import { heartbeat as _heartbeat, checkAPIUrl } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
@@ -104,6 +104,15 @@ function useProvideAuth(): AuthProvider {
         // Set context
         const serverInfo: ServerInfo = JSON.parse(storedServerInfo);
         setServerInfo(serverInfo);
+
+        // Is server valid?
+        checkAPIUrl(serverInfo.apiURL!).then((result) => {
+            if (!result.reachable || !result.valid || !result.compatible) {
+                console.debug(`Server '${serverInfo.apiURL}' is not valid; going back to welcome screen`);
+                logoutFunc(true);
+                return;
+            }
+        });
     }, []);
 
     useEffect(() => {
