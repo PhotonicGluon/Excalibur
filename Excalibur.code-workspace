@@ -48,7 +48,8 @@
         "cSpell.words": [
             "pipx",
             "showcontent",
-            "towncrier"
+            "towncrier",
+            "trustless"
         ]
     },
     "extensions": {

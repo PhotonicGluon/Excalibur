@@ -1,7 +1,7 @@
 {
     "name": "excalibur",
     "version": "0.2.0-alpha.5",
-    "description": "An app that interacts with an encrypted file server",
+    "description": "A trustless secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
         "url": "https://github.com/PhotonicGluon/Excalibur/issues"

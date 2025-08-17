@@ -17,6 +17,7 @@
         "powmod",
         "priv",
         "randbits",
+        "trustless",
         "updaters"
     ],
     "[javascript]": {

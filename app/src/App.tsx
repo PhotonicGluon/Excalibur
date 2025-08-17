@@ -85,8 +85,15 @@ const App: React.FC = () => {
         <IonApp>
             <IonReactRouter>
                 <IonRouterOutlet>
+                    {/* Index */}
+                    {localStorage.getItem("hasSeenWelcome") === "true" ? (
+                        <Redirect exact from="/" to="/login" />
+                    ) : (
+                        <Redirect exact from="/" to="/welcome" />
+                    )}
+
+                    {/* Welcome */}
                     <Route exact path="/welcome" component={Welcome} />
-                    <Redirect exact from="/" to="/login" />
 
                     {/* Authentication */}
                     <Route exact path="/server-choice" component={ServerChoice} />

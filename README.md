@@ -1,6 +1,6 @@
 # Excalibur
 
-An app and server that encrypts files before storing them.
+A trustless secure file management solution using military-grade encryption.
 
 ## Development
 

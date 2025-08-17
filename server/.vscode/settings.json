@@ -24,6 +24,7 @@
         "sessionmaker",
         "sqlalchemy",
         "sqlmodel",
+        "trustless",
         "vite"
     ],
     "[python]": {
