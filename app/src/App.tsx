@@ -34,6 +34,7 @@ import { useSettings } from "@contexts/settings";
 import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
+import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
 import Welcome from "@pages/Welcome";
 
@@ -84,9 +85,11 @@ const App: React.FC = () => {
         <IonApp>
             <IonReactRouter>
                 <IonRouterOutlet>
-                    {/* Authentication */}
-                    <Redirect exact from="/" to="/login" />
                     <Route exact path="/welcome" component={Welcome} />
+                    <Redirect exact from="/" to="/login" />
+
+                    {/* Authentication */}
+                    <Route exact path="/server-choice" component={ServerChoice} />
                     <NeedServerURLRoute exact path="/login" component={Login} />
 
                     {/* Main */}

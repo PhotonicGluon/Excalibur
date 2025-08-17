@@ -325,7 +325,7 @@ const Login: React.FC = () => {
                             button={true}
                             onClick={() => {
                                 auth.logout(true); // Fully log out
-                                router.push("/welcome", "forward", "replace");
+                                router.push("/server-choice", "forward", "replace");
                             }}
                         >
                             <IonLabel>
