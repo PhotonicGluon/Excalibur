@@ -6,9 +6,25 @@ from typing import Annotated
 import typer
 from alembic.config import Config
 
+from excalibur_server.meta import VERSION
+
 CLI_DIR = Path(__file__).parent
 
 app = typer.Typer(no_args_is_help=True, invoke_without_command=True)
+
+ASCII_BANNER = """\
+  ________   _______          _      _____ ____  _    _ _____  
+ |  ____\ \ / / ____|   /\   | |    |_   _|  _ \| |  | |  __ \ 
+ | |__   \ V / |       /  \  | |      | | | |_) | |  | | |__) |
+ |  __|   > <| |      / /\ \ | |      | | |  _ <| |  | |  _  / 
+ | |____ / . \ |____ / ____ \| |____ _| |_| |_) | |__| | | \ \ 
+ |______/_/ \_\_____/_/    \_\______|_____|____/ \____/|_|  \_\ \
+"""
+
+def _print_banner():
+    typer.secho(ASCII_BANNER, fg="blue")
+    typer.secho(f"Excalibur Server {VERSION}", fg="cyan")
+    typer.echo()
 
 
 # Add a callback to handle the `--version` option
@@ -22,6 +38,8 @@ def main(version: Annotated[bool, typer.Option("--version", "-v", help="Show Exc
         from importlib import metadata
 
         typer.echo(metadata.version("excalibur-server"))
+    else:
+        _print_banner()
 
 
 # Add a function to get the Alembic config

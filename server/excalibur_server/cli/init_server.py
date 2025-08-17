@@ -22,9 +22,11 @@ def init_server(
 
     # Handle resetting
     if reset:
+        typer.secho("Resetting server...", fg="yellow")
         from excalibur_server.cli.reset_server import _reset_server
 
         _reset_server()
+        typer.secho("Server reset.", fg="yellow")
 
     # Make the root folder
     os.makedirs(ROOT_FOLDER, exist_ok=True)
@@ -32,7 +34,11 @@ def init_server(
     # Copy the config file
     config_path = ROOT_FOLDER / "config.toml"
     if not config_path.exists():
+        typer.secho("Creating config file...", nl=False, fg="yellow")
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
+        typer.secho("done.", fg="green")
+    else:
+        typer.secho("Config file already exists; not changing", fg="yellow")
 
     # Obtain config
     from excalibur_server.src.config import CONFIG
