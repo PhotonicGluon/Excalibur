@@ -136,10 +136,10 @@ const Login: React.FC = () => {
                         text: "Yes",
                         role: "confirm",
                         handler: async () => {
-                            // TODO: It feels like this 'hangs' for a while before any confirmation is shown to the user whenever this is triggered... can we add more feedback?
+                            setIsLoading(true);
 
                             // Get SRP group used for communication
-                            setLoadingState("Determining SRP group..."); // FIXME: In fact these don't appear...
+                            setLoadingState("Determining SRP group...");
                             const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
                             const srpGroup = groupResponse.group;
                             if (!srpGroup) {
@@ -155,7 +155,7 @@ const Login: React.FC = () => {
                             console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
 
                             // Set up account unlock key (AUK) and vault key
-                            console.debug("Creating new AUK and vault key");
+                            setLoadingState("Creating new AUK and vault key...");
                             const aukSalt = randomBytes(32);
                             const auk = await generateKey(values.password, aukSalt);
                             console.debug(
@@ -168,8 +168,7 @@ const Login: React.FC = () => {
                             const encryptedVaultKey = exef.encrypt(vaultKey);
 
                             // Set up SRP key
-                            console.debug("Creating new SRP key");
-
+                            setLoadingState("Creating new SRP key...");
                             const srpSalt = randomBytes(32);
                             const srpKey = await generateKey(values.password, srpSalt);
                             console.debug(
@@ -179,6 +178,7 @@ const Login: React.FC = () => {
                             const srpVerifier = srpGroup.generateVerifier(srpKey);
 
                             // Set up security details
+                            setLoadingState("Adding user...");
                             await addUser(
                                 auth.serverInfo!.apiURL!,
                                 values.username,
@@ -193,6 +193,8 @@ const Login: React.FC = () => {
                                 duration: 5000,
                                 color: "success",
                             });
+
+                            setIsLoading(false);
                         },
                     },
                 ],
