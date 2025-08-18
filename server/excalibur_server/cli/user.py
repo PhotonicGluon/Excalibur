@@ -4,7 +4,7 @@ from typing import Annotated
 
 import typer
 
-from excalibur_server.cli import app
+user_app = typer.Typer(no_args_is_help=True, help="User operations.")
 
 
 def _vault_key_callback(value: str) -> str:
@@ -20,7 +20,7 @@ def _vault_key_callback(value: str) -> str:
     return value
 
 
-@app.command(name="add-user")
+@user_app.command(name="add")
 def add_user(
     username: Annotated[str, typer.Option(help="Username for the API server.", prompt=True)],
     password: Annotated[str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)],

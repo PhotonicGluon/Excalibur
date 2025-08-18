@@ -21,6 +21,7 @@ ASCII_BANNER = """\
  |______/_/ \_\_____/_/    \_\______|_____|____/ \____/|_|  \_\ \
 """
 
+
 def _print_banner():
     typer.secho(ASCII_BANNER, fg="blue")
     typer.secho(f"Excalibur Server {VERSION}", fg="cyan")
@@ -53,13 +54,14 @@ def get_alembic_config() -> Config:
 
 # Add other typer apps
 from .db import db_app
+from .user import user_app
 
 app.add_typer(db_app, name="db")
+app.add_typer(user_app, name="user")
 
 # Expose other commands
 from .init_server import init_server as init_server
 from .start_server import start_server as start_server
-from .add_user import add_user as add_user
 from .reset_server import reset_server as reset_server
 
 # Since tests may be excluded from the build, we need to handle the import like this
