@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "An app that interacts with an encrypted file server",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
