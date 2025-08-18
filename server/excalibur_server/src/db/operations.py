@@ -44,3 +44,19 @@ def get_user(username: str) -> User | None:
             if user is not None:
                 user = user.model_copy()  # So that we can avoid session issues
             return user
+
+
+def remove_user(username: str):
+    """
+    Removes a user from the database.
+
+    :param username: The username of the user to remove
+    :raises ValueError: If the user does not exist
+    """
+
+    with _get_session() as session:
+        with session.begin():
+            user = session.get(User, username)
+            if user is None:
+                raise ValueError(f"User '{username}' does not exist.")
+            session.delete(user)
