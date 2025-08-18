@@ -54,6 +54,7 @@ export async function downloadFile(
     const response = await fetch(`${auth.serverInfo!.apiURL}/files/download/${path}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        cache: "no-store",
     });
     switch (response.status) {
         case 200:
