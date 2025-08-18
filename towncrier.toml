@@ -25,6 +25,11 @@ name = "Changed"
 showcontent = true
 
 [[tool.towncrier.type]]
+directory = "performance"
+name = "Performance Improvements"
+showcontent = true
+
+[[tool.towncrier.type]]
 directory = "fixed"
 name = "Fixed"
 showcontent = true
@@ -37,4 +42,9 @@ showcontent = true
 [[tool.towncrier.type]]
 directory = "deprecated"
 name = "Deprecated"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other"
 showcontent = true

@@ -13,14 +13,23 @@ def start_server(
     encrypt_responses: Annotated[
         bool,
         typer.Option(
-            "-e/-E",
             "--encrypt-responses/--no-encrypt-responses",
+            "-e/-E",
             help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
         ),
     ] = True,
     delay_responses_duration: Annotated[
-        float, typer.Option("-d", "--delay-responses-duration", help="Duration to delay responses, in seconds.")
+        float, typer.Option("--delay", "-d", help="Duration to delay responses, in seconds.")
     ] = 0,
+    enable_cors: Annotated[
+        bool,
+        typer.Option(
+            "--enable-cors/--disable-cors",
+            "-c/-C",
+            help="Whether to enable CORS. It is recommended to only disable CORS for debugging purposes "
+            "(e.g., when using an Android emulator).",
+        ),
+    ] = True,
 ):
     """
     Start API server.
@@ -49,6 +58,10 @@ def start_server(
             RuntimeWarning,
         )
         os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0"
+
+    if not enable_cors:
+        warnings.warn("CORS is disabled. This is not recommended for production.", RuntimeWarning)
+        os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "0"
 
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = str(delay_responses_duration)
 
