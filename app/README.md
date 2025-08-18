@@ -51,15 +51,9 @@ You can change the `host` IP to restrict access.
 >     - Powershell: `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 >     - Command Prompt: `set JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 
-First, amend [`middlewares.py`](../server/excalibur_server/api/middlewares.py) in the `server` directory:
+First, [start the app's web server](#web).
 
-```python
-ALLOW_ORIGINS = [
-    "*"  # <-- To allow ALL origins
-]
-```
-
-Then [start the web server](#web).
+Next, start the [Excalibur Server](../server/README.md) _with CORS disabled_.
 
 Now find your android device using
 
@@ -67,10 +61,12 @@ Now find your android device using
 npx cap run android --list
 ```
 
+Note the target ID of the device you want to run the app on.
+
 Finally, without closing the web server, we can run
 
 ```bash
-npx cap run android --target=[PHONE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
+npx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
 ```
 
 > [!TIP]

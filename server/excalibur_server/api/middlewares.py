@@ -10,9 +10,13 @@ from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 def add_middleware(app: FastAPI):
     # Add CORS middleware
+    allow_origins = CONFIG.api.allow_origins
+    if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
+        allow_origins = ["*"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=CONFIG.api.allow_origins,
+        allow_origins=allow_origins,
         allow_methods=["*"],
         allow_headers=["*"],
         allow_credentials=True,
