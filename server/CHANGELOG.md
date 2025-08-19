@@ -8,6 +8,19 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.2 - 2025-08-19
+
+### ⚙️ Internal
+
+- Added `--disable-cors` option for debugging
+- Changed `typer` minimum version to `0.16.1`
+
+
+## 0.1.1 - 2025-08-18
+
+No significant changes.
+
+
 ## 0.1.0 - 2025-08-14
 
 Initial release of Excalibur server.

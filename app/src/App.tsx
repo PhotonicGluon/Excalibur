@@ -42,7 +42,9 @@ import "@theme/variables.css";
 
 // Set up app
 setupIonicReact();
-PrivacyScreen.enable();
+PrivacyScreen.enable({
+    android: { privacyModeOnActivityHidden: "dim", dimBackground: true, preventScreenshots: true },
+});
 
 // Helper functions
 function toggleDarkPalette(shouldAdd: boolean) {

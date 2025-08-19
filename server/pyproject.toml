@@ -23,7 +23,7 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "sqlmodel>=0.0.24",
     "toml>=0.10.2",
-    "typer~=0.15.4",             # TODO: Update to 0.16.x once the "no_args_is_help causing extra Error box popping up" is fixed
+    "typer>=0.16.1",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
