@@ -10,7 +10,7 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 ## 0.1.1 - 2025-08-18
 
-### Fixed
+### 🔧 Fixed
 
 - Fixed a bug where sometimes, after full decryption, downloading file for the first time reloads the page, and attempting to download same file will give "must start with ExEF header" error
 
