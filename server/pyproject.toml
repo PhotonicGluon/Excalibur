@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.1.0"
+version = "0.1.2a1"
 dependencies = [
     "aiofiles>=24.1.0",
     "cachetools>=6.1.0",
@@ -17,7 +17,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "semver>=3.0.4",
     "toml>=0.10.2",
-    "typer~=0.15.4",             # TODO: Update to 0.16.x once the "no_args_is_help causing extra Error box popping up" is fixed
+    "typer>=0.16.1",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
