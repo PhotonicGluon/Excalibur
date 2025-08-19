@@ -11,17 +11,22 @@ issue_format = "[#{issue}](https://github.com/PhotonicGluon/Excalibur/issues/{is
 
 [[tool.towncrier.type]]
 directory = "security"
-name = "Security"
+name = "🔒 Security"
 showcontent = true
 
 [[tool.towncrier.type]]
 directory = "added"
-name = "Added"
+name = "✨ Additions"
 showcontent = true
 
 [[tool.towncrier.type]]
 directory = "changed"
-name = "Changed"
+name = "✏️ Changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "performance"
+name = "🚄 Performance Improvements"
 showcontent = true
 
 [[tool.towncrier.type]]
@@ -31,17 +36,22 @@ showcontent = true
 
 [[tool.towncrier.type]]
 directory = "fixed"
-name = "Fixed"
+name = "🔧 Fixes"
 showcontent = true
 
 [[tool.towncrier.type]]
 directory = "removed"
-name = "Removed"
+name = "🗑️ Removals"
 showcontent = true
 
 [[tool.towncrier.type]]
 directory = "deprecated"
-name = "Deprecated"
+name = "⚠️ Deprecations"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "internal"
+name = "⚙️ Internal"
 showcontent = true
 
 [[tool.towncrier.type]]

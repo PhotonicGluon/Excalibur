@@ -9,7 +9,6 @@ dependencies = [
     "aiofiles>=24.1.0",
     "alembic>=1.16.4",
     "cachetools>=6.1.0",
-    "click<8.2.0",               # TODO: Remove this restriction once Typer #1262 is fixed (see https://github.com/fastapi/typer/pull/1262#issuecomment-3196733114)
     "duckdb>=1.3.2",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.116.1",
@@ -24,7 +23,7 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "sqlmodel>=0.0.24",
     "toml>=0.10.2",
-    "typer>=0.16.0",
+    "typer>=0.16.1",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
