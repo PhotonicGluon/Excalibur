@@ -8,6 +8,13 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.2 - 2025-08-19
+
+### ✏️ Changes
+
+- Changed privacy screen of app to be pure black (originally is the Excalibur splash screen)
+
+
 ## 0.1.1 - 2025-08-18
 
 ### 🔧 Fixed
