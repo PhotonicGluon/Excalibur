@@ -10,6 +10,26 @@ We recommend using [`pipx`](https://pipx.pypa.io/stable/) to install the server.
 pipx install [PATH_TO_WHEEL_FILE]
 ```
 
+## Usage
+
+Run
+
+```bash
+excalibur start
+```
+
+If using debug mode, run
+
+```bash
+excalibur start --debug
+```
+
+To disable CORS, run
+
+```bash
+excalibur start --disable-cors
+```
+
 ## Development
 
 > [!NOTE]
@@ -31,17 +51,7 @@ uv version
 
 ### Running the API Server
 
-Run
-
-```bash
-uv run excalibur start
-```
-
-If using debug mode, run
-
-```bash
-uv run excalibur start --debug
-```
+See the [usage section](#usage) above, but append `uv run` before every command.
 
 ### Linting
 

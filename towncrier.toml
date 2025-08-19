@@ -25,6 +25,11 @@ name = "✏️ Changes"
 showcontent = true
 
 [[tool.towncrier.type]]
+directory = "performance"
+name = "🚄 Performance Improvements"
+showcontent = true
+
+[[tool.towncrier.type]]
 directory = "fixed"
 name = "🔧 Fixes"
 showcontent = true

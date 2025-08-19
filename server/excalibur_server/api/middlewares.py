@@ -20,9 +20,13 @@ TOKEN_REFILL_RATE = 1
 
 def add_middleware(app: FastAPI):
     # Add CORS middleware
+    allow_origins = ALLOW_ORIGINS
+    if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
+        allow_origins = ["*"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=ALLOW_ORIGINS,
+        allow_origins=allow_origins,
         allow_methods=["*"],
         allow_headers=["*"],
         allow_credentials=True,
