@@ -21,6 +21,7 @@
             "@components/*": ["./src/components/*"],
             "@contexts/*": ["./src/contexts/*"],
             "@lib/*": ["./src/lib/*"],
+            "@native/*": ["src/native/*"],
             "@pages/*": ["./src/pages/*"],
             "@theme/*": ["./src/theme/*"],
             "@root/*": ["./*"]
