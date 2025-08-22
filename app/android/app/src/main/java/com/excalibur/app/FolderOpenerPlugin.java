@@ -17,7 +17,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 
 /**
- * A Capacitor plugin to open a specific folder in the device's file explorer.
+ * A Capacitor plugin that opens the Excalibur folder in a file explorer app.
  * <p>
  * This plugin specifically targets the app's custom folder within the public Documents directory
  * and uses a content URI to ensure compatibility.
@@ -31,32 +31,30 @@ public class FolderOpenerPlugin extends Plugin {
     private static final String EXCALIBUR_FOLDER = "/Excalibur";
 
     /**
-     * Opens the Excalibur documents folder in a file explorer app.
+     * Opens the Excalibur folder in a file explorer app.
      * <p>
      * It ensures the folder exists, then creates an {@link Intent#ACTION_VIEW} intent with a 
      * {@link DocumentsContract} URI to request that the system open the folder. The call is
      * rejected if the folder cannot be created or if no app can handle the intent.
      *
      * @param call The plugin call object used to resolve or reject the request
-     * @apiNote `call` does not take in any inputs. It will resolve to an object with a `opened`
-     *         boolean value, indicating whether the folder was successfully opened.
      */
     @PluginMethod
-    public void openDocumentsFolder(PluginCall call) {
-        Log.d(TAG, "openDocumentsFolder() called");
+    public void openExcaliburFolder(PluginCall call) {
+        Log.d(TAG, "openExcaliburFolder() called");
 
-        // Ensure that the Excalibur documents folder exists
-        File targetFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), EXCALIBUR_FOLDER);
-        if (!targetFolder.exists()) {
-            Log.d(TAG, "Excalibur documents folder does not yet exist... creating it");
-            if (!targetFolder.mkdirs()) {
+        // Ensure that the Excalibur folder exists
+        File excaliburFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), EXCALIBUR_FOLDER);
+        if (!excaliburFolder.exists()) {
+            Log.d(TAG, "Excalibur folder does not yet exist... creating it");
+            if (!excaliburFolder.mkdirs()) {
                 String errorMsg = "Failed to create folder";
                 Log.e(TAG, errorMsg);
                 call.reject(errorMsg);
                 return;
             }
         }
-        Log.d(TAG, "Absolute path: " + targetFolder.getAbsolutePath());
+        Log.d(TAG, "Absolute path: " + excaliburFolder.getAbsolutePath());
 
         // Build a special URI that points to that folder
         // This is not a file path URI but a content URI that the system's file picker understands
@@ -71,9 +69,7 @@ public class FolderOpenerPlugin extends Plugin {
         if (intent.resolveActivity(getContext().getPackageManager()) != null) {
             try {
                 getContext().startActivity(Intent.createChooser(intent, "Open Folder With"));
-                JSObject res = new JSObject();
-                res.put("opened", true);
-                call.resolve(res);
+                call.resolve();
                 return;
             } catch (android.content.ActivityNotFoundException ignored) {
                 // We will handle the error in the code after this

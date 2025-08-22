@@ -1,7 +1,10 @@
 import { registerPlugin } from "@capacitor/core";
 
 export interface FolderOpenerPlugin {
-    openDocumentsFolder(): Promise<{ opened: boolean }>;
+    /**
+     * Opens the Excalibur folder in a file explorer app.
+     */
+    openExcaliburFolder(): Promise<void>;
 }
 
 const FolderOpener = registerPlugin<FolderOpenerPlugin>("FolderOpener");

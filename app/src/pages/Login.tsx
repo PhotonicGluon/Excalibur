@@ -34,8 +34,6 @@ import generateKey from "@lib/security/keygen";
 import { addUser, checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
-import FolderOpener from "@native/FolderOpenerPlugin";
-
 import Versions from "@components/Versions";
 import { useAuth } from "@contexts/auth";
 
@@ -361,17 +359,6 @@ const Login: React.FC = () => {
                                 <img src={logo} className="size-36" alt="Excalibur logo" />
                                 <h1 className="-mt-4 mb-2 text-2xl font-bold">Login</h1>
                             </div>
-
-                            {/* TODO: REMOVE */}
-                            <IonButton
-                                onClick={() => {
-                                    FolderOpener.openDocumentsFolder().then((result) => {
-                                        console.log("Opened folder: ", result);
-                                    });
-                                }}
-                            >
-                                Open Documents Folder
-                            </IonButton>
 
                             {/* Form */}
                             <form>
