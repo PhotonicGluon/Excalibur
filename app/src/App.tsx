@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { PrivacyScreen } from "@capacitor/privacy-screen";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { useEffect } from "react";
@@ -39,9 +40,11 @@ import "@theme/variables.css";
 
 // Set up app
 setupIonicReact();
-PrivacyScreen.enable({
-    android: { privacyModeOnActivityHidden: "dim", dimBackground: true, preventScreenshots: true },
-});
+if (Capacitor.isNativePlatform()) {
+    PrivacyScreen.enable({
+        android: { privacyModeOnActivityHidden: "dim", dimBackground: true, preventScreenshots: true },
+    });
+}
 
 // Helper functions
 function toggleDarkPalette(shouldAdd: boolean) {
@@ -54,12 +57,14 @@ const App: React.FC = () => {
     const settings = useSettings();
 
     // Effects
-    useEffect(() => {
-        // Lock screen orientation to portrait
-        ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
-            console.warn(error);
-        });
-    }, []);
+    if (Capacitor.isNativePlatform()) {
+        useEffect(() => {
+            // Lock screen orientation to portrait
+            ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
+                console.warn(error);
+            });
+        }, []);
+    }
 
     useEffect(() => {
         // Set app theme
