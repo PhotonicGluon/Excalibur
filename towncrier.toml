@@ -53,8 +53,3 @@ showcontent = true
 directory = "internal"
 name = "⚙️ Internal"
 showcontent = true
-
-[[tool.towncrier.type]]
-directory = "other"
-name = "Other"
-showcontent = true
