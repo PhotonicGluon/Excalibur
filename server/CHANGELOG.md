@@ -8,6 +8,13 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.3 - 2025-08-22
+
+### ⚙️ Internal
+
+- Updated `uv.lock`'s dependencies' versions
+
+
 ## 0.1.2 - 2025-08-19
 
 ### ⚙️ Internal

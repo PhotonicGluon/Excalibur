@@ -1,12 +1,10 @@
 /// <reference types="vitest" />
-
+import tailwindcss from "@tailwindcss/vite";
+import legacy from "@vitejs/plugin-legacy";
+import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
 import { defineConfig } from "vite";
-
-import react from "@vitejs/plugin-react";
-import legacy from "@vitejs/plugin-legacy";
-import tailwindcss from "@tailwindcss/vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 /**
@@ -38,4 +36,5 @@ export default defineConfig({
         environment: "jsdom",
         setupFiles: "./src/setupTests.ts",
     },
+    server: { watch: { ignored: ["**/android"] } },
 });
