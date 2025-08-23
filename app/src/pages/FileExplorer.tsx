@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import { useCallback, useEffect, useState } from "react";
@@ -46,6 +47,8 @@ import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile 
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
+
+import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
@@ -496,7 +499,20 @@ const FileExplorer: React.FC = () => {
                                 <IonText className="pl-2">View Vault Key</IonText>
                             </IonLabel>
                         </IonItem>
-                        <IonItem>TODO: Add more ellipsis menu items</IonItem>
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                FolderOpener.openExcaliburFolder().catch((error) => {
+                                    presentSnackbar(`Failed to open Excalibur folder: ${error}`, "danger");
+                                });
+                            }}
+                            disabled={!Capacitor.isPluginAvailable("FolderOpener")}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={folderOutline} size="large" />
+                                <IonText className="pl-2">Open Excalibur Folder</IonText>
+                            </IonLabel>
+                        </IonItem>
                     </IonList>
                 </IonContent>
             </IonPopover>

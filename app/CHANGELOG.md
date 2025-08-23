@@ -8,6 +8,27 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.3 - 2025-08-22
+
+### 🔒 Security
+
+- Updated transient `sha.js` dependency from `2.4.11` to `2.4.12` to address CVE-2025-9288
+
+### ✏️ Changes
+
+- Changed minimum supported Android version from 6.0 to 13.0
+- Changed privacy screen and screen orientation handling to be more platform-dependent (instead of relying on checking if the capability is available)
+
+### 🔧 Fixes
+
+- Fixed issue with the app GUI going out of bounds
+
+### ⚙️ Internal
+
+- Changed Vite config to ignore android directory (which helps to reduce spurious page reloads)
+- Updated dependencies' versions
+
+
 ## 0.1.2 - 2025-08-19
 
 ### ✏️ Changes
