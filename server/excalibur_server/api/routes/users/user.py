@@ -6,10 +6,11 @@ from fastapi import Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_serializer
 
+from excalibur_server.api.misc import is_debug
 from excalibur_server.api.routes.users import router
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.security.token import get_credentials
-from excalibur_server.src.users import User, add_user, get_user, is_user
+from excalibur_server.src.users import User, add_user, get_user, is_user, remove_user
 
 
 class SecurityDetails(BaseModel):
@@ -23,7 +24,10 @@ class SecurityDetails(BaseModel):
     @classmethod
     def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetails":
         assert "auk_salt" in obj and "srp_salt" in obj
-        return SecurityDetails(auk_salt=b64decode(obj["auk_salt"]), srp_salt=b64decode(obj["srp_salt"]))
+        return SecurityDetails(
+            auk_salt=b64decode(obj["auk_salt"]),
+            srp_salt=b64decode(obj["srp_salt"]),
+        )
 
 
 class EncryptedVaultKey(BaseModel):
@@ -47,9 +51,9 @@ class EncryptedVaultKey(BaseModel):
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},
     },
 )
-def check_user_endpoint(username: Annotated[str, Path(description="The username to check")]):
+def check_user_endpoint(username: Annotated[str, Path()]):
     """
-    Endpoint that checks if the user exists.
+    Checks if a user with the specified username exists in the database.
     """
 
     if not is_user(username):
@@ -66,9 +70,9 @@ def check_user_endpoint(username: Annotated[str, Path(description="The username 
     },
     response_model=SecurityDetails,
 )
-def get_user_security_endpoint(username: Annotated[str, Path(description="The username to get security details for")]):
+def get_user_security_details_endpoint(username: Annotated[str, Path()]):
     """
-    Endpoint that returns the user security details.
+    Returns the security details of a user with the specified username.
     """
 
     if not is_user(username):
@@ -88,9 +92,9 @@ def get_user_security_endpoint(username: Annotated[str, Path(description="The us
     response_model=EncryptedVaultKey,
     tags=["encrypted"],
 )
-def get_user_vault_endpoint(username: Annotated[str, Path(description="The username to get vault key for")]):
+def get_user_vault_key_endpoint(username: Annotated[str, Path()]):
     """
-    Endpoint that returns the user vault key.
+    Returns the vault key of a user with the specified username.
     """
 
     if not is_user(username):
@@ -116,7 +120,7 @@ def get_user_vault_endpoint(username: Annotated[str, Path(description="The usern
     response_class=PlainTextResponse,
 )
 def add_user_endpoint(
-    username: Annotated[str, Path(description="The username to add")],
+    username: Annotated[str, Path()],
     auk_salt: Annotated[str, Body(description="Base64 string of the account unlock key (AUK) salt.")],
     srp_salt: Annotated[str, Body(description="Base64 string of the SRP handshake salt.")],
     verifier: Annotated[str, Body(description="Base64 string of the verifier to enrol.")],
@@ -151,3 +155,18 @@ def add_user_endpoint(
 
     add_user(user)
     return "User added"
+
+
+if is_debug():
+    # Include this endpoint only in debug mode
+    @router.delete("/remove/{username}", name="Remove User", tags=["debug"])
+    def remove_user_endpoint(username: Annotated[str, Path()]):
+        """
+        Removes a user from the database.
+        """
+
+        if not is_user(username):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        remove_user(username)
+        return "User removed"
