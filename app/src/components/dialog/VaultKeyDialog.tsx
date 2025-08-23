@@ -19,6 +19,12 @@ import { useAuth } from "@contexts/auth";
 import "./VaultKeyDialog.css";
 
 interface VaultKeyDialogProps {
+    /**
+     * A vault key to display.
+     *
+     * If not provided, will use the vault key from the authentication context.
+     */
+    vaultKey?: Buffer;
     /** Whether the dialog is open */
     isOpen: boolean;
     /** Callback when the dialog is dismissed */
@@ -31,7 +37,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
 
     // States
     const [isValid, setIsValid] = useState<boolean>();
-    const [localVaultKey, setLocalVaultKey] = useState("");
+    const [localVaultKey, setLocalVaultKey] = useState<string>("");
 
     // Functions
     /**
@@ -56,10 +62,16 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
 
     // Effects
     useEffect(() => {
-        const vaultKeyRaw = auth.vaultKey ? auth.vaultKey!.toString("hex").toLocaleUpperCase() : "";
-
+        let vk;
+        if (props.vaultKey) {
+            vk = props.vaultKey!;
+        }
+        if (auth.vaultKey) {
+            vk = auth.vaultKey;
+        }
+        const vaultKeyRaw = vk ? vk.toString("hex").toLocaleUpperCase() : "";
         setLocalVaultKey(vaultKeyRaw);
-    }, [auth.vaultKey]);
+    }, [auth.vaultKey, props.vaultKey]);
 
     // Render
     return (

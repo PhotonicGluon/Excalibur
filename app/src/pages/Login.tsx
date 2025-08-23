@@ -35,6 +35,7 @@ import { addUser, checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import Versions from "@components/Versions";
+import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import { useAuth } from "@contexts/auth";
 
 import logo from "@assets/icon.png";
@@ -59,6 +60,9 @@ const Login: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
+
+    const [localVaultKey, setLocalVaultKey] = useState<Buffer>();
+    const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     // Functions
     /**
@@ -99,6 +103,63 @@ const Login: React.FC = () => {
      * Handles the login button click event.
      */
     async function onLoginButtonClick() {
+        /**
+         * Handles the initial registration of the user on the server.
+         */
+        async function registerOnServer() {
+            setIsLoading(true);
+
+            // Get SRP group used for communication
+            setLoadingState("Determining SRP group...");
+            const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
+            const srpGroup = groupResponse.group;
+            if (!srpGroup) {
+                setIsLoading(false);
+                presentToast({
+                    message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
+                    duration: 2000,
+                    color: "danger",
+                });
+                return;
+            }
+
+            console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
+
+            // Set up account unlock key (AUK) and vault key
+            setLoadingState("Creating new AUK and vault key...");
+            const aukSalt = randomBytes(32);
+            const auk = await generateKey(values.password, aukSalt);
+            console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
+
+            const vaultKey = randomBytes(32);
+            console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
+            setLocalVaultKey(vaultKey);
+            const exef = new ExEF(auk);
+            const encryptedVaultKey = exef.encrypt(vaultKey);
+
+            // Set up SRP key
+            setLoadingState("Creating new SRP key...");
+            const srpSalt = randomBytes(32);
+            const srpKey = await generateKey(values.password, srpSalt);
+            console.debug(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
+
+            const srpVerifier = srpGroup.generateVerifier(srpKey);
+
+            // Set up security details
+            setLoadingState("Adding user...");
+            await addUser(auth.serverInfo!.apiURL!, values.username, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
+            console.debug("Security details set up");
+
+            // Show vault key
+            setIsLoading(false);
+            setShowVaultKeyDialog(true);
+            presentToast({
+                message: "Security details set up. Please save the vault key in a secure location and log in again.",
+                duration: 5000,
+                color: "success",
+            });
+        }
+
         // Check values
         const values = getAllValues();
         if (!validateValues(values)) {
@@ -124,7 +185,7 @@ const Login: React.FC = () => {
                         text: "No",
                         role: "cancel",
                         handler: () => {
-                            console.debug("Security details setup cancelled.");
+                            console.debug("Security details setup cancelled");
                             presentToast({
                                 message: "Security details setup cancelled",
                                 duration: 2000,
@@ -135,67 +196,7 @@ const Login: React.FC = () => {
                     {
                         text: "Yes",
                         role: "confirm",
-                        handler: async () => {
-                            setIsLoading(true);
-
-                            // Get SRP group used for communication
-                            setLoadingState("Determining SRP group...");
-                            const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
-                            const srpGroup = groupResponse.group;
-                            if (!srpGroup) {
-                                setIsLoading(false);
-                                presentToast({
-                                    message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
-                                    duration: 2000,
-                                    color: "danger",
-                                });
-                                return;
-                            }
-
-                            console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
-
-                            // Set up account unlock key (AUK) and vault key
-                            setLoadingState("Creating new AUK and vault key...");
-                            const aukSalt = randomBytes(32);
-                            const auk = await generateKey(values.password, aukSalt);
-                            console.debug(
-                                `Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`,
-                            );
-
-                            const vaultKey = randomBytes(32);
-                            console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
-                            const exef = new ExEF(auk);
-                            const encryptedVaultKey = exef.encrypt(vaultKey);
-
-                            // Set up SRP key
-                            setLoadingState("Creating new SRP key...");
-                            const srpSalt = randomBytes(32);
-                            const srpKey = await generateKey(values.password, srpSalt);
-                            console.debug(
-                                `Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`,
-                            );
-
-                            const srpVerifier = srpGroup.generateVerifier(srpKey);
-
-                            // Set up security details
-                            setLoadingState("Adding user...");
-                            await addUser(
-                                auth.serverInfo!.apiURL!,
-                                values.username,
-                                aukSalt,
-                                srpSalt,
-                                srpVerifier,
-                                encryptedVaultKey,
-                            );
-                            console.debug("Security details set up");
-                            presentToast({
-                                message: "Security details set up. Please log in again.",
-                                duration: 5000,
-                                color: "success",
-                            });
-
-                            setIsLoading(false);
-                        },
+                        handler: registerOnServer,
                     },
                 ],
             });
@@ -353,6 +354,13 @@ const Login: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
+                    {/* Vault key info dialog */}
+                    <VaultKeyDialog
+                        vaultKey={localVaultKey}
+                        isOpen={showVaultKeyDialog}
+                        onDidDismiss={() => setShowVaultKeyDialog(false)}
+                    />
+
                     {/* Main container */}
                     <div className="flex h-full items-center justify-center">
                         <div className="mx-auto flex w-4/5 flex-col">
