@@ -10,10 +10,10 @@ from excalibur_server.src.security.token import API_TOKEN_HEADER, check_auth_tok
 HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type": "text/plain"}
 
 
-@router.head("/heartbeat")
+@router.head("/heartbeat", name="Health Check")
 @router.get(
     "/heartbeat",
-    summary="Health check",
+    name="Health Check",
     responses={
         status.HTTP_200_OK: {
             "description": "Alive",
