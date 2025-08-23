@@ -9,7 +9,7 @@ from excalibur_server.src.compatibility import check_compatibility
 
 @router.get(
     "/compatible",
-    summary="Check if the client version is compatible with the server version",
+    name="Check Client Version Compatibility",
     responses={
         status.HTTP_200_OK: {
             "content": {

@@ -8,7 +8,7 @@ from excalibur_server.api.routes.well_known import router
 
 @router.get(
     "/clock",
-    summary="Get server time",
+    name="Get Server Time",
     responses={
         status.HTTP_200_OK: {
             "content": {"text/plain": {"example": "2012-03-04T05:06:07+08:09"}},
