@@ -159,7 +159,12 @@ def add_user_endpoint(
 
 if is_debug():
     # Include this endpoint only in debug mode
-    @router.delete("/remove/{username}", name="Remove User", tags=["debug"])
+    @router.delete(
+        "/remove/{username}",
+        name="Remove User",
+        tags=["debug"],
+        response_class=PlainTextResponse,
+    )
     def remove_user_endpoint(username: Annotated[str, Path()]):
         """
         Removes a user from the database.

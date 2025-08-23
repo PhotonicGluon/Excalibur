@@ -27,6 +27,8 @@ interface VaultKeyDialogProps {
     vaultKey?: Buffer;
     /** Whether the dialog is open */
     isOpen: boolean;
+    /** Whether the vault key input is disabled */
+    inputDisabled?: boolean;
     /** Callback when the dialog is dismissed */
     onDidDismiss?: () => void;
 }
@@ -107,7 +109,11 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                             Reveal vault key
                         </summary>
                         <div className="flex flex-col items-center">
-                            <GridInput value={localVaultKey} onChange={onChangeVaultKeyInput}></GridInput>
+                            <GridInput
+                                value={localVaultKey}
+                                onChange={onChangeVaultKeyInput}
+                                disabled={props.inputDisabled}
+                            ></GridInput>
                             {isValid === false && (
                                 <IonText color="danger" className="-mt-1 mb-2 text-center">
                                     Invalid vault key

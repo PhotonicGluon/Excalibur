@@ -358,6 +358,7 @@ const Login: React.FC = () => {
                     <VaultKeyDialog
                         vaultKey={localVaultKey}
                         isOpen={showVaultKeyDialog}
+                        inputDisabled={true}
                         onDidDismiss={() => setShowVaultKeyDialog(false)}
                     />
 

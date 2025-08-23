@@ -8,9 +8,11 @@ interface ContainerProps {
     value: string;
     /** A callback that fires whenever the grid changes */
     onChange: (value: string) => void;
+    /** Whether the grid is disabled */
+    disabled?: boolean;
 }
 
-const GridInput: React.FC<ContainerProps> = ({ value, onChange }) => {
+const GridInput: React.FC<ContainerProps> = ({ value, onChange, disabled }) => {
     // States
     const [inputs, setInputs] = useState<string[]>(Array(16).fill(""));
     const inputRefs = useRef<(HTMLIonInputElement | null)[]>([]);
@@ -185,6 +187,7 @@ const GridInput: React.FC<ContainerProps> = ({ value, onChange }) => {
                                     onPaste={(e) => handlePaste(e, index)}
                                     style={{ "--border-radius": 0 }}
                                     className="!min-h-8 text-center !font-mono !text-xl uppercase [&_.input-wrapper]:!p-0"
+                                    disabled={disabled}
                                 />
                             </IonCol>
                         );
