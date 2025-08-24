@@ -16,6 +16,7 @@ const Welcome: React.FC = () => {
                         </div>
 
                         <IonButton
+                            id="continue-button"
                             className="w-min"
                             onClick={() => {
                                 localStorage.setItem("hasSeenWelcome", "true");

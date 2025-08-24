@@ -90,7 +90,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                     <IonToolbar className="!pt-0">
                         <IonTitle>Vault Key</IonTitle>
                         <IonButtons slot="end">
-                            <IonButton onClick={props.onDidDismiss}>
+                            <IonButton id="vault-key-modal-close" onClick={props.onDidDismiss}>
                                 <IonIcon size="large" icon={close} slot="icon-only" />
                             </IonButton>
                         </IonButtons>

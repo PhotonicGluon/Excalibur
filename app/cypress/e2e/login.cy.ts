@@ -1,19 +1,15 @@
 describe("Check Login Page Contents", () => {
     beforeEach(() => {
+        cy.onboard("http://127.0.0.1:8989");
         cy.visit("/login");
     });
 
-    it("index redirects to login", () => {
-        cy.visit("/");
-        cy.url().should("include", "/login");
-    });
-
     it("should have basic navigation", () => {
-        cy.get("#settings-button").should("exist");
+        cy.get("#menu-button").should("exist");
     });
 
     it("should have login form", () => {
-        cy.get("#server-input").should("exist");
+        cy.get("#username-input").should("exist");
         cy.get("#password-input").should("exist");
         cy.get("#save-password-checkbox").should("exist");
         cy.get("#login-button").should("exist");
@@ -21,11 +17,17 @@ describe("Check Login Page Contents", () => {
 });
 
 describe("Handle Auth Process", () => {
+    beforeEach(() => {
+        cy.onboard("http://127.0.0.1:8989");
+    });
+
     it("should handle initial signup gracefully", () => {
         cy.visit("/login");
 
+        // Initial checks
+        cy.get("#vault-key-modal").should("not.exist");
+
         // Fill in login form
-        cy.get("#server-input > .input-wrapper").type("http://127.0.0.1:8989");
         cy.get("#username-input > .input-wrapper").type(`new-test-user-${Date.now()}`);
         cy.get("#password-input > .input-wrapper").type("Password123");
         cy.get("#login-button").click();
@@ -34,10 +36,15 @@ describe("Handle Auth Process", () => {
         cy.get(".alert-head").should("exist");
         cy.get(".alert-head").should("have.text", "Security Details Not Set Up");
 
-        // Set up details and try logging in again
+        // Set up details
         cy.get(".alert-button-role-confirm").click();
         cy.get(".alert-head").should("not.exist");
 
+        // Assert that the vault key dialog shows up
+        cy.get("#vault-key-modal").should("exist");
+        cy.get("#vault-key-modal-close").click();
+
+        // Now try to log in again
         cy.get("#login-button").click();
         cy.url().should("include", "/files");
     });
@@ -49,29 +56,18 @@ describe("Handle Auth Process", () => {
     });
 });
 
-describe("Check Validation", () => {
-    describe("Check if inputs are filled", () => {
-        ["server-input", "password-input"].forEach((input) => {
-            it(`should check if ${input} is filled`, () => {
-                cy.visit("/login");
-
-                cy.get(`#${input}`).type("http://some-text.com");
-                cy.get("#login-button").click();
-                cy.get(".alert-head").should("exist");
-                cy.get(".alert-head").should("have.text", "Invalid Values");
-            });
-        });
+describe("Check All Inputs Filled", () => {
+    beforeEach(() => {
+        cy.onboard("http://127.0.0.1:8989");
+        cy.visit("/login");
     });
 
-    it("should validate server URL", () => {
-        cy.visit("/login");
-        cy.get("#server-input").type("invalid-url");
-        cy.get("#password-input").type("some-password");
-        cy.get(".input-bottom").should("exist");
-        cy.get(".input-bottom").should("have.text", "Invalid URL");
-
-        cy.get("#login-button").click();
-        cy.get(".alert-head").should("exist");
-        cy.get(".alert-head").should("have.text", "Invalid Values");
+    ["username-input", "password-input"].forEach((input) => {
+        it(`should check if ${input} is filled`, () => {
+            cy.get(`#${input}`).type("some-text");
+            cy.get("#login-button").click();
+            cy.get(".alert-head").should("exist");
+            cy.get(".alert-head").should("have.text", "Invalid Values");
+        });
     });
 });
