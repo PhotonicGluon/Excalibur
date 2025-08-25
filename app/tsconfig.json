@@ -25,9 +25,9 @@
             "@theme/*": ["./src/theme/*"],
             "@root/*": ["./*"]
         },
-        "types": ["vitest/globals"]
+        "types": ["vitest/globals", "cypress", "./cypress.d.ts"]
     },
-    "include": ["src"],
+    "include": ["src", "cypress.d.ts"],
     "references": [
         {
             "path": "./tsconfig.node.json"
