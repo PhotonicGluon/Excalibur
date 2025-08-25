@@ -18,8 +18,8 @@ import { checkAPIUrl, getServerTime, getServerVersion } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/validators";
 
+import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
-import { useAuth } from "@contexts/auth";
 
 const Welcome: React.FC = () => {
     // States

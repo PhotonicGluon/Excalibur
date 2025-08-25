@@ -1,5 +1,5 @@
-import { ProvideAuth } from "@contexts/auth";
-import { ProvideSettings } from "@contexts/settings";
+import { ProvideAuth } from "@components/auth/context";
+import { ProvideSettings } from "@components/settings/context";
 
 export default function Contexts({ children }: { children: React.ReactNode }) {
     return (

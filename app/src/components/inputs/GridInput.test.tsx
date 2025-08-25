@@ -75,7 +75,7 @@ describe("GridInput Component", () => {
     });
 
     it("calls onChange when value changes", async () => {
-        const onValueChange = vi.fn((str: string) => console.log(str));
+        const onValueChange = vi.fn();
         const user = userEvent.setup();
 
         renderComponent({ onChange: onValueChange });

@@ -52,12 +52,12 @@ import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
+import { useAuth } from "@components/auth/context";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
-import { useAuth } from "@contexts/auth";
-import { useSettings } from "@contexts/settings";
+import { useSettings } from "@components/settings/context";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter

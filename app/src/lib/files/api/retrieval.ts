@@ -1,7 +1,7 @@
 import ExEF from "@lib/exef";
 import { Directory } from "@lib/files/structures";
 
-import { AuthProvider } from "@contexts/auth";
+import { AuthProvider } from "@components/auth/context";
 
 /**
  * Lists the contents of a directory.

@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect, RouteProps, useLocation } from "react-router";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
-import { useAuth } from "@contexts/auth";
+import { useAuth } from "@components/auth/context";
 
 /**
  * A wrapper for <Route> that redirects to the login page if not authenticated.

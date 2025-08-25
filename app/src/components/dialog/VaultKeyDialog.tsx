@@ -13,8 +13,8 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
+import { useAuth } from "@components/auth/context";
 import GridInput from "@components/inputs/GridInput";
-import { useAuth } from "@contexts/auth";
 
 import "./VaultKeyDialog.css";
 

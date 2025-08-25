@@ -1,6 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import { Directory } from "@capacitor/filesystem";
-import { Filesystem } from "@capacitor/filesystem";
+import { Directory, Filesystem } from "@capacitor/filesystem";
 import write_blob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
 import React, { useRef } from "react";
@@ -28,9 +27,9 @@ import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
+import { useAuth } from "@components/auth/context";
 import { UIFeedbackMethods } from "@components/explorer/types";
-import { useAuth } from "@contexts/auth";
-import { useSettings } from "@contexts/settings";
+import { useSettings } from "@components/settings/context";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
 interface ContainerProps extends FileLikePartial {

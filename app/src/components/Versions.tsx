@@ -3,7 +3,7 @@ import React, { HTMLAttributes } from "react";
 import { IonText } from "@ionic/react";
 import packageInfo from "@root/package.json";
 
-import { useAuth } from "@contexts/auth";
+import { useAuth } from "@components/auth/context";
 
 const Versions: React.FC<HTMLAttributes<HTMLDivElement>> = ({ ...props }) => {
     const auth = useAuth();

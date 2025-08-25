@@ -1,7 +1,7 @@
 import ExEF from "@lib/exef";
 import { getVaultKey } from "@lib/users/api";
 
-import { AuthInfo } from "@contexts/auth";
+import { AuthInfo } from "@components/auth/context";
 
 /**
  * Retrieves the vault key from the server.

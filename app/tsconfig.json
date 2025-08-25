@@ -19,7 +19,6 @@
         "paths": {
             "@assets/*": ["./resources/*"],
             "@components/*": ["./src/components/*"],
-            "@contexts/*": ["./src/contexts/*"],
             "@lib/*": ["./src/lib/*"],
             "@native/*": ["src/native/*"],
             "@pages/*": ["./src/pages/*"],

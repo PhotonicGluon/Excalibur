@@ -35,8 +35,8 @@ import { addUser, checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import Versions from "@components/Versions";
+import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
-import { useAuth } from "@contexts/auth";
 
 import logo from "@assets/icon.png";
 
