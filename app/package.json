@@ -25,6 +25,7 @@
         "cy:run": "cypress run",
         "test:unit": "vitest watch",
         "test:unit-run": "vitest run",
+        "test:component": "cypress run --component",
         "lint": "eslint",
         "update": "npx npm-check-updates --peer -u"
     },

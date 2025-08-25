@@ -4,6 +4,8 @@ import { IonCol, IonGrid, IonInput, IonRow } from "@ionic/react";
 
 // This allows a parent to pass in a value and listen for changes.
 interface ContainerProps {
+    /** The ID of the grid */
+    id?: string;
     /** Value of the grid */
     value?: string;
     /** A callback that fires whenever the grid changes */
@@ -12,7 +14,7 @@ interface ContainerProps {
     disabled?: boolean;
 }
 
-const GridInput: React.FC<ContainerProps> = ({ value = "", onChange = () => {}, disabled }) => {
+const GridInput: React.FC<ContainerProps> = ({ id, value = "", onChange = () => {}, disabled }) => {
     // States
     const [inputs, setInputs] = useState<string[]>(Array(16).fill(""));
     const inputRefs = useRef<(HTMLIonInputElement | null)[]>([]);
@@ -167,7 +169,7 @@ const GridInput: React.FC<ContainerProps> = ({ value = "", onChange = () => {}, 
 
     // Render
     return (
-        <IonGrid data-testid="grid-input">
+        <IonGrid id={id}>
             {Array.from({ length: 4 }).map((_, rowIndex) => (
                 <IonRow key={rowIndex} className="flex justify-center">
                     {Array.from({ length: 4 }).map((_, colIndex) => {

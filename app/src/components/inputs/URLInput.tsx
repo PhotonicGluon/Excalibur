@@ -46,7 +46,6 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
     return (
         <IonInput
             id={props.id}
-            data-testid="url-input"
             className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} ${props.className}`}
             label={props.label}
             labelPlacement="stacked"
