@@ -28,7 +28,7 @@ import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
-import { UIFeedbackMethods } from "@components/explorer/types";
+import { useUIFeedback } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
@@ -37,18 +37,16 @@ interface ContainerProps extends FileLikePartial {
     oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
     keepExEF?: boolean;
-    /** Methods for UI feedback */
-    feedbackMethods: UIFeedbackMethods;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
-    const feedbackMethods = props.feedbackMethods;
     const isFile = props.type === "file";
 
     // Contexts
     const auth = useAuth();
     const settings = useSettings();
     const router = useIonRouter();
+    const uiFeedback = useUIFeedback();
 
     // States
     const slideRef = useRef<HTMLIonItemSlidingElement>(null);
@@ -70,20 +68,20 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
          * Actual function handling the download process.
          */
         async function handleDownload() {
-            feedbackMethods.setShowDialog(true);
-            feedbackMethods.setDialogMessage("Getting download stream...");
-            feedbackMethods.setProgress(null);
+            uiFeedback.setShowDialog(true);
+            uiFeedback.setDialogMessage("Getting download stream...");
+            uiFeedback.setProgress(null);
 
             // Send request for file
             // TODO: Stream file download, with chunk size management?
             const response = await downloadFile(auth, props.fullpath);
             if (!response.success) {
-                feedbackMethods.presentToast({
+                uiFeedback.presentToast({
                     message: `Failed to get file: ${response.error}`,
                     duration: 2000,
                     color: "danger",
                 });
-                feedbackMethods.setShowDialog(false);
+                uiFeedback.setShowDialog(false);
                 return;
             }
 
@@ -92,8 +90,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const fileSize = encryptedFileSize - ExEF.additionalSize;
 
             // Decrypt file using a Comlink worker
-            feedbackMethods.setDialogMessage("Downloading and decrypting...");
-            feedbackMethods.setProgress(0);
+            uiFeedback.setDialogMessage("Downloading and decrypting...");
+            uiFeedback.setProgress(0);
 
             const worker = new DecryptionProcessorWorker();
             const processor = Comlink.wrap<DecryptionProcessor>(worker);
@@ -106,15 +104,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     auth.vaultKey!,
                     fileSize,
                     // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy(feedbackMethods.setProgress),
+                    Comlink.proxy(uiFeedback.setProgress),
                 );
             } catch (e) {
-                feedbackMethods.presentToast({
+                uiFeedback.presentToast({
                     message: `Failed to decrypt file: ${(e as Error).message}`,
                     duration: 2000,
                     color: "danger",
                 });
-                feedbackMethods.setShowDialog(false);
+                uiFeedback.setShowDialog(false);
                 return;
             } finally {
                 // Free up resources
@@ -124,8 +122,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const fileDataBlob = new Blob([fileData]);
 
             // Save file
-            feedbackMethods.setDialogMessage("Saving...");
-            feedbackMethods.setProgress(null);
+            uiFeedback.setDialogMessage("Saving...");
+            uiFeedback.setProgress(null);
             console.debug(`Saving file ${fileName}...`);
             if (Capacitor.getPlatform() === "web") {
                 // Create a new a element to download the file
@@ -139,7 +137,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
                 }, 0);
-                feedbackMethods.presentToast({
+                uiFeedback.presentToast({
                     message: "File downloaded",
                     duration: 2000,
                     color: "success",
@@ -155,14 +153,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         console.error(error);
                     },
                 });
-                feedbackMethods.presentToast({
+                uiFeedback.presentToast({
                     message: "File downloaded to the documents folder",
                     duration: 2000,
                     color: "success",
                 });
             }
 
-            feedbackMethods.setShowDialog(false);
+            uiFeedback.setShowDialog(false);
         }
 
         // If on mobile, check if the file already exists
@@ -174,7 +172,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 });
 
                 // If no error was thrown, that means that the file already exists on device
-                feedbackMethods.presentAlert({
+                uiFeedback.presentAlert({
                     header: "File already exists",
                     message: "Do you want to override the existing file?",
                     buttons: [
@@ -182,7 +180,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             text: "No",
                             role: "cancel",
                             handler: () => {
-                                feedbackMethods.presentToast({
+                                uiFeedback.presentToast({
                                     message: "Download cancelled",
                                     duration: 2000,
                                     color: "warning",
@@ -209,7 +207,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the delete button an item.
      */
     async function onClickDelete() {
-        await feedbackMethods.onDelete(props.fullpath, !isFile);
+        await uiFeedback.onDelete(props.fullpath, !isFile);
         slideRef.current?.close();
     }
 

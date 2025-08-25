@@ -57,6 +57,7 @@ import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
+import { uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 const FileExplorer: React.FC = () => {
@@ -587,9 +588,8 @@ const FileExplorer: React.FC = () => {
 
                     {/* Files list */}
                     {directoryContents && (
-                        <DirectoryList
-                            {...directoryContents!}
-                            feedbackMethods={{
+                        <uiFeedbackContext.Provider
+                            value={{
                                 onDelete: onDeleteItem,
                                 setShowDialog: setShowProgressDialog,
                                 setDialogMessage: setDialogMessage,
@@ -598,7 +598,9 @@ const FileExplorer: React.FC = () => {
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
                             }}
-                        />
+                        >
+                            <DirectoryList {...directoryContents!} />
+                        </uiFeedbackContext.Provider>
                     )}
                 </IonContent>
             </IonPage>
