@@ -6,7 +6,7 @@ import { IonApp } from "@ionic/react";
 import URLInput from "./URLInput";
 
 describe("URLInput Component", () => {
-    const renderComponent = (props = {}) => {
+    function renderComponent(props = {}) {
         const defaultProps = {
             label: "Test URL",
             ...props,
@@ -17,7 +17,7 @@ describe("URLInput Component", () => {
                 <URLInput {...defaultProps} />
             </IonApp>,
         );
-    };
+    }
 
     it("renders with default props", () => {
         renderComponent();
