@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+
+import { IonApp } from "@ionic/react";
 
 import URLInput from "./URLInput";
 
@@ -10,82 +12,93 @@ describe("URLInput Component", () => {
             ...props,
         };
 
-        return render(<URLInput {...defaultProps} />);
+        return render(
+            <IonApp>
+                <URLInput {...defaultProps} />
+            </IonApp>,
+        );
     };
 
-    // it("renders with default props", () => {
-    //     renderComponent();
-    //     const input = screen.getByTestId("url-input");
-
-    //     expect(input).toBeInTheDocument();
-    //     expect(input).toHaveAttribute("placeholder", "https://example.com");
-    //     expect(input).toHaveAttribute("label", "Test URL");
-    // });
-
-    // it("displays error for invalid URL format", async () => {
-    //     const user = userEvent.setup();
-    //     renderComponent();
-
-    //     const input = screen.getByTestId("url-input");
-    //     await user.type(input, "not-a-url");
-
-    //     // Trigger blur to validate
-    //     fireEvent.blur(input);
-
-    //     expect(screen.getByText("Invalid URL")).toBeInTheDocument();
-    // });
-
-    it("accepts valid URL format", async () => {
-        const user = userEvent.setup();
+    it("renders with default props", () => {
         renderComponent();
-
         const input = screen.getByTestId("url-input");
-        console.log(input.children);
-        await user.type(input, "https://example.com");
+
+        expect(input).toBeInTheDocument();
+        expect(input).toHaveAttribute("placeholder", "https://example.com");
+        expect(input).toHaveAttribute("label", "Test URL");
+    });
+
+    it("displays error for invalid URL format", async () => {
+        const user = userEvent.setup();
+
+        renderComponent();
+        const input = screen.getByTestId("url-input");
+        let nativeInput: HTMLInputElement | null = null;
+        await waitFor(() => {
+            nativeInput = input.querySelector("input");
+            expect(nativeInput).not.toBeNull();
+        });
+
+        await user.type(nativeInput!, "not-a-url");
 
         // Trigger blur to validate
         fireEvent.blur(input);
 
-        expect(screen.getByText("Invalid URL")).not.toBeInTheDocument();
+        expect(input).not.toHaveClass("ion-valid");
+        expect(input).toHaveClass("ion-invalid");
     });
 
-    // it("shows no error when empty", () => {
-    //     renderComponent();
-    //     const input = screen.getByTestId("url-input");
+    it("accepts valid URL format", async () => {
+        const user = userEvent.setup();
 
-    //     // Should not show error when empty and not touched
-    //     expect(input).not.toHaveClass("ion-invalid");
-    //     expect(input).not.toHaveClass("ion-valid");
+        renderComponent();
+        const input = screen.getByTestId("url-input");
+        let nativeInput: HTMLInputElement | null = null;
+        await waitFor(() => {
+            nativeInput = input.querySelector("input");
+            expect(nativeInput).not.toBeNull();
+        });
 
-    //     // After blur, still no error
-    //     fireEvent.blur(input);
-    //     expect(input).not.toHaveClass("ion-invalid");
-    // });
+        await user.type(nativeInput!, "https://example.com");
 
-    // it("applies custom class name", () => {
-    //     renderComponent({ className: "custom-class" });
-    //     const input = screen.getByTestId("url-input");
-    //     expect(input).toHaveClass("custom-class");
-    // });
+        // Trigger blur to validate
+        fireEvent.blur(input);
+
+        expect(input).toHaveClass("ion-valid");
+        expect(input).not.toHaveClass("ion-invalid");
+    });
+
+    it("applies custom class name", () => {
+        renderComponent({ className: "custom-class" });
+        const input = screen.getByTestId("url-input");
+        expect(input).toHaveClass("custom-class");
+    });
 
     it("calls onKeyDown when provided", async () => {
-        const handleKeyDown = vi.fn((event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-            }
-        });
+        const handleKeyDown = vi.fn();
         const user = userEvent.setup();
 
         renderComponent({ onKeyDown: handleKeyDown });
         const input = screen.getByTestId("url-input");
+        let nativeInput: HTMLInputElement | null = null;
+        await waitFor(() => {
+            nativeInput = input.querySelector("input");
+            expect(nativeInput).not.toBeNull();
+        });
 
-        await user.type(input, "http://example.com");
+        await user.type(nativeInput!, "http://example.com");
         expect(handleKeyDown).toHaveBeenCalled();
     });
 
-    it("respects disabled prop", () => {
+    it("respects disabled prop", async () => {
         renderComponent({ disabled: true });
         const input = screen.getByTestId("url-input");
-        expect(input).toBeDisabled();
+        let nativeInput: HTMLInputElement | null = null;
+        await waitFor(() => {
+            nativeInput = input.querySelector("input");
+            expect(nativeInput).not.toBeNull();
+        });
+
+        expect(nativeInput).toBeDisabled();
     });
 });
