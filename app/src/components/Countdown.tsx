@@ -4,18 +4,14 @@ import { IonLabel, IonText } from "@ionic/react";
 
 import { padNumber } from "@lib/util";
 
-interface CountdownProps {
+interface CountdownProps extends HTMLAttributes<HTMLIonLabelElement> {
     /** Countdown ending date */
     endDate: Date;
     /** Callback to be called when the countdown expires */
     onExpiry: () => void;
 }
 
-const Countdown: React.FC<CountdownProps & HTMLAttributes<HTMLIonLabelElement>> = ({
-    endDate: date,
-    onExpiry,
-    ...props
-}) => {
+const Countdown: React.FC<CountdownProps> = ({ endDate: date, onExpiry, ...props }) => {
     const [time, setTime] = useState({
         hours: 0,
         minutes: 0,

@@ -13,6 +13,7 @@ export default defineConfig({
     },
 
     component: {
+        specPattern: "./src/**/*.test.tsx",
         devServer: {
             framework: "react",
             bundler: "vite",
