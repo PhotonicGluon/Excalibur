@@ -7,7 +7,10 @@ import { Directory, FileLike } from "@lib/files/structures";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
-interface ContainerProps extends Omit<Directory, "fullpath"> {}
+interface ContainerProps extends Omit<Directory, "fullpath"> {
+    /** The ID of the directory list */
+    id?: string;
+}
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
@@ -47,7 +50,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Render
     return (
-        <>
+        <div id={props.id}>
             {/* Sorting Buttons */}
             <IonGrid className="!pb-1">
                 <IonRow className="ion-align-items-center">
@@ -84,7 +87,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                     </div>
                 )}
             </IonList>
-        </>
+        </div>
     );
 };
 

@@ -32,7 +32,9 @@ import { useUIFeedback } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
-interface ContainerProps extends FileLikePartial {
+export interface ContainerProps extends FileLikePartial {
+    /** The ID of the directory item */
+    id?: string;
     /** Whether the item is on an even row */
     oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
@@ -227,7 +229,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             break;
     }
     return (
-        <div className={rowColourClass}>
+        <div id={props.id} className={rowColourClass}>
             <IonItemSliding ref={slideRef} className="w-full bg-(--item-bg)">
                 {/* Main item content */}
                 <IonItem className="[--background:var(--item-bg)]" button={true} onClick={() => onClickItem()}>

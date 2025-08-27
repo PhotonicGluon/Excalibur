@@ -18,6 +18,10 @@ import { setupIonicReact } from "@ionic/react";
 
 import "./commands";
 
+// Patch process object to prevent errors while component testing
+global.process.env = global.process.env || {};
+(global.process as any).version = global.process.version || "x.x.x";
+
 // Setup Ionic React
 setupIonicReact();
 
