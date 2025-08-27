@@ -1,3 +1,5 @@
+import { createContext, useContext } from "react";
+
 import { AlertOptions, ToastOptions } from "@ionic/core";
 
 /**
@@ -16,4 +18,15 @@ export interface UIFeedbackMethods {
     presentAlert: (options: AlertOptions) => void;
     /** Present a toast */
     presentToast: (options: ToastOptions) => void;
+}
+
+export const uiFeedbackContext = createContext<UIFeedbackMethods>(null!);
+
+/**
+ * Hook to get the UI feedback methods.
+ *
+ * @returns The UI feedback methods.
+ */
+export function useUIFeedback(): UIFeedbackMethods {
+    return useContext(uiFeedbackContext);
 }

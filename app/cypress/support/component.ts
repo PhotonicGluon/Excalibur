@@ -1,5 +1,5 @@
 // ***********************************************************
-// This example support/e2e.ts is processed and
+// This example support/component.ts is processed and
 // loaded automatically before your test files.
 //
 // This is a great place to put global configuration and
@@ -12,4 +12,22 @@
 // You can read more here:
 // https://on.cypress.io/configuration
 // ***********************************************************
+import { mount } from "cypress/react";
+
+import { setupIonicReact } from "@ionic/react";
+
 import "./commands";
+
+// Setup Ionic React
+setupIonicReact();
+
+// Add mount command to Cypress
+Cypress.Commands.add("mount", mount);
+
+declare global {
+    namespace Cypress {
+        interface Chainable {
+            mount: typeof mount;
+        }
+    }
+}

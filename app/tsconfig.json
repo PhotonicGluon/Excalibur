@@ -19,16 +19,15 @@
         "paths": {
             "@assets/*": ["./resources/*"],
             "@components/*": ["./src/components/*"],
-            "@contexts/*": ["./src/contexts/*"],
             "@lib/*": ["./src/lib/*"],
             "@native/*": ["src/native/*"],
             "@pages/*": ["./src/pages/*"],
             "@theme/*": ["./src/theme/*"],
             "@root/*": ["./*"]
         },
-        "types": ["vitest/globals"]
+        "types": ["vitest/globals", "cypress", "./cypress.d.ts"]
     },
-    "include": ["src"],
+    "include": ["src", "cypress.d.ts"],
     "references": [
         {
             "path": "./tsconfig.node.json"

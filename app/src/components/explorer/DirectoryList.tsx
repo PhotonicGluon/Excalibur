@@ -6,12 +6,8 @@ import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 import { Directory, FileLike } from "@lib/files/structures";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
-import { UIFeedbackMethods } from "@components/explorer/types";
 
-interface ContainerProps extends Omit<Directory, "fullpath"> {
-    /** Methods for UI feedback */
-    feedbackMethods: UIFeedbackMethods;
-}
+interface ContainerProps extends Omit<Directory, "fullpath"> {}
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
@@ -77,7 +73,6 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             type={item.type}
                             mimetype={item.type === "file" ? item.mimetype : undefined}
                             size={item.type === "file" ? item.size : undefined}
-                            feedbackMethods={props.feedbackMethods}
                         />
                     ))}
                 {!(props.items && props.items.length > 0) && (

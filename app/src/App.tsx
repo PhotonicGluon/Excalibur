@@ -29,7 +29,7 @@ import "@ionic/react/css/text-transformation.css";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
-import { useSettings } from "@contexts/settings";
+import { useSettings } from "@components/settings/context";
 
 /* App pages */
 import Credits from "@pages/Credits";

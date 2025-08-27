@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.2.0-alpha.7",
+    "version": "0.2.0-alpha.8",
     "description": "A trustless secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
@@ -25,6 +25,7 @@
         "cy:run": "cypress run",
         "test:unit": "vitest watch",
         "test:unit-run": "vitest run",
+        "test:component": "cypress run --component",
         "lint": "eslint",
         "update": "npx npm-check-updates --peer -u"
     },
@@ -60,6 +61,8 @@
         "@capacitor/assets": "^3.0.5",
         "@capacitor/cli": "7.4.3",
         "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.1",
         "@trivago/prettier-plugin-sort-imports": "^5.2.2",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/react": "19.1.10",
@@ -68,7 +71,7 @@
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-legacy": "^7.2.1",
         "@vitejs/plugin-react": "^5.0.1",
-        "cypress": "^14.5.4",
+        "cypress": "^15.0.0",
         "eslint": "^9.33.0",
         "eslint-plugin-cypress": "^5.1.1",
         "eslint-plugin-react": "^7.37.5",

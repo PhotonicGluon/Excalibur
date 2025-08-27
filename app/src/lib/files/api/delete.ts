@@ -1,6 +1,6 @@
 import { type ItemType } from "@lib/files/structures";
 
-import { AuthProvider } from "@contexts/auth";
+import { AuthProvider } from "@components/auth/context";
 
 /**
  * Deletes the item at the given path.

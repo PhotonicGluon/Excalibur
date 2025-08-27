@@ -30,7 +30,7 @@ import {
 } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
-import { useSettings } from "@contexts/settings";
+import { useSettings } from "@components/settings/context";
 
 const Settings: React.FC = () => {
     const router = useIonRouter();

@@ -1,4 +1,4 @@
-import { AuthProvider } from "@contexts/auth";
+import { AuthProvider } from "@components/auth/context";
 
 /**
  * Checks if a path exists.

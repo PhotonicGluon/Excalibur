@@ -52,12 +52,13 @@ import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
+import { useAuth } from "@components/auth/context";
 import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
-import { useAuth } from "@contexts/auth";
-import { useSettings } from "@contexts/settings";
+import { uiFeedbackContext } from "@components/explorer/context";
+import { useSettings } from "@components/settings/context";
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -587,9 +588,8 @@ const FileExplorer: React.FC = () => {
 
                     {/* Files list */}
                     {directoryContents && (
-                        <DirectoryList
-                            {...directoryContents!}
-                            feedbackMethods={{
+                        <uiFeedbackContext.Provider
+                            value={{
                                 onDelete: onDeleteItem,
                                 setShowDialog: setShowProgressDialog,
                                 setDialogMessage: setDialogMessage,
@@ -598,7 +598,9 @@ const FileExplorer: React.FC = () => {
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
                             }}
-                        />
+                        >
+                            <DirectoryList {...directoryContents!} />
+                        </uiFeedbackContext.Provider>
                     )}
                 </IonContent>
             </IonPage>

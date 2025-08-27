@@ -1,7 +1,7 @@
 import React from "react";
 import { Redirect, Route, RouteProps, useLocation } from "react-router";
 
-import { useAuth } from "@contexts/auth";
+import { useAuth } from "@components/auth/context";
 
 /**
  * A wrapper for <Route> that redirects to the login page if not authenticated.
