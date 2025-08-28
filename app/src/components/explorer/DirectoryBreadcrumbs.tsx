@@ -1,9 +1,7 @@
 import { IonBreadcrumb, IonBreadcrumbs, IonIcon } from "@ionic/react";
 import { chevronForward, home } from "ionicons/icons";
 
-interface ContainerProps {
-    /** Additional classes to apply to the breadcrumbs */
-    className?: string;
+interface ContainerProps extends React.HTMLProps<HTMLIonBreadcrumbsElement> {
     /**
      * Path to the directory.
      *
@@ -16,7 +14,7 @@ const DirectoryBreadcrumbs: React.FC<ContainerProps> = (props) => {
     const breadcrumbPaths = [""].concat(props.path.split("/").filter((p) => p !== "."));
 
     return (
-        <IonBreadcrumbs className={props.className} maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+        <IonBreadcrumbs {...props} maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
             {breadcrumbPaths.map((fragment, idx) => {
                 const routerLink = idx === 0 ? "/files/" : `/files/${breadcrumbPaths.slice(1, idx + 1).join("/")}`;
                 return (
