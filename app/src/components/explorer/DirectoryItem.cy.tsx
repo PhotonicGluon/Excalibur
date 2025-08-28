@@ -1,0 +1,69 @@
+import { IonApp } from "@ionic/react";
+import { documentOutline, musicalNotesOutline } from "ionicons/icons";
+
+import { settingsContext } from "@components/settings/context";
+
+import DirectoryItem, { ContainerProps } from "./DirectoryItem";
+
+describe("<DirectoryItem />", () => {
+    function renderComponent(props = {}) {
+        const defaultProps: ContainerProps = {
+            oddRow: true,
+            name: "Sample File.txt.exef",
+            fullpath: "/some/path",
+            size: 123456,
+            type: "file",
+            ...props,
+        };
+
+        return cy.mount(
+            <IonApp>
+                <settingsContext.Provider
+                    value={{
+                        theme: "dark",
+                        rowAlternatingColours: "normal",
+                        fileSizeUnits: "si",
+                        cryptoChunkSize: 262144,
+                        change: () => {},
+                        save: () => Promise.resolve(),
+                    }}
+                >
+                    <DirectoryItem id="directory-item" {...defaultProps} />
+                </settingsContext.Provider>
+            </IonApp>,
+        );
+    }
+
+    it("renders correctly", () => {
+        renderComponent();
+        cy.get("#directory-item").should("exist");
+
+        // Correct icon should be present
+        cy.get("#directory-item ion-icon").should("exist");
+        cy.get("#directory-item ion-icon").should("have.attr", "icon");
+
+        // Correct name should be present
+        cy.get("#directory-item ion-label").should("exist");
+        cy.get("#directory-item ion-label").should("have.text", "Sample File.txt");
+
+        // Correct size should be present
+        cy.get("#directory-item ion-note").should("exist");
+        cy.get("#directory-item ion-note").should("have.text", "123.46 kB");
+    });
+
+    it("keeps the .exef extension if specified", () => {
+        renderComponent({ keepExEF: true });
+        cy.get("#directory-item ion-label").should("exist");
+        cy.get("#directory-item ion-label").should("have.text", "Sample File.txt.exef");
+    });
+
+    it("has correct icon for defined MIME type", () => {
+        renderComponent({ mimetype: "audio/mpeg" });
+        cy.get("#directory-item ion-icon").should("have.attr", "icon", musicalNotesOutline);
+    });
+
+    it("has correct default icon for undefined MIME type", () => {
+        renderComponent({ mimetype: "fake/fake" });
+        cy.get("#directory-item ion-icon").should("have.attr", "icon", documentOutline);
+    });
+});
