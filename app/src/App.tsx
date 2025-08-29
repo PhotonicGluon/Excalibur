@@ -60,14 +60,14 @@ const App: React.FC = () => {
     const settings = useSettings();
 
     // Effects
-    if (Capacitor.isNativePlatform()) {
-        useEffect(() => {
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
             // Lock screen orientation to portrait
             ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
                 console.warn(error);
             });
-        }, []);
-    }
+        }
+    }, []);
 
     useEffect(() => {
         // Set app theme

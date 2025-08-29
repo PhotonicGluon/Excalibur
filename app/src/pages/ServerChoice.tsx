@@ -30,7 +30,7 @@ const Welcome: React.FC = () => {
     const [presentAlert] = useIonAlert();
 
     const [isLoading, setIsLoading] = useState(false);
-    const [loadingState, setLoadingState] = useState("Checking connectivity...");
+    const [loadingState, _setLoadingState] = useState("Checking connectivity...");
 
     // Functions
     /**

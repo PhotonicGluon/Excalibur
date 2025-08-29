@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { heartbeat as _heartbeat, checkAPIUrl } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
@@ -79,19 +79,22 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
     }
 
-    async function logoutFunc(full: boolean = false) {
-        clearInterval(heartbeatInterval!);
+    const logoutFunc = useCallback(
+        async (full: boolean = false) => {
+            clearInterval(heartbeatInterval!);
 
-        if (full) {
-            setServerInfo(null);
-            localStorage.removeItem("serverInfo");
-        }
+            if (full) {
+                setServerInfo(null);
+                localStorage.removeItem("serverInfo");
+            }
 
-        setAuthInfo(null);
-        localStorage.removeItem("authInfo");
+            setAuthInfo(null);
+            localStorage.removeItem("authInfo");
 
-        setVaultKey(null);
-    }
+            setVaultKey(null);
+        },
+        [heartbeatInterval],
+    );
 
     // Effects
     useEffect(() => {
@@ -113,7 +116,7 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
         });
-    }, []);
+    }, [logoutFunc]);
 
     useEffect(() => {
         // Check if local storage has auth info

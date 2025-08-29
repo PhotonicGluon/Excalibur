@@ -23,6 +23,19 @@ export default tseslint.config(
             "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
             "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
             "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
+            "no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                {
+                    args: "all",
+                    argsIgnorePattern: "^_",
+                    caughtErrors: "all",
+                    caughtErrorsIgnorePattern: "^_",
+                    destructuredArrayIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                    ignoreRestSiblings: true,
+                },
+            ],
         },
     },
 );
