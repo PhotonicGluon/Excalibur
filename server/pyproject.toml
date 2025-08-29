@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.2.0a7"
+version = "0.2.0a8"
 dependencies = [
     "aiofiles>=24.1.0",
     "alembic>=1.16.4",
@@ -52,6 +52,7 @@ module-name = "excalibur_server"
 module-root = ""
 source-exclude = [
     "test*",                             # All test files are excluded
+    "excalibur_server/conftest.py",      # Conftest is excluded
     "excalibur_server/cli/run_tests.py", # Testing command is excluded
 ]
 

@@ -28,10 +28,11 @@ def test_get_user_security_details():
     assert "srp_salt" in data
 
 
-def test_get_user_vault_key():
+def test_get_user_vault_key(auth_key):
     # Without authentication, it should fail
     response = client.get("/api/users/vault/test-user")
     assert response.status_code == 401
 
     # With authentication, it should succeed
-    # TODO: Add authentication case
+    response = client.get("/api/users/vault/test-user", headers={"Authorization": f"Bearer {auth_key}"})
+    assert response.status_code == 200
