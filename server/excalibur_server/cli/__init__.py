@@ -54,9 +54,11 @@ def get_alembic_config() -> Config:
 
 # Add other typer apps
 from .db import db_app
+from .files import files_app
 from .user import user_app
 
 app.add_typer(db_app, name="db")
+app.add_typer(files_app, name="files")
 app.add_typer(user_app, name="user")
 
 # Expose other commands
