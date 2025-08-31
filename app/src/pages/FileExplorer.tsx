@@ -68,14 +68,13 @@ const FileExplorer: React.FC = () => {
     // Get contexts
     const auth = useAuth();
     const settings = useSettings();
+    const router = useIonRouter();
 
     // Get token expiry
     const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.token);
     const tokenExpiry = new Date(expTimestamp * 1000);
 
     // States
-    const router = useIonRouter();
-
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
@@ -430,7 +429,6 @@ const FileExplorer: React.FC = () => {
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
-    // Effects
     useEffect(() => {
         // Refresh directory contents
         refreshContents(false);
@@ -601,6 +599,15 @@ const FileExplorer: React.FC = () => {
                         >
                             <DirectoryList {...directoryContents!} />
                         </uiFeedbackContext.Provider>
+                    )}
+
+                    {/* Changed vault key notice */}
+                    {auth.origVaultKey !== auth.vaultKey && (
+                        <div className="fixed bottom-6 w-full">
+                            <IonText color="warning" className="block w-full text-center text-sm">
+                                Vault key was changed
+                            </IonText>
+                        </div>
                     )}
                 </IonContent>
             </IonPage>

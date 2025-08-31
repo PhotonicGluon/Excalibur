@@ -49,6 +49,7 @@ function useProvideAuth(): AuthProvider {
     const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
     const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
+    const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
@@ -74,6 +75,7 @@ function useProvideAuth(): AuthProvider {
         // Update state
         setAuthInfo(authInfo);
         setVaultKey(vaultKey);
+        setOrigVaultKey(vaultKey);
 
         // Save to local storage
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
@@ -92,6 +94,7 @@ function useProvideAuth(): AuthProvider {
             localStorage.removeItem("authInfo");
 
             setVaultKey(null);
+            setOrigVaultKey(null);
         },
         [heartbeatInterval],
     );
@@ -144,6 +147,7 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
             setVaultKey(resp);
+            setOrigVaultKey(resp);
         });
     }, [authInfo, serverInfo]);
 
@@ -152,6 +156,7 @@ function useProvideAuth(): AuthProvider {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
+        origVaultKey: origVaultKey!,
         setServerInfo: setServerInfoFunc,
         login: loginFunc,
         logout: logoutFunc,
