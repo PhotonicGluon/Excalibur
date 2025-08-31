@@ -18,6 +18,7 @@ describe("<Versions />", () => {
                             deltaTime: 0,
                         },
                         vaultKey: null,
+                        origVaultKey: null,
                         setServerInfo: () => {},
                         setVaultKey: () => {},
                         login: (_a, _b) => Promise.resolve(),
