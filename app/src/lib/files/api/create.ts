@@ -1,3 +1,5 @@
+import { timedFetch } from "@lib/network";
+
 import { AuthProvider } from "@components/auth/context";
 
 /**
@@ -22,11 +24,14 @@ export async function uploadFile(
     formData.append("file", file);
 
     // Send the request
-    const response = await fetch(`${auth.serverInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
-        body: formData,
-    });
+    const response = await timedFetch(
+        `${auth.serverInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`,
+        {
+            method: "POST",
+            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+            body: formData,
+        },
+    );
     switch (response.status) {
         case 201:
             // Continue with normal flow
@@ -68,7 +73,7 @@ export async function mkdir(
     path: string,
     name: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, {
+    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: name,

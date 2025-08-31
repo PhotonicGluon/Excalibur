@@ -1,5 +1,7 @@
 import packageInfo from "@root/package.json";
 
+import { timedFetch } from "./fetch";
+
 export async function checkAPIUrl(
     apiURL: string,
 ): Promise<{ reachable: boolean; valid: boolean | null; compatible: boolean | null; error?: string }> {
@@ -30,18 +32,14 @@ export async function checkAPIUrl(
  * Checks if the given API url is valid.
  *
  * @param apiURL The API URL to check
- * @param timeout Number of seconds to wait for a response before timing out
  * @returns A promise that resolves to an object with three properties:
  *      - `reachable`: Whether the server is reachable
  *      - `valid`: Whether the URL is a valid API URL
  *      - `error`: An optional error message
  */
-async function checkValidity(
-    apiURL: string,
-    timeout: number = 5,
-): Promise<{ reachable: boolean; valid: boolean; error?: string }> {
+async function checkValidity(apiURL: string): Promise<{ reachable: boolean; valid: boolean; error?: string }> {
     try {
-        const response = await fetch(`${apiURL}/well-known/version`, { signal: AbortSignal.timeout(timeout * 1000) });
+        const response = await timedFetch(`${apiURL}/well-known/version`);
         switch (response.status) {
             case 200:
                 return { reachable: true, valid: true };
@@ -61,7 +59,7 @@ async function checkValidity(
  */
 async function checkCompatibility(apiURL: string): Promise<{ valid: boolean }> {
     try {
-        const response = await fetch(
+        const response = await timedFetch(
             `${apiURL}/well-known/compatible?version=${encodeURIComponent(packageInfo.version)}`,
             {
                 method: "GET",

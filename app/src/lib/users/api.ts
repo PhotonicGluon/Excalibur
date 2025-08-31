@@ -1,4 +1,5 @@
 import ExEF from "@lib/exef";
+import { timedFetch } from "@lib/network";
 import { numberToBuffer } from "@lib/util";
 
 /**
@@ -9,7 +10,7 @@ import { numberToBuffer } from "@lib/util";
  * @returns Whether the user exists
  */
 export async function checkUser(apiURL: string, username: string): Promise<boolean> {
-    const response = await fetch(`${apiURL}/users/check/${username}`, {
+    const response = await timedFetch(`${apiURL}/users/check/${username}`, {
         method: "HEAD",
     });
     if (response.status === 404) {
@@ -32,7 +33,7 @@ export async function getSecurityDetails(
     apiURL: string,
     username: string,
 ): Promise<{ success: boolean; aukSalt?: Buffer; srpSalt?: Buffer; error?: string }> {
-    const response = await fetch(`${apiURL}/users/security/${username}`, {
+    const response = await timedFetch(`${apiURL}/users/security/${username}`, {
         method: "GET",
     });
     switch (response.status) {
@@ -69,7 +70,7 @@ export async function getVaultKey(
     e2eeKey: Buffer,
 ): Promise<{ success: boolean; error?: string; encryptedKey?: Buffer }> {
     // Fetch the vault key
-    const response = await fetch(`${apiURL}/users/vault/${username}`, {
+    const response = await timedFetch(`${apiURL}/users/vault/${username}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
     });
@@ -110,7 +111,7 @@ export async function addUser(
     verifier: bigint,
     encryptedVaultKey: Buffer,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await fetch(`${apiURL}/users/add/${username}`, {
+    const response = await timedFetch(`${apiURL}/users/add/${username}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

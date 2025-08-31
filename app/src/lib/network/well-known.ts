@@ -1,3 +1,5 @@
+import { timedFetch } from "./fetch";
+
 /**
  * Checks if the authentication token is valid.
  *
@@ -8,7 +10,7 @@
  */
 export async function heartbeat(apiURL: string, token: string): Promise<{ success: boolean; authValid?: boolean }> {
     try {
-        const response = await fetch(`${apiURL}/well-known/heartbeat`, {
+        const response = await timedFetch(`${apiURL}/well-known/heartbeat`, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -36,7 +38,7 @@ export async function heartbeat(apiURL: string, token: string): Promise<{ succes
  *      version
  */
 export async function getServerVersion(apiURL: string): Promise<{ success: boolean; version?: string }> {
-    const response = await fetch(`${apiURL}/well-known/version`);
+    const response = await timedFetch(`${apiURL}/well-known/version`);
     switch (response.status) {
         case 200:
             // Continue with normal flow
@@ -57,7 +59,7 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
  *      time as a Date object
  */
 export async function getServerTime(apiURL: string): Promise<{ success: boolean; time?: Date }> {
-    const response = await fetch(`${apiURL}/well-known/clock`);
+    const response = await timedFetch(`${apiURL}/well-known/clock`);
     switch (response.status) {
         case 200:
             // Continue with normal flow
