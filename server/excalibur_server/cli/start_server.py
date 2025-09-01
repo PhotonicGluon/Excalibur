@@ -38,7 +38,6 @@ def start_server(
     """
 
     import os
-    import warnings
     from pathlib import Path
 
     import uvicorn
@@ -47,22 +46,9 @@ def start_server(
     from excalibur_server.src.config import CONFIG
 
     # Set environment variables
-    if debug:
-        warnings.warn("Debug mode is enabled.", RuntimeWarning)
-        os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
-
-    if not encrypt_responses:
-        warnings.warn(
-            "Encryption is disabled."
-            "This WILL break any code that requires the response to be encrypted on the client side.",
-            RuntimeWarning,
-        )
-        os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0"
-
-    if not enable_cors:
-        warnings.warn("CORS is disabled. This is not recommended for production.", RuntimeWarning)
-        os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "0"
-
+    os.environ["EXCALIBUR_SERVER_DEBUG"] = "1" if debug else "0"
+    os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
+    os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = str(delay_responses_duration)
 
     # Make the folders

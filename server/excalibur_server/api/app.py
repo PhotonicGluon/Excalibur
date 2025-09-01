@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import FastAPI
 
@@ -10,9 +11,21 @@ from .log_filters import EndpointFilter
 from .meta import TAGS
 from .routes import auth_router, files_router, users_router, well_known_router
 
+logger = logging.getLogger("uvicorn.error")
+
 # Add logging filter
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
 uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.no_log))
+
+# Check for enabled flags
+if os.getenv("EXCALIBUR_SERVER_DEBUG") == "1":
+    logger.warning("Debug mode is enabled.")
+
+if os.getenv("EXCALIBUR_SERVER_ENCRYPT_RESPONSES") == "0":
+    logger.warning("Encryption is disabled.")
+
+if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
+    logger.warning("CORS is disabled. This is not recommended for production.")
 
 # Define app
 app = FastAPI(
@@ -24,7 +37,7 @@ app = FastAPI(
 )
 
 # Add middlewares
-add_middleware(app)
+add_middleware(app, logger)
 
 # Include routes
 app.include_router(auth_router, prefix="/auth")
