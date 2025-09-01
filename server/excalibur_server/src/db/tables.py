@@ -1,6 +1,6 @@
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel
 
-from excalibur_server.src.security.srp.group import SRPGroup
+from excalibur_server.src.auth.srp.group import SRPGroup
 
 
 class User(SQLModel, table=True):

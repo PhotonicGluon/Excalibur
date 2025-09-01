@@ -48,8 +48,8 @@ def add_user(
 
     from excalibur_server.src.config import CONFIG
     from excalibur_server.src.exef.exef import ExEF
-    from excalibur_server.src.security.keygen import generate_key
-    from excalibur_server.src.security.srp import SRP
+    from excalibur_server.src.auth.keygen import generate_key
+    from excalibur_server.src.auth.srp import SRP
     from excalibur_server.src.users import User, add_user
 
     srp_handler = SRP(CONFIG.server.srp_group)

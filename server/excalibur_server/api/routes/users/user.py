@@ -9,7 +9,7 @@ from pydantic import BaseModel, field_serializer
 from excalibur_server.api.misc import is_debug
 from excalibur_server.api.routes.users import router
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.security.token import get_credentials
+from excalibur_server.src.auth.token import get_credentials
 from excalibur_server.src.users import User, add_user, get_user, is_user, remove_user
 
 

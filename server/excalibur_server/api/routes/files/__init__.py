@@ -1,7 +1,7 @@
 # ruff: noqa: E402
 from fastapi import APIRouter, Depends, status
 
-from excalibur_server.src.security.token import get_credentials
+from excalibur_server.src.auth.token import get_credentials
 
 router = APIRouter(
     tags=["files", "encrypted"],

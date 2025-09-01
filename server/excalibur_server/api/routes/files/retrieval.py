@@ -9,7 +9,7 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.path import check_path_subdir
-from excalibur_server.src.security.token import get_credentials
+from excalibur_server.src.auth.token import get_credentials
 
 
 @router.get(

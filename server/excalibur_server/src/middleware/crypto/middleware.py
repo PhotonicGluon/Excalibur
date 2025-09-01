@@ -10,8 +10,8 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
-from excalibur_server.src.security.consts import KEY
-from excalibur_server.src.security.token import CREDENTIALS_EXCEPTION, decode_token
+from excalibur_server.src.auth.consts import KEY
+from excalibur_server.src.auth.token import CREDENTIALS_EXCEPTION, decode_token
 
 
 class RouteEncryptionMiddleware:

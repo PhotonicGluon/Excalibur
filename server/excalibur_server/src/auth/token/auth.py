@@ -5,7 +5,7 @@ from Crypto.Cipher import AES
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from excalibur_server.src.security.consts import KEY
+from excalibur_server.src.auth.consts import KEY
 
 from .jwt import decode_token, generate_token
 

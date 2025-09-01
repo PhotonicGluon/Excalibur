@@ -7,7 +7,7 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.src.security.srp import SRP, SRPGroup
+from excalibur_server.src.auth.srp import SRP, SRPGroup
 from excalibur_server.src.users import User
 
 # Values from RFC5054, Appendix B

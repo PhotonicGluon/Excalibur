@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.security.token.auth import generate_auth_token
+from excalibur_server.src.auth.token.auth import generate_auth_token
 
 
 @pytest.fixture

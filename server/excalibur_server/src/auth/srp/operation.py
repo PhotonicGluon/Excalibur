@@ -2,7 +2,7 @@ from Crypto.Hash import SHA1, SHA3_256
 from Crypto.Random.random import getrandbits
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-from excalibur_server.src.security.srp.group import SRPGroup
+from excalibur_server.src.auth.srp.group import SRPGroup
 
 
 class SRP:

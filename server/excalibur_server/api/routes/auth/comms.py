@@ -10,8 +10,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from excalibur_server.api.logging import logger
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.security.srp import SRP
-from excalibur_server.src.security.token.auth import generate_auth_token
+from excalibur_server.src.auth.srp import SRP
+from excalibur_server.src.auth.token.auth import generate_auth_token
 from excalibur_server.src.users import User, get_user
 
 MAX_ITER_COUNT = 3
