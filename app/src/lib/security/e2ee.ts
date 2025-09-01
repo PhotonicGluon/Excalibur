@@ -17,14 +17,10 @@ export interface E2EEData {
 }
 
 enum E2EEStage {
-    CHECK_USERNAME,
     GET_SRP_GROUP,
-    GET_SRP_SALT,
     GET_SERVER_PUBLIC_VALUE,
-    CHECK_CLIENT_VALUE,
     SHARED_VALUE_CHECK,
-    M1_CHECK,
-    M2_CHECK,
+    M_VALUE_CHECKS,
     GET_AUTH_TOKEN,
 }
 
@@ -51,6 +47,36 @@ interface E2EEState {
         m1?: Buffer;
         m2?: Buffer;
     };
+}
+
+/**
+ * Sends a response to the server.
+ *
+ * @param ws The WebSocket connection to send the response to
+ * @param data Optional data to send with the response
+ * @param status The status of the response
+ */
+function sendResponse(ws: WebSocket, data?: string | Buffer, status?: "OK" | "ERR") {
+    const response = {
+        status: status ?? null,
+        binary: data instanceof Buffer,
+        data: data instanceof Buffer ? data.toString("base64") : data,
+    };
+    ws.send(JSON.stringify(response));
+}
+
+/**
+ * Parses a response from the server.
+ *
+ * @param data The response data to parse
+ * @returns An object containing the status and optional data
+ */
+function parseResponse(data: any): { status: "OK" | "ERR" | null; data?: string | Buffer } {
+    const raw = JSON.parse(data);
+    if (raw.binary) {
+        return { status: raw.status, data: Buffer.from(raw.data, "base64") };
+    }
+    return { status: raw.status, data: raw.data };
 }
 
 /**
@@ -97,7 +123,7 @@ export async function e2ee(
 
     setLoadingState?.("Checking username...");
     const state: E2EEState = {
-        stage: E2EEStage.CHECK_USERNAME,
+        stage: E2EEStage.GET_SRP_GROUP,
         negotiationIter: 0,
     };
 
@@ -113,27 +139,22 @@ export async function e2ee(
 
         ws.addEventListener("open", () => {
             console.log(`Connected to server; sending username '${username}'`);
-            ws.send(username);
+            sendResponse(ws, username);
         });
 
         ws.addEventListener("message", async (event) => {
-            const data = event.data;
+            const response = parseResponse(event.data);
             try {
-                if (state.stage === E2EEStage.CHECK_USERNAME) {
-                    if (data.toString() !== "OK") {
+                if (state.stage === E2EEStage.GET_SRP_GROUP) {
+                    if (response.status !== "OK") {
                         ws.close();
                         stopLoading?.();
                         showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
                         reject("Server rejected username");
                         return;
                     }
-                    setLoadingState?.("Determining SRP group...");
-                    state.stage = E2EEStage.GET_SRP_GROUP;
-                    return;
-                }
 
-                if (state.stage === E2EEStage.GET_SRP_GROUP) {
-                    const srpBits = parseInt(data.toString());
+                    const srpBits = parseInt(response.data!.toString());
                     state.srpGroup = getSRPGroup(srpBits);
                     state.stage = E2EEStage.GET_SERVER_PUBLIC_VALUE;
                     console.debug(`Server is using ${state.srpGroup.bits}-bit SRP group`);
@@ -142,7 +163,7 @@ export async function e2ee(
 
                 if (state.stage === E2EEStage.GET_SERVER_PUBLIC_VALUE) {
                     // Receive server's public value
-                    const serverPub = bufferToNumber(Buffer.from(await data.arrayBuffer(), "binary"));
+                    const serverPub = bufferToNumber(response.data! as Buffer);
                     if (serverPub % state.srpGroup!.prime === 0n) {
                         state.negotiationIter++;
                         console.debug(
@@ -164,33 +185,29 @@ export async function e2ee(
 
                     state.negotiationIter = 0;
                     state.values = { server: { pub: serverPub } };
-                    ws.send("OK");
 
                     // Now generate client's ephemeral values and send the public value
                     const { priv, pub } = state.srpGroup!.generateClientValues();
                     state.values.client = { priv, pub };
-                    ws.send(numberToBuffer(pub));
-                    state.stage = E2EEStage.CHECK_CLIENT_VALUE;
+                    sendResponse(ws, numberToBuffer(pub), "OK");
+                    state.stage = E2EEStage.SHARED_VALUE_CHECK;
                     return;
                 }
 
-                if (state.stage === E2EEStage.CHECK_CLIENT_VALUE) {
-                    if (data.toString() !== "OK") {
-                        console.log(data.toString());
+                if (state.stage === E2EEStage.SHARED_VALUE_CHECK) {
+                    // Check if the server accepted the client's public value
+                    if (response.status !== "OK") {
+                        console.log(response.toString());
                         console.debug("Server rejected client's public value, retrying");
                         const { priv, pub } = state.srpGroup!.generateClientValues();
                         state.values!.client = { priv, pub };
                         ws.send(numberToBuffer(pub));
                         return;
                     }
-                    state.stage = E2EEStage.SHARED_VALUE_CHECK;
-                    return;
-                }
 
-                if (state.stage === E2EEStage.SHARED_VALUE_CHECK) {
                     // Check shared U value
                     const sharedU = state.srpGroup!.computeU(state.values!.client!.pub, state.values!.server!.pub);
-                    if (data.toString() !== "U is OK" || sharedU === 0n) {
+                    if (response.data! !== "U is OK" || sharedU === 0n) {
                         ws.close();
                         stopLoading?.();
                         let message = "Server rejected shared value.";
@@ -227,18 +244,19 @@ export async function e2ee(
                         state.values!.server!.pub,
                         masterKey,
                     );
-                    ws.send(m1Client);
+                    sendResponse(ws, m1Client, "OK");
 
                     state.values!.m1 = m1Client;
-                    state.stage = E2EEStage.M1_CHECK;
+                    state.stage = E2EEStage.M_VALUE_CHECKS;
                     return;
                 }
 
-                if (state.stage === E2EEStage.M1_CHECK) {
-                    if (data.toString() !== "OK") {
-                        const errorMsg = data.toString().substring(4); // Remove leading "ERR: "
+                if (state.stage === E2EEStage.M_VALUE_CHECKS) {
+                    // Check that server accepted M1
+                    if (response.status !== "OK") {
                         ws.close();
                         stopLoading?.();
+                        const errorMsg = response.data! as string;
                         if (errorMsg === "M1 values do not match") {
                             showAlert?.(
                                 "Client Verification Failed",
@@ -253,12 +271,8 @@ export async function e2ee(
                         return;
                     }
 
-                    state.stage = E2EEStage.M2_CHECK;
-                    return;
-                }
-
-                if (state.stage === E2EEStage.M2_CHECK) {
-                    const m2Server = Buffer.from(await data.arrayBuffer(), "binary");
+                    // Confirm M2 values match
+                    const m2Server = response.data! as Buffer;
                     const m2Client = state.srpGroup!.generateM2(
                         state.values!.client!.pub,
                         state.values!.m1!,
@@ -275,13 +289,13 @@ export async function e2ee(
                         reject("Server verification failed");
                         return;
                     }
-                    ws.send("OK");
+                    sendResponse(ws, undefined, "OK");
                     state.stage = E2EEStage.GET_AUTH_TOKEN;
                     return;
                 }
 
                 if (state.stage === E2EEStage.GET_AUTH_TOKEN) {
-                    const auth_token_data = JSON.parse(data.toString());
+                    const auth_token_data = JSON.parse(response.data! as string);
                     const nonce = Buffer.from(auth_token_data.nonce, "base64");
                     const token = Buffer.from(auth_token_data.token, "base64");
                     const tag = Buffer.from(auth_token_data.tag, "base64");
