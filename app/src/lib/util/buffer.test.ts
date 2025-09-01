@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import { bufferToNumber, numberToBuffer, padBuffer, xorBuffer } from "./buffer";
 
 test("numberToBuffer", () => {

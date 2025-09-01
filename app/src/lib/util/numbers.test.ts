@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import { bytesToHumanReadable, padNumber } from "./numbers";
 
 describe("padNumber", () => {

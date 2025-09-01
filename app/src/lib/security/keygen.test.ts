@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import generateKey, { normalizePassword, slowHash } from "./keygen";
 
 describe("normalizePassword", () => {

@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import ExEF, { ExEFFooter, ExEFHeader } from "./exef";
 
 const KEY = Buffer.from("111111111111111111111111", "utf-8");

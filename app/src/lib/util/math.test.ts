@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import { modulo, powmod } from "./math";
 
 test("modulo", () => {

@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import { randbits } from "./util";
 
 test("randbits", () => {

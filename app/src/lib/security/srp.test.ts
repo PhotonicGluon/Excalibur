@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 import { bufferToNumber } from "@lib/util/buffer";
 
 import { SRPGroup, getSRPGroup } from "./srp";
