@@ -4,6 +4,8 @@ import { bufferToNumber } from "@lib/util/buffer";
 
 import { SRPGroup, getSRPGroup } from "./srp";
 
+const USERNAME = "test-user";
+
 // RFC5054 Appendix B test vectors
 const S = Buffer.from("BEB25379 D1A8581E B5A72767 3A2441EE".replaceAll(" ", ""), "hex");
 const X = Buffer.from("94B7555A ABE9127C C58CCF49 93DB6CF8 4D16C124".replaceAll(" ", ""), "hex");
@@ -48,11 +50,11 @@ const MASTER_SECRET = Buffer.from(
     "hex",
 );
 const M1 = Buffer.from(
-    "D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replaceAll(" ", ""),
+    "2E35BEFD 4A598685 DA9971A8 EEBA3A28 BCE0574D 341260BD E8EDEA9F EC50465E".replaceAll(" ", ""),
     "hex",
 );
 const M2 = Buffer.from(
-    "53EEEE88 4F3309A0 6645299F F457AAD0 FB724151 B872B44F 2382F52D C0D0E820".replaceAll(" ", ""),
+    "9050BF71 CD772053 A9790872 6FB8E46F 2D277247 6BCD6AA5 2482850A 35631628".replaceAll(" ", ""),
     "hex",
 );
 
@@ -106,22 +108,21 @@ test("premasterToMaster", () => {
 });
 
 test("generateM1", () => {
-    expect(
-        SRPGroup.SMALL.generateM1(
-            S,
-            bufferToNumber(A_PUB),
-            bufferToNumber(B_PUB),
-            SRPGroup.SMALL.premasterToMaster(bufferToNumber(PREMASTER_SECRET)),
-        ),
-    ).toEqual(M1);
+    const m1 = SRPGroup.SMALL.generateM1(
+        USERNAME,
+        S,
+        bufferToNumber(A_PUB),
+        bufferToNumber(B_PUB),
+        SRPGroup.SMALL.premasterToMaster(bufferToNumber(PREMASTER_SECRET)),
+    );
+    expect(m1).toEqual(M1);
 });
 
 test("generateM2", () => {
-    expect(
-        SRPGroup.SMALL.generateM2(
-            bufferToNumber(A_PUB),
-            M1,
-            SRPGroup.SMALL.premasterToMaster(bufferToNumber(PREMASTER_SECRET)),
-        ),
-    ).toEqual(M2);
+    const m2 = SRPGroup.SMALL.generateM2(
+        bufferToNumber(A_PUB),
+        M1,
+        SRPGroup.SMALL.premasterToMaster(bufferToNumber(PREMASTER_SECRET)),
+    );
+    expect(m2).toEqual(M2);
 });

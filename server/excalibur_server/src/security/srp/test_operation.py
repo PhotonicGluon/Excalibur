@@ -3,6 +3,8 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from .group import SRPGroup
 from .operation import SRP
 
+USERNAME = "test-user"
+
 # Values from RFC5054, Appendix B
 SRP_HANDLER = SRP(SRPGroup.SMALL)
 
@@ -40,8 +42,8 @@ PREMASTER_SECRET = int(
 
 # Verification values, self-computed
 MASTER_SECRET = int("573C0D40 FABF905D 72B44716 380D2E54 C5A48FD4 3B40D345 A3619881 D3E8632B".replace(" ", ""), 16)
-M1 = int("D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replace(" ", ""), 16)
-M2 = int("53EEEE88 4F3309A0 6645299F F457AAD0 FB724151 B872B44F 2382F52D C0D0E820".replace(" ", ""), 16)
+M1 = int("2E35BEFD 4A598685 DA9971A8 EEBA3A28 BCE0574D 341260BD E8EDEA9F EC50465E".replace(" ", ""), 16)
+M2 = int("9050BF71 CD772053 A9790872 6FB8E46F 2D277247 6BCD6AA5 2482850A 35631628".replace(" ", ""), 16)
 
 
 def test_srp_small_parameters():
@@ -108,7 +110,9 @@ def test_premaster_to_master():
 
 
 def test_generate_m1():
-    m1 = SRP_HANDLER.generate_m1(long_to_bytes(S), A_PUB, B_PUB, SRP_HANDLER.premaster_to_master(PREMASTER_SECRET))
+    m1 = SRP_HANDLER.generate_m1(
+        USERNAME, long_to_bytes(S), A_PUB, B_PUB, SRP_HANDLER.premaster_to_master(PREMASTER_SECRET)
+    )
     assert m1 == long_to_bytes(M1)
 
 

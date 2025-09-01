@@ -20,9 +20,9 @@ export class _SRPGroup {
     /**
      * Initializes an SRP group with specified bit length, prime, and generator.
      *
-     * @param bits The number of bits for the prime.
-     * @param prime The prime number in hexadecimal string format.
-     * @param generator The generator value for the SRP group.
+     * @param bits The number of bits for the prime
+     * @param prime The prime number in hexadecimal string format
+     * @param generator The generator value for the SRP group
      */
     constructor(bits: number, prime: string, generator: bigint) {
         this.bits = bits;
@@ -39,8 +39,8 @@ export class _SRPGroup {
     /**
      * Generates the SRP verifier for the given key.
      *
-     * @param key The key as a buffer, which will be converted to a bigint.
-     * @returns The computed verifier as a bigint.
+     * @param key The key as a buffer, which will be converted to a bigint
+     * @returns The computed verifier as a bigint
      */
     generateVerifier(key: Buffer): bigint {
         return powmod(this.generator, bufferToNumber(key), this.prime);
@@ -50,7 +50,7 @@ export class _SRPGroup {
      * Generates a pair of client private and public values, suitable for use in an SRP exchange.
      *
      * @returns An object containing the client private value (`priv`) and the client
-     * public value (`pub`), both as bigints.
+     * public value (`pub`)
      */
     generateClientValues(): { priv: bigint; pub: bigint } {
         const priv = randbits(256);
@@ -59,11 +59,11 @@ export class _SRPGroup {
     }
 
     /**
-     * Computes the SRP shared `u` value.
+     * Computes the SRP shared u value.
      *
-     * @param clientPub The client's public value `A`.
-     * @param serverPub The server's public value `B`.
-     * @returns The computed `u` value as a bigint.
+     * @param clientPub The client's public value, A
+     * @param serverPub The server's public value, B
+     * @returns The computed u value
      */
     computeU(clientPub: bigint, serverPub: bigint): bigint {
         const clientPubBuff = padBuffer(numberToBuffer(clientPub), this.bits / 8);
@@ -76,11 +76,11 @@ export class _SRPGroup {
     /**
      * Computes the SRP pre-master secret.
      *
-     * @param clientPriv The client's private value, `a`.
-     * @param serverPub The server's public value `B`.
-     * @param key The key buffer.
-     * @param u The shared `u` value.
-     * @returns The computed pre-master secret as a bigint.
+     * @param clientPriv The client's private value, a
+     * @param serverPub The server's public value, B
+     * @param key The key buffer
+     * @param u The shared u value
+     * @returns The computed pre-master secret
      */
     computePremasterSecret(clientPriv: bigint, serverPub: bigint, key: Buffer, u: bigint): bigint {
         const x = bufferToNumber(key);
@@ -96,8 +96,8 @@ export class _SRPGroup {
      * RFC2945 allows the use of other hash algorithms other than the SHA1-Interleave. We adopt
      * SHA3-256.
      *
-     * @param premaster The pre-master secret.
-     * @returns The master secret as a Buffer.
+     * @param premaster The pre-master secret
+     * @returns The master secret
      */
     premasterToMaster(premaster: bigint): Buffer {
         return Buffer.from(sha3_256.arrayBuffer(padBuffer(numberToBuffer(premaster), this.bits / 8)));
@@ -109,21 +109,28 @@ export class _SRPGroup {
      * This value should be the same on both the client and server for successful mutual
      * authentication.
      *
-     * @param salt The salt used for key generation on the client side.
-     * @param clientPub The client's public value, A.
-     * @param serverPub The server's public value, B.
-     * @param masterSecret The client's computed master secret.
-     * @returns The computed M1 value as a Buffer.
+     * @param username The username
+     * @param salt The salt used for key generation on the client side
+     * @param clientPub The client's public value, A
+     * @param serverPub The server's public value, B
+     * @param masterSecret The client's computed master secret
+     * @returns The computed M1 value
      */
-    generateM1(salt: Buffer, clientPub: bigint, serverPub: bigint, masterSecret: Buffer): Buffer {
+    generateM1(username: string, salt: Buffer, clientPub: bigint, serverPub: bigint, masterSecret: Buffer): Buffer {
         const primeHash = Buffer.from(sha3_256.arrayBuffer(numberToBuffer(this.prime)));
         const generatorHash = Buffer.from(sha3_256.arrayBuffer(numberToBuffer(this.generator)));
+        const usernameHash = Buffer.from(sha3_256.arrayBuffer(Buffer.from(username, "utf-8")));
 
-        const first = numberToBuffer(bufferToNumber(primeHash) ^ bufferToNumber(generatorHash));
-        const third = numberToBuffer(clientPub);
-        const fourth = numberToBuffer(serverPub);
+        const components = [
+            numberToBuffer(bufferToNumber(primeHash) ^ bufferToNumber(generatorHash)),
+            usernameHash,
+            salt,
+            numberToBuffer(clientPub),
+            numberToBuffer(serverPub),
+            masterSecret,
+        ];
 
-        const preM = Buffer.concat([first, salt, third, fourth, masterSecret]);
+        const preM = Buffer.concat(components);
         return Buffer.from(sha3_256.arrayBuffer(preM));
     }
 
@@ -133,10 +140,10 @@ export class _SRPGroup {
      * This value should be the same on both the client and server for successful mutual
      * authentication.
      *
-     * @param clientPub The client's public value, A.
-     * @param m1 The previously computed M1 value.
-     * @param masterSecret The client's computed master secret.
-     * @returns The computed M2 value as a Buffer.
+     * @param clientPub The client's public value, A
+     * @param m1 The previously computed M1 value
+     * @param masterSecret The client's computed master secret
+     * @returns The computed M2 value
      */
     generateM2(clientPub: bigint, m1: Buffer, masterSecret: Buffer): Buffer {
         const preM = Buffer.concat([numberToBuffer(clientPub), m1, masterSecret]);
@@ -167,9 +174,9 @@ export const SRPGroup = {
  * Retrieves the SRP group corresponding to the specified bit size.
  *
  * @param bits The bit size of the SRP group. Supported values are 1024 (`SMALL`), 1536 (`MEDIUM`),
- *      and 2048 (`LARGE`).
- * @returns The SRP group matching the provided bit size.
- * @throws Will throw an error if the bit size is not supported.
+ *      and 2048 (`LARGE`)
+ * @returns The SRP group matching the provided bit size
+ * @throws Will throw an error if the bit size is not supported
  */
 export function getSRPGroup(bits: number): _SRPGroup {
     switch (bits) {

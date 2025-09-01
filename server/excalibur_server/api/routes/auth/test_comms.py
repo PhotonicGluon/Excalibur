@@ -43,12 +43,12 @@ PREMASTER_SECRET = int(
 )
 
 # Verification values, self-computed
-M1 = int("D67B66EE 8621C267 7BFD97E7 82480762 5693212F AE9599D9 59A03F82 0F4E815C".replace(" ", ""), 16)
-M2 = int("53EEEE88 4F3309A0 6645299F F457AAD0 FB724151 B872B44F 2382F52D C0D0E820".replace(" ", ""), 16)
+M1 = int("2E35BEFD 4A598685 DA9971A8 EEBA3A28 BCE0574D 341260BD E8EDEA9F EC50465E".replace(" ", ""), 16)
+M2 = int("9050BF71 CD772053 A9790872 6FB8E46F 2D277247 6BCD6AA5 2482850A 35631628".replace(" ", ""), 16)
 
 # Create a test user
 TEST_USER = User(
-    username="srp_test_user",
+    username="test-user",
     auk_salt=b"Doesn't Matter",
     srp_group=SRPGroup.SMALL,
     srp_salt=long_to_bytes(S),
@@ -61,13 +61,13 @@ SRP_HANDLER = SRP(SRPGroup.SMALL)
 
 # Mock functions
 def mock_get_user(username: str):
-    if username == "srp_test_user":
+    if username == "test-user":
         return TEST_USER
     return None
 
 
 def mock_is_user(username: str):
-    return username == "srp_test_user"
+    return username == "test-user"
 
 
 # Pytest fixture to apply the mocks
@@ -86,7 +86,7 @@ client = TestClient(app)
 
 def test_group_establishment():
     with client.websocket_connect("/api/auth") as ws:
-        ws.send_text("srp_test_user")
+        ws.send_text("test-user")
         assert ws.receive_text() == "OK", "Failed to find user"
 
         data = ws.receive_text()
@@ -96,7 +96,7 @@ def test_group_establishment():
 def test_auth_negotiation():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("srp_test_user")
+        ws.send_text("test-user")
         assert ws.receive_text() == "OK", "Failed to find user"
 
         # Get SRP group size
@@ -140,7 +140,7 @@ def test_abort_on_invalid_username():
 def test_abort_on_invalid_client_public_value():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("srp_test_user")
+        ws.send_text("test-user")
         ws.receive_text()
 
         # Get SRP group size
@@ -160,7 +160,7 @@ def test_abort_on_invalid_client_public_value():
 def test_abort_on_invalid_client_m1():
     with client.websocket_connect("/api/auth") as ws:
         # Send username
-        ws.send_text("srp_test_user")
+        ws.send_text("test-user")
         ws.receive_text()
 
         # Get SRP group size

@@ -7,6 +7,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import WebSocket, WebSocketDisconnect
 
+from excalibur_server.api.logging import logger
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.security.srp import SRP
@@ -224,7 +225,8 @@ async def _verify_m_values(
         srp_salt = b64decode(os.environ["EXCALIBUR_SERVER_TEST_SRP_SALT"])
 
     # Verify client's M1
-    m1_server = srp_handler.generate_m1(srp_salt, a_pub, b_pub, master_server)
+    m1_server = srp_handler.generate_m1(user.username, srp_salt, a_pub, b_pub, master_server)
+    logger.debug(f"M1 server: {m1_server.hex()}")
     m1_client = await websocket.receive_bytes()
 
     if m1_client != m1_server:

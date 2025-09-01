@@ -127,6 +127,7 @@ class SRP:
 
     def generate_m1(
         self,
+        username: str,
         salt: bytes,
         client_public_value: int,
         server_public_value: int,
@@ -138,6 +139,7 @@ class SRP:
         This value should be the same on both the client and server for successful mutual
         authentication.
 
+        :param username: username of the user
         :param salt: salt used for key generation on the client side
         :param client_public_value: client public value, A
         :param server_public_value: server public value, B
@@ -147,12 +149,18 @@ class SRP:
 
         group_prime_hash = SHA3_256.new(long_to_bytes(self.group.prime)).digest()
         group_generator_hash = SHA3_256.new(long_to_bytes(self.group.generator)).digest()
+        username_hash = SHA3_256.new(username.encode()).digest()
 
-        first = long_to_bytes(bytes_to_long(group_prime_hash) ^ bytes_to_long(group_generator_hash))
-        third = long_to_bytes(client_public_value)
-        fourth = long_to_bytes(server_public_value)
+        components = [
+            long_to_bytes(bytes_to_long(group_prime_hash) ^ bytes_to_long(group_generator_hash)),
+            username_hash,
+            salt,
+            long_to_bytes(client_public_value),
+            long_to_bytes(server_public_value),
+            master_secret,
+        ]
 
-        pre_m = first + salt + third + fourth + master_secret
+        pre_m = b"".join(components)
         return SHA3_256.new(pre_m).digest()
 
     @staticmethod

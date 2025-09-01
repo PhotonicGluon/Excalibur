@@ -221,6 +221,7 @@ export async function e2ee(
                     setLoadingState?.("Authentication...");
                     console.debug("Verifying M1...");
                     const m1Client = state.srpGroup!.generateM1(
+                        username,
                         srpSalt,
                         state.values!.client!.pub,
                         state.values!.server!.pub,

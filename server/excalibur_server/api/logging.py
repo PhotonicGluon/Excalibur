@@ -1,6 +1,10 @@
 import logging
+import time
+
+from excalibur_server.src.config import CONFIG
 
 
+# Create endpoint filter
 class EndpointFilter(logging.Filter):
     """
     Filter out log records containing specific endpoints.
@@ -32,3 +36,18 @@ class EndpointFilter(logging.Filter):
                 return False
 
         return True
+
+
+# Add endpoint filter to access logger
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.logging.no_log))
+
+# Define main logger
+logger = logging.getLogger("uvicorn.error")
+
+# Configure logging to file
+file_handler = logging.FileHandler(CONFIG.api.logging.logs_dir / f"{int(time.time())}.log", mode="a", encoding="utf-8")
+file_handler.setFormatter(logging.Formatter(CONFIG.api.logging.file_format))
+
+logger.addHandler(file_handler)
+uvicorn_access_logger.addHandler(file_handler)
