@@ -1,5 +1,5 @@
 import json
-from base64 import b64decode
+from base64 import b64decode, b64encode
 
 import pytest
 from Crypto.Cipher import AES
@@ -86,42 +86,42 @@ client = TestClient(app)
 
 def test_group_establishment():
     with client.websocket_connect("/api/auth") as ws:
-        ws.send_text("test-user")
-        assert ws.receive_text() == "OK", "Failed to find user"
-
-        data = ws.receive_text()
-        assert data == str(SRP_HANDLER.bits), "Failed to receive group size"
+        ws.send_json({"data": "test-user"})
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Failed to find user"
+        assert response["data"] == str(SRP_HANDLER.bits), "Failed to receive group size"
 
 
 def test_auth_negotiation():
     with client.websocket_connect("/api/auth") as ws:
-        # Send username
-        ws.send_text("test-user")
-        assert ws.receive_text() == "OK", "Failed to find user"
-
-        # Get SRP group size
-        ws.receive_text()
+        ws.send_json({"data": "test-user"})
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Failed to find user"
 
         # Receive server's public value
-        b_pub = bytes_to_long(ws.receive_bytes())
+        response = ws.receive_json()
+        assert response.get("binary")
+        b_pub = bytes_to_long(b64decode(response["data"]))
         assert b_pub == B_PUB, "Server sent incorrect public value"
-        ws.send_text("OK")
 
         # Send client's public value
-        ws.send_bytes(long_to_bytes(A_PUB))
-        assert ws.receive_text() == "OK", "Server rejected acceptable client public value"
+        ws.send_json({"status": "OK", "binary": True, "data": b64encode(long_to_bytes(A_PUB)).decode("utf-8")})
 
-        # The shared U value should be valid
-        assert ws.receive_text() == "U is OK", "Failed to compute shared U value"
+        # Server should accept, and the shared U value should be valid
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Server rejected acceptable client public value"
+        assert response["data"] == "U is OK", "Failed to compute shared U value"
 
         # Check M values
-        ws.send_bytes(long_to_bytes(M1))
-        assert ws.receive_text() == "OK", "Server failed to verify client's M1 value"
-        assert ws.receive_bytes() == long_to_bytes(M2), "Server failed to send correct M2 value"
-        ws.send_text("OK")
+        ws.send_json({"status": "OK", "binary": True, "data": b64encode(long_to_bytes(M1)).decode("utf-8")})
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Server failed to verify client's M1 value"
+        assert bytes_to_long(b64decode(response["data"])) == M2, "Server failed to send correct M2 value"
+
+        ws.send_json({"status": "OK"})
 
         # Check received auth token
-        auth_token_data = json.loads(ws.receive_text())
+        auth_token_data = json.loads(ws.receive_json()["data"])
         cipher = AES.new(
             SRP_HANDLER.premaster_to_master(PREMASTER_SECRET),
             AES.MODE_GCM,
@@ -133,50 +133,51 @@ def test_auth_negotiation():
 
 def test_abort_on_invalid_username():
     with client.websocket_connect("/api/auth") as ws:
-        ws.send_text("fake_username")
-        assert ws.receive_text() == "ERR: User does not exist", "Failed to deny user"
+        ws.send_json({"data": "fake_username"})
+        assert ws.receive_json()["status"] == "ERR", "Failed to deny user"
 
 
 def test_abort_on_invalid_client_public_value():
     with client.websocket_connect("/api/auth") as ws:
-        # Send username
-        ws.send_text("test-user")
-        ws.receive_text()
-
-        # Get SRP group size
-        ws.receive_text()
+        ws.send_json({"data": "test-user"})
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Failed to find user"
 
         # Receive server's public value
-        ws.receive_bytes()
-        ws.send_text("OK")
+        response = ws.receive_json()
+        assert response.get("binary")
+        b_pub = bytes_to_long(b64decode(response["data"]))
+        assert b_pub == B_PUB, "Server sent incorrect public value"
 
         # Send client's INVALID public value
-        ws.send_bytes(b"\x00")
-        assert (
-            ws.receive_text() == "ERR: Client public value is illegal; A mod N cannot be 0"
-        ), "Failed to deny invalid client public value"
+        ws.send_json({"status": "OK", "binary": True, "data": b64encode(b"\x00").decode("utf-8")})
+
+        # Server should reject, and the shared U value should be valid
+        response = ws.receive_json()
+        assert response["status"] == "ERR", "Server accepted invalid client public value"
 
 
 def test_abort_on_invalid_client_m1():
     with client.websocket_connect("/api/auth") as ws:
-        # Send username
-        ws.send_text("test-user")
-        ws.receive_text()
-
-        # Get SRP group size
-        ws.receive_text()
+        ws.send_json({"data": "test-user"})
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Failed to find user"
 
         # Receive server's public value
-        ws.receive_bytes()
-        ws.send_text("OK")
+        response = ws.receive_json()
+        assert response.get("binary")
+        b_pub = bytes_to_long(b64decode(response["data"]))
+        assert b_pub == B_PUB, "Server sent incorrect public value"
 
         # Send client's public value
-        ws.send_bytes(long_to_bytes(A_PUB))
-        ws.receive_text()
+        ws.send_json({"status": "OK", "binary": True, "data": b64encode(long_to_bytes(A_PUB)).decode("utf-8")})
 
-        # The shared U value should be valid
-        ws.receive_text()
+        # Server should accept, and the shared U value should be valid
+        response = ws.receive_json()
+        assert response["status"] == "OK", "Server rejected acceptable client public value"
+        assert response["data"] == "U is OK", "Failed to compute shared U value"
 
         # Send WRONG M1
-        ws.send_bytes(long_to_bytes(12345))
-        assert ws.receive_text() == "ERR: M1 values do not match", "Failed to deny invalid client M1"
+        ws.send_json({"status": "OK", "binary": True, "data": b64encode(b"12345").decode("utf-8")})
+        response = ws.receive_json()
+        assert response["status"] == "ERR", "Server accepted invalid client M1 value"

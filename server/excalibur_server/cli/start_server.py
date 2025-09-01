@@ -71,4 +71,5 @@ def start_server(
         log_config=log_config,
         reload=debug,
         reload_dirs=[Path(__file__).parent.parent],
+        reload_excludes=["test_*.py"],
     )
