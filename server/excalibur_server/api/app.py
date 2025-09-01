@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 from fastapi import FastAPI
 
@@ -13,9 +14,19 @@ from .routes import auth_router, files_router, users_router, well_known_router
 
 logger = logging.getLogger("uvicorn.error")
 
-# Add logging filter
+# Add endpoint filter to access logger
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
-uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.no_log))
+uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.logging.no_log))
+
+# Configure logging to file
+file_handler = logging.FileHandler(CONFIG.api.logging.logs_dir / f"{int(time.time())}.log", mode="a", encoding="utf-8")
+file_handler.setFormatter(logging.Formatter(CONFIG.api.logging.file_format))
+
+logger.addHandler(file_handler)
+logger.propagate = True
+
+uvicorn_access_logger.addHandler(file_handler)
+uvicorn_access_logger.propagate = True
 
 # Check for enabled flags
 if os.getenv("EXCALIBUR_SERVER_DEBUG") == "1":

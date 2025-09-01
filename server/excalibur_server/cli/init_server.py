@@ -44,6 +44,7 @@ def init_server(
     from excalibur_server.src.config import CONFIG
 
     # Make the folders
+    os.makedirs(CONFIG.api.logging.logs_dir, exist_ok=True)
     os.makedirs(CONFIG.server.vault_folder, exist_ok=True)
 
     # Initialize the database

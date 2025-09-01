@@ -34,9 +34,6 @@ file_process_chunk_size = 4096 # 4 KiB
 # How long a login session lasts, in seconds
 login_validity_time = 3600
 
-# The API endpoints to not log
-no_log = ["/api/well-known/heartbeat"]
-
 # The allowed origins for CORS
 allow_origins = [
     "capacitor://localhost", # Capacitor on iOS
@@ -51,3 +48,19 @@ capacity = 20
 
 # The refill rate of the rate limiter, in tokens per second
 refill_rate = 1
+
+[api.logging]
+# The directory to store logs in
+logs_dir = "logs"
+
+# The default log format
+default_format = "[%(asctime)s] %(levelprefix)s %(message)s"
+
+# The log format for any webpage access
+access_format = '[%(asctime)s] %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+
+# Log format when writing to file
+file_format = "[%(asctime)s] %(levelname)s - %(message)s"
+
+# The API endpoints to not log
+no_log = ["/api/well-known/heartbeat"]

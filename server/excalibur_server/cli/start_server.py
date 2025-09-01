@@ -41,6 +41,7 @@ def start_server(
     from pathlib import Path
 
     import uvicorn
+    from uvicorn.config import LOGGING_CONFIG
 
     from excalibur_server.consts import ROOT_FOLDER
     from excalibur_server.src.config import CONFIG
@@ -53,14 +54,21 @@ def start_server(
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
+    os.makedirs(CONFIG.api.logging.logs_dir, exist_ok=True)
     os.makedirs(CONFIG.server.vault_folder, exist_ok=True)
+
+    # Configure log format
+    log_config = LOGGING_CONFIG
+    formatters = log_config["formatters"]
+    formatters["default"]["fmt"] = CONFIG.api.logging.default_format
+    formatters["access"]["fmt"] = CONFIG.api.logging.access_format
 
     # Start server
     uvicorn.run(
         "excalibur_server.api.app:app",
         host=host,
         port=port,
+        log_config=log_config,
         reload=debug,
         reload_dirs=[Path(__file__).parent.parent],
-        reload_excludes=["examples/*"],
     )
