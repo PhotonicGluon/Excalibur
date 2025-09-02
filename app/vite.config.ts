@@ -37,4 +37,17 @@ export default defineConfig({
         setupFiles: ["./src/vitest-setup.ts"],
     },
     server: { watch: { ignored: ["**/android"] } },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id: string) {
+                    if (id.includes("node_modules")) {
+                        const importPath = id.toString().split("node_modules/")[1];
+                        const packageID = importPath.split("/")[0];
+                        return packageID;
+                    }
+                },
+            },
+        },
+    },
 });
