@@ -31,6 +31,19 @@ class TokenBucket:
         self.refill_rate = refill_rate
         self._sub_buckets: dict[str, SubBucket] = {}  # TODO: Migrate to Redis or another shared storage?
 
+    def _get_sub_bucket(self, client_id: str) -> SubBucket:
+        """
+        Gets the sub-bucket for the given client ID.
+
+        :param client_id: the ID of the client
+        :return: the sub-bucket for the client
+        """
+
+        return self._sub_buckets.get(
+            client_id,
+            SubBucket(tokens=self.capacity, last_refill=time.time()),
+        )
+
     def consume(self, client_id: str) -> bool:
         """
         Consumes a token from the bucket.
@@ -39,10 +52,10 @@ class TokenBucket:
         :return: True if a token was consumed, False otherwise
         """
 
-        now = time.time()
-        bucket = self._sub_buckets.get(client_id, SubBucket(tokens=self.capacity, last_refill=now))
+        bucket = self._get_sub_bucket(client_id)
 
         # Refill tokens
+        now = time.time()
         time_since_refill = now - bucket.last_refill
         tokens_to_add = time_since_refill * self.refill_rate
         bucket.tokens = min(self.capacity, bucket.tokens + tokens_to_add)

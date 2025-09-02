@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from .token_bucket import TokenBucket
@@ -63,8 +61,8 @@ def test_token_refill(bucket: TokenBucket):
     # The next request should fail
     assert bucket.consume(client_id) is False
 
-    # Wait for 0.4 seconds to refill 2 tokens (refill_rate is 5 tokens/second)
-    time.sleep(0.4)
+    # Mock waiting 0.4 seconds to refill 2 tokens (refill_rate is 5 tokens/second)
+    bucket._get_sub_bucket(client_id).last_refill -= 0.4
 
     # Now, two more requests should be successful
     assert bucket.consume(client_id) is True, "First token after refill should be consumable"
@@ -84,8 +82,8 @@ def test_bucket_does_not_overflow_capacity(bucket: TokenBucket):
     assert bucket.consume(client_id) is True
     assert bucket._sub_buckets[client_id].tokens == 4
 
-    # Wait for 1.1 seconds, which is more than enough to fully refill the bucket
-    time.sleep(1.1)
+    # Mock waiting 1.1 seconds, which is more than enough to fully refill the bucket
+    bucket._get_sub_bucket(client_id).last_refill -= 1.1
 
     # Try to consume one token. This will trigger the refill logic first.
     assert bucket.consume(client_id) is True
