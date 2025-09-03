@@ -7,7 +7,9 @@ import DirectoryItem, { ContainerProps } from "./DirectoryItem";
 import { uiFeedbackContext } from "./context";
 
 describe("<DirectoryItem />", () => {
-    function renderComponent(props = {}) {
+    function renderComponent(
+        props: any = { renameHook: () => Promise.resolve(), deleteHook: () => Promise.resolve() },
+    ) {
         const defaultProps: ContainerProps = {
             oddRow: true,
             name: "Sample File.txt.exef",
@@ -31,7 +33,8 @@ describe("<DirectoryItem />", () => {
                 >
                     <uiFeedbackContext.Provider
                         value={{
-                            onDelete: (_path, _isDir) => Promise.resolve(),
+                            onRename: (_path) => props.renameHook(),
+                            onDelete: (_path, _isDir) => props.deleteHook(),
                             presentAlert: () => Promise.resolve(),
                             presentToast: () => Promise.resolve(),
                             setProgress: () => {},
@@ -77,5 +80,21 @@ describe("<DirectoryItem />", () => {
     it("has correct default icon for undefined MIME type", () => {
         renderComponent({ mimetype: "fake/fake" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", documentOutline);
+    });
+
+    it("calls rename hook when rename button is clicked", () => {
+        const renameHook = cy.stub().resolves();
+        renderComponent({ renameHook });
+        cy.get("#directory-item .button").click();
+        cy.get(".item > .sc-ion-label-md-h").eq(0).click();
+        cy.wrap(renameHook).should("have.been.called");
+    });
+
+    it("calls delete hook when delete button is clicked", () => {
+        const deleteHook = cy.stub().resolves();
+        renderComponent({ deleteHook });
+        cy.get("#directory-item .button").click();
+        cy.get(".item > .sc-ion-label-md-h").eq(1).click();
+        cy.wrap(deleteHook).should("have.been.called");
     });
 });

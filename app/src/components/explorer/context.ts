@@ -6,6 +6,8 @@ import { AlertOptions, ToastOptions } from "@ionic/core";
  * Methods for UI feedback, specifically for file explorer components.
  */
 export interface UIFeedbackMethods {
+    /** Function to call when renaming is requested */
+    onRename: (path: string) => Promise<void>;
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when the dialog is closed */

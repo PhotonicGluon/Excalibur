@@ -20,7 +20,7 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, folderOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, folderOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
@@ -54,19 +54,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const uiFeedback = useUIFeedback();
 
     // Popover
-    const Popover = () => (
-        <IonContent>
-            <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
-                <IonItem button={true} onClick={() => onClickDelete()}>
-                    <IonLabel>
-                        <IonIcon icon={trashOutline} size="large" />
-                        <IonText className="pl-2">Delete</IonText>
-                    </IonLabel>
-                </IonItem>
-            </IonList>
-        </IonContent>
-    );
-    const [showPopover, dismissPopover] = useIonPopover(Popover);
 
     // Functions
     /**
@@ -221,6 +208,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     /**
+     * Handles the user clicking the rename button an item.
+     */
+    async function onClickRename() {
+        await uiFeedback.onRename(props.fullpath);
+        dismissPopover();
+    }
+
+    /**
      * Handles the user clicking the delete button an item.
      */
     async function onClickDelete() {
@@ -244,6 +239,25 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             break;
     }
 
+    const Popover = () => (
+        <IonContent>
+            <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+                <IonItem button={true} onClick={() => onClickRename()}>
+                    <IonLabel>
+                        <IonIcon icon={pencilOutline} size="large" />
+                        <IonText className="pl-2">Rename</IonText>
+                    </IonLabel>
+                </IonItem>
+                <IonItem button={true} onClick={() => onClickDelete()}>
+                    <IonLabel>
+                        <IonIcon icon={trashOutline} size="large" />
+                        <IonText className="pl-2">Delete</IonText>
+                    </IonLabel>
+                </IonItem>
+            </IonList>
+        </IonContent>
+    );
+    const [showPopover, dismissPopover] = useIonPopover(Popover);
     return (
         <IonItem id={props.id} className={rowColourClass} button={true}>
             {/* Main item content */}

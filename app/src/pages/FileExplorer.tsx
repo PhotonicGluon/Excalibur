@@ -588,6 +588,7 @@ const FileExplorer: React.FC = () => {
                     {directoryContents && (
                         <uiFeedbackContext.Provider
                             value={{
+                                onRename: (path) => Promise.resolve(), // TODO: Add
                                 onDelete: onDeleteItem,
                                 setShowDialog: setShowProgressDialog,
                                 setDialogMessage: setDialogMessage,
