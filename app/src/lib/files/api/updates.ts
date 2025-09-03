@@ -33,6 +33,8 @@ export async function renameItem(
             return { success: false, error: "Illegal or invalid path" };
         case 409:
             return { success: false, error: "Item with that name already exists" };
+        case 412:
+            return { success: false, error: "Cannot rename root directory" };
         case 414:
             return { success: false, error: "Path too long" };
         case 422:

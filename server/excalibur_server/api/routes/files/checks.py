@@ -1,4 +1,3 @@
-from pathlib import Path as PathlibPath
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Query, Response, status
@@ -30,7 +29,7 @@ async def check_path_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
+    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -91,7 +90,7 @@ async def check_dir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
+    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

@@ -1,4 +1,3 @@
-from pathlib import Path as PathlibPath
 from typing import Annotated
 
 import aiofiles
@@ -47,7 +46,7 @@ async def upload_file_endpoint(
         )
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
+    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -60,7 +59,7 @@ async def upload_file_endpoint(
         raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
 
     # Check for any attempts at path traversal again
-    user_path, valid = check_path_subdir(file_path, CONFIG.server.vault_folder)
+    _, valid = check_path_subdir(file_path, CONFIG.server.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -107,7 +106,7 @@ async def create_directory_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(PathlibPath(username) / path, CONFIG.server.vault_folder)
+    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
