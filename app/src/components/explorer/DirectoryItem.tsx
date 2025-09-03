@@ -2,22 +2,25 @@ import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import write_blob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
-import React, { useRef } from "react";
+import React from "react";
 
 import {
+    IonButton,
+    IonButtons,
     IonCol,
+    IonContent,
     IonGrid,
     IonIcon,
     IonItem,
-    IonItemOption,
-    IonItemOptions,
-    IonItemSliding,
     IonLabel,
+    IonList,
     IonNote,
     IonRow,
+    IonText,
+    useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { folderOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, folderOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
@@ -50,8 +53,20 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const router = useIonRouter();
     const uiFeedback = useUIFeedback();
 
-    // States
-    const slideRef = useRef<HTMLIonItemSlidingElement>(null);
+    // Popover
+    const Popover = () => (
+        <IonContent>
+            <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+                <IonItem button={true} onClick={() => onClickDelete()}>
+                    <IonLabel>
+                        <IonIcon icon={trashOutline} size="large" />
+                        <IonText className="pl-2">Delete</IonText>
+                    </IonLabel>
+                </IonItem>
+            </IonList>
+        </IonContent>
+    );
+    const [showPopover, dismissPopover] = useIonPopover(Popover);
 
     // Functions
     /**
@@ -210,12 +225,12 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      */
     async function onClickDelete() {
         await uiFeedback.onDelete(props.fullpath, !isFile);
-        slideRef.current?.close();
+        dismissPopover();
     }
 
     // Render
-    const lighter = "[--item-bg:#ffffff] dark:[--item-bg:var(--ion-background-color)]";
-    const darker = "[--item-bg:var(--ion-color-light)] dark:[--item-bg:var(--ion-background-color-step-50)]";
+    const lighter = "[--background:#ffffff] dark:[--background:var(--ion-background-color)]";
+    const darker = "[--background:var(--ion-color-light)] dark:[--background:var(--ion-background-color-step-50)]";
     let rowColourClass;
     switch (settings.rowAlternatingColours) {
         case "off":
@@ -228,43 +243,39 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             rowColourClass = props.oddRow ? darker : lighter;
             break;
     }
-    return (
-        <div id={props.id} className={rowColourClass}>
-            <IonItemSliding ref={slideRef} className="w-full bg-(--item-bg)">
-                {/* Main item content */}
-                <IonItem className="[--background:var(--item-bg)]" button={true} onClick={() => onClickItem()}>
-                    <div className="flex h-16 w-full items-center">
-                        <IonGrid>
-                            <IonRow className="ion-align-items-center">
-                                <IonCol className="flex items-center">
-                                    <IonIcon
-                                        className="size-6"
-                                        icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
-                                    />
-                                    <div className="pl-4">
-                                        <IonLabel className="max-w-92 truncate">
-                                            {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
-                                        </IonLabel>
-                                        {props.size !== undefined && (
-                                            <IonNote>
-                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
-                                            </IonNote>
-                                        )}
-                                    </div>
-                                </IonCol>
-                            </IonRow>
-                        </IonGrid>
-                    </div>
-                </IonItem>
 
-                {/* Slide options */}
-                <IonItemOptions side="end">
-                    <IonItemOption color="danger" onClick={() => onClickDelete()}>
-                        <IonIcon slot="icon-only" icon={trashOutline}></IonIcon>
-                    </IonItemOption>
-                </IonItemOptions>
-            </IonItemSliding>
-        </div>
+    return (
+        <IonItem id={props.id} className={rowColourClass} button={true}>
+            {/* Main item content */}
+            <div className="flex h-16 w-full items-center">
+                <IonGrid onClick={() => onClickItem()}>
+                    <IonRow className="ion-align-items-center">
+                        <IonCol className="flex items-center">
+                            <IonIcon
+                                className="size-6"
+                                icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
+                            />
+                            <div className="pl-4">
+                                <IonLabel className="max-w-92 truncate">
+                                    {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
+                                </IonLabel>
+                                {props.size !== undefined && (
+                                    <IonNote>{bytesToHumanReadable(props.size, settings.fileSizeUnits)}</IonNote>
+                                )}
+                            </div>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+            </div>
+
+            {/* Ellipsis button */}
+            <IonButtons className="w-24 justify-end" slot="end">
+                {/* Ellipsis menu trigger button */}
+                <IonButton onClick={(e: any) => showPopover({ event: e })}>
+                    <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
+                </IonButton>
+            </IonButtons>
+        </IonItem>
     );
 };
 

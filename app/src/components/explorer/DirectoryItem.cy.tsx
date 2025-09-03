@@ -4,6 +4,7 @@ import { documentOutline, musicalNotesOutline } from "ionicons/icons";
 import { settingsContext } from "@components/settings/context";
 
 import DirectoryItem, { ContainerProps } from "./DirectoryItem";
+import { uiFeedbackContext } from "./context";
 
 describe("<DirectoryItem />", () => {
     function renderComponent(props = {}) {
@@ -28,7 +29,18 @@ describe("<DirectoryItem />", () => {
                         save: () => Promise.resolve(),
                     }}
                 >
-                    <DirectoryItem id="directory-item" {...defaultProps} />
+                    <uiFeedbackContext.Provider
+                        value={{
+                            onDelete: (_path, _isDir) => Promise.resolve(),
+                            presentAlert: () => Promise.resolve(),
+                            presentToast: () => Promise.resolve(),
+                            setProgress: () => {},
+                            setShowDialog: () => {},
+                            setDialogMessage: () => {},
+                        }}
+                    >
+                        <DirectoryItem id="directory-item" {...defaultProps} />
+                    </uiFeedbackContext.Provider>
                 </settingsContext.Provider>
             </IonApp>,
         );
