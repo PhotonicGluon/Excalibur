@@ -15,3 +15,4 @@ from .create import upload_file_endpoint as upload_file_endpoint
 from .delete import delete_endpoint as delete_endpoint
 from .retrieval import download_file_endpoint as download_file_endpoint
 from .retrieval import listdir_endpoint as listdir_endpoint
+from .updates import rename_path_endpoint as rename_path_endpoint

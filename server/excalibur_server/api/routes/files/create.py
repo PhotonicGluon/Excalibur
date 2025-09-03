@@ -7,9 +7,9 @@ from fastapi.params import Body
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
+from excalibur_server.src.auth.token import get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
-from excalibur_server.src.auth.token import get_credentials
 
 
 @router.post(
@@ -58,6 +58,11 @@ async def upload_file_endpoint(
     file_path = user_path / file.filename
     if not check_path_length(file_path):
         raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
+
+    # Check for any attempts at path traversal again
+    user_path, valid = check_path_subdir(file_path, CONFIG.server.vault_folder)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
     # Check if file already exists
     if not force and file_path.exists():
