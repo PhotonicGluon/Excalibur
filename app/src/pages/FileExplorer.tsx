@@ -43,7 +43,7 @@ import {
 } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
-import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, uploadFile } from "@lib/files/api";
+import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 import { updateAndYield } from "@lib/util";
@@ -388,6 +388,54 @@ const FileExplorer: React.FC = () => {
     }
 
     /**
+     * Handles the user clicking the rename button on a directory item.
+     *
+     * @param path The path of the item to rename
+     */
+    async function onRenameItem(path: string) {
+        // Ask for user input
+        presentAlert({
+            header: "Enter New Name",
+            inputs: [
+                {
+                    type: "text",
+                    name: "newName",
+                    placeholder: "New Name",
+                    value: path
+                        .split("/")
+                        .pop()
+                        ?.replace(/\.exef$/, ""),
+                },
+            ],
+            buttons: [
+                "Cancel",
+                {
+                    text: "Rename",
+                    handler: async (data: { newName: string }) => {
+                        let newName = data.newName;
+                        if (newName === "") {
+                            presentSnackbar("New name cannot be empty", "danger");
+                            return;
+                        }
+                        if (!newName.endsWith(".exef")) {
+                            newName += ".exef";
+                        }
+
+                        const renameResponse = await renameItem(auth, path, newName);
+                        if (!renameResponse.success) {
+                            presentSnackbar(`Failed to rename item: ${renameResponse.error}`, "danger");
+                            return;
+                        }
+
+                        refreshContents(false);
+                        presentSnackbar("Item renamed", "success");
+                    },
+                },
+            ],
+        });
+    }
+
+    /**
      * Handles the user clicking the delete button on a directory item.
      *
      * @param path The path of the item to delete
@@ -588,7 +636,7 @@ const FileExplorer: React.FC = () => {
                     {directoryContents && (
                         <uiFeedbackContext.Provider
                             value={{
-                                onRename: (path) => Promise.resolve(), // TODO: Add
+                                onRename: onRenameItem,
                                 onDelete: onDeleteItem,
                                 setShowDialog: setShowProgressDialog,
                                 setDialogMessage: setDialogMessage,
