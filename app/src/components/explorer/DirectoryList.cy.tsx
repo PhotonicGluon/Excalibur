@@ -70,10 +70,10 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").get("ion-item").eq(1).should("contain.text", "Sample File"); // Second item is the file
 
         // Row colour classes should be identical (since rowAlternatingColours is "off")
-        cy.get("#directory-list ion-list > div")
+        cy.get("#directory-list ion-list > ion-item")
             .eq(0)
             .then(($el) => {
-                cy.get("#directory-list ion-list > div").eq(1).should("have.class", $el.attr("class"));
+                cy.get("#directory-list ion-list > ion-item").eq(1).should("have.class", $el.attr("class"));
             });
     });
 
@@ -88,10 +88,10 @@ describe("<DirectoryList />", () => {
     it("renders row alternating colours", () => {
         renderComponent({}, "normal");
         // Row colour classes should be different (since rowAlternatingColours is "normal")
-        cy.get("#directory-list ion-list > div")
+        cy.get("#directory-list ion-list > ion-item")
             .eq(0)
             .then(($el) => {
-                cy.get("#directory-list ion-list > div").eq(1).should("not.have.class", $el.attr("class"));
+                cy.get("#directory-list ion-list > ion-item").eq(1).should("not.have.class", $el.attr("class"));
             });
     });
 });
