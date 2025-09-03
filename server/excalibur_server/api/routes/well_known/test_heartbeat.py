@@ -18,10 +18,10 @@ def test_heartbeat_no_auth():
     assert response.text == "OK"
 
 
-def test_heartbeat_auth(auth_key):
+def test_heartbeat_auth(auth_client: TestClient):
     """Test the heartbeat endpoint with GET request and authentication."""
 
-    response = client.get("/api/well-known/heartbeat", headers={"Authorization": f"Bearer {auth_key}"})
+    response = auth_client.get("/api/well-known/heartbeat")
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert "Cache-Control" in response.headers
     assert HEADERS["Cache-Control"] in response.headers["Cache-Control"]
