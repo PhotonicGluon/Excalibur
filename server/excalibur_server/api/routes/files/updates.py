@@ -20,9 +20,9 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
         },
         status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
+        status.HTTP_409_CONFLICT: {"description": "Item already exists"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot rename root directory"},
         status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Path too long"},
-        status.HTTP_409_CONFLICT: {"description": "Item already exists"},
     },
     response_class=PlainTextResponse,
 )
