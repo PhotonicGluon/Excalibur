@@ -1,14 +1,34 @@
-from typing import Annotated
+import tempfile
+from typing import Annotated, Generator
 
 import aiofiles
-from fastapi import File, HTTPException, Path, Query, UploadFile, status
-from fastapi.params import Body
+from fastapi import Body, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.consts import FILES_FOLDER
 from excalibur_server.src.files.consts import FILE_PROCESS_CHUNK_SIZE
-from excalibur_server.src.path import check_path_subdir, check_path_length
+from excalibur_server.src.path import check_path_length, check_path_subdir
+
+MAX_FILE_SIZE = 1024 * 1024  # 1 MB
+
+
+async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
+    """
+    A dependency that creates a spooled temporary file from the request body.
+
+    :param request: The request object
+    :yield: The spooled temporary file
+    """
+
+    spooled_file = tempfile.SpooledTemporaryFile(max_size=MAX_FILE_SIZE)
+    try:
+        async for chunk in request.stream():
+            spooled_file.write(chunk)
+        spooled_file.seek(0)
+        yield spooled_file
+    finally:
+        spooled_file.close()
 
 
 @router.post(
@@ -28,18 +48,30 @@ from excalibur_server.src.path import check_path_subdir, check_path_length
     },
     status_code=status.HTTP_201_CREATED,
     response_class=PlainTextResponse,
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/octet-stream": {
+                    "schema": {"type": "string", "format": "binary"},
+                }
+            },
+            "required": True,
+            "description": "Upload a binary file.",
+        }
+    },
 )
 async def upload_file_endpoint(
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
-    file: Annotated[UploadFile, File(description="The *encrypted* file to upload. Should end with `.exef`")],
+    name: Annotated[str, Query(description="The name of the file to upload. Should end with `.exef`")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
+    file: tempfile.SpooledTemporaryFile = Depends(get_spooled_file),
 ):
     """
     Uploads a file to a directory.
     """
 
     # Check file extension
-    if not file.filename.endswith(".exef"):
+    if not name.endswith(".exef"):
         raise HTTPException(
             status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Uploaded file needs to end with `.exef`"
         )
@@ -53,7 +85,7 @@ async def upload_file_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
     # Check file path length
-    file_path = user_path / file.filename
+    file_path = user_path / name
     if not check_path_length(file_path):
         raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
 
@@ -65,7 +97,7 @@ async def upload_file_endpoint(
 
     # Save the file
     async with aiofiles.open(file_path, "wb") as out_file:
-        while content := await file.read(FILE_PROCESS_CHUNK_SIZE):
+        while content := file.read(FILE_PROCESS_CHUNK_SIZE):
             await out_file.write(content)
 
     return "File uploaded"

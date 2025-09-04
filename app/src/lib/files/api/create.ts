@@ -17,16 +17,23 @@ export async function uploadFile(
     file: File,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
-    // Form the body data to send to server
-    const formData = new FormData();
-    formData.append("file", file);
+    // FIXME: The file needs to be encrypted!
+    // const formData = new FormData();
+    // formData.append("file", file);
 
     // Send the request
-    const response = await fetch(`${auth.authInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${auth.authInfo!.e2eeData.token}` },
-        body: formData,
-    });
+    const response = await fetch(
+        `${auth.authInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${auth.authInfo!.e2eeData.token}`,
+                // "X-Encrypted": "true",
+                // "X-Content-Type": "multipart/form-data",
+            },
+            body: file,
+        },
+    );
     switch (response.status) {
         case 201:
             // Continue with normal flow

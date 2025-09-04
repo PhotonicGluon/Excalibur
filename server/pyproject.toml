@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.1.3"
+version = "0.1.4rc1"
 dependencies = [
     "aiofiles>=24.1.0",
     "cachetools>=6.1.0",
@@ -14,7 +14,6 @@ dependencies = [
     "pycryptodome>=3.23.0",
     "pydantic>=2.11.7",
     "pyjwt>=2.10.1",
-    "python-multipart>=0.0.20",
     "semver>=3.0.4",
     "toml>=0.10.2",
     "typer>=0.16.1",
