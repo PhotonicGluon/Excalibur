@@ -19,8 +19,9 @@
     },
     "scripts": {
         "dev": "vite --port 8100",
-        "build": "tsc && vite build",
         "preview": "vite preview",
+        "build": "npx vite build && npx cap copy",
+        "sync": "npx cap sync --inline",
         "cy:open": "cypress open",
         "cy:run": "cypress run",
         "test:unit": "vitest watch",

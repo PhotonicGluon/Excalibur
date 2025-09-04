@@ -38,6 +38,7 @@ export default defineConfig({
     },
     server: { watch: { ignored: ["**/android"] } },
     build: {
+        chunkSizeWarningLimit: 750, // 750 kB
         rollupOptions: {
             output: {
                 manualChunks(id: string) {
