@@ -229,8 +229,12 @@ class EncryptionHandler:
             await self._send(self._initial_message)
             return
         if message_type == "http.response.body":
+            if message.get("body", b"") == b"":
+                await self._send(message)
+                return
+
             # Encrypt body
-            plaintext_body = message.get("body", b"")
+            plaintext_body = message["body"]
             self._exef.encryptor.update(plaintext_body)
 
             # Determine what we need to send
@@ -322,7 +326,8 @@ class EncryptionHandler:
 
             if self._e2ee_key is None:
                 # Try again using the headers
-                self._set_e2ee_key(MutableHeaders(scope=message))
+                if "headers" in message:
+                    self._set_e2ee_key(MutableHeaders(scope=message))
 
                 if self._e2ee_key is None:
                     # Wanted to encrypt but still no key found
