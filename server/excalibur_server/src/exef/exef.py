@@ -99,3 +99,20 @@ class ExEF(BaseModel):
         """
 
         return self.decryptor.decrypt(data)
+
+    # Other methods
+    @classmethod
+    def validate(cls, data: bytes) -> bool:
+        """
+        Checks if the given data is valid ExEF data.
+
+        :param data: The data to check
+        :return: Whether the data is valid ExEF data
+        """
+
+        try:
+            Header.from_serialized(data[: Header.size])
+            Footer.from_serialized(data[-Footer.size :])
+            return True
+        except ValueError:
+            return False
