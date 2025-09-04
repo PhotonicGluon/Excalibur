@@ -6,10 +6,10 @@ import { AuthProvider } from "@contexts/auth";
 /**
  * Lists the contents of a directory.
  *
- * @param auth The current authentication provider.
- * @param path The path to list.
+ * @param auth The current authentication provider
+ * @param path The path to list
  * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message or the directory object.
+ *      message or the directory object
  */
 export async function listdir(
     auth: AuthProvider,
@@ -42,10 +42,10 @@ export async function listdir(
 /**
  * Downloads a file from the server.
  *
- * @param auth The current authentication provider.
- * @param path The path to the file to download.
+ * @param auth The current authentication provider
+ * @param path The path to the file to download
  * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message, or the file size and ReadableStream of the decrypted file data.
+ *      message, or the file size and decrypted ReadableStream of the (still encrypted) file data
  */
 export async function downloadFile(
     auth: AuthProvider,

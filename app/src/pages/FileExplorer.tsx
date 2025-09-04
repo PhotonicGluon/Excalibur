@@ -195,6 +195,7 @@ const FileExplorer: React.FC = () => {
             const encryptedFileSize = rawFileSize + ExEF.additionalSize;
 
             // Encrypt the file using a stream
+            // TODO: Use a ComLink worker?
             const exef = new ExEF(auth.vaultKey!);
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
@@ -229,7 +230,6 @@ const FileExplorer: React.FC = () => {
             const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
 
             // Upload the file
-            // TODO: Stream contents of file upload
             setDialogMessage("Uploading...");
             setUploadProgress(null);
 
