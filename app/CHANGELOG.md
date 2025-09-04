@@ -8,6 +8,21 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.4 - 2025-09-04
+
+### 🔒 Security
+
+- Fixed missing encryption in some routes
+
+### 🚄 Performance Improvements
+
+- Added a Comlink worker to encrypt files
+
+### 🔧 Fixes
+
+- Fixed an issue where the user would not be kicked out of the session when the token expires (and the countdown shows negative time)
+
+
 ## 0.1.3 - 2025-08-22
 
 ### 🔒 Security

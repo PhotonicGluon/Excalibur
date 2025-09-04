@@ -29,7 +29,7 @@ const Countdown: React.FC<CountdownProps> = ({ endDate: date, onExpiry, ...props
 
             setTime({ hours, minutes, seconds });
 
-            if (interval && hours === 0 && minutes === 0 && seconds === 0) {
+            if (interval && hours <= 0 && minutes <= 0 && seconds <= 0) {
                 clearInterval(interval);
                 onExpiry();
             }

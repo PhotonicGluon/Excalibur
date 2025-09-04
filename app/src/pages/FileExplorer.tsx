@@ -1,6 +1,8 @@
 import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
+import FolderOpener from "@native/FolderOpenerPlugin";
+import * as Comlink from "comlink";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -42,13 +44,11 @@ import {
     settingsOutline,
 } from "ionicons/icons";
 
-import ExEF from "@lib/exef";
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
-import { updateAndYield } from "@lib/util";
-
-import FolderOpener from "@native/FolderOpenerPlugin";
+import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
+import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
@@ -195,10 +195,8 @@ const FileExplorer: React.FC = () => {
             }
 
             const rawFileSize = rawFileData.length;
-            const encryptedFileSize = rawFileSize + ExEF.additionalSize;
 
-            // Encrypt the file using a stream
-            const exef = new ExEF(auth.vaultKey!);
+            // Set up file data stream
             const rawFileDataStream = new ReadableStream<Buffer>({
                 start(controller) {
                     for (let i = 0; i < rawFileSize / settings.cryptoChunkSize; i++) {
@@ -213,29 +211,38 @@ const FileExplorer: React.FC = () => {
                 },
             });
 
+            // Encrypt the file using a ComLink worker
             setDialogMessage("Encrypting...");
-            const encryptStream = exef.encryptStream(rawFileSize, rawFileDataStream);
-            const reader = encryptStream.getReader();
+            setUploadProgress(0);
+
+            const worker = new EncryptionProcessorWorker();
+            const processor = Comlink.wrap<EncryptionProcessor>(worker);
+
             let encryptedFileData: Buffer = Buffer.from([]);
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    break;
-                }
-                encryptedFileData = Buffer.concat([encryptedFileData, value]);
-                await updateAndYield(encryptedFileData.length / encryptedFileSize, setUploadProgress);
-                console.debug(
-                    `Encrypted ${encryptedFileData.length} / ${encryptedFileSize} (${((encryptedFileData.length / encryptedFileSize) * 100).toFixed(2)}%)`,
+            try {
+                encryptedFileData = await processor.processStream(
+                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                    Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
+                    auth.vaultKey!,
+                    rawFileSize,
+                    // `proxy()` ensures the callback function works across threads
+                    Comlink.proxy(setUploadProgress),
                 );
+            } catch (e) {
+                presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                setShowProgressDialog(false);
+                return;
+            } finally {
+                // Free up resources
+                worker.terminate();
             }
 
             const encryptedFile = new File([encryptedFileData], rawFile.name + ".exef");
 
             // Upload the file
-            // TODO: Stream contents of file upload
             setDialogMessage("Uploading...");
             setUploadProgress(null);
-
+            console.debug(`Uploading file ${encryptedFile.name}...`);
             const uploadResponse = await uploadFile(auth, requestedPath, encryptedFile, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");

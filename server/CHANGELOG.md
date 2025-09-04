@@ -8,6 +8,13 @@ This project uses [_towncrier_](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## 0.1.4 - 2025-09-04
+
+### ✏️ Changes
+
+- Changed parameters for the file upload endpoint to accept file data in the body instead of as a `multipart/form-data` request
+
+
 ## 0.1.3 - 2025-08-22
 
 ### ⚙️ Internal

@@ -1,3 +1,4 @@
+import ExEF from "@lib/exef";
 import { timedFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
@@ -5,13 +6,13 @@ import { AuthProvider } from "@components/auth/context";
 /**
  * Uploads a file to the given path.
  *
- * @param auth The current authentication provider.
- * @param path The path to upload the file to.
- * @param file The file to upload.
+ * @param auth The current authentication provider
+ * @param path The path to upload the file to
+ * @param file The file to upload
  * @param force If true, forces the file to be uploaded even if it already exists. If false, the
- *      request will fail if the file already exists.
+ *      request will fail if the file already exists
  * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message.
+ *      message
  */
 export async function uploadFile(
     auth: AuthProvider,
@@ -19,17 +20,23 @@ export async function uploadFile(
     file: File,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
-    // Form the body data to send to server
-    const formData = new FormData();
-    formData.append("file", file);
+    // Encrypt the file contents
+    const exef = new ExEF(auth.authInfo!.key!);
+    const encryptedFile = exef.encrypt(Buffer.from(await file.arrayBuffer()));
 
+    // TODO: Stream upload of file?
     // Send the request
     const response = await timedFetch(
-        `${auth.serverInfo!.apiURL}/files/upload/${path}?force=${force ? "true" : "false"}`,
+        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
         {
             method: "POST",
-            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
-            body: formData,
+            headers: {
+                Authorization: `Bearer ${auth.authInfo!.token}`,
+                "Content-Type": "application/octet-stream",
+                "X-Encrypted": "true",
+                "X-Content-Type": "application/octet-stream",
+            },
+            body: encryptedFile,
         },
     );
     switch (response.status) {
@@ -62,11 +69,11 @@ export async function uploadFile(
 /**
  * Creates a directory at the given path.
  *
- * @param auth The current authentication provider.
- * @param path The path to create the new directory at.
- * @param name The name of the new directory.
+ * @param auth The current authentication provider
+ * @param path The path to create the new directory at
+ * @param name The name of the new directory
  * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message.
+ *      message
  */
 export async function mkdir(
     auth: AuthProvider,
