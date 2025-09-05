@@ -4,7 +4,16 @@ All traffic and files will be encrypted using the Excalibur Encryption Format (E
 
 The following is a diagram of the ExEF format. The numbers represent 0-indexed _byte_ positions.
 
-[![](https://mermaid.ink/img/pako:eNpNkM1ugzAQhF8F7Rkj_m18TdJLlV5S9VBxcWEDVoONHCOFIN69GFAV3_ztzGh2J6h0jcChF9UvWvKDVpTK80KScK-E0-P05p1FI6sSHE5J5vAXmrvUamM5oY694-hd5BM3yEhUOPqhVbWjOCTxqjzIvkVj8WFfDDEjecJfh3t6Suia9CmaEsCHDk0nZL1Unty8BNtit4Q4TY1XMdxW57xIxWD1ZVQVcGsG9MHooWmBX8XtvvyGvhYWj1I0RnT_tBcK-AQP4GkcFCwOk5jSjFFWhLkPI3CWBGlCs9mHp9aLLwwYzcLlRVFe0DRniQ9YS6vNebvseuA1-Hs1bF0a43bYe6Gq0Rz0oCzwIp3_ANZVeeg?type=png)](https://mermaid.live/edit#pako:eNpNkM1ugzAQhF8F7Rkj_m18TdJLlV5S9VBxcWEDVoONHCOFIN69GFAV3_ztzGh2J6h0jcChF9UvWvKDVpTK80KScK-E0-P05p1FI6sSHE5J5vAXmrvUamM5oY694-hd5BM3yEhUOPqhVbWjOCTxqjzIvkVj8WFfDDEjecJfh3t6Suia9CmaEsCHDk0nZL1Unty8BNtit4Q4TY1XMdxW57xIxWD1ZVQVcGsG9MHooWmBX8XtvvyGvhYWj1I0RnT_tBcK-AQP4GkcFCwOk5jSjFFWhLkPI3CWBGlCs9mHp9aLLwwYzcLlRVFe0DRniQ9YS6vNebvseuA1-Hs1bF0a43bYe6Gq0Rz0oCzwIp3_ANZVeeg)
+```mermaid
+packet-beta
+  0-3: "ExEF Magic"
+  4-5: "Version"
+  6-7: "Key Size"
+  8-19: "Nonce"
+  20-27: "Ciphertext Size"
+  28-63: "Ciphertext"
+  64-79: "Tag"
+```
 
 - Bytes `0` to `3` will be the ExEF magic constant. The magic constant is the ASCII string `ExEF`.
 - Bytes `4` and `5` represent the ExEF version, which should be interpreted as an 2-byte unsigned integer. The current version is `00 02`.
@@ -16,9 +25,3 @@ The following is a diagram of the ExEF format. The numbers represent 0-indexed _
 - Bytes `20` to `27` represent the ciphertext length, which should be interpreted as an 8-byte unsigned integer.
 - The ciphertext follows.
 - The last 16 bytes is the 16-byte AES-GCM tag.
-
-Regex that matches hex:
-
-```
-(?<magic>45784546)(?<version>[0-9a-f]{4})(?<aes_key_len>0080|00C0|0100)(?<nonce>[0-9a-f]{24})(?<ct_len>[0-9a-f]{16})(?<ct>[0-9a-f]+)(?<tag>[0-9a-f]{32})
-```

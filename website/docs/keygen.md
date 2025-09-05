@@ -4,4 +4,24 @@ TODO: Update
 
 Adapted from 1Password's security whitepaper.
 
-[![](https://mermaid.ink/img/pako:eNpVkktuwjAURbdiPQkJVAMhX8iggxZVSFELahhUTRhYxIAFsZFxRPltoPNusCupEwfaeuD4XR9fv6v4BHORUQhhsRH7-YpIhabDlCM9Jkl3Qna7vZAZRpPuzKhR0o3pXFKFYiUZX2IUXbdivUU2CqO4VGqTh2j4lCTVx0Z7plbI9yxsWRZiikqimOC7WW0wqthynt0MGg107QLdodIfMa6EMbbrS9rt-_NUshwRnqEXIXOyYUd6rpi6N43U5c23zrGmB2M5utGRpkf_4bfxawUgUahtoUyUOpaR_gTWxzXfbH5_frVav9mMbGq90OU4SsbGL6IHnRkw5FS3zzL9S04lmYJa0ZymEOplRuQ6hZRfNEcKJeIDn0OoZEExSFEsVxAuyGanq2KbEUWHjCwlyW_qlnAIT_ABoeP3O4Hr-Zbn-v3Aw3CA0O13XCfwrMC3B87A9ZwLhqMQ-rjV6QfuQA_XdgaB5_cw0IwpIZ_N46neUGX_XvGmo6UsY9RXS8ozKh9FwRWEdu_yA9KgveM?type=png)](https://mermaid.live/edit#pako:eNpVkktuwjAURbdiPQkJVAMhX8iggxZVSFELahhUTRhYxIAFsZFxRPltoPNusCupEwfaeuD4XR9fv6v4BHORUQhhsRH7-YpIhabDlCM9Jkl3Qna7vZAZRpPuzKhR0o3pXFKFYiUZX2IUXbdivUU2CqO4VGqTh2j4lCTVx0Z7plbI9yxsWRZiikqimOC7WW0wqthynt0MGg107QLdodIfMa6EMbbrS9rt-_NUshwRnqEXIXOyYUd6rpi6N43U5c23zrGmB2M5utGRpkf_4bfxawUgUahtoUyUOpaR_gTWxzXfbH5_frVav9mMbGq90OU4SsbGL6IHnRkw5FS3zzL9S04lmYJa0ZymEOplRuQ6hZRfNEcKJeIDn0OoZEExSFEsVxAuyGanq2KbEUWHjCwlyW_qlnAIT_ABoeP3O4Hr-Zbn-v3Aw3CA0O13XCfwrMC3B87A9ZwLhqMQ-rjV6QfuQA_XdgaB5_cw0IwpIZ_N46neUGX_XvGmo6UsY9RXS8ozKh9FwRWEdu_yA9KgveM)
+```mermaid
+flowchart TD
+    P[/Password, P/]
+    K[/Secret String, K/]
+    S[/Salt, S/]
+
+    PBKDF[[PBKDF2 with 650,000 iterations]]
+    HKDF[[HKDF]]
+
+    %% Password + Salt into PBKDF2
+    P-->|Trim and Normalize|PBKDF
+    S-->PBKDF
+
+    %% Secret key into HKDF
+    K-->HKDF
+
+    %% XOR HKDF output with PBKDF2 output
+    PBKDF-->XOR((⊕))
+    HKDF-->XOR
+    XOR-->OK[Output Key]
+```
