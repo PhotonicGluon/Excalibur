@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from excalibur_server.src.config import CONFIG
@@ -46,8 +47,11 @@ uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.log
 logger = logging.getLogger("uvicorn.error")
 
 # Configure logging to file
-file_handler = logging.FileHandler(CONFIG.api.logging.logs_dir / f"{int(time.time())}.log", mode="a", encoding="utf-8")
-file_handler.setFormatter(logging.Formatter(CONFIG.api.logging.file_format))
+if os.getenv("EXCALIBUR_SERVER_LOGGING") == "1":
+    file_handler = logging.FileHandler(
+        CONFIG.api.logging.logs_dir / f"{int(time.time())}.log", mode="a", encoding="utf-8"
+    )
+    file_handler.setFormatter(logging.Formatter(CONFIG.api.logging.file_format))
 
-logger.addHandler(file_handler)
-uvicorn_access_logger.addHandler(file_handler)
+    logger.addHandler(file_handler)
+    uvicorn_access_logger.addHandler(file_handler)

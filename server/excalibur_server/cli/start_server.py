@@ -30,6 +30,14 @@ def start_server(
             "(e.g., when using an Android emulator).",
         ),
     ] = True,
+    enable_logging: Annotated[
+        bool,
+        typer.Option(
+            "--logging/--no-logging",
+            "-l/-L",
+            help="Whether to enable logging to file.",
+        ),
+    ] = True,
 ):
     """
     Start API server.
@@ -51,6 +59,7 @@ def start_server(
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
     os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = str(delay_responses_duration)
+    os.environ["EXCALIBUR_SERVER_LOGGING"] = "1" if enable_logging else "0"
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
