@@ -17,6 +17,13 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
+        "mkdir": RoutingTree(
+            segment="mkdir",
+            has_path_param=True,
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
         "download": RoutingTree(
             segment="download",
             has_path_param=True,

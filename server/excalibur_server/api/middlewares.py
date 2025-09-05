@@ -24,12 +24,13 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
     )
 
     # Add rate limit middleware if not debugging
-    if not os.getenv("EXCALIBUR_SERVER_DEBUG"):
+    if os.getenv("EXCALIBUR_SERVER_DEBUG", "0") != "1":
         app.add_middleware(
             RateLimitMiddleware,
             capacity=CONFIG.api.rate_limit.capacity,
             refill_rate=CONFIG.api.rate_limit.refill_rate,
         )
+
     # Add artificial delay
     artificial_delay = float(os.environ.get("EXCALIBUR_SERVER_DELAY_RESPONSES", 0))
     if artificial_delay > 0:

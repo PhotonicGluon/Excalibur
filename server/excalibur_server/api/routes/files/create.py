@@ -2,21 +2,15 @@ import tempfile
 from typing import Annotated, Generator
 
 import aiofiles
-from fastapi import Depends, File, HTTPException, Path, Query, UploadFile, status
-from fastapi.params import Body
+from fastapi import Body, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.auth.token import get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
-from fastapi import Body, Depends, HTTPException, Path, Query, Request, status
-from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.routes.files import router
-from excalibur_server.src.path import check_path_length, check_path_subdir
-
-MAX_FILE_SIZE = 1024 * 1024  # 1 MB
+MAX_FILE_SIZE = 1024 * 1024  # 1 MiB
 
 
 async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
@@ -151,10 +145,10 @@ async def create_directory_endpoint(
     if not (user_path.exists() and user_path.is_dir()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    # Check if new directory causes issues
+    # Check for any attempts at path traversal, again
     dir_path, valid = check_path_subdir(name, user_path)
     if not valid:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Illegal or invalid directory name")
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
     # Check if directory already exists
     dir_path = user_path / name
