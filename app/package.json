@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.2.0-alpha.13",
+    "version": "0.2.0-alpha.14",
     "description": "A trustless secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
@@ -46,6 +46,7 @@
         "@ionic/react-router": "^8.7.3",
         "@maskito/core": "^3.10.3",
         "@maskito/react": "^3.10.3",
+        "@panva/hkdf": "^1.2.1",
         "@tailwindcss/vite": "^4.1.12",
         "capacitor-blob-writer": "^1.1.19",
         "comlink": "^4.4.2",

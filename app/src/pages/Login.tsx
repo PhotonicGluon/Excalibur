@@ -127,8 +127,10 @@ const Login: React.FC = () => {
 
             // Set up account unlock key (AUK) and vault key
             setLoadingState("Creating new AUK and vault key...");
+            const additionalInfo = { username: values.username, apiURL: auth.serverInfo!.apiURL! };
+
             const aukSalt = randomBytes(32);
-            const auk = await generateKey(values.password, aukSalt);
+            const auk = await generateKey(values.password, additionalInfo, aukSalt);
             console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
 
             const vaultKey = randomBytes(32);
@@ -140,7 +142,7 @@ const Login: React.FC = () => {
             // Set up SRP key
             setLoadingState("Creating new SRP key...");
             const srpSalt = randomBytes(32);
-            const srpKey = await generateKey(values.password, srpSalt);
+            const srpKey = await generateKey(values.password, additionalInfo, srpSalt);
             console.debug(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
             const srpVerifier = srpGroup.generateVerifier(srpKey);
