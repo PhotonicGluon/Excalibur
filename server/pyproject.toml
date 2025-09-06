@@ -22,7 +22,7 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "sqlmodel>=0.0.24",
     "toml>=0.10.2",
-    "typer>=0.16.1",
+    "typer>=0.16.2",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
@@ -43,8 +43,8 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.4.0", "ruff>=0.12.9"]
-test = ["httpx>=0.28.1", "pytest>=8.4.1"]
+dev = ["ipython>=9.4.0", "ruff>=0.12.12"]
+test = ["httpx>=0.28.1", "pytest>=8.4.2"]
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"
