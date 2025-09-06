@@ -150,14 +150,14 @@ async def create_directory_endpoint(
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
-    # Check if directory already exists
-    dir_path = user_path / name
-    if dir_path.exists():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
-
     # Check directory path length
+    dir_path = user_path / name
     if not check_path_length(dir_path):
         raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="Directory path too long")
+
+    # Check if directory already exists
+    if dir_path.exists():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
 
     # Create the directory
     dir_path.mkdir(parents=True)
