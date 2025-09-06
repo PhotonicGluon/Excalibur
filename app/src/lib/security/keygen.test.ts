@@ -28,21 +28,22 @@ test("slowHash", async () => {
 });
 
 test("fastHash", async () => {
-    const additionalInfo = { username: "test-user", apiURL: "https://example.com" };
-    console.log(JSON.stringify(additionalInfo));
+    const additionalInfo = { username: "test-user" };
     const salt = Buffer.from("deadbeef", "hex");
     const result = await fastHash(additionalInfo, salt);
 
     expect(result.length).toBe(32);
-    expect(result).toEqual(Buffer.from("769ba5e7434108652a9d3a0952adbe92b6cf96cad0980bbd933e5604c6c02d07", "hex"));
+
+    expect(result).toEqual(Buffer.from("2a729be3d3e50315c32e87d48c7be45db7059088d7ab1549ffb53cf500778ac6", "hex"));
 });
 
 test("generateKey", async () => {
     const password = "password";
-    const additionalInfo = { username: "test-user", apiURL: "https://example.com" };
+    const additionalInfo = { username: "test-user" };
     const salt = Buffer.from("deadbeef", "hex");
     const result = await generateKey(password, additionalInfo, salt);
 
     expect(result.length).toBe(32);
-    expect(result).toEqual(Buffer.from("ebf725d4b89ad7c7d4a2c64a716f8725186a89937ed09988f3b636405efeb7fe", "hex"));
+    console.log(result.toString("hex"));
+    expect(result).toEqual(Buffer.from("b71e1bd0283edcb73d117b97afb9ddea19a08fd179e3877c9f3d5cb19849103f", "hex"));
 });

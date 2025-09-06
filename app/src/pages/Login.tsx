@@ -127,7 +127,7 @@ const Login: React.FC = () => {
 
             // Set up account unlock key (AUK) and vault key
             setLoadingState("Creating new AUK and vault key...");
-            const additionalInfo = { username: values.username, apiURL: auth.serverInfo!.apiURL! };
+            const additionalInfo = { username: values.username };
 
             const aukSalt = randomBytes(32);
             const auk = await generateKey(values.password, additionalInfo, aukSalt);

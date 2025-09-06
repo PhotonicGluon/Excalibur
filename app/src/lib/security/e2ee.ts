@@ -112,7 +112,7 @@ export async function e2ee(
 
     // Generate keys
     setLoadingState?.("Generating keys...");
-    const additionalInfo = { username, apiURL };
+    const additionalInfo = { username };
     const auk = await generateKey(password, additionalInfo, aukSalt);
     const srpKey = await generateKey(password, additionalInfo, srpSalt);
     console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);

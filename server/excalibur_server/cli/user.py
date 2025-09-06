@@ -56,10 +56,10 @@ def add_user(
 
     # Generate salts and keys
     auk_salt = get_random_bytes(16)
-    auk_key = generate_key(password, auk_salt)
+    auk_key = generate_key(password, {"username": username}, auk_salt)
 
     srp_salt = get_random_bytes(16)
-    srp_key = generate_key(password, srp_salt)
+    srp_key = generate_key(password, {"username": username}, srp_salt)
 
     # Generate SRP verifier
     verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))

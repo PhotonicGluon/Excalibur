@@ -10,8 +10,6 @@ const SLOW_HASH_NUM_ITER = 650_000;
 export interface KeygenAdditionalInfo {
     /** Username of the user */
     username: string;
-    /** API URL of the server */
-    apiURL: string;
 }
 
 /**
