@@ -1,12 +1,10 @@
-import warnings
-from base64 import b64decode
 from typing import Awaitable, Callable
 
-from Crypto.Cipher import AES
 from starlette.datastructures import MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
@@ -143,18 +141,16 @@ class EncryptionHandler:
         token = decode_token(auth[1], KEY)
         if token is None:
             return
-        e2ee_data = token["e2ee"]
 
-        # Decrypt the e2ee data to get the key
-        cipher = AES.new(KEY, AES.MODE_GCM, nonce=b64decode(e2ee_data["nonce"]))
-        try:
-            e2ee_key = cipher.decrypt_and_verify(b64decode(e2ee_data["key"]), b64decode(e2ee_data["tag"]))
-        except ValueError:
-            warnings.warn("Invalid E2EE key")
+        # Get master key
+        if "uuid" not in token:
             return
 
-        # Update cache
-        self._e2ee_key = e2ee_key
+        comm_uuid = token["uuid"]
+        if comm_uuid not in MASTER_KEYS_CACHE:
+            return
+
+        self._e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
 
     async def _decrypt_request(self, message: Message) -> Message:
         """

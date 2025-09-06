@@ -58,7 +58,7 @@ class TestUploadFile:
         assert uploaded_file.exists()
         assert uploaded_file.read_bytes() == example_file.read_bytes()
 
-    def test_file_already_exists(self, auth_client: TestClient, example_file: Path, test_user_vault_folder: Path):
+    def test_file_already_exists(self, auth_client: TestClient, test_user_vault_folder: Path):
         uuid = uuid4().hex
         uploaded_file = test_user_vault_folder / f"test-{uuid}.txt.exef"
 

@@ -1,7 +1,7 @@
 from .jwt import decode_token, generate_token
 
 KEY = b"one demo 16B key"
-SAMPLE_DATA = {"sub": "1234567890", "name": "John Doe"}
+SAMPLE_DATA = {"sub": "1234567890", "uuid": "some-uuid"}
 
 
 def test_check_token():

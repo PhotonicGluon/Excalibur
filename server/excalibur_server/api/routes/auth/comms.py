@@ -1,11 +1,13 @@
 import json
 from base64 import b64encode
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import WebSocket, WebSocketDisconnect
 
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.srp import SRP
@@ -88,8 +90,12 @@ async def comms_endpoint(websocket: WebSocket):
             await ws_manager.close()
             return
 
+        # Add to the master key cache
+        uuid = uuid4().hex
+        MASTER_KEYS_CACHE[uuid] = master_server
+
         # Send the auth token for client to use
-        await _send_auth_token(ws_manager, user.username, master_server)
+        await _send_auth_token(ws_manager, user.username, uuid)
 
         # Finally, close connection
         await ws_manager.close()
@@ -183,22 +189,22 @@ async def _negotiate_ephemeral_values(
     return a_pub, b_pub, b_priv
 
 
-async def _send_auth_token(ws_manager: WebSocketManager, username: str, master: bytes) -> None:
+async def _send_auth_token(ws_manager: WebSocketManager, username: str, comm_uuid: str) -> None:
     """
     Send the authentication token to the client.
 
     Encrypts the authentication token using the master value and sends it to the client.
 
+    :param ws_manager: the WebSocket manager
     :param username: the username
-    :param websocket: the WebSocket connection to the client
-    :param master: the master value to use for the authentication token
+    :param comm_uuid: the UUID of the communication session
     """
 
     auth_token = generate_auth_token(
-        username, master, datetime.now(tz=timezone.utc).timestamp() + CONFIG.api.login_validity_time
+        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.api.login_validity_time
     )
 
-    cipher = AES.new(master, AES.MODE_GCM)
+    cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)
     auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))
     tag = cipher.digest()
 
