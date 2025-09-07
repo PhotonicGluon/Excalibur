@@ -2,8 +2,8 @@ import hashlib
 import unicodedata
 from typing import TypedDict
 
-from Crypto.Protocol.KDF import HKDF
 from Crypto.Hash import SHA256
+from Crypto.Protocol.KDF import HKDF
 
 DIGEST_ALGORITHM = "sha256"
 KEY_LENGTH = 32  # In bytes
