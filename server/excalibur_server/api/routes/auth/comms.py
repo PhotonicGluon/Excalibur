@@ -11,7 +11,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.srp import SRP
-from excalibur_server.src.auth.token.auth import generate_auth_token
+from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.users import User, get_user
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg

@@ -1,6 +1,4 @@
-import re
 from datetime import datetime, timezone
-from hmac import HMAC
 from typing import Annotated
 
 from fastapi import Header, HTTPException, Request, Security, status
@@ -8,7 +6,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.consts import KEY
-from excalibur_server.src.exef.exef import ExEF
+from excalibur_server.src.exef import ExEF
+from excalibur_server.src.auth.hmac import HMAC_HEADER_EXAMPLE, HMAC_HEADER_PATTERN, generate_hmac, parse_hmac_header
 
 from .jwt import decode_token, generate_token
 
@@ -57,9 +56,6 @@ def check_auth_token(token: str) -> bool:
     return True
 
 
-HMAC_HEADER_PATTERN = r"^(?<timestamp>[0-9]{10}) (?<nonce>[a-f0-9]{16}) (?<hmac>[a-f0-9]{64})$"
-
-
 async def get_credentials(
     request: Request,
     hmac_validation: Annotated[
@@ -69,7 +65,7 @@ async def get_credentials(
             pattern=HMAC_HEADER_PATTERN,
             description="HMAC for authentication.",
         ),
-    ],
+    ] = HMAC_HEADER_EXAMPLE,
     credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER),
 ) -> str:
     """
@@ -85,17 +81,14 @@ async def get_credentials(
         raise CREDENTIALS_EXCEPTION
 
     # Check that the header is valid
-    match = re.match(HMAC_HEADER_PATTERN.replace(r"?<", r"?P<"), hmac_validation)
-    if not match:
+    try:
+        timestamp, nonce, hmac = parse_hmac_header(hmac_validation)
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing HMAC",
             headers={"X-SRP-HMAC": HMAC_HEADER_PATTERN},
         )
-
-    timestamp = int(match.group("timestamp"))
-    nonce = match.group("nonce")
-    hmac = match.group("hmac")
 
     if timestamp < datetime.now(tz=timezone.utc).timestamp() - 60:  # TODO: Make this configurable
         raise HTTPException(
@@ -103,6 +96,8 @@ async def get_credentials(
             detail="Invalid timestamp",
             headers={"X-SRP-HMAC": HMAC_HEADER_PATTERN},
         )
+
+    # TODO: Add nonce to cache of known nonces
 
     # Check if the provided identity token is valid
     decoded = decode_token(credentials.credentials, KEY)
@@ -114,9 +109,8 @@ async def get_credentials(
     if comm_uuid not in MASTER_KEYS_CACHE:
         raise CREDENTIALS_EXCEPTION
 
+    # Extract parts needed for the SRP HMAC
     master_key = MASTER_KEYS_CACHE[comm_uuid]
-
-    # Check if the SRP HMAC is valid
     method = request.method
     path = request.url.path
     body = await request.body()
@@ -125,8 +119,8 @@ async def get_credentials(
     else:
         signature = b""
 
-    hmac_msg = f"{method} {path} {timestamp} {nonce} ".encode("UTF-8") + signature
-    hmac_computed = HMAC(master_key, hmac_msg, "sha256").hexdigest()
+    # Check if the SRP HMAC is valid
+    hmac_computed = generate_hmac(master_key, method, path, timestamp, nonce, signature)
     if hmac_computed != hmac:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

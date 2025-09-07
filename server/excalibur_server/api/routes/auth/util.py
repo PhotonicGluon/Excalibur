@@ -19,7 +19,7 @@ def get_token_endpoint(
     from uuid import uuid4
 
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
-    from excalibur_server.src.auth.token.auth import generate_auth_token
+    from excalibur_server.src.auth.credentials import generate_auth_token
 
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"

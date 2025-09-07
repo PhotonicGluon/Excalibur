@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
-from excalibur_server.src.auth.token.auth import generate_auth_token
+from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.config import CONFIG
 
 
