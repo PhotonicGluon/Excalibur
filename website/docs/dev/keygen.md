@@ -9,7 +9,6 @@ flowchart TD
     P[/Password/]
     S[/Salt/]
     I[/Username/]
-    U[/Server URL/]
 
     PBKDF[[PBKDF2 with 650,000 iterations]]
     HKDF[[HKDF using SHA256]]
@@ -19,10 +18,8 @@ flowchart TD
     TrimAndNorm-->PBKDF
     S-->PBKDF
 
-    %% Identity and Server URL into HKDF
-    I-->Combine[Combine into JSON object]
-    U-->Combine
-    Combine-->HKDF
+    %% Identity into HKDF
+    I-->HKDF
 
     %% XOR HKDF output with PBKDF2 output
     PBKDF-->XOR((⊕))
