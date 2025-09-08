@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -127,7 +128,7 @@ async def get_credentials(
     # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]
     method = request.method
-    path = request.url.path
+    path = urllib.parse.quote(request.url.path)  # For some reason, `request.url.path` is not URL encoded...
 
     # Check if the SRP PoP is valid
     hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)

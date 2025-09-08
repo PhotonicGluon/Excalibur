@@ -25,6 +25,8 @@ export async function checkPath(
         case 202:
             // Continue with normal flow
             break;
+        case 401:
+            return { success: false, error: "Unauthorized" };
         case 404:
             return { success: false, error: "Path not found" };
         case 406:

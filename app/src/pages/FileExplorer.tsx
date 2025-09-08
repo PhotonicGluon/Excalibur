@@ -1,7 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
-import FolderOpener from "@native/FolderOpenerPlugin";
 import * as Comlink from "comlink";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -49,6 +48,8 @@ import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
+
+import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
@@ -363,6 +364,9 @@ const FileExplorer: React.FC = () => {
                                 case "Path not found":
                                     // This is good -- the folder doesn't exist, so we can just carry on
                                     break;
+                                case "Unauthorized":
+                                    presentSnackbar("Unauthorized", "danger");
+                                    return;
                                 case "Illegal or invalid path":
                                     presentSnackbar("Illegal or invalid folder name", "danger");
                                     return;
