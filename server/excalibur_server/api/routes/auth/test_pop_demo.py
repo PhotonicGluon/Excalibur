@@ -1,6 +1,8 @@
 import os
+from base64 import b64encode
 
 import pytest
+from Crypto.Random import get_random_bytes
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.misc import is_debug
@@ -18,7 +20,7 @@ def enable_hmac():
 
 
 def _gen_nonce():
-    return os.urandom(8).hex()
+    return get_random_bytes(16)
 
 
 class TestBasicHMACChecks:
@@ -34,7 +36,12 @@ class TestBasicHMACChecks:
     def test_invalid_timestamp(self, auth_client: TestClient):
         response = auth_client.get(
             "/api/auth/pop-demo",
-            headers={"X-SRP-PoP": "0 " + "0" * 16 + " " + "0" * 64},
+            headers={
+                "X-SRP-PoP": "0 "
+                + b64encode(_gen_nonce()).decode("UTF-8")
+                + " "
+                + b64encode(b"\x00" * 32).decode("UTF-8")
+            },
         )
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid timestamp"

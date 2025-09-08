@@ -40,11 +40,11 @@ The parameters of the HMAC are as follows:
 - The method is the HTTP method (e.g., GET, POST, PUT, DELETE), in ALL CAPS.
 - The path is the path of the request.
 - The timestamp is the current time in seconds since the Unix epoch.
-- The nonce is a random 16 byte value, expressed as a hex string.
+- The nonce is a random 16 byte value.
 
 The HMAC is of the message `{METHOD} {PATH} {TIMESTAMP} {NONCE}` using the SRP master key as the key, and using SHA-256 as the hash function.
 
-This header's is `X-SRP-PoP` and its value is `{NONCE} {TIMESTAMP} {HMAC}`, where `HMAC` is a hex string.
+This header's is `X-SRP-PoP` and its value is `{TIMESTAMP} {NONCE} {HMAC}`. In particular, for the header, both `NONCE` and `HMAC` are Base64 encoded.
 
 > [!NOTE] Why Not Include the Body?
 > The body of the message need not be included in the HMAC calculation since it is already verified by the encryption:
