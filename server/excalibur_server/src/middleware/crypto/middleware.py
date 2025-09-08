@@ -130,7 +130,6 @@ class EncryptionHandler:
             return
 
         # Try to obtain the e2ee data
-        e2ee_data = None
         if headers.get("Authorization") is None:
             return
 

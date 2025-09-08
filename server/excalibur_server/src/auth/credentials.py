@@ -6,8 +6,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.consts import KEY
+from excalibur_server.src.auth.hmac import HMAC_HEADER_PATTERN, generate_hmac, parse_hmac_header
 from excalibur_server.src.exef import ExEF
-from excalibur_server.src.auth.hmac import HMAC_HEADER_EXAMPLE, HMAC_HEADER_PATTERN, generate_hmac, parse_hmac_header
 
 from .jwt import decode_token, generate_token
 
@@ -65,7 +65,7 @@ async def get_credentials(
             pattern=HMAC_HEADER_PATTERN,
             description="HMAC for authentication.",
         ),
-    ] = HMAC_HEADER_EXAMPLE,
+    ] = "",
     credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER),
 ) -> str:
     """
@@ -81,14 +81,14 @@ async def get_credentials(
         raise CREDENTIALS_EXCEPTION
 
     # Check that the header is valid
-    try:
-        timestamp, nonce, hmac = parse_hmac_header(hmac_validation)
-    except ValueError:
+    if not hmac_validation:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing HMAC",
             headers={"X-SRP-HMAC": HMAC_HEADER_PATTERN},
         )
+
+    timestamp, nonce, hmac = parse_hmac_header(hmac_validation)
 
     if timestamp < datetime.now(tz=timezone.utc).timestamp() - 60:  # TODO: Make this configurable
         raise HTTPException(
@@ -113,14 +113,9 @@ async def get_credentials(
     master_key = MASTER_KEYS_CACHE[comm_uuid]
     method = request.method
     path = request.url.path
-    body = await request.body()
-    if body and request.headers.get("X-Encrypt") == "true":
-        signature = body[-ExEF.footer_size :]
-    else:
-        signature = b""
 
     # Check if the SRP HMAC is valid
-    hmac_computed = generate_hmac(master_key, method, path, timestamp, nonce, signature)
+    hmac_computed = generate_hmac(master_key, method, path, timestamp, nonce)
     if hmac_computed != hmac:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

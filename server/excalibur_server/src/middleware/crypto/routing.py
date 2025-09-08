@@ -1,5 +1,21 @@
 from .structures import EncryptedRoute, RoutingTree
 
+AUTH_ROUTING_TREE = RoutingTree(
+    segment="auth",
+    subtrees={
+        "hmac-demo": RoutingTree(
+            segment="hmac-demo",
+            subtrees={
+                "encrypted": RoutingTree(
+                    segment="encrypted",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                )
+            },
+        )
+    },
+)
 FILES_ROUTING_TREE = RoutingTree(
     segment="files",
     subtrees={
@@ -49,6 +65,7 @@ USERS_ROUTING_TREE = RoutingTree(
 ROUTING_TREE = RoutingTree(
     segment="api",
     subtrees={
+        "auth": AUTH_ROUTING_TREE,
         "files": FILES_ROUTING_TREE,
         "users": USERS_ROUTING_TREE,
     },
