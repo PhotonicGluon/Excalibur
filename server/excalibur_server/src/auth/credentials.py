@@ -5,9 +5,10 @@ from typing import Annotated
 from fastapi import Header, HTTPException, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
+from excalibur_server.src.config import CONFIG
 
 from .jwt import decode_token, generate_token
 
@@ -104,14 +105,24 @@ async def get_credentials(
 
     timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
-    if timestamp < datetime.now(tz=timezone.utc).timestamp() - 60:  # TODO: Make this configurable
+    # Check if timestamp is within acceptable range
+    if timestamp < datetime.now(tz=timezone.utc).timestamp() - CONFIG.security.pop_timestamp_validity_time:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid timestamp",
             headers={"X-SRP-PoP": POP_HEADER_PATTERN},
         )
 
-    # TODO: Add nonce to cache of known nonces
+    # Check if nonce is fresh
+    if nonce in POP_NONCE_CACHE:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Nonce reused",
+            headers={"X-SRP-PoP": POP_HEADER_PATTERN},
+        )
+
+    # Add nonce to cache of known nonces
+    POP_NONCE_CACHE[nonce] = True
 
     # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]

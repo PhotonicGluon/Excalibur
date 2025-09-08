@@ -34,6 +34,15 @@ srp_group = "small"
 # How long a login session lasts, in seconds
 login_validity_time = 3600 # 1 hour
 
+# The maximum number of E2EE communication sessions to cache
+e2ee_comm_cache_size = 1024
+
+# The maximum number of PoP nonces to cache
+pop_nonce_cache_size = 65536
+
+# How long ago a received Proof-of-Possession (PoP) timestamp can be still considered valid, in seconds
+pop_timestamp_validity_time = 60
+
 [api]
 # The allowed origins for CORS
 allow_origins = [

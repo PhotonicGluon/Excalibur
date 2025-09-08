@@ -39,6 +39,34 @@ class TestBasicHMACChecks:
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid timestamp"
 
+    def test_nonce_reuse(self, auth_client: TestClient):
+        import time
+
+        nonce = _gen_nonce()
+        header = generate_pop_header(
+            master_key=b"one demo 16B key",
+            method="GET",
+            path="/api/auth/pop-demo",
+            timestamp=int(time.time()),
+            nonce=nonce,
+        )
+
+        # First request should succeed
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={"X-SRP-PoP": header},
+        )
+        assert response.status_code == 200
+        assert response.json() == "test-user"
+
+        # Second request should fail
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={"X-SRP-PoP": header},
+        )
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Nonce reused"
+
 
 def test_get(auth_client: TestClient):
     import time
