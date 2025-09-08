@@ -2,7 +2,7 @@
 
 TODO: Tidy up
 
-https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')&input=R0VUIC9hcGkvYXV0aC9kZW1vIDEwMDAwMDAwMDAgYWJjZGFiY2RhYmNkYWJjZA
+https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF
 
 ## Initial Authentication
 
