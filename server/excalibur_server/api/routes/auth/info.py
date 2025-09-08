@@ -15,4 +15,4 @@ def get_group_size_endpoint() -> SRPGroupBits:
     In particular, this returns the number of bits in the group's modulus.
     """
 
-    return CONFIG.server.srp_group.bits
+    return CONFIG.security.srp_group.bits

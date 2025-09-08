@@ -29,13 +29,6 @@ class Logging(BaseModel):
 
 
 class API(BaseModel):
-    login_validity_time: int
     allow_origins: list[str]
     rate_limit: RateLimit
     logging: Logging
-
-    @field_validator("login_validity_time")
-    def validate_positive(cls, value: int) -> int:
-        if value < 0:
-            raise ValueError("must be greater than 0")
-        return value

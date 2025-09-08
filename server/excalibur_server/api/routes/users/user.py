@@ -145,7 +145,7 @@ def add_user_endpoint(
         user = User(
             username=username,
             auk_salt=auk_salt,
-            srp_group=CONFIG.server.srp_group,
+            srp_group=CONFIG.security.srp_group,
             srp_salt=srp_salt,
             srp_verifier=verifier,
             key_enc=key_enc,

@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 
 from excalibur_server.consts import CONFIG_FILE
 from excalibur_server.src.config.api import API
+from excalibur_server.src.config.security import Security
 from excalibur_server.src.config.server import Server
 
 SETTINGS_VERSION = 1
@@ -12,6 +13,7 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(toml_file=CONFIG_FILE)
     version: int = SETTINGS_VERSION
     server: Server
+    security: Security
     api: API
 
     @classmethod

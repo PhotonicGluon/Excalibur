@@ -9,7 +9,9 @@ from excalibur_server.src.config import CONFIG
 @router.get("/token", tags=["debug"])
 def get_token_endpoint(
     username: Annotated[str, Query(description="The username to get the token for")],
-    expiry_time: Annotated[int, Query(description="The expiry time of the token")] = CONFIG.api.login_validity_time,
+    expiry_time: Annotated[
+        int, Query(description="The expiry time of the token")
+    ] = CONFIG.security.login_validity_time,
 ):
     """
     Gets the authentication token for a user.

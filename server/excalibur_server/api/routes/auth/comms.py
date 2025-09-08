@@ -201,7 +201,7 @@ async def _send_auth_token(ws_manager: WebSocketManager, username: str, comm_uui
     """
 
     auth_token = generate_auth_token(
-        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.api.login_validity_time
+        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.login_validity_time
     )
 
     cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)
