@@ -8,7 +8,12 @@ import { uiFeedbackContext } from "./context";
 
 describe("<DirectoryItem />", () => {
     function renderComponent(
-        props: any = { renameHook: () => Promise.resolve(), deleteHook: () => Promise.resolve() },
+        props: Partial<
+            ContainerProps & {
+                renameHook: () => Promise<void>;
+                deleteHook: () => Promise<void>;
+            }
+        > = { renameHook: () => Promise.resolve(), deleteHook: () => Promise.resolve() },
     ) {
         const defaultProps: ContainerProps = {
             oddRow: true,
@@ -33,8 +38,8 @@ describe("<DirectoryItem />", () => {
                 >
                     <uiFeedbackContext.Provider
                         value={{
-                            onRename: (_path) => props.renameHook(),
-                            onDelete: (_path, _isDir) => props.deleteHook(),
+                            onRename: (_path) => props.renameHook!(),
+                            onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
                             presentToast: () => Promise.resolve(),
                             setProgress: () => {},

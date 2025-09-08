@@ -285,7 +285,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             {/* Ellipsis button */}
             <IonButtons className="w-24 justify-end" slot="end">
                 {/* Ellipsis menu trigger button */}
-                <IonButton onClick={(e: any) => showPopover({ event: e })}>
+                <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                     <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
                 </IonButton>
             </IonButtons>

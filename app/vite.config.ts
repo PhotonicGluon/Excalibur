@@ -42,6 +42,11 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id: string) {
+                    if (!process || !process.env || process.env.NODE_ENV !== "production") {
+                        return "chunk";
+                    }
+
+                    // For production, we'll split the chunks better
                     if (id.includes("node_modules")) {
                         const importPath = id.toString().split("node_modules/")[1];
                         const packageID = importPath.split("/")[0];

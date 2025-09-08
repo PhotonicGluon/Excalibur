@@ -71,7 +71,7 @@ function sendResponse(ws: WebSocket, data?: string | Buffer, status?: "OK" | "ER
  * @param data The response data to parse
  * @returns An object containing the status and optional data
  */
-function parseResponse(data: any): { status: "OK" | "ERR" | null; data?: string | Buffer } {
+function parseResponse(data: string): { status: "OK" | "ERR" | null; data?: string | Buffer } {
     const raw = JSON.parse(data);
     if (raw.binary) {
         return { status: raw.status, data: Buffer.from(raw.data, "base64") };
@@ -144,7 +144,7 @@ export async function e2ee(
         });
 
         ws.addEventListener("message", async (event) => {
-            const response = parseResponse(event.data);
+            const response = parseResponse(event.data as string);
             try {
                 if (state.stage === E2EEStage.GET_SRP_GROUP) {
                     if (response.status !== "OK") {
