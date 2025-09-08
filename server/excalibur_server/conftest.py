@@ -1,3 +1,4 @@
+import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,6 +10,13 @@ from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.config import CONFIG
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_hmac_checks():
+    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "false"
+    yield
+    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "true"
 
 
 @pytest.fixture(scope="class")

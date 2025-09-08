@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -7,7 +8,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.hmac import HMAC_HEADER_PATTERN, generate_hmac, parse_hmac_header
-from excalibur_server.src.exef import ExEF
 
 from .jwt import decode_token, generate_token
 
@@ -80,6 +80,20 @@ async def get_credentials(
     if not credentials:
         raise CREDENTIALS_EXCEPTION
 
+    # Check if the provided identity token is valid
+    decoded = decode_token(credentials.credentials, KEY)
+    if decoded is None:
+        raise CREDENTIALS_EXCEPTION
+    sub = decoded["sub"]
+    comm_uuid = decoded["uuid"]
+
+    if comm_uuid not in MASTER_KEYS_CACHE:
+        raise CREDENTIALS_EXCEPTION
+
+    if os.getenv("EXCALIBUR_SERVER_HMAC_ENABLED", "true") != "true":
+        # No need to proceed to check header
+        return sub
+
     # Check that the header is valid
     if not hmac_validation:
         raise HTTPException(
@@ -98,16 +112,6 @@ async def get_credentials(
         )
 
     # TODO: Add nonce to cache of known nonces
-
-    # Check if the provided identity token is valid
-    decoded = decode_token(credentials.credentials, KEY)
-    if decoded is None:
-        raise CREDENTIALS_EXCEPTION
-    sub = decoded["sub"]
-    comm_uuid = decoded["uuid"]
-
-    if comm_uuid not in MASTER_KEYS_CACHE:
-        raise CREDENTIALS_EXCEPTION
 
     # Extract parts needed for the SRP HMAC
     master_key = MASTER_KEYS_CACHE[comm_uuid]

@@ -7,7 +7,14 @@ from excalibur_server.api.misc import is_debug
 from excalibur_server.src.auth.hmac import generate_hmac_header
 
 if not is_debug():
-    pytest.skip("Skipping HMAC demo tests", allow_module_level=True)
+    pytest.skip("Debug mode not enabled", allow_module_level=True)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def enable_hmac():
+    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "true"
+    yield
+    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "false"
 
 
 def _gen_nonce():
