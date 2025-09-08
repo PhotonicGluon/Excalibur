@@ -1,5 +1,5 @@
 import ExEF from "@lib/exef";
-import { timedFetch } from "@lib/network";
+import { popFetch, timedFetch } from "@lib/network";
 import { numberToBuffer } from "@lib/util";
 
 /**
@@ -70,7 +70,7 @@ export async function getVaultKey(
     e2eeKey: Buffer,
 ): Promise<{ success: boolean; error?: string; encryptedKey?: Buffer }> {
     // Fetch the vault key
-    const response = await timedFetch(`${apiURL}/users/vault/${username}`, {
+    const response = await popFetch(`${apiURL}/users/vault/${username}`, e2eeKey, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
     });

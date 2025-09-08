@@ -1,5 +1,5 @@
 import ExEF from "@lib/exef";
-import { timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -26,8 +26,9 @@ export async function uploadFile(
 
     // TODO: Stream upload of file?
     // Send the request
-    const response = await timedFetch(
+    const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
+        auth.authInfo!.key!,
         {
             method: "POST",
             headers: {
@@ -80,7 +81,7 @@ export async function mkdir(
     path: string,
     name: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, auth.authInfo!.key!, {
         method: "POST",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         body: name,

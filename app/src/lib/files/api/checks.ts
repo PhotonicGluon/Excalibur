@@ -1,4 +1,4 @@
-import { timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -14,7 +14,7 @@ export async function checkPath(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/check/path/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/path/${path}`, auth.authInfo!.key!, {
         method: "HEAD",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
@@ -50,7 +50,7 @@ export async function checkSize(
     auth: AuthProvider,
     size: number,
 ): Promise<{ success: boolean; error?: string; isTooLarge?: boolean }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/check/size?size=${size}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/size?size=${size}`, auth.authInfo!.key!, {
         method: "HEAD",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
@@ -82,7 +82,7 @@ export async function checkDir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; isEmpty?: boolean }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/check/dir/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/dir/${path}`, auth.authInfo!.key!, {
         method: "HEAD",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });

@@ -1,4 +1,4 @@
-import { timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -16,7 +16,7 @@ export async function renameItem(
     path: string,
     newName: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/rename/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/rename/${path}`, auth.authInfo!.key!, {
         method: "POST",
         body: newName,
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },

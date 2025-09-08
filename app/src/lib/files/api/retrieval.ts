@@ -1,6 +1,6 @@
 import ExEF from "@lib/exef";
 import { Directory } from "@lib/files/structures";
-import { timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -16,7 +16,7 @@ export async function listdir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, auth.authInfo!.key!, {
         method: "GET",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
     });
@@ -52,7 +52,7 @@ export async function downloadFile(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
-    const response = await timedFetch(`${auth.serverInfo!.apiURL}/files/download/${path}`, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/download/${path}`, auth.authInfo!.key!, {
         method: "GET",
         headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
         cache: "no-store",

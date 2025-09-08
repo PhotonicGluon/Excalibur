@@ -1,5 +1,5 @@
 import { type ItemType } from "@lib/files/structures";
-import { timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -21,8 +21,9 @@ export async function deleteItem(
     isDir?: boolean,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string; deletedType?: ItemType }> {
-    const response = await timedFetch(
+    const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/delete/${path}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
+        auth.authInfo!.key!,
         {
             method: "DELETE",
             headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
