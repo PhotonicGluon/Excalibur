@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.misc import is_debug
-from excalibur_server.src.auth.hmac import generate_hmac_header
+from excalibur_server.src.auth.pop import generate_pop_header
 
 if not is_debug():
     pytest.skip("Debug mode not enabled", allow_module_level=True)
@@ -23,18 +23,18 @@ def _gen_nonce():
 
 class TestBasicHMACChecks:
     def test_no_hmac(self, auth_client: TestClient):
-        response = auth_client.get("/api/auth/hmac-demo")
+        response = auth_client.get("/api/auth/pop-demo")
         assert response.status_code == 401
-        assert response.json()["detail"] == "Missing HMAC"
+        assert response.json()["detail"] == "Missing PoP"
 
     def test_invalid_hmac(self, auth_client: TestClient):
-        response = auth_client.get("/api/auth/hmac-demo", headers={"X-SRP-HMAC": "invalid-hmac"})
+        response = auth_client.get("/api/auth/pop-demo", headers={"X-SRP-PoP": "invalid-pop"})
         assert response.status_code == 422
 
     def test_invalid_timestamp(self, auth_client: TestClient):
         response = auth_client.get(
-            "/api/auth/hmac-demo",
-            headers={"X-SRP-HMAC": "0 " + "0" * 16 + " " + "0" * 64},
+            "/api/auth/pop-demo",
+            headers={"X-SRP-PoP": "0 " + "0" * 16 + " " + "0" * 64},
         )
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid timestamp"
@@ -44,12 +44,12 @@ def test_get(auth_client: TestClient):
     import time
 
     response = auth_client.get(
-        "/api/auth/hmac-demo",
+        "/api/auth/pop-demo",
         headers={
-            "X-SRP-HMAC": generate_hmac_header(
+            "X-SRP-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
-                path="/api/auth/hmac-demo",
+                path="/api/auth/pop-demo",
                 timestamp=int(time.time()),
                 nonce=_gen_nonce(),
             )
@@ -63,12 +63,12 @@ def test_post_no_encrypt(auth_client: TestClient):
     import time
 
     response = auth_client.post(
-        "/api/auth/hmac-demo",
+        "/api/auth/pop-demo",
         headers={
-            "X-SRP-HMAC": generate_hmac_header(
+            "X-SRP-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="POST",
-                path="/api/auth/hmac-demo",
+                path="/api/auth/pop-demo",
                 timestamp=int(time.time()),
                 nonce=_gen_nonce(),
             )
@@ -89,21 +89,21 @@ def test_post_encrypted(auth_client: TestClient):
     from excalibur_server.src.exef import ExEF
 
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(b"hello world")
-    hmac_header = generate_hmac_header(
+    hmac_header = generate_pop_header(
         master_key=b"one demo 16B key",
         method="POST",
-        path="/api/auth/hmac-demo/encrypted",
+        path="/api/auth/pop-demo/encrypted",
         timestamp=int(time.time()),
         nonce=_gen_nonce(),
     )
 
     response = auth_client.post(
-        "/api/auth/hmac-demo/encrypted",
+        "/api/auth/pop-demo/encrypted",
         headers={
             "Content-Type": "application/octet-stream",
             "X-Encrypted": "true",
             "X-Content-Type": "text/plain",
-            "X-SRP-HMAC": hmac_header,
+            "X-SRP-PoP": hmac_header,
         },
         content=transit_encrypted_data,
     )

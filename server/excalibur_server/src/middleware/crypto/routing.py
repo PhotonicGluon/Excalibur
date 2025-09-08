@@ -3,8 +3,8 @@ from .structures import EncryptedRoute, RoutingTree
 AUTH_ROUTING_TREE = RoutingTree(
     segment="auth",
     subtrees={
-        "hmac-demo": RoutingTree(
-            segment="hmac-demo",
+        "pop-demo": RoutingTree(
+            segment="pop-demo",
             subtrees={
                 "encrypted": RoutingTree(
                     segment="encrypted",

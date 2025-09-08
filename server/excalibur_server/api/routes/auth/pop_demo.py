@@ -6,7 +6,7 @@ from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import get_credentials
 
 
-@router.get("/hmac-demo", tags=["debug"])
+@router.get("/pop-demo", tags=["debug"])
 def demo_get_endpoint(credential: Annotated[str, Depends(get_credentials)]):
     """
     Demo endpoint for a GET request.
@@ -15,7 +15,7 @@ def demo_get_endpoint(credential: Annotated[str, Depends(get_credentials)]):
     return credential
 
 
-@router.post("/hmac-demo", tags=["debug"])
+@router.post("/pop-demo", tags=["debug"])
 def demo_post_endpoint(
     credential: Annotated[str, Depends(get_credentials)],
     data: Annotated[str, Body(description="Some data")] = "hello world!",
@@ -30,7 +30,7 @@ def demo_post_endpoint(
     }
 
 
-@router.post("/hmac-demo/encrypted", tags=["debug"])
+@router.post("/pop-demo/encrypted", tags=["debug"])
 def demo_post_encrypted_endpoint(
     credential: Annotated[str, Depends(get_credentials)],
     data: Annotated[str, Body(description="Some data")],

@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.consts import KEY
-from excalibur_server.src.auth.hmac import HMAC_HEADER_PATTERN, generate_hmac, parse_hmac_header
+from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
 
 from .jwt import decode_token, generate_token
 
@@ -61,8 +61,8 @@ async def get_credentials(
     hmac_validation: Annotated[
         str,
         Header(
-            alias="X-SRP-HMAC",
-            pattern=HMAC_HEADER_PATTERN,
+            alias="X-SRP-PoP",
+            pattern=POP_HEADER_PATTERN,
             description="HMAC for authentication.",
         ),
     ] = "",
@@ -98,31 +98,31 @@ async def get_credentials(
     if not hmac_validation:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing HMAC",
-            headers={"X-SRP-HMAC": HMAC_HEADER_PATTERN},
+            detail="Missing PoP",
+            headers={"X-SRP-PoP": POP_HEADER_PATTERN},
         )
 
-    timestamp, nonce, hmac = parse_hmac_header(hmac_validation)
+    timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
     if timestamp < datetime.now(tz=timezone.utc).timestamp() - 60:  # TODO: Make this configurable
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid timestamp",
-            headers={"X-SRP-HMAC": HMAC_HEADER_PATTERN},
+            headers={"X-SRP-PoP": POP_HEADER_PATTERN},
         )
 
     # TODO: Add nonce to cache of known nonces
 
-    # Extract parts needed for the SRP HMAC
+    # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]
     method = request.method
     path = request.url.path
 
-    # Check if the SRP HMAC is valid
-    hmac_computed = generate_hmac(master_key, method, path, timestamp, nonce)
+    # Check if the SRP PoP is valid
+    hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)
     if hmac_computed != hmac:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid HMAC",
+            detail="Invalid PoP",
         )
     return sub
