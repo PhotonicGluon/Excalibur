@@ -33,7 +33,6 @@ test("fastHash", async () => {
     const result = await fastHash(additionalInfo, salt);
 
     expect(result.length).toBe(32);
-
     expect(result).toEqual(Buffer.from("2a729be3d3e50315c32e87d48c7be45db7059088d7ab1549ffb53cf500778ac6", "hex"));
 });
 
@@ -44,6 +43,5 @@ test("generateKey", async () => {
     const result = await generateKey(password, additionalInfo, salt);
 
     expect(result.length).toBe(32);
-    console.log(result.toString("hex"));
     expect(result).toEqual(Buffer.from("b71e1bd0283edcb73d117b97afb9ddea19a08fd179e3877c9f3d5cb19849103f", "hex"));
 });

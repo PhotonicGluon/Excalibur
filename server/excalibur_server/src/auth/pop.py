@@ -5,6 +5,38 @@ from hmac import HMAC
 POP_HEADER_PATTERN = r"^(?:(?<timestamp>[0-9]{1,10}) (?<nonce>[A-Za-z0-9+\/]{22}==) (?<hmac>[A-Za-z0-9+\/]{43}=)|)$"
 
 
+def generate_pop(master_key: bytes, method: str, path: str, timestamp: int, nonce: bytes) -> bytes:
+    """
+    Generates a valid Proof of Possession (PoP).
+
+    :param master_key: the master key
+    :param method: the HTTP method
+    :param path: the path
+    :param timestamp: the timestamp
+    :param nonce: the nonce
+    :return: the PoP
+    """
+
+    hmac_msg = f"{method} {path} {timestamp} ".encode("UTF-8") + nonce
+    return HMAC(master_key, hmac_msg, "sha256").digest()
+
+
+def generate_pop_header(master_key: bytes, method: str, path: str, timestamp: int, nonce: bytes) -> str:
+    """
+    Generates a valid Proof of Possession (PoP) header.
+
+    :param master_key: the master key
+    :param method: the HTTP method
+    :param path: the path
+    :param timestamp: the timestamp
+    :param nonce: the nonce
+    :return: the PoP header
+    """
+
+    pop = generate_pop(master_key, method, path, timestamp, nonce)
+    return f"{timestamp} {b64encode(nonce).decode('UTF-8')} {b64encode(pop).decode('UTF-8')}"
+
+
 def parse_pop_header(pop_header: str) -> tuple[int, bytes, bytes]:
     """
     Parses the Proof of Possession (PoP) header.
@@ -23,35 +55,3 @@ def parse_pop_header(pop_header: str) -> tuple[int, bytes, bytes]:
     hmac = b64decode(match.group("hmac"))
 
     return timestamp, nonce, hmac
-
-
-def generate_pop(master_key: bytes, method: str, path: str, timestamp: int, nonce: bytes) -> str:
-    """
-    Generates a valid Proof of Possession (PoP).
-
-    :param master_key: the master key
-    :param method: the HTTP method
-    :param path: the path
-    :param timestamp: the timestamp
-    :param nonce: the nonce
-    :return: the PoP
-    """
-
-    hmac_msg = f"{method} {path} {timestamp} {nonce}".encode("UTF-8")
-    return HMAC(master_key, hmac_msg, "sha256").digest()
-
-
-def generate_pop_header(master_key: bytes, method: str, path: str, timestamp: int, nonce: bytes) -> str:
-    """
-    Generates a valid Proof of Possession (PoP) header.
-
-    :param master_key: the master key
-    :param method: the HTTP method
-    :param path: the path
-    :param timestamp: the timestamp
-    :param nonce: the nonce
-    :return: the PoP header
-    """
-
-    pop = generate_pop(master_key, method, path, timestamp, nonce)
-    return f"{timestamp} {b64encode(nonce).decode('UTF-8')} {b64encode(pop).decode('UTF-8')}"

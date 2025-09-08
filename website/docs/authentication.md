@@ -39,7 +39,7 @@ The parameters of the HMAC are as follows:
 
 - The method is the HTTP method (e.g., GET, POST, PUT, DELETE), in ALL CAPS.
 - The path is the path of the request.
-- The timestamp is the current time in seconds since the Unix epoch.
+- The timestamp is the current time _in seconds_ since the Unix epoch.
 - The nonce is a random 16 byte value.
 
 The HMAC is of the message `{METHOD} {PATH} {TIMESTAMP} {NONCE}` using the SRP master key as the key, and using SHA-256 as the hash function.
