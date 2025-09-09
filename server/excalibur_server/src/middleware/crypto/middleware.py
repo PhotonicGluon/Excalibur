@@ -5,11 +5,11 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.src.auth.consts import KEY
+from excalibur_server.src.auth.credentials import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
-from excalibur_server.src.auth.consts import KEY
-from excalibur_server.src.auth.credentials import CREDENTIALS_EXCEPTION, decode_token
 
 
 class RouteEncryptionMiddleware:
@@ -177,11 +177,15 @@ class EncryptionHandler:
         # Update headers
         headers = MutableHeaders(raw=self._scope["headers"])
         headers["Content-Length"] = str(len(decrypted_body))
-        if "X-Content-Type" in headers:
-            headers["Content-Type"] = headers["X-Content-Type"]
-            del headers["X-Content-Type"]
-        if "X-Encrypted" in headers:
-            del headers["X-Encrypted"]
+
+        # TODO: Determine if `X-Content-Type` needs to be deleted
+        # if "X-Content-Type" in headers:
+        #     headers["Content-Type"] = headers["X-Content-Type"]
+        #     del headers["X-Content-Type"]
+
+        # UPDATE: We stop deleting `X-Encrypted` because this was messing up some of the large file uploads
+        # if "X-Encrypted" in headers:
+        #     del headers["X-Encrypted"]
 
         self._scope["headers"] = headers.raw
 
@@ -223,6 +227,7 @@ class EncryptionHandler:
             # Now send the message
             await self._send(self._initial_message)
             return
+
         if message_type == "http.response.body":
             if message.get("body", b"") == b"":
                 await self._send(message)
@@ -284,6 +289,7 @@ class EncryptionHandler:
                     # We wanted to decrypt but no key was found...
                     self._to_raise_credentials_exception = True
                     return message
+
             if self._exef is None:
                 self._exef = ExEF(self._e2ee_key)
 

@@ -53,11 +53,11 @@ export class ExEFHeader {
      */
     static fromBuffer(buffer: Buffer): ExEFHeader {
         if (buffer.length !== ExEFHeader.headerSize) {
-            throw new Error(`header must be ${ExEFHeader.headerSize} bytes`);
+            throw new Error(`header must be ${ExEFHeader.headerSize} bytes (got ${buffer.length} bytes)`);
         }
 
         if (buffer.toString("ascii", 0, 4) !== "ExEF") {
-            throw new Error("data must start with ExEF");
+            throw new Error("data must start with 'ExEF'");
         }
 
         const version = parseInt(buffer.toString("hex", 4, 6), 16);
@@ -105,7 +105,7 @@ export class ExEFFooter {
      */
     static fromBuffer(buffer: Buffer): ExEFFooter {
         if (buffer.length !== ExEFFooter.footerSize) {
-            throw new Error(`footer must be ${ExEFFooter.footerSize} bytes`);
+            throw new Error(`footer must be ${ExEFFooter.footerSize} bytes (got ${buffer.length} bytes)`);
         }
         return new ExEFFooter(buffer);
     }
