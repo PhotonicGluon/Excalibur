@@ -7,13 +7,13 @@ import { generatePoPHeader } from "@lib/security/pop";
  *
  * @param url The URL to fetch
  * @param options The options to pass to fetch
- * @param timeout The timeout, in seconds
+ * @param timeout The timeout, in seconds. If null, no timeout is applied
  * @returns The response from fetch
  */
-export async function timedFetch(url: string, options?: RequestInit, timeout: number = 3): Promise<Response> {
+export async function timedFetch(url: string, options?: RequestInit, timeout: number | null = 3): Promise<Response> {
     return globalThis.fetch(url, {
-        signal: AbortSignal.timeout(timeout * 1000),
         ...options,
+        signal: timeout ? AbortSignal.timeout(timeout * 1000) : undefined,
     });
 }
 
@@ -23,14 +23,14 @@ export async function timedFetch(url: string, options?: RequestInit, timeout: nu
  * @param url The URL to fetch
  * @param masterKey The master key to use for generating the PoP
  * @param options The options to pass to fetch
- * @param timeout The timeout, in seconds
+ * @param timeout The timeout, in seconds. If null, no timeout is applied
  * @returns The response from fetch
  */
 export async function popFetch(
     url: string,
     masterKey: Buffer,
     options?: RequestInit,
-    timeout: number = 3,
+    timeout: number | null = 3,
 ): Promise<Response> {
     let popHeader;
     if (options && masterKey) {

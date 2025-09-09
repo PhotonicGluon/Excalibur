@@ -52,11 +52,16 @@ export async function downloadFile(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/download/${path}`, auth.authInfo!.key!, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
-        cache: "no-store",
-    });
+    const response = await popFetch(
+        `${auth.serverInfo!.apiURL}/files/download/${path}`,
+        auth.authInfo!.key!,
+        {
+            method: "GET",
+            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+            cache: "no-store",
+        },
+        null, // No timeout; TODO: Determine a timeout for downloading file
+    );
     switch (response.status) {
         case 200:
             // Continue with normal flow

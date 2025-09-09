@@ -21,6 +21,7 @@ export async function uploadFile(
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
     // Encrypt the file contents
+    // FIXME: This just re-encrypts the entire file, but without any info on progress. Can we do a stream?
     const exef = new ExEF(auth.authInfo!.key!);
     const encryptedFile = exef.encrypt(Buffer.from(await file.arrayBuffer()));
 
@@ -39,6 +40,7 @@ export async function uploadFile(
             },
             body: encryptedFile,
         },
+        null, // No timeout; TODO: Determine a timeout for uploading file
     );
     switch (response.status) {
         case 201:
