@@ -27,10 +27,10 @@ test("slowHash", async () => {
     expect(result).toEqual(Buffer.from("9d6c8033fbdbdfa2fe3ffc4323c239b7aea51f59ae48923560886044983e9af9", "hex"));
 });
 
-test("fastHash", async () => {
+test("fastHash", () => {
     const additionalInfo = { username: "test-user" };
     const salt = Buffer.from("deadbeef", "hex");
-    const result = await fastHash(additionalInfo, salt);
+    const result = fastHash(additionalInfo, salt);
 
     expect(result.length).toBe(32);
     expect(result).toEqual(Buffer.from("2a729be3d3e50315c32e87d48c7be45db7059088d7ab1549ffb53cf500778ac6", "hex"));

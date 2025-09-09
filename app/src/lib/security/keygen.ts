@@ -1,6 +1,6 @@
-import hkdf from "@panva/hkdf";
 import { pbkdf2 } from "crypto";
 
+import hkdf from "@lib/security/hkdf";
 import { xorBuffer } from "@lib/util";
 
 const DIGEST_ALGORITHM = "sha256";
@@ -54,9 +54,15 @@ export async function slowHash(passwordBuf: Uint8Array, salt: Buffer): Promise<B
  * @param salt The salt to be used
  * @returns The hashed additional information
  */
-export async function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Promise<Buffer> {
-    const key = await hkdf(DIGEST_ALGORITHM, JSON.stringify(additionalInfo), new Uint8Array(salt), "", KEY_LENGTH);
-    return Buffer.from(key);
+export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Buffer {
+    const key = hkdf(
+        DIGEST_ALGORITHM,
+        Buffer.from(JSON.stringify(additionalInfo), "utf8"),
+        salt,
+        Buffer.from([]),
+        KEY_LENGTH,
+    );
+    return key;
 }
 
 /**
@@ -74,6 +80,6 @@ export default async function generateKey(
 ): Promise<Buffer> {
     const passwordBuf = normalizePassword(password);
     const iKey1 = await slowHash(passwordBuf, salt);
-    const iKey2 = await fastHash(additionalInfo, salt);
+    const iKey2 = fastHash(additionalInfo, salt);
     return xorBuffer(iKey1, iKey2);
 }

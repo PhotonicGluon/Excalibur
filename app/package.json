@@ -46,7 +46,6 @@
         "@ionic/react-router": "^8.7.3",
         "@maskito/core": "^3.10.3",
         "@maskito/react": "^3.10.3",
-        "@panva/hkdf": "^1.2.1",
         "@tailwindcss/vite": "^4.1.13",
         "capacitor-blob-writer": "^1.1.19",
         "comlink": "^4.4.2",
