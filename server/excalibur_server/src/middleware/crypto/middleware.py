@@ -5,6 +5,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.credentials import CREDENTIALS_EXCEPTION, decode_token
 from excalibur_server.src.exef import ExEF
@@ -189,6 +190,7 @@ class EncryptionHandler:
 
         self._scope["headers"] = headers.raw
 
+        logger.debug(f"< {len(decrypted_body)} decrypted bytes")
         return message
 
     async def _encrypt_response(self, message: Message):
@@ -262,6 +264,7 @@ class EncryptionHandler:
             if not self._started_response:
                 self._started_response = True
             await self._send(message)
+            logger.debug(f"> {len(to_send)} encrypted bytes")
 
     def _receive_wrapper(self, scope: Scope) -> Callable[[], Awaitable[Message]]:
         """

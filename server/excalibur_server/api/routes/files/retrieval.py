@@ -41,6 +41,7 @@ async def download_file_endpoint(
     if not (user_path.exists() and user_path.is_file()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
 
+    # TODO: Customize chunk size by making subclass of `FileResponse` and setting class variable `chunk_size`
     return FileResponse(user_path, media_type="application/octet-stream")
 
 
