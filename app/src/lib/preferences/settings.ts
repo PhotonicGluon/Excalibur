@@ -2,7 +2,7 @@
 export type Theme = "light" | "dark" | "system";
 export type RowAlternatingColours = "off" | "normal" | "inverted";
 export type FileSizeUnits = "si" | "iec";
-export type CryptoChunkSize = 32768 | 65536 | 131072 | 262144 | 524288 | 1048576;
+export type CryptoChunkSize = 65536 | 131072 | 262144 | 524288 | 1_048_576 | 2_097_152 | 4_194_304;
 
 /**
  * Preferences for the settings page.
@@ -27,6 +27,6 @@ export interface SettingsPreferenceValues {
 export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     theme: "system",
     rowAlternatingColours: "off",
-    cryptoChunkSize: 262144, // 256 KiB
+    cryptoChunkSize: 524288, // 512 KiB
     fileSizeUnits: "si",
 };
