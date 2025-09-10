@@ -41,7 +41,7 @@ def delete_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -49,7 +49,7 @@ def delete_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
     # Check if user is trying to delete root directory
-    if user_path == CONFIG.server.vault_folder / PathlibPath(username):
+    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
     # Handle deletion

@@ -16,7 +16,7 @@ class AlembicDuckDBImpl(DefaultImpl):
 
 # This is the Alembic Config object, which provides access to the values within the .ini file in use
 config = context.config
-config.set_main_option("sqlalchemy.url", "duckdb:///" + (ROOT_FOLDER / CONFIG.server.database_file).as_posix())
+config.set_main_option("sqlalchemy.url", "duckdb:///" + (ROOT_FOLDER / CONFIG.storage.database.file).as_posix())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically

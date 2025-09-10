@@ -29,7 +29,7 @@ async def check_path_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -64,7 +64,7 @@ async def check_file_size_endpoint(
     Checks whether the given file size is acceptable.
     """
 
-    if size > CONFIG.server.max_file_size:
+    if size > CONFIG.storage.max_upload_size:
         raise HTTPException(status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, detail="File size too large")
 
     response.status_code = status.HTTP_200_OK
@@ -90,7 +90,7 @@ async def check_dir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

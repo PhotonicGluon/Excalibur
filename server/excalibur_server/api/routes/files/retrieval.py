@@ -34,7 +34,7 @@ async def download_file_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -68,7 +68,7 @@ def listdir_endpoint(
     """
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.server.vault_folder / username)
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 

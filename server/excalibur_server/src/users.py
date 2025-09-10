@@ -28,7 +28,7 @@ def add_user(user: User):
     """
 
     # Create new user directory
-    (CONFIG.server.vault_folder / user.username).mkdir(parents=True, exist_ok=True)
+    (CONFIG.storage.vault_folder / user.username).mkdir(parents=True, exist_ok=True)
 
     # Add user to database
     _add_user(user)
@@ -46,7 +46,7 @@ def remove_user(username: str):
     _remove_user(username)
 
     # Remove user directory
-    shutil.rmtree(CONFIG.server.vault_folder / username)
+    shutil.rmtree(CONFIG.storage.vault_folder / username)
 
 
 get_user = _get_user

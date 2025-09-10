@@ -41,17 +41,15 @@ class EndpointFilter(logging.Filter):
 
 # Add endpoint filter to access logger
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
-uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.api.logging.no_log))
+uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.logging.no_log_endpoints))
 
 # Define main logger
 logger = logging.getLogger("uvicorn.error")
 
 # Configure logging to file
 if os.getenv("EXCALIBUR_SERVER_LOGGING") == "1":
-    file_handler = logging.FileHandler(
-        CONFIG.api.logging.logs_dir / f"{int(time.time())}.log", mode="a", encoding="utf-8"
-    )
-    file_handler.setFormatter(logging.Formatter(CONFIG.api.logging.file_format))
+    file_handler = logging.FileHandler(CONFIG.logging.directory / f"{int(time.time())}.log", mode="a", encoding="utf-8")
+    file_handler.setFormatter(logging.Formatter(CONFIG.logging.format.file))
 
     logger.addHandler(file_handler)
     uvicorn_access_logger.addHandler(file_handler)

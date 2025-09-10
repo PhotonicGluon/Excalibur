@@ -107,7 +107,7 @@ async def get_credentials(
     timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
     # Check if timestamp is within acceptable range
-    if timestamp < datetime.now(tz=timezone.utc).timestamp() - CONFIG.security.pop_timestamp_validity_time:
+    if timestamp < datetime.now(tz=timezone.utc).timestamp() - CONFIG.security.pop.timestamp_validity:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid timestamp",

@@ -34,7 +34,7 @@ def auth_client() -> TestClient:
 @pytest.fixture(scope="session", autouse=True)
 def test_user_vault_folder(tmp_path_factory: pytest.TempPathFactory):
     vault = tmp_path_factory.mktemp("vault")
-    CONFIG.server.vault_folder = vault
+    CONFIG.storage.vault_folder = vault
 
     test_user_folder = vault / "test-user"
     test_user_folder.mkdir()

@@ -63,14 +63,14 @@ def start_server(
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
-    os.makedirs(CONFIG.api.logging.logs_dir, exist_ok=True)
-    os.makedirs(CONFIG.server.vault_folder, exist_ok=True)
+    os.makedirs(CONFIG.logging.directory, exist_ok=True)
+    os.makedirs(CONFIG.storage.vault_folder, exist_ok=True)
 
     # Configure log format
     log_config = LOGGING_CONFIG
     formatters = log_config["formatters"]
-    formatters["default"]["fmt"] = CONFIG.api.logging.default_format
-    formatters["access"]["fmt"] = CONFIG.api.logging.access_format
+    formatters["default"]["fmt"] = CONFIG.logging.format.default
+    formatters["access"]["fmt"] = CONFIG.logging.format.access
 
     # Start server
     uvicorn.run(
