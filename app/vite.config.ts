@@ -27,7 +27,12 @@ function getAliasesFromTSConfig() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), legacy(), tailwindcss(), nodePolyfills({ include: ["crypto", "stream", "util", "vm"] })],
+    plugins: [
+        react(),
+        legacy(),
+        tailwindcss(),
+        nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
+    ],
     resolve: {
         alias: getAliasesFromTSConfig(),
     },

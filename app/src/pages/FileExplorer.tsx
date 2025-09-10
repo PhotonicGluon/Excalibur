@@ -303,7 +303,7 @@ const FileExplorer: React.FC = () => {
                     presentSnackbar("File path too long", "danger");
                     return;
                 default:
-                    presentSnackbar("Failed to check file path: Unknown error", "danger");
+                    presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
                     return;
             }
         }

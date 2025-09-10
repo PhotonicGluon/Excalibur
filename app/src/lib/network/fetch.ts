@@ -35,7 +35,7 @@ export async function popFetch(
     let popHeader;
     if (options && masterKey) {
         const method = options.method ?? "GET";
-        const path = new URL(url).pathname;
+        const path = encodeURIComponent(new URL(url).pathname).replaceAll("%2F", "/"); // Slashes are safe
         const timestamp = Math.floor(Date.now() / 1e3); // Want seconds, not milliseconds
         const nonce = randomBytes(16);
         popHeader = generatePoPHeader(masterKey, method, path, timestamp, nonce);
