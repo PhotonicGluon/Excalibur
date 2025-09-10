@@ -1,50 +1,25 @@
-##########################################################################
-#      ________   _______          _      _____ ____  _    _ _____       #
-#     |  ____\ \ / / ____|   /\   | |    |_   _|  _ \| |  | |  __ \      #
-#     | |__   \ V / |       /  \  | |      | | | |_) | |  | | |__) |     #
-#     |  __|   > <| |      / /\ \ | |      | | |  _ <| |  | |  _  /      #
-#     | |____ / . \ |____ / ____ \| |____ _| |_| |_) | |__| | | \ \      #
-#     |______/_/ \_\_____/_/    \_\______|_____|____/ \____/|_|  \_\     #
-#                                                                        #
-#                  Excalibur Server Configuration File                   #
-#                                                                        #
-##########################################################################
+################################################################################
+#         ________   _______          _      _____ ____  _    _ _____          #
+#        |  ____\ \ / / ____|   /\   | |    |_   _|  _ \| |  | |  __ \         #
+#        | |__   \ V / |       /  \  | |      | | | |_) | |  | | |__) |        #
+#        |  __|   > <| |      / /\ \ | |      | | |  _ <| |  | |  _  /         #
+#        | |____ / . \ |____ / ____ \| |____ _| |_| |_) | |__| | | \ \         #
+#        |______/_/ \_\_____/_/    \_\______|_____|____/ \____/|_|  \_\        #
+#                                                                              #
+#                     Excalibur Server Configuration File                      #
+#                                                                              #
+################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
 version = 1
 
+# -----------------------------------------------------------------------------
+# Server & Network Configuration
+#
+# Settings related to the web server, network access, and request handling.
+# -----------------------------------------------------------------------------
 [server]
-# The vault folder relative to the root folder
-vault_folder = "vault"
-
-# The database file path, relative to the root folder
-database_file = "excalibur.duckdb"
-
-# The maximum file size, in bytes, that can be uploaded
-max_file_size = 52_428_800 # 50 MiB
-
-# The chunk size, in bytes, to use when processing files (e.g., saving to disk)
-file_process_chunk_size = 4096 # 4 KiB
-
-[security]
-# SRP group size
-# Valid values (case insensitive): "small", "medium", "large"
-srp_group = "small"
-
-# How long a login session lasts, in seconds
-login_validity_time = 3600 # 1 hour
-
-# The maximum number of E2EE communication sessions to cache
-e2ee_comm_cache_size = 1024
-
-# The maximum number of PoP nonces to cache
-pop_nonce_cache_size = 65536
-
-# How long ago a received Proof-of-Possession (PoP) timestamp can be still considered valid, in seconds
-pop_timestamp_validity_time = 60
-
-[api]
-# The allowed origins for CORS
+# The allowed origins for Cross-Origin Resource Sharing (CORS)
 allow_origins = [
     "capacitor://localhost", # Capacitor on iOS
     "http://localhost",      # Capacitor on Android
@@ -52,25 +27,75 @@ allow_origins = [
     "http://localhost:8100", # Local development server for Ionic
 ]
 
-[api.rate_limit]
-# The capacity of the rate limiter
+[server.rate_limit]
+# The capacity of the rate limiter (e.g., number of allowed bursts)
 capacity = 20
 
 # The refill rate of the rate limiter, in tokens per second
 refill_rate = 1
 
-[api.logging]
-# The directory to store logs in
-logs_dir = "logs"
+# -----------------------------------------------------------------------------
+# Storage Configuration
+#
+# Settings for file storage, database, and data handling.
+# -----------------------------------------------------------------------------
+[storage]
+# The vault folder for storing user files, relative to the application root
+vault_folder = "vault"
 
-# The default log format
-default_format = "[%(asctime)s] %(levelprefix)s %(message)s"
+# The maximum file size that can be uploaded, in bytes
+max_upload_size = 52_428_800 # 50 MiB
 
-# The log format for any webpage access
-access_format = '[%(asctime)s] %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+# The chunk size to use when processing files (e.g., saving to disk), in bytes
+file_chunk_size = 4096 # 4 KiB
 
-# Log format when writing to file
-file_format = "[%(asctime)s] %(levelname)s - %(message)s"
+[storage.database]
+# The database file path, relative to the application root
+file = "excalibur.duckdb"
 
-# The API endpoints to not log
-no_log = ["/api/well-known/heartbeat"]
+# -----------------------------------------------------------------------------
+# Security Configuration
+#
+# Settings related to authentication, sessions, and cryptography.
+# -----------------------------------------------------------------------------
+[security]
+# How long a login session lasts, in seconds
+session_duration = 3600 # 1 hour
+
+[security.srp]
+# Secure Remote Password (SRP) group size for authentication
+# Valid values (case insensitive): "small", "medium", "large"
+group = "small"
+
+[security.e2ee]
+# The maximum number of end-to-end encryption communication sessions to cache
+comm_cache_size = 1024
+
+[security.pop]
+# The maximum number of Proof-of-Possession (PoP) nonces to cache
+nonce_cache_size = 65536
+
+# How long a received Proof-of-Possession (PoP) timestamp is considered valid, in seconds
+timestamp_validity = 60
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+#
+# Settings for application logging.
+# -----------------------------------------------------------------------------
+[logging]
+# The directory to store log files in
+directory = "logs"
+
+# A list of API endpoints to exclude from access logs
+no_log_endpoints = ["/api/well-known/heartbeat"]
+
+[logging.format]
+# The default log format for console output
+default = "[%(asctime)s] %(levelprefix)s %(message)s"
+
+# The log format for API access logs
+access = '[%(asctime)s] %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
+
+# The log format when writing to files
+file = "[%(asctime)s] %(levelname)s - %(message)s"
