@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
-import { Variants } from "motion";
-import { motion } from "motion/react";
+import { useColorMode } from "@docusaurus/theme-common";
+import { Variants, motion } from "motion/react";
 
 // Types
 interface FeatureCardProps {
@@ -12,20 +12,13 @@ interface FeatureCardProps {
     icon: string;
 }
 
-interface SignatureFeatureProps extends FeatureCardProps {
-    color: string;
-}
-
-// Animation variants with proper typing
+// Animation variants
 const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: {
-            duration: 0.6,
-            ease: [0.25, 0.1, 0.25, 1], // cubic-bezier equivalent of easeOutQuad
-        },
+        transition: { duration: 0.5, ease: "easeOut" },
     },
 };
 
@@ -34,105 +27,152 @@ const staggerContainer: Variants = {
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.2,
+            staggerChildren: 0.15,
         },
     },
 };
 
-// Custom hook for viewport animations
-function useIsInView(ref: React.RefObject<HTMLElement>): boolean {
-    const [isInView, setIsInView] = useState(false);
-
-    useEffect(() => {
-        if (!ref.current) return;
-
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsInView(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1 }
-        );
-
-        observer.observe(ref.current);
-        return () => observer.disconnect();
-    }, [ref]);
-
-    return isInView;
-}
-
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const isInView = useIsInView(ref);
-
     return (
         <motion.div
-            ref={ref}
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
             variants={fadeInUp}
-            className="p-6 bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-primary-500"
+            className="p-6 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-shadow duration-300"
         >
             <div className="text-4xl mb-4 text-primary-500">{icon}</div>
-            <h3 className="text-xl font-bold mb-2">{title}</h3>
-            <p className="text-gray-300">{description}</p>
+            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{title}</h3>
+            <p className="text-gray-600 dark:text-gray-300">{description}</p>
         </motion.div>
+    );
+};
+
+// High-performance particle wave using HTML Canvas
+const CanvasWaveBackground: React.FC = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { colorMode } = useColorMode();
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        let animationFrameId: number;
+        let time = 0;
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        const particleConfig = {
+            rows: 25,
+            cols: 50,
+            spacing: 40,
+            amplitude: 20,
+            frequency: 0.08,
+            speed: 0.02,
+            baseRadius: 1.5,
+        };
+
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const gridWidth = particleConfig.cols * particleConfig.spacing;
+            const gridHeight = particleConfig.rows * particleConfig.spacing;
+            const startX = (canvas.width - gridWidth) / 2;
+            const startY = (canvas.height - gridHeight) / 2;
+
+            const particleColor = colorMode === "dark" ? "rgba(96, 165, 250, 1)" : "rgba(0,0,0, 1)";
+            ctx.fillStyle = particleColor;
+
+            for (let i = 0; i < particleConfig.rows; i++) {
+                for (let j = 0; j < particleConfig.cols; j++) {
+                    const x = startX + j * particleConfig.spacing;
+                    const yOffset = Math.sin(j * particleConfig.frequency + time) * particleConfig.amplitude;
+                    const y = startY + i * particleConfig.spacing + yOffset;
+
+                    const opacityFactor = 0.5 + (Math.sin(j * particleConfig.frequency * 0.7 + time) + 1) / 4;
+                    const radius = particleConfig.baseRadius * opacityFactor;
+
+                    ctx.globalAlpha = opacityFactor;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.globalAlpha = 1.0;
+        };
+
+        const animate = () => {
+            time += particleConfig.speed;
+            draw();
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        resizeCanvas();
+        animate();
+
+        window.addEventListener("resize", resizeCanvas);
+        return () => {
+            window.removeEventListener("resize", resizeCanvas);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [colorMode]);
+
+    return <canvas ref={canvasRef} className="absolute inset-0 -z-10 bg-gray-50 dark:bg-gray-900" />;
+};
+
+const GetStartedButton: React.FC = () => {
+    return (
+        <Link
+            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 !text-white !no-underline font-bold rounded-lg text-lg transition-transform duration-300 transform-all shadow-lg"
+            to="/docs"
+        >
+            Get Started
+        </Link>
     );
 };
 
 const Home: React.FC = () => {
     const { siteConfig } = useDocusaurusContext();
-    const heroRef = useRef<HTMLDivElement>(null);
-    const isHeroInView = useIsInView(heroRef);
 
-    const signatureFeatures: SignatureFeatureProps[] = [
+    const signatureFeatures: FeatureCardProps[] = [
         {
             title: "Military-Grade Security",
             description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
             icon: "🛡️",
-            color: "from-purple-600 to-blue-500",
         },
         {
             title: "Lightning Fast",
             description: "Optimized for speed with minimal overhead, even with large files.",
             icon: "⚡",
-            color: "from-yellow-500 to-orange-500",
         },
         {
             title: "User-Friendly",
             description: "Simple, intuitive interface that makes secure file sharing effortless.",
             icon: "✨",
-            color: "from-pink-500 to-rose-500",
         },
     ];
 
     const features: FeatureCardProps[] = [
         {
             title: "End-to-End Encryption",
-            description:
-                "Your files are encrypted before they leave your device, ensuring only you and your intended recipients can access them.",
+            description: "Your files are encrypted before they leave your device.",
             icon: "🔒",
         },
         {
             title: "Secure Sharing",
-            description: "Share files with confidence using expiring links and password protection features.",
+            description: "Share files with expiring links and password protection.",
             icon: "🔗",
         },
-        {
-            title: "Zero-Knowledge Architecture",
-            description: "We never store your encryption keys, ensuring complete privacy and security.",
-            icon: "🛡️",
-        },
+        { title: "Zero-Knowledge", description: "We never store your keys, ensuring complete privacy.", icon: "🛡️" },
         {
             title: "Cross-Platform",
-            description: "Access your files from any device with a modern web browser.",
+            description: "Access your files from any device with a modern browser.",
             icon: "🌐",
         },
         {
             title: "Open Source",
-            description: "Fully transparent and auditable codebase for maximum trust and security.",
+            description: "Fully transparent and auditable codebase for maximum trust.",
             icon: "📦",
         },
         {
@@ -142,53 +182,35 @@ const Home: React.FC = () => {
         },
     ];
 
-    return (
-        <Layout
-            title={`${siteConfig?.title || "Excalibur"} - ${siteConfig?.tagline || "Secure File Storage"}`}
-            description={siteConfig?.tagline || "Secure file storage and sharing with end-to-end encryption"}
-        >
-            {/* Hero Section */}
-            <header
-                ref={heroRef}
-                className="relative overflow-hidden min-h-[90vh] flex items-center bg-gradient-to-br from-gray-900 to-gray-800"
-            >
-                <div className="container relative z-10 text-center px-4">
-                    <motion.div
-                        className="max-w-4xl mx-auto text-center"
-                        initial="hidden"
-                        animate={isHeroInView ? "visible" : "hidden"}
-                        variants={staggerContainer}
-                    >
-                        <motion.div
-                            className="inline-block mb-6 px-4 py-2 rounded-full bg-primary-900/30 border border-primary-500/30 text-primary-300 text-sm font-medium"
-                            variants={fadeInUp}
-                        >
-                            Secure File Storage & Sharing
-                        </motion.div>
+    const featureRows = [];
+    const itemsPerRow = 3;
+    for (let i = 0; i < features.length; i += itemsPerRow) {
+        featureRows.push(features.slice(i, i + itemsPerRow));
+    }
 
+    return (
+        <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
+            <header className="relative overflow-hidden min-h-screen flex items-center justify-center">
+                <CanvasWaveBackground />
+                <div className="absolute inset-0 bg-white/70 dark:bg-black/60" /> {/* Overlay for text readability */}
+                <div className="container relative z-10 text-center px-4">
+                    <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
                         <motion.h1
-                            className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-blue-400"
+                            className="!text-5xl md:!text-7xl font-bold mb-6 text-gray-800 dark:text-white"
                             variants={fadeInUp}
                         >
                             {siteConfig.title}
                         </motion.h1>
-
                         <motion.p
-                            className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto"
+                            className="!text-xl md:!text-2xl text-gray-700 dark:text-gray-200 mb-10"
                             variants={fadeInUp}
                         >
                             The most secure way to store and share your files with end-to-end encryption.
                         </motion.p>
-
                         <motion.div className="flex flex-col sm:flex-row gap-4 justify-center" variants={fadeInUp}>
+                            <GetStartedButton />
                             <Link
-                                className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-primary-500/30"
-                                to="/docs"
-                            >
-                                Get Started
-                            </Link>
-                            <Link
-                                className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg text-lg transition-all duration-300 border border-gray-700 hover:border-gray-600"
+                                className="px-8 py-4 bg-transparent border-2 border-gray-800 dark:border-white text-gray-800 dark:text-white hover:text-gray-800 dark:hover:text-white !no-underline font-bold rounded-lg text-lg transition-all duration-300 hover:bg-gray-800/10 dark:hover:bg-white/10"
                                 to="#features"
                             >
                                 Learn More
@@ -198,99 +220,96 @@ const Home: React.FC = () => {
                 </div>
             </header>
 
-            {/* Signature Features */}
-            <section className="py-20 bg-gray-900/50 relative">
-                <div className="absolute inset-0 bg-grid-white/[0.03] [mask-image:radial-gradient(ellipse_at_center,white,transparent_70%)]" />
-                <div className="container px-4 mx-auto relative">
-                    <motion.div
-                        className="text-center mb-16"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                        variants={fadeInUp}
-                    >
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Choose Excalibur?</h2>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            Experience the next generation of secure file storage with our powerful features
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                    >
+            <main className="bg-gray-100 dark:bg-gray-900">
+                <section className="py-24">
+                    <div className="container px-4 mx-auto space-y-24">
                         {signatureFeatures.map((feature, index) => (
                             <motion.div
                                 key={index}
-                                className={`p-8 rounded-2xl bg-gradient-to-br ${feature.color} text-white`}
-                                variants={fadeInUp}
-                                whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                                className="grid md:grid-cols-2 gap-12 items-center"
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, amount: 0.3 }}
+                                variants={staggerContainer}
                             >
-                                <div className="text-5xl mb-4">{feature.icon}</div>
-                                <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-gray-100">{feature.description}</p>
+                                <motion.div
+                                    className={`rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 h-80 flex items-center justify-center shadow-lg ${
+                                        index % 2 === 0 ? "md:order-1" : "md:order-2"
+                                    }`}
+                                    variants={fadeInUp}
+                                >
+                                    <div className="text-gray-500">Screenshot Placeholder</div>
+                                </motion.div>
+                                <motion.div
+                                    className={`text-left ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}
+                                    variants={fadeInUp}
+                                >
+                                    <div className="text-5xl mb-4">{feature.icon}</div>
+                                    <h3 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-lg text-gray-600 dark:text-gray-400">{feature.description}</p>
+                                </motion.div>
                             </motion.div>
                         ))}
-                    </motion.div>
-                </div>
-            </section>
+                    </div>
+                </section>
 
-            {/* Features Grid */}
-            <section id="features" className="py-20 bg-gray-900">
-                <div className="container px-4 mx-auto">
-                    <motion.div
-                        className="text-center mb-16"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                        variants={fadeInUp}
-                    >
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Powerful Features</h2>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            Everything you need to securely manage and share your files
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                    >
-                        {features.map((feature, index) => (
-                            <FeatureCard key={index} {...feature} />
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-20 bg-gradient-to-r from-primary-900/30 to-blue-900/30">
-                <div className="container px-4 mx-auto text-center">
-                    <motion.div
-                        className="max-w-3xl mx-auto"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                        variants={fadeInUp}
-                    >
-                        <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to get started?</h2>
-                        <p className="text-xl text-gray-300 mb-10">
-                            Join thousands of users who trust Excalibur with their files.
-                        </p>
-                        <Link
-                            className="inline-block px-8 py-4 bg-white text-gray-900 font-medium rounded-lg text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                            to="/docs"
+                <section id="features" className="py-24 bg-white dark:bg-black/20">
+                    <div className="container px-4 mx-auto">
+                        <motion.div
+                            className="text-center mb-16"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.5 }}
+                            variants={fadeInUp}
                         >
-                            Get Started for Free
-                        </Link>
-                    </motion.div>
-                </div>
-            </section>
+                            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
+                                Powerful Features
+                            </h2>
+                            <p className="text-xl text-gray-600 dark:text-gray-400">
+                                Everything you need to securely manage and share your files
+                            </p>
+                        </motion.div>
+
+                        <div className="space-y-8">
+                            {featureRows.map((row, rowIndex) => (
+                                <motion.div
+                                    key={rowIndex}
+                                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+                                    variants={staggerContainer}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true, amount: 0.3 }}
+                                >
+                                    {row.map((feature, cardIndex) => (
+                                        <FeatureCard key={cardIndex} {...feature} />
+                                    ))}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="py-24">
+                    <div className="container px-4 mx-auto text-center">
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.5 }}
+                            variants={fadeInUp}
+                        >
+                            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
+                                Ready to get started?
+                            </h2>
+                            <p className="text-xl text-gray-600 dark:text-gray-300 pb-4 mb-10">
+                                Join thousands of users who trust Excalibur with their files.
+                            </p>
+                            <GetStartedButton />
+                        </motion.div>
+                    </div>
+                </section>
+            </main>
         </Layout>
     );
 };

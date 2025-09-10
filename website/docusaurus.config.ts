@@ -2,8 +2,6 @@ import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
 const config: Config = {
     title: "Excalibur",
     tagline: "Secure File Storage and Sharing",
@@ -48,8 +46,6 @@ const config: Config = {
             {
                 docs: {
                     sidebarPath: "./sidebars.ts",
-                    // Please change this to your repo.
-                    // Remove this to remove the "edit this page" links.
                     editUrl: "https://github.com/PhotonicGluon/Excalibur/tree/main/website",
                 },
                 blog: false,
@@ -77,19 +73,17 @@ const config: Config = {
     plugins: ["./src/plugins/tailwind-config.js"],
 
     themeConfig: {
-        // Force dark mode as default
         colorMode: {
             defaultMode: "dark",
-            disableSwitch: false,
-            respectPrefersColorScheme: false,
         },
 
         // Add announcement bar if needed
         // announcementBar: {
-        //     id: 'welcome',
-        //     content: '⭐️ If you like Excalibur, give it a star on <a href="https://github.com/your-org/Excalibur">GitHub</a>!',
-        //     backgroundColor: '#2c3e50',
-        //     textColor: '#ffffff',
+        //     id: "welcome",
+        //     content:
+        //         '⭐️ If you like Excalibur, give it a star on <a href="https://github.com/your-org/Excalibur">GitHub</a>!',
+        //     backgroundColor: "#2c3e50",
+        //     textColor: "#ffffff",
         //     isCloseable: true,
         // },
 
