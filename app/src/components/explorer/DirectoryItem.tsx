@@ -1,6 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
-import write_blob from "capacitor-blob-writer";
+import writeBlob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
 import React from "react";
 
@@ -129,42 +129,50 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             uiFeedback.setDialogMessage("Saving...");
             uiFeedback.setProgress(null);
             console.debug(`Saving file ${fileName}...`);
-            if (Capacitor.getPlatform() === "web") {
-                // Create a new a element to download the file
-                const a = document.createElement("a");
-                const url = URL.createObjectURL(fileDataBlob);
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(function () {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 0);
+            try {
+                if (Capacitor.getPlatform() === "web") {
+                    // Create a new a element to download the file
+                    const a = document.createElement("a");
+                    const url = URL.createObjectURL(fileDataBlob);
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function () {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 0);
+                    uiFeedback.presentToast({
+                        message: "File downloaded",
+                        duration: 2000,
+                        color: "success",
+                    });
+                } else {
+                    // Write file to documents folder
+                    await writeBlob({
+                        path: `Excalibur/${fileName}`,
+                        directory: Directory.Documents,
+                        blob: fileDataBlob,
+                        recursive: true,
+                        on_fallback(error) {
+                            console.error(error);
+                        },
+                    });
+                    uiFeedback.presentToast({
+                        message: "File downloaded to the documents folder",
+                        duration: 2000,
+                        color: "success",
+                    });
+                }
+            } catch (e) {
                 uiFeedback.presentToast({
-                    message: "File downloaded",
+                    message: `Failed to save file: ${(e as Error).message}`,
                     duration: 2000,
-                    color: "success",
+                    color: "danger",
                 });
-            } else {
-                // Write file to documents folder
-                await write_blob({
-                    path: `Excalibur/${fileName}`,
-                    directory: Directory.Documents,
-                    blob: fileDataBlob,
-                    recursive: true,
-                    on_fallback(error) {
-                        console.error(error);
-                    },
-                });
-                uiFeedback.presentToast({
-                    message: "File downloaded to the documents folder",
-                    duration: 2000,
-                    color: "success",
-                });
+            } finally {
+                uiFeedback.setShowDialog(false);
             }
-
-            uiFeedback.setShowDialog(false);
         }
 
         // If on mobile, check if the file already exists
