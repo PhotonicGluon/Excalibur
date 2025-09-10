@@ -21,6 +21,7 @@
         "@docusaurus/theme-mermaid": "3.8.1",
         "@mdx-js/react": "^3.1.1",
         "clsx": "^2.1.1",
+        "motion": "^12.23.12",
         "prism-react-renderer": "^2.4.1",
         "react": "^19.1.1",
         "react-dom": "^19.1.1"
@@ -29,6 +30,11 @@
         "@docusaurus/module-type-aliases": "3.8.1",
         "@docusaurus/tsconfig": "3.8.1",
         "@docusaurus/types": "3.8.1",
+        "@tailwindcss/postcss": "^4.1.13",
+        "@tailwindcss/typography": "^0.5.16",
+        "autoprefixer": "^10.4.21",
+        "postcss": "^8.5.6",
+        "tailwindcss": "^4.1.13",
         "typescript": "~5.9.2"
     },
     "browserslist": {

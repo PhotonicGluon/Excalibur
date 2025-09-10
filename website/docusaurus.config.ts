@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
     title: "Excalibur",
-    tagline: "TODO ADD",
+    tagline: "Secure File Storage and Sharing",
     favicon: "img/favicon.ico",
 
     // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -22,8 +22,8 @@ const config: Config = {
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
-    organizationName: "PhotonicGluon", // Usually your GitHub org/user name.
-    projectName: "Excalibur", // Usually your repo name.
+    organizationName: "PhotonicGluon",
+    projectName: "Excalibur",
 
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "warn",
@@ -60,7 +60,39 @@ const config: Config = {
         ],
     ],
 
+    stylesheets: [
+        {
+            href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
+            type: "text/css",
+        },
+    ],
+
+    scripts: [
+        {
+            src: "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js",
+            async: true,
+        },
+    ],
+
+    plugins: ["./src/plugins/tailwind-config.js"],
+
     themeConfig: {
+        // Force dark mode as default
+        colorMode: {
+            defaultMode: "dark",
+            disableSwitch: false,
+            respectPrefersColorScheme: false,
+        },
+
+        // Add announcement bar if needed
+        // announcementBar: {
+        //     id: 'welcome',
+        //     content: '⭐️ If you like Excalibur, give it a star on <a href="https://github.com/your-org/Excalibur">GitHub</a>!',
+        //     backgroundColor: '#2c3e50',
+        //     textColor: '#ffffff',
+        //     isCloseable: true,
+        // },
+
         // Replace with your project's social card
         image: "img/docusaurus-social-card.jpg",
         navbar: {
