@@ -11,7 +11,7 @@ from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 def add_middleware(app: FastAPI, logger: logging.Logger):
     # Add CORS middleware
-    allow_origins = CONFIG.api.allow_origins
+    allow_origins = CONFIG.server.allow_origins
     if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
         allow_origins = ["*"]
 
@@ -27,8 +27,8 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
     if os.getenv("EXCALIBUR_SERVER_DEBUG", "0") != "1":
         app.add_middleware(
             RateLimitMiddleware,
-            capacity=CONFIG.api.rate_limit.capacity,
-            refill_rate=CONFIG.api.rate_limit.refill_rate,
+            capacity=CONFIG.server.rate_limit.capacity,
+            refill_rate=CONFIG.server.rate_limit.refill_rate,
         )
 
     # Add artificial delay
@@ -52,4 +52,4 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
     # Add a file size limit middleware
     from excalibur_server.src.middleware import LimitUploadSizeMiddleware
 
-    app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=CONFIG.server.max_file_size)
+    app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=CONFIG.storage.max_upload_size)

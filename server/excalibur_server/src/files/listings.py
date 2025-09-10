@@ -16,7 +16,7 @@ def get_fullpath(username: str, path: Path):
     :return: A POSIX-style path string relative to the vault folder.
     """
 
-    return path.resolve().relative_to(CONFIG.server.vault_folder / username).as_posix()
+    return path.resolve().relative_to(CONFIG.storage.vault_folder / username).as_posix()
 
 
 def listdir(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:
