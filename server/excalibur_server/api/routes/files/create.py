@@ -10,8 +10,6 @@ from excalibur_server.src.auth.credentials import get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
-MAX_FILE_SIZE = 1024 * 1024  # 1 MiB
-
 
 async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
     """
@@ -21,7 +19,7 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
     :yield: The spooled temporary file
     """
 
-    spooled_file = tempfile.SpooledTemporaryFile(max_size=MAX_FILE_SIZE)
+    spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)
     try:
         async for chunk in request.stream():
             spooled_file.write(chunk)
@@ -103,7 +101,7 @@ async def upload_file_endpoint(
 
     # Save the file
     async with aiofiles.open(file_path, "wb") as out_file:
-        while content := file.read(CONFIG.storage.file_chunk_size):
+        while content := file.read(CONFIG.storage.write_chunk_size):
             await out_file.write(content)
 
     return "File uploaded"

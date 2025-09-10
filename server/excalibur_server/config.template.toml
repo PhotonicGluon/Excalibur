@@ -46,8 +46,15 @@ vault_folder = "vault"
 # The maximum file size that can be uploaded, in bytes
 max_upload_size = 52_428_800 # 50 MiB
 
-# The chunk size to use when processing files (e.g., saving to disk), in bytes
-file_chunk_size = 4096 # 4 KiB
+# The maximum size for an uploaded file to be held in memory before being written to a temporary
+# file on disk, in bytes
+max_spool_size = 1_048_576 # 1 MiB
+
+# The chunk size to use when writing files to disk, in bytes
+write_chunk_size = 65536 # 64 KiB
+
+# The chunk size to use when sending files to the client, in bytes
+send_chunk_size = 131072 # 128 KiB
 
 [storage.database]
 # The database file path, relative to the application root
@@ -73,7 +80,7 @@ comm_cache_size = 1024
 
 [security.pop]
 # The maximum number of Proof-of-Possession (PoP) nonces to cache
-nonce_cache_size = 65536
+nonce_cache_size = 8192
 
 # How long a received Proof-of-Possession (PoP) timestamp is considered valid, in seconds
 timestamp_validity = 60

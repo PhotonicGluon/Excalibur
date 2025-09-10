@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Query, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse as FastAPIFileResponse
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.auth.credentials import get_credentials
@@ -9,6 +9,12 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.path import check_path_subdir
+
+
+class FileResponse(FastAPIFileResponse):
+    # For some reason, the file response chunk size is configured as a class variable.
+    # So, if we want to change it, we need to update the class variable directly, which is a bit weird but works
+    chunk_size = CONFIG.storage.send_chunk_size
 
 
 @router.get(
@@ -41,7 +47,6 @@ async def download_file_endpoint(
     if not (user_path.exists() and user_path.is_file()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
 
-    # TODO: Customize chunk size by making subclass of `FileResponse` and setting class variable `chunk_size`
     return FileResponse(user_path, media_type="application/octet-stream")
 
 
