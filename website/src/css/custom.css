@@ -4,3 +4,7 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+.theme-layout-footer {
+    @apply p-4;
+}

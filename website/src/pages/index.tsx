@@ -1,15 +1,21 @@
-import { useEffect, useRef } from "react";
-import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import Layout from "@theme/Layout";
-import { useColorMode } from "@docusaurus/theme-common";
 import { Variants, motion } from "motion/react";
+import { useEffect, useRef } from "react";
+
+import Link from "@docusaurus/Link";
+import { useColorMode } from "@docusaurus/theme-common";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+
+import Layout from "@theme/Layout";
 
 // Types
 interface FeatureCardProps {
     title: string;
     description: string;
     icon: string;
+}
+
+interface SignatureFeatureProps extends FeatureCardProps {
+    screenshot: React.ReactNode;
 }
 
 // Animation variants
@@ -32,20 +38,31 @@ const staggerContainer: Variants = {
     },
 };
 
+// Helper components
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) => {
     return (
         <motion.div
             variants={fadeInUp}
-            className="p-6 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-shadow duration-300"
+            className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800/50"
         >
-            <div className="text-4xl mb-4 text-primary-500">{icon}</div>
-            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{title}</h3>
+            <div className="text-primary-500 mb-4 text-4xl">{icon}</div>
+            <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
             <p className="text-gray-600 dark:text-gray-300">{description}</p>
         </motion.div>
     );
 };
 
-// High-performance particle wave using HTML Canvas
+const GetStartedButton: React.FC = () => {
+    return (
+        <Link
+            className="transform-all rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 text-lg font-bold !text-white !no-underline shadow-lg transition-transform duration-300 hover:from-purple-600 hover:to-blue-600"
+            to="/docs"
+        >
+            Get Started
+        </Link>
+    );
+};
+
 const CanvasWaveBackground: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { colorMode } = useColorMode();
@@ -81,7 +98,7 @@ const CanvasWaveBackground: React.FC = () => {
             const startX = (canvas.width - gridWidth) / 2;
             const startY = (canvas.height - gridHeight) / 2;
 
-            const particleColor = colorMode === "dark" ? "rgba(96, 165, 250, 1)" : "rgba(0,0,0, 1)";
+            const particleColor = colorMode === "dark" ? "rgba(96, 165, 250, 1)" : "rgba(0, 0, 0, 1)";
             ctx.fillStyle = particleColor;
 
             for (let i = 0; i < particleConfig.rows; i++) {
@@ -121,54 +138,42 @@ const CanvasWaveBackground: React.FC = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 -z-10 bg-gray-50 dark:bg-gray-900" />;
 };
 
-const GetStartedButton: React.FC = () => {
-    return (
-        <Link
-            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 !text-white !no-underline font-bold rounded-lg text-lg transition-transform duration-300 transform-all shadow-lg"
-            to="/docs"
-        >
-            Get Started
-        </Link>
-    );
-};
-
+// Main component
 const Home: React.FC = () => {
     const { siteConfig } = useDocusaurusContext();
 
-    const signatureFeatures: FeatureCardProps[] = [
+    const signatureFeatures: SignatureFeatureProps[] = [
         {
             title: "Military-Grade Security",
             description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
             icon: "🛡️",
+            screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
         },
         {
-            title: "Lightning Fast",
-            description: "Optimized for speed with minimal overhead, even with large files.",
-            icon: "⚡",
+            title: "Zero-Trust By Default",
+            description:
+                "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
+            icon: "🕵️",
+            screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
         },
         {
             title: "User-Friendly",
             description: "Simple, intuitive interface that makes secure file sharing effortless.",
             icon: "✨",
+            screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
         },
     ];
 
     const features: FeatureCardProps[] = [
         {
             title: "End-to-End Encryption",
-            description: "Your files are encrypted before they leave your device.",
+            description: "Data in transit are always encrypted using AES-GCM.",
             icon: "🔒",
         },
         {
-            title: "Secure Sharing",
-            description: "Share files with expiring links and password protection.",
-            icon: "🔗",
-        },
-        { title: "Zero-Knowledge", description: "We never store your keys, ensuring complete privacy.", icon: "🛡️" },
-        {
-            title: "Cross-Platform",
-            description: "Access your files from any device with a modern browser.",
-            icon: "🌐",
+            title: "Zero-Knowledge Authentication",
+            description: "Your password never leaves your device.",
+            icon: "🗝️",
         },
         {
             title: "Open Source",
@@ -183,34 +188,35 @@ const Home: React.FC = () => {
     ];
 
     const featureRows = [];
-    const itemsPerRow = 3;
+    const itemsPerRow = 2;
     for (let i = 0; i < features.length; i += itemsPerRow) {
         featureRows.push(features.slice(i, i + itemsPerRow));
     }
 
     return (
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
-            <header className="relative overflow-hidden min-h-screen flex items-center justify-center">
+            {/* Hero box */}
+            <header className="relative flex min-h-screen items-center justify-center overflow-hidden">
                 <CanvasWaveBackground />
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" /> {/* Overlay for text readability */}
-                <div className="container relative z-10 text-center px-4">
+                <div className="relative z-10 container px-4 text-center">
                     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
                         <motion.h1
-                            className="!text-5xl md:!text-7xl font-bold mb-6 text-gray-800 dark:text-white"
+                            className="mb-6 !text-5xl font-bold text-gray-800 md:!text-7xl dark:text-white"
                             variants={fadeInUp}
                         >
                             {siteConfig.title}
                         </motion.h1>
                         <motion.p
-                            className="!text-xl md:!text-2xl text-gray-700 dark:text-gray-200 mb-10"
+                            className="mb-10 !text-xl text-gray-700 md:!text-2xl dark:text-gray-200"
                             variants={fadeInUp}
                         >
                             The most secure way to store and share your files with end-to-end encryption.
                         </motion.p>
-                        <motion.div className="flex flex-col sm:flex-row gap-4 justify-center" variants={fadeInUp}>
+                        <motion.div className="flex flex-col justify-center gap-4 sm:flex-row" variants={fadeInUp}>
                             <GetStartedButton />
                             <Link
-                                className="px-8 py-4 bg-transparent border-2 border-gray-800 dark:border-white text-gray-800 dark:text-white hover:text-gray-800 dark:hover:text-white !no-underline font-bold rounded-lg text-lg transition-all duration-300 hover:bg-gray-800/10 dark:hover:bg-white/10"
+                                className="rounded-lg border-2 border-gray-800 bg-transparent px-8 py-4 text-lg font-bold text-gray-800 !no-underline transition-all duration-300 hover:bg-gray-800/10 hover:text-gray-800 dark:border-white dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
                                 to="#features"
                             >
                                 Learn More
@@ -221,31 +227,32 @@ const Home: React.FC = () => {
             </header>
 
             <main className="bg-gray-100 dark:bg-gray-900">
+                {/* Signature features */}
                 <section className="py-24">
-                    <div className="container px-4 mx-auto space-y-24">
+                    <div className="container mx-auto space-y-24 px-4">
                         {signatureFeatures.map((feature, index) => (
                             <motion.div
                                 key={index}
-                                className="grid md:grid-cols-2 gap-12 items-center"
+                                className="grid items-center gap-12 md:grid-cols-2"
                                 initial="hidden"
                                 whileInView="visible"
                                 viewport={{ once: true, amount: 0.3 }}
                                 variants={staggerContainer}
                             >
                                 <motion.div
-                                    className={`rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 h-80 flex items-center justify-center shadow-lg ${
+                                    className={`flex h-80 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-lg/25 dark:border-gray-700 dark:bg-gray-800 ${
                                         index % 2 === 0 ? "md:order-1" : "md:order-2"
                                     }`}
                                     variants={fadeInUp}
                                 >
-                                    <div className="text-gray-500">Screenshot Placeholder</div>
+                                    {feature.screenshot}
                                 </motion.div>
                                 <motion.div
                                     className={`text-left ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}
                                     variants={fadeInUp}
                                 >
-                                    <div className="text-5xl mb-4">{feature.icon}</div>
-                                    <h3 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+                                    <div className="mb-4 text-5xl">{feature.icon}</div>
+                                    <h3 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
                                         {feature.title}
                                     </h3>
                                     <p className="text-lg text-gray-600 dark:text-gray-400">{feature.description}</p>
@@ -255,16 +262,17 @@ const Home: React.FC = () => {
                     </div>
                 </section>
 
-                <section id="features" className="py-24 bg-white dark:bg-black/20">
-                    <div className="container px-4 mx-auto">
+                {/* "Other" features */}
+                <section id="features" className="bg-white py-24 dark:bg-black/20">
+                    <div className="container mx-auto px-4">
                         <motion.div
-                            className="text-center mb-16"
+                            className="mb-16 text-center"
                             initial="hidden"
                             whileInView="visible"
                             viewport={{ once: true, amount: 0.5 }}
                             variants={fadeInUp}
                         >
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
+                            <h2 className="mb-6 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
                                 Powerful Features
                             </h2>
                             <p className="text-xl text-gray-600 dark:text-gray-400">
@@ -276,7 +284,7 @@ const Home: React.FC = () => {
                             {featureRows.map((row, rowIndex) => (
                                 <motion.div
                                     key={rowIndex}
-                                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+                                    className="grid grid-cols-2 gap-8"
                                     variants={staggerContainer}
                                     initial="hidden"
                                     whileInView="visible"
@@ -291,20 +299,18 @@ const Home: React.FC = () => {
                     </div>
                 </section>
 
+                {/* Call to action */}
                 <section className="py-24">
-                    <div className="container px-4 mx-auto text-center">
+                    <div className="container mx-auto px-4 text-center">
                         <motion.div
                             initial="hidden"
                             whileInView="visible"
                             viewport={{ once: true, amount: 0.5 }}
                             variants={fadeInUp}
                         >
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
-                                Ready to get started?
+                            <h2 className="mb-10 pb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
+                                Secure your data today.
                             </h2>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 pb-4 mb-10">
-                                Join thousands of users who trust Excalibur with their files.
-                            </p>
                             <GetStartedButton />
                         </motion.div>
                     </div>
