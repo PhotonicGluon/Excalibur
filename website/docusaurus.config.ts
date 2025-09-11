@@ -92,8 +92,8 @@ const config: Config = {
                 {
                     type: "docSidebar",
                     position: "left",
-                    sidebarId: "api",
-                    label: "API",
+                    sidebarId: "dev",
+                    label: "Development",
                 },
                 {
                     href: "https://github.com/PhotonicGluon/Excalibur",
@@ -101,10 +101,6 @@ const config: Config = {
                     position: "right",
                 },
             ],
-        },
-        footer: {
-            style: "dark",
-            copyright: `Copyright © ${new Date().getFullYear()}. Built with Docusaurus.`,
         },
         prism: {
             theme: prismThemes.github,
