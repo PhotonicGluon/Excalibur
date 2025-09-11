@@ -45,12 +45,7 @@
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
-        "cSpell.words": [
-            "pipx",
-            "showcontent",
-            "towncrier",
-            "trustless"
-        ]
+        "cSpell.words": ["pipx", "showcontent", "towncrier", "trustless"]
     },
     "extensions": {
         "recommendations": [
@@ -62,7 +57,8 @@
             "bradlc.vscode-tailwindcss",
             "ms-python.black-formatter",
             "ms-python.isort",
-            "tamasfe.even-better-toml"
+            "tamasfe.even-better-toml",
+            "unifiedjs.vscode-mdx"
         ]
     }
 }

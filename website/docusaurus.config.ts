@@ -1,10 +1,11 @@
 import { themes as prismThemes } from "prism-react-renderer";
-import type { Config } from "@docusaurus/types";
+
 import type * as Preset from "@docusaurus/preset-classic";
+import type { Config } from "@docusaurus/types";
 
 const config: Config = {
     title: "Excalibur",
-    tagline: "Secure File Storage and Sharing",
+    tagline: "A trustless secure file management solution using military-grade encryption",
     favicon: "img/favicon.ico",
 
     // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -18,17 +19,11 @@ const config: Config = {
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl: "/",
 
-    // GitHub pages deployment config.
-    // If you aren't using GitHub pages, you don't need these.
-    organizationName: "PhotonicGluon",
-    projectName: "Excalibur",
-
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "warn",
 
-    // Even if you don't use internationalization, you can use this field to set
-    // useful metadata like html lang. For example, if your site is Chinese, you
-    // may want to replace "en" with "zh-Hans".
+    // Even if you don't use internationalization, you can use this field to set useful metadata like html lang.
+    // For example, if your site is Chinese, you may want to replace "en" with "zh-Hans".
     i18n: {
         defaultLocale: "en",
         locales: ["en"],
@@ -63,13 +58,6 @@ const config: Config = {
         },
     ],
 
-    scripts: [
-        {
-            src: "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js",
-            async: true,
-        },
-    ],
-
     plugins: ["./src/plugins/tailwind-config.js"],
 
     themeConfig: {
@@ -77,11 +65,10 @@ const config: Config = {
             defaultMode: "dark",
         },
 
-        // Add announcement bar if needed
         // announcementBar: {
         //     id: "welcome",
         //     content:
-        //         '⭐️ If you like Excalibur, give it a star on <a href="https://github.com/your-org/Excalibur">GitHub</a>!',
+        //         '⭐️ If you like Excalibur, give it a star on <a href="https://github.com/PhotonicGluon/Excalibur">GitHub</a>!',
         //     backgroundColor: "#2c3e50",
         //     textColor: "#ffffff",
         //     isCloseable: true,
@@ -96,12 +83,18 @@ const config: Config = {
                 src: "img/logo.svg",
             },
             items: [
-                // {
-                //     type: "docSidebar",
-                //     sidebarId: "tutorialSidebar",
-                //     position: "left",
-                //     label: "Tutorial",
-                // },
+                {
+                    type: "doc",
+                    position: "left",
+                    docId: "welcome",
+                    label: "Docs",
+                },
+                {
+                    type: "docSidebar",
+                    position: "left",
+                    sidebarId: "api",
+                    label: "API",
+                },
                 {
                     href: "https://github.com/PhotonicGluon/Excalibur",
                     label: "GitHub",

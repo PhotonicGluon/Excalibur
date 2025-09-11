@@ -138,54 +138,55 @@ const CanvasWaveBackground: React.FC = () => {
     return <canvas ref={canvasRef} className="absolute inset-0 -z-10 bg-gray-50 dark:bg-gray-900" />;
 };
 
+// Features
+export const signatureFeatures: SignatureFeatureProps[] = [
+    {
+        title: "Military-Grade Security",
+        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
+        icon: "🛡️",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
+    },
+    {
+        title: "Zero-Trust By Default",
+        description:
+            "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
+        icon: "🕵️",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
+    },
+    {
+        title: "User-Friendly",
+        description: "Simple, intuitive interface that makes secure file sharing effortless.",
+        icon: "✨",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
+    },
+];
+
+export const features: FeatureCardProps[] = [
+    {
+        title: "End-to-End Encryption",
+        description: "Data in transit are always encrypted using AES-GCM.",
+        icon: "🔒",
+    },
+    {
+        title: "Zero-Knowledge Authentication",
+        description: "Your password never leaves your device.",
+        icon: "🗝️",
+    },
+    {
+        title: "Open Source",
+        description: "Fully transparent and auditable codebase for maximum trust.",
+        icon: "📦",
+    },
+    {
+        title: "Self-Hostable",
+        description: "Deploy your own instance for complete control over your data.",
+        icon: "🖥️",
+    },
+];
+
 // Main component
 const Home: React.FC = () => {
     const { siteConfig } = useDocusaurusContext();
-
-    const signatureFeatures: SignatureFeatureProps[] = [
-        {
-            title: "Military-Grade Security",
-            description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
-            icon: "🛡️",
-            screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
-        },
-        {
-            title: "Zero-Trust By Default",
-            description:
-                "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
-            icon: "🕵️",
-            screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
-        },
-        {
-            title: "User-Friendly",
-            description: "Simple, intuitive interface that makes secure file sharing effortless.",
-            icon: "✨",
-            screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
-        },
-    ];
-
-    const features: FeatureCardProps[] = [
-        {
-            title: "End-to-End Encryption",
-            description: "Data in transit are always encrypted using AES-GCM.",
-            icon: "🔒",
-        },
-        {
-            title: "Zero-Knowledge Authentication",
-            description: "Your password never leaves your device.",
-            icon: "🗝️",
-        },
-        {
-            title: "Open Source",
-            description: "Fully transparent and auditable codebase for maximum trust.",
-            icon: "📦",
-        },
-        {
-            title: "Self-Hostable",
-            description: "Deploy your own instance for complete control over your data.",
-            icon: "🖥️",
-        },
-    ];
 
     const featureRows = [];
     const itemsPerRow = 2;
@@ -198,7 +199,7 @@ const Home: React.FC = () => {
             {/* Hero box */}
             <header className="relative flex min-h-screen items-center justify-center overflow-hidden">
                 <CanvasWaveBackground />
-                <div className="absolute inset-0 bg-white/70 dark:bg-black/60" /> {/* Overlay for text readability */}
+                <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
                     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
                         <motion.h1
@@ -208,10 +209,10 @@ const Home: React.FC = () => {
                             {siteConfig.title}
                         </motion.h1>
                         <motion.p
-                            className="mb-10 !text-xl text-gray-700 md:!text-2xl dark:text-gray-200"
+                            className="mb-10 !text-center !text-xl text-gray-700 md:!text-2xl dark:text-gray-200"
                             variants={fadeInUp}
                         >
-                            The most secure way to store and share your files with end-to-end encryption.
+                            A trustless secure file management solution using military-grade encryption.
                         </motion.p>
                         <motion.div className="flex flex-col justify-center gap-4 sm:flex-row" variants={fadeInUp}>
                             <GetStartedButton />
@@ -275,7 +276,7 @@ const Home: React.FC = () => {
                             <h2 className="mb-6 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
                                 Powerful Features
                             </h2>
-                            <p className="text-xl text-gray-600 dark:text-gray-400">
+                            <p className="!text-center text-xl text-gray-600 dark:text-gray-400">
                                 Everything you need to securely manage and share your files
                             </p>
                         </motion.div>
