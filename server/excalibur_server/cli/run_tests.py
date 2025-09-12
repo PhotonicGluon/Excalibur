@@ -1,4 +1,3 @@
-import os
 from typing import Annotated
 
 import typer
@@ -20,6 +19,7 @@ def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verb
         typer.secho("Error: `pytest` not found. Please install the developer dependencies.", fg="red")
         typer.Exit(1)
 
+    import os
     import subprocess
 
     from excalibur_server.cli.init_server import init_server

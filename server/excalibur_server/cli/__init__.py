@@ -64,7 +64,12 @@ from .init_server import init_server as init_server
 from .start_server import start_server as start_server
 from .reset_server import reset_server as reset_server
 
-# Since tests may be excluded from the build, we need to handle the import like this
+# Handle possibly excluded commands
+try:
+    from .build import build as build
+except ImportError:
+    pass
+
 try:
     from .run_tests import run_tests as run_tests
 except ImportError:
