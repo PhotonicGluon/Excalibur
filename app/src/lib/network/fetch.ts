@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 
 import { generatePoPHeader } from "@lib/security/pop";
+import { getURLEncodedPath } from "@lib/url";
 
 /**
  * Fetches a URL with a timeout.
@@ -35,7 +36,7 @@ export async function popFetch(
     let popHeader;
     if (options && masterKey) {
         const method = options.method ?? "GET";
-        const path = encodeURIComponent(new URL(url).pathname).replaceAll("%2F", "/"); // Slashes are safe
+        const path = getURLEncodedPath(url);
         const timestamp = Math.floor(Date.now() / 1e3); // Want seconds, not milliseconds
         const nonce = randomBytes(16);
         popHeader = generatePoPHeader(masterKey, method, path, timestamp, nonce);

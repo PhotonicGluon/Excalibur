@@ -1,5 +1,4 @@
 import os
-import urllib.parse
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -10,6 +9,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.url import get_url_encoded_path
 
 from .jwt import decode_token, generate_token
 
@@ -128,7 +128,7 @@ async def get_credentials(
     # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]
     method = request.method
-    path = urllib.parse.quote(request.url.path)  # For some reason, `request.url.path` is not URL encoded...
+    path = get_url_encoded_path(request.url)
 
     # Check if the SRP PoP is valid
     hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)

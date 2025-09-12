@@ -2,7 +2,7 @@ import React, { HTMLProps, useState } from "react";
 
 import { IonInput } from "@ionic/react";
 
-import { validateURL } from "@lib/validators";
+import { validateURL } from "@lib/url";
 
 interface ContainerProps extends HTMLProps<HTMLIonInputElement> {
     label: string;

@@ -12,3 +12,7 @@ export function validateURL(url: string): boolean {
         return false;
     }
 }
+
+export function getURLEncodedPath(url: string) {
+    return encodeURIComponent(new URL(url).pathname).replaceAll("%2F", "/"); // Slashes are safe
+}
