@@ -39,4 +39,4 @@ You can check if the server is running by going to [`http://localhost:8888/api/w
 }
 ```
 
-Congratulations! You have successfully set up an Excalibur server. Move on to the [Client Quickstart](./02-client.md) to set up a client to connect to your server.
+Congratulations! You have successfully set up an Excalibur server. Move on to the [Client Quickstart](./02-client/index.mdx) to set up a client to connect to your server.
