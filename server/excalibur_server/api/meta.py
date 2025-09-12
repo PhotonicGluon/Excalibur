@@ -10,5 +10,6 @@ TAGS = [
             + "Responses follow the Excalibur Encryption Format (ExEF). See the documentation for more information."
         ),
     },
+    {"name": "pwa", "description": "Progressive Web App (PWA) endpoints."},
     {"name": "debug", "description": "Endpoints that are accessible only in debug mode."},
 ]
