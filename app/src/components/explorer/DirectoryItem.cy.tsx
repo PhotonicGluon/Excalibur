@@ -38,7 +38,7 @@ describe("<DirectoryItem />", () => {
                 >
                     <uiFeedbackContext.Provider
                         value={{
-                            onRename: (_path) => props.renameHook!(),
+                            onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
                             presentToast: () => Promise.resolve(),

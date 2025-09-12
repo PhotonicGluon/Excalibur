@@ -46,6 +46,7 @@ export interface ContainerProps extends FileLikePartial {
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
+    const nameNoExEF = props.name.replace(/\.exef$/, "");
 
     // Contexts
     const auth = useAuth();
@@ -66,7 +67,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        const fileName = props.name.replace(".exef", "");
+        const fileName = nameNoExEF;
 
         /**
          * Actual function handling the download process.
@@ -219,7 +220,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button an item.
      */
     async function onClickRename() {
-        await uiFeedback.onRename(props.fullpath);
+        await uiFeedback.onRename(props.fullpath, !isFile);
         dismissPopover();
     }
 
@@ -279,7 +280,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             />
                             <div className="pl-4">
                                 <IonLabel className="max-w-92 truncate">
-                                    {props.keepExEF ? props.name : props.name.replace(/\.exef$/, "")}
+                                    {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
                                 </IonLabel>
                                 {props.size !== undefined && (
                                     <IonNote>{bytesToHumanReadable(props.size, settings.fileSizeUnits)}</IonNote>

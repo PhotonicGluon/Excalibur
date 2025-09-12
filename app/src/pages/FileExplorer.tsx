@@ -402,8 +402,11 @@ const FileExplorer: React.FC = () => {
      * Handles the user clicking the rename button on a directory item.
      *
      * @param path The path of the item to rename
+     * @param isDir If true, the item is a directory. If false, the item is a file
      */
-    async function onRenameItem(path: string) {
+    async function onRenameItem(path: string, isDir: boolean) {
+        const baseName = path.split("/").pop();
+
         // Ask for user input
         presentAlert({
             header: "Enter New Name",
@@ -412,10 +415,7 @@ const FileExplorer: React.FC = () => {
                     type: "text",
                     name: "newName",
                     placeholder: "New Name",
-                    value: path
-                        .split("/")
-                        .pop()
-                        ?.replace(/\.exef$/, ""),
+                    value: !isDir ? baseName?.replace(/\.exef$/, "") : baseName,
                 },
             ],
             buttons: [
@@ -428,7 +428,7 @@ const FileExplorer: React.FC = () => {
                             presentSnackbar("New name cannot be empty", "danger");
                             return;
                         }
-                        if (!newName.endsWith(".exef")) {
+                        if (!isDir) {
                             newName += ".exef";
                         }
 
@@ -450,7 +450,7 @@ const FileExplorer: React.FC = () => {
      * Handles the user clicking the delete button on a directory item.
      *
      * @param path The path of the item to delete
-     * @param isDir If true, the item is a directory. If false, the item is a file.
+     * @param isDir If true, the item is a directory. If false, the item is a file
      */
     async function onDeleteItem(path: string, isDir: boolean, force: boolean = false) {
         if (isDir) {

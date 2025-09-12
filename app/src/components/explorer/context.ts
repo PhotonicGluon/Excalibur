@@ -7,7 +7,7 @@ import { AlertOptions, ToastOptions } from "@ionic/core";
  */
 export interface UIFeedbackMethods {
     /** Function to call when renaming is requested */
-    onRename: (path: string) => Promise<void>;
+    onRename: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when the dialog is closed */
