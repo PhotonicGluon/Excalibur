@@ -501,7 +501,12 @@ const FileExplorer: React.FC = () => {
                 <IonHeader>
                     <IonToolbar className="ion-padding-top min-h-16">
                         <IonTitle>
-                            <IonText className="font-bold [font-variant:small-caps]">Excalibur</IonText>
+                            <div className="flex items-center gap-4">
+                                <IonText className="flex-none font-bold [font-variant:small-caps]">Excalibur</IonText>
+                                <IonText className="grow truncate text-right font-mono text-sm font-bold">
+                                    {auth.authInfo?.username}
+                                </IonText>
+                            </div>
                         </IonTitle>
                     </IonToolbar>
                 </IonHeader>
@@ -543,7 +548,13 @@ const FileExplorer: React.FC = () => {
                         </IonItem>
                     </IonList>
 
-                    <Versions className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block" />
+                    {/* Details */}
+                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block *:text-xs md:*:text-sm">
+                        <Versions />
+                        <IonText color="medium">
+                            Delta time: <span className="font-mono">{auth.serverInfo!.deltaTime} ms</span>
+                        </IonText>
+                    </div>
                 </IonContent>
             </IonMenu>
 

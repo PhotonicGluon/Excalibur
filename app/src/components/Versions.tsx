@@ -10,10 +10,10 @@ const Versions: React.FC<HTMLAttributes<HTMLDivElement>> = (props) => {
 
     return (
         <div {...props}>
-            <IonText color="medium" className="text-xs md:text-sm">
+            <IonText color="medium" className="block">
                 App version: <span className="font-mono">{packageInfo.version}</span>
             </IonText>
-            <IonText color="medium" className="text-xs md:text-sm">
+            <IonText color="medium" className="block">
                 Server version: <span className="font-mono">{auth.serverInfo!.version}</span>
             </IonText>
         </div>
