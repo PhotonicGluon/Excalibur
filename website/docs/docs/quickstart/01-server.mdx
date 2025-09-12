@@ -1,10 +1,21 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # Server Quickstart
 
 Set up an Excalibur server for clients to connect.
 
 ## Obtaining the Server Distributable
 
-TODO: Add
+<Tabs groupId="server-type">
+    <TabItem value="api-only" label="API Only" default>
+    TODO: Add API only download link
+    </TabItem>
+    
+    <TabItem value="with-pwa" label="With PWA">
+    TODO: Add PWA download link
+    </TabItem>
+</Tabs>
 
 ## Installing
 
@@ -38,5 +49,15 @@ You can check if the server is running by going to [`http://localhost:8888/api/w
     "commit": null
 }
 ```
+
+:::tip Host and Port
+
+You might want to change the host and port that the server runs on. You can do this by setting specifying the `--host` and `--port` flags when starting the server. For example, to listen on all IPs and port 8080, run
+
+```bash
+excalibur start --host 0.0.0.0 --port 8080
+```
+
+:::
 
 Congratulations! You have successfully set up an Excalibur server. Move on to the [Client Quickstart](./02-client/index.mdx) to set up a client to connect to your server.
