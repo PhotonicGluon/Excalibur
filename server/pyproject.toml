@@ -4,11 +4,11 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.2.0a16"
+version = "0.2.0b3"
 dependencies = [
     "aiofiles>=24.1.0",
-    "alembic>=1.16.4",
-    "cachetools>=6.1.0",
+    "alembic>=1.16.5",
+    "cachetools>=6.2.0",
     "duckdb>=1.3.2",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.116.1",
@@ -22,7 +22,7 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "sqlmodel>=0.0.24",
     "toml>=0.10.2",
-    "typer>=0.16.2",
+    "typer>=0.17.4",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1",
 ]
@@ -43,7 +43,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.4.0", "ruff>=0.12.12"]
+dev = ["ipython>=9.5.0", "ruff>=0.13.0"]
 test = ["httpx>=0.28.1", "pytest>=8.4.2"]
 
 [tool.uv.build-backend]
