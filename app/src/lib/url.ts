@@ -13,6 +13,14 @@ export function validateURL(url: string): boolean {
     }
 }
 
+/**
+ * Encodes the path of a URL.
+ *
+ * @param url The URL to encode the path of
+ * @returns The encoded path
+ */
 export function getURLEncodedPath(url: string) {
-    return encodeURIComponent(new URL(url).pathname).replaceAll("%2F", "/"); // Slashes are safe
+    const basePath = decodeURIComponent(new URL(url).pathname); // Decode it to just get the raw path
+    const encodedPath = encodeURIComponent(basePath);
+    return encodedPath.replaceAll("%2F", "/"); // Slashes are safe
 }
