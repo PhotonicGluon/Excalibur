@@ -150,7 +150,7 @@ const Welcome: React.FC = () => {
         <IonPage>
             {/* Header content */}
             <IonHeader>
-                <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
+                <IonToolbar className="absolute [--ion-toolbar-background:transparent] [&::part(container)]:min-h-16">
                     <IonButtons slot="start">
                         {/* Settings button */}
                         <IonButton id="settings-button" color="medium" onClick={() => router.push("/settings")}>

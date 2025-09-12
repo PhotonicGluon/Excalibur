@@ -347,7 +347,7 @@ const Login: React.FC = () => {
             <IonPage id="main-content">
                 {/* Header content */}
                 <IonHeader>
-                    <IonToolbar className="absolute [--ion-toolbar-background:transparent]">
+                    <IonToolbar className="absolute [--ion-toolbar-background:transparent] [&::part(container)]:min-h-16">
                         <IonButtons slot="start">
                             <IonMenuButton id="menu-button" onClick={() => menuController.open()} />
                         </IonButtons>

@@ -114,7 +114,7 @@ const Settings: React.FC = () => {
         <IonPage>
             {/* Header content */}
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
                         <IonButton onClick={onBackButton}>
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
