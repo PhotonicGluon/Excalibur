@@ -13,6 +13,9 @@ def setup_pwa():
 
     from .app import app
 
+    if not PWA_PATH.exists():
+        return
+
     @app.get("/", name="PWA Index", tags=["pwa"])
     async def index_endpoint() -> str:
         """
