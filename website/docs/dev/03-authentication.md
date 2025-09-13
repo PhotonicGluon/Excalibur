@@ -1,6 +1,6 @@
 # Authentication
 
-TODO: Tidy up
+TODO: Add more details
 
 https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF
 
@@ -37,10 +37,10 @@ Subsequent requests are authenticated using _both_ the authentication token and 
 
 The parameters of the HMAC are as follows:
 
--   The method is the HTTP method (e.g., GET, POST, PUT, DELETE), in ALL CAPS.
--   The path is the path of the request.
--   The timestamp is the current time _in seconds_ since the Unix epoch.
--   The nonce is a random 16 byte value.
+- The method is the HTTP method (e.g., GET, POST, PUT, DELETE), in ALL CAPS.
+- The path is the path of the request.
+- The timestamp is the current time _in seconds_ since the Unix epoch.
+- The nonce is a random 16 byte value.
 
 The HMAC is of the message `{METHOD} {PATH} {TIMESTAMP} {NONCE}` using the SRP master key as the key, and using SHA-256 as the hash function.
 
@@ -50,7 +50,7 @@ This header's is `X-SRP-PoP` and its value is `{TIMESTAMP} {NONCE} {HMAC}`. In p
 
 The body of the message need not be included in the HMAC calculation since it is already verified by the encryption:
 
--   If the request does not include a body, then there is already nothing to check;
--   If the request does include a body, the body _should_ be encrypted using AES-GCM, which authenticates the data sent. Since the data sent uses the secret master key, no malicious actor can spoof the data; thus no need to check.
+- If the request does not include a body, then there is already nothing to check;
+- If the request does include a body, the body _should_ be encrypted using AES-GCM, which authenticates the data sent. Since the data sent uses the secret master key, no malicious actor can spoof the data; thus no need to check.
 
 :::

@@ -33,6 +33,27 @@ excalibur --version
 
 You should see the version of the server printed to the console.
 
+Now we need to initialize the server by running
+
+```bash
+excalibur init
+```
+
+This will create a new folder `excalibur-files` in the current working directory.
+
+## Configuration
+
+The configuration file is a TOML file named `config.toml` in the `excalibur-files` folder. There are a few key values that you might want to edit:
+- **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `20` and `1` respectively.
+
+    :::warning For PWA Users
+
+    If you obtained a server distributable that includes the PWA, it is advised to **increase** the `server.rate_limit.capacity` value to a higher number such as `250`. This is because requests to the PWA files are also counted in the rate limiting calculation.
+
+    :::
+- **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
+- **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`. 
+
 ## Running
 
 Run the following command in a terminal.
