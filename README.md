@@ -34,3 +34,15 @@ towncrier build --config towncrier.toml --dir [SUBDIR] --version [VERSION]
 Where `[SUBDIR]` is the directory of the project you want to generate the changelog for, and `[VERSION]` is the version number.
 
 See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorepo.html) for more information.
+
+### Testing GitHub Actions Locally
+
+To test GitHub Actions locally, you can use [`act`](https://github.com/nektar/act).
+
+If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--act-offline-mode` flag.
+
+Some steps involve the uploading of artifacts. Specify the path of the artifact server using the `--artifact-server-path` flag:
+
+```bash
+act --artifact-server-path ./dist
+```
