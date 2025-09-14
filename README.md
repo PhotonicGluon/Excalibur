@@ -39,10 +39,13 @@ See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorep
 
 To test GitHub Actions locally, you can use [`act`](https://github.com/nektar/act).
 
-If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--act-offline-mode` flag.
+If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--action-offline-mode` flag.
 
 Some steps involve the uploading of artifacts. Specify the path of the artifact server using the `--artifact-server-path` flag:
 
 ```bash
 act --artifact-server-path ./dist
 ```
+
+> [!WARNING]
+> It is recommended to specify `--container-architecture linux/amd64` on non-AMD64 machines (e.g., Apple Silicon Macs).
