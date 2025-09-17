@@ -1,96 +1,117 @@
 name: Release Builds
 
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+    push:
+        tags:
+            - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  build-server:
-    name: Build Server
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
+    build-server:
+        name: Build Server
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "./server/pyproject.toml"
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version-file: "./server/pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6.5.0
-        with:
-          enable-cache: true
-          version: "0.8.17"
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6.5.0
+              with:
+                  enable-cache: true
+                  version: "0.8.17"
+                  cache-dependency-glob: "server/uv.lock"
 
-      - name: Build Server
-        working-directory: ./server
-        run: |
-          uv run --no-dev excalibur build
+            - name: Build Server
+              working-directory: ./server
+              run: |
+                  uv run --no-dev excalibur build
 
-      - name: Upload Server Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: server
-          path: server/dist
-          if-no-files-found: error
+            - name: Upload Server Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: server
+                  path: server/dist
+                  if-no-files-found: error
 
-  build-app:
-    name: Build App
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
+    build-app:
+        name: Build App
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: "npm"
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: app/package-lock.json
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "gradle"
+            - name: Set up JDK
+              uses: actions/setup-java@v5
+              with:
+                  java-version: "21"
+                  distribution: "temurin"
+                  cache: "gradle"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+            - name: Set up Android SDK
+              uses: android-actions/setup-android@v3
 
-      - name: Install Dependencies
-        working-directory: ./app
-        run: npm ci
+            - name: Install Dependencies
+              working-directory: ./app
+              run: npm ci
 
-      - name: Build PWA
-        working-directory: ./app
-        run: npm run build
+            - name: Build PWA
+              working-directory: ./app
+              run: npm run build
 
-      - name: Upload PWA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-pwa
-          path: app/dist/
-          if-no-files-found: error
+            - name: Upload PWA Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-pwa
+                  path: app/dist/
+                  if-no-files-found: error
 
-      - name: Sync Capacitor
-        working-directory: ./app
-        run: npm run sync
+            - name: Sync Capacitor
+              working-directory: ./app
+              run: npm run sync
 
-      - name: Grant execute permission for gradlew
-        working-directory: ./app/android
-        run: chmod +x gradlew
+            - name: Grant execute permission for gradlew
+              working-directory: ./app/android
+              run: chmod +x gradlew
 
-      - name: Build with Gradle
-        working-directory: ./app/android
-        run: ./gradlew build
+            - name: Build with Gradle
+              working-directory: ./app/android
+              run: ./gradlew build
 
-      - name: Build debug APK
-        working-directory: ./app/android
-        run: ./gradlew assembleDebug
+            - name: Build debug APK
+              working-directory: ./app/android
+              run: ./gradlew assembleDebug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-android
-          path: app/android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+            - name: Upload Debug APK
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-android-debug
+                  path: app/android/app/build/outputs/apk/debug/app-debug.apk
+                  if-no-files-found: error
+
+            - name: Decode Keystore
+              working-directory: ./app/android/app
+              run: echo "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > release.jks
+
+            - name: Build Release AAB
+              working-directory: ./app/android
+              run: ./gradlew bundleRelease
+              env:
+                  ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+                  ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+                  ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+
+            - name: Upload Release AAB
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-android-release
+                  path: app/android/app/build/outputs/bundle/release/app-release.aab
+                  if-no-files-found: error
