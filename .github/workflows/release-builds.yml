@@ -102,7 +102,7 @@ jobs:
         uses: astral-sh/setup-uv@v6.5.0
         with:
           enable-cache: true
-          version: "0.8.x"
+          version: "0.8.17"
           cache-dependency-glob: "server/uv.lock"
 
       - name: Build Server Without PWA
@@ -186,11 +186,19 @@ jobs:
 
           ## App
 
+          <details>
+          <summary>App Changelog</summary>
+
           $APP_BODY
+          </details>
 
           ## Server
 
+          <details>
+          <summary>Server Changelog</summary>
+
           $SERVER_BODY
+          </details>
           EOF
           )
 

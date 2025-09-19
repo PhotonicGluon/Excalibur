@@ -60,7 +60,7 @@ Now, create an `event.json` file in the `.github` folder with the following cont
 We can now run the workflow:
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets --artifact-server-path ./dist
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
 ```
 
 ### General Tips
