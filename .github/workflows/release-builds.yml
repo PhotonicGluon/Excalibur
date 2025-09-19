@@ -1,117 +1,215 @@
 name: Release Builds
 
 on:
-    push:
-        tags:
-            - "v[0-9]+.[0-9]+.[0-9]+*"
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-    build-server:
-        name: Build Server
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v5
+  build-server:
+    name: Build Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-            - name: Set up Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version-file: "./server/pyproject.toml"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "./server/pyproject.toml"
 
-            - name: Install uv
-              uses: astral-sh/setup-uv@v6.5.0
-              with:
-                  enable-cache: true
-                  version: "0.8.17"
-                  cache-dependency-glob: "server/uv.lock"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6.5.0
+        with:
+          enable-cache: true
+          version: "0.8.17"
+          cache-dependency-glob: "server/uv.lock"
 
-            - name: Build Server
-              working-directory: ./server
-              run: |
-                  uv run --no-dev excalibur build
+      - name: Build Server
+        working-directory: ./server
+        run: uv run --no-dev excalibur build
 
-            - name: Upload Server Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: server
-                  path: server/dist
-                  if-no-files-found: error
+      # - name: Build Server DEMO
+      #   working-directory: ./server
+      #   run: |
+      #     mkdir -p ./dist
+      #     echo "Server Contents" > ./dist/server.demo.txt
 
-    build-app:
-        name: Build App
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v5
+      - name: Upload Server Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server
+          path: server/dist
+          if-no-files-found: error
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: "22"
-                  cache: "npm"
-                  cache-dependency-path: app/package-lock.json
+  # TODO: Build server with PWA included?
 
-            - name: Set up JDK
-              uses: actions/setup-java@v5
-              with:
-                  java-version: "21"
-                  distribution: "temurin"
-                  cache: "gradle"
+  build-app:
+    name: Build App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-            - name: Set up Android SDK
-              uses: android-actions/setup-android@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: app/package-lock.json
 
-            - name: Install Dependencies
-              working-directory: ./app
-              run: npm ci
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "gradle"
 
-            - name: Build PWA
-              working-directory: ./app
-              run: npm run build
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-            - name: Upload PWA Artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: app-pwa
-                  path: app/dist/
-                  if-no-files-found: error
+      - name: Install Dependencies
+        working-directory: ./app
+        run: npm ci
 
-            - name: Sync Capacitor
-              working-directory: ./app
-              run: npm run sync
+      - name: Build PWA
+        working-directory: ./app
+        run: |
+          npm run build
+          zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
-            - name: Grant execute permission for gradlew
-              working-directory: ./app/android
-              run: chmod +x gradlew
+      # - name: Build PWA DEMO
+      #   working-directory: ./app
+      #   run: |
+      #     mkdir -p ./dist
+      #     echo "PWA Contents" > ./dist/file1.demo.txt
+      #     echo "PWA Contents 2" > ./dist/file2.demo.txt
+      #     zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
-            - name: Build with Gradle
-              working-directory: ./app/android
-              run: ./gradlew build
+      - name: Upload PWA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-pwa
+          path: app/app-${{ github.ref_name }}-pwa.zip
+          if-no-files-found: error
 
-            - name: Build debug APK
-              working-directory: ./app/android
-              run: ./gradlew assembleDebug
+      - name: Sync Capacitor
+        working-directory: ./app
+        run: npm run sync
 
-            - name: Upload Debug APK
-              uses: actions/upload-artifact@v4
-              with:
-                  name: app-android-debug
-                  path: app/android/app/build/outputs/apk/debug/app-debug.apk
-                  if-no-files-found: error
+      - name: Grant execute permission for gradlew
+        working-directory: ./app/android
+        run: chmod +x gradlew
 
-            - name: Decode Keystore
-              working-directory: ./app/android/app
-              run: echo "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > release.jks
+      - name: Build with Gradle
+        working-directory: ./app/android
+        run: ./gradlew build
 
-            - name: Build Release AAB
-              working-directory: ./app/android
-              run: ./gradlew bundleRelease
-              env:
-                  ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
-                  ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-                  ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+      - name: Build debug APK
+        working-directory: ./app/android
+        run: ./gradlew assembleDebug
 
-            - name: Upload Release AAB
-              uses: actions/upload-artifact@v4
-              with:
-                  name: app-android-release
-                  path: app/android/app/build/outputs/bundle/release/app-release.aab
-                  if-no-files-found: error
+      # - name: Build debug APK DEMO
+      #   working-directory: ./app/android
+      #   run: |
+      #     mkdir -p ./app/build/outputs/apk/debug
+      #     echo "App APK" > ./app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Rename debug APK
+        working-directory: ./app/android/app/build/outputs/apk/debug
+        run: |
+          mv ./app-debug.apk ./app-${{ github.ref_name }}-debug.apk
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-android-debug
+          path: app/android/app/build/outputs/apk/debug/app-${{ github.ref_name }}-debug.apk
+          if-no-files-found: error
+
+      - name: Decode Keystore
+        working-directory: ./app/android/app
+        run: echo "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > release.jks
+
+      - name: Build Release AAB
+        working-directory: ./app/android
+        run: ./gradlew bundleRelease
+        env:
+          ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+
+      # - name: Build Release AAB DEMO
+      #   working-directory: ./app/android
+      #   run: |
+      #     mkdir -p ./app/build/outputs/bundle/release
+      #     echo "App AAB" > ./app/build/outputs/bundle/release/app-release.aab
+
+      - name: Rename release AAB
+        working-directory: ./app/android/app/build/outputs/bundle/release
+        run: |
+          mv ./app-release.aab ./app-${{ github.ref_name }}-release.aab
+
+      - name: Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-android-release
+          path: app/android/app/build/outputs/bundle/release/app-${{ github.ref_name }}-release.aab
+          if-no-files-found: error
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-server, build-app]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+
+      - name: Prepare Release Notes
+        id: prepare_release_notes
+        run: |
+          # Read the full content of both changelogs
+          APP_CHANGELOG=$(cat app/changelog/${{ github.ref_name }}.md)
+          SERVER_CHANGELOG=$(cat server/changelog/${{ github.ref_name }}.md)
+
+          # Extract the header from the app changelog (first line) and change '##' to '#'
+          RELEASE_HEADER=$(echo "$APP_CHANGELOG" | head -n 1 | sed 's/^##/#/')
+
+          # Extract the content of the app changelog (from line 3 onwards to skip the header and blank line)
+          APP_BODY=$(echo "$APP_CHANGELOG" | tail -n +3)
+
+          # Extract the content of the server changelog (from line 3 onwards)
+          SERVER_BODY=$(echo "$SERVER_CHANGELOG" | tail -n +3)
+
+          # Combine everything into the final release body using the desired format
+          COMBINED_BODY=$(cat <<EOF
+          $RELEASE_HEADER
+
+          ## App
+
+          $APP_BODY
+
+          ## Server
+
+          $SERVER_BODY
+          EOF
+          )
+
+          # Use a heredoc to safely pass the multiline string to the step output
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMBINED_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.prepare_release_notes.outputs.body }}
+          draft: true # TODO: Make this actually release?
+          files: |
+            artifacts/server/*
+            artifacts/app-pwa/*
+            artifacts/app-android-debug/*
+            artifacts/app-android-release/*
