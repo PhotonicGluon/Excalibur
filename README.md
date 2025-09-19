@@ -6,7 +6,7 @@ A trustless secure file management solution using military-grade encryption.
 
 ### Generating Changelog
 
-We use [`towncrier`](https://github.com/twisted/towncrier) to generate the changelog. Assuming you have [`pipx`](https://pipx.pypa.io/stable/), you can install it using
+We use [`towncrier`](https://github.com/twisted/towncrier) to generate the changelog. Assuming you have [`pipx`](https://pipx.pypa.io/stable/), you can install `towncrier` using
 
 ```bash
 pipx install towncrier
