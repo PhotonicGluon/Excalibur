@@ -39,14 +39,6 @@ jobs:
           npm run build
           zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
-      # - name: Build PWA DEMO
-      #   working-directory: ./app
-      #   run: |
-      #     mkdir -p ./dist
-      #     echo "PWA Contents" > ./dist/file1.demo.ext1
-      #     echo "PWA Contents 2" > ./dist/file2.demo.ext2
-      #     zip -r app-${{ github.ref_name }}-pwa.zip ./dist
-
       - name: Upload PWA Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -64,58 +56,34 @@ jobs:
 
       - name: Build with Gradle
         working-directory: ./app/android
-        run: ./gradlew build
+        run: ./gradlew --console plain build
 
-      - name: Build debug APK
+      - name: Build Unsigned Release APK
         working-directory: ./app/android
-        run: ./gradlew assembleDebug
+        run: ./gradlew --console plain assembleRelease
 
-      # - name: Build debug APK DEMO
-      #   working-directory: ./app/android
-      #   run: |
-      #     mkdir -p ./app/build/outputs/apk/debug
-      #     echo "App APK" > ./app/build/outputs/apk/debug/app-debug.apk
+      - name: Sign app APK
+        uses: ilharp/sign-android-release@v2
+        with:
+          releaseDir: ./app/android/app/build/outputs/apk/release
+          signingKey: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+          keyAlias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          buildToolsVersion: 36.0.0
 
-      - name: Rename debug APK
-        working-directory: ./app/android/app/build/outputs/apk/debug
+      - name: Rename Release APK
+        working-directory: ./app/android/app/build/outputs/apk/release
         run: |
-          mv ./app-debug.apk ./app-${{ github.ref_name }}-debug.apk
+          for f in *-signed.apk; do
+            mv -- "$f" ./app-${{ github.ref_name }}-release.apk
+          done
 
-      - name: Upload Debug APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-android-debug
-          path: app/android/app/build/outputs/apk/debug/app-${{ github.ref_name }}-debug.apk
-          if-no-files-found: error
-
-      - name: Decode Keystore
-        working-directory: ./app/android/app
-        run: echo "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > release.jks
-
-      - name: Build Release AAB
-        working-directory: ./app/android
-        run: ./gradlew bundleRelease
-        env:
-          ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
-          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-
-      # - name: Build Release AAB DEMO
-      #   working-directory: ./app/android
-      #   run: |
-      #     mkdir -p ./app/build/outputs/bundle/release
-      #     echo "App AAB" > ./app/build/outputs/bundle/release/app-release.aab
-
-      - name: Rename release AAB
-        working-directory: ./app/android/app/build/outputs/bundle/release
-        run: |
-          mv ./app-release.aab ./app-${{ github.ref_name }}-release.aab
-
-      - name: Upload Release AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-android-release
-          path: app/android/app/build/outputs/bundle/release/app-${{ github.ref_name }}-release.aab
+          name: app-android
+          path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
           if-no-files-found: error
 
   build-server:
@@ -233,6 +201,7 @@ jobs:
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v2
+        if: ${{ github.token }}
         with:
           body: ${{ steps.prepare_release_notes.outputs.body }}
           draft: true # TODO: Make this actually release?
@@ -240,5 +209,5 @@ jobs:
             artifacts/server/*
             artifacts/server-pwa/*
             artifacts/app-pwa/*
-            artifacts/app-android-debug/*
-            artifacts/app-android-release/*
+            artifacts/app-android/*
+          preserve_order: true
