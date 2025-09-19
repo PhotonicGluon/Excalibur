@@ -6,43 +6,6 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  build-server:
-    name: Build Server
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "./server/pyproject.toml"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6.5.0
-        with:
-          enable-cache: true
-          version: "0.8.17"
-          cache-dependency-glob: "server/uv.lock"
-
-      - name: Build Server
-        working-directory: ./server
-        run: uv run --no-dev excalibur build
-
-      # - name: Build Server DEMO
-      #   working-directory: ./server
-      #   run: |
-      #     mkdir -p ./dist
-      #     echo "Server Contents" > ./dist/server.demo.txt
-
-      - name: Upload Server Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: server
-          path: server/dist
-          if-no-files-found: error
-
-  # TODO: Build server with PWA included?
-
   build-app:
     name: Build App
     runs-on: ubuntu-latest
@@ -80,8 +43,8 @@ jobs:
       #   working-directory: ./app
       #   run: |
       #     mkdir -p ./dist
-      #     echo "PWA Contents" > ./dist/file1.demo.txt
-      #     echo "PWA Contents 2" > ./dist/file2.demo.txt
+      #     echo "PWA Contents" > ./dist/file1.demo.ext1
+      #     echo "PWA Contents 2" > ./dist/file2.demo.ext2
       #     zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
       - name: Upload PWA Artifact
@@ -155,6 +118,71 @@ jobs:
           path: app/android/app/build/outputs/bundle/release/app-${{ github.ref_name }}-release.aab
           if-no-files-found: error
 
+  build-server:
+    name: Build Server
+    needs: build-app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "./server/pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6.5.0
+        with:
+          enable-cache: true
+          version: "0.8.x"
+          cache-dependency-glob: "server/uv.lock"
+
+      - name: Build Server Without PWA
+        working-directory: ./server
+        run: uv run --no-dev excalibur build --no-pwa
+
+      - name: Upload Server Without PWA Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server
+          path: server/dist
+          if-no-files-found: error
+
+      - name: Download App PWA Artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: app-pwa
+          path: ./app/dist
+
+      - name: Extract PWA
+        working-directory: ./app/dist
+        run: |
+          for f in *.zip; do
+            unzip "$f" -d ..
+            rm "$f"
+          done
+
+      - name: Build Server With PWA
+        working-directory: ./server
+        run: |
+          uv run --no-dev excalibur build --pwa
+          cd dist
+
+          for f in *.whl; do
+            mv -- "$f" "${f%.whl}_pwa.whl"
+          done
+
+          for f in *.tar.gz; do
+            mv -- "$f" "${f%.tar.gz}_pwa.tar.gz"
+          done
+
+      - name: Upload Server With PWA Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-pwa
+          path: server/dist
+          if-no-files-found: error
+
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
@@ -210,6 +238,7 @@ jobs:
           draft: true # TODO: Make this actually release?
           files: |
             artifacts/server/*
+            artifacts/server-pwa/*
             artifacts/app-pwa/*
             artifacts/app-android-debug/*
             artifacts/app-android-release/*
