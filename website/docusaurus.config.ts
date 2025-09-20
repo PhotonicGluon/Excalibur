@@ -18,6 +18,9 @@ const config: Config = {
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl: "/",
+    
+    organizationName: "PhotonicGluon",
+    projectName: "Excalibur",
 
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "warn",
@@ -41,7 +44,7 @@ const config: Config = {
             {
                 docs: {
                     sidebarPath: "./sidebars.ts",
-                    editUrl: "https://github.com/PhotonicGluon/Excalibur/tree/main/website",
+                    editUrl: "https://github.com/PhotonicGluon/Excalibur/tree/website/website",
                 },
                 blog: false,
                 theme: {

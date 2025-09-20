@@ -34,7 +34,16 @@
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
-        "cSpell.words": ["pipx", "showcontent", "towncrier", "trustless"]
+        "[javascriptreact]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "cSpell.words": [
+            "closeable",
+            "pipx",
+            "showcontent",
+            "towncrier",
+            "trustless"
+        ]
     },
     "extensions": {
         "recommendations": [
