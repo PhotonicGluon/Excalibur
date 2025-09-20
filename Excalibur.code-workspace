@@ -1,0 +1,53 @@
+{
+    "folders": [
+        {
+            "name": "Website",
+            "path": "website"
+        },
+        {
+            "name": "Root",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "cSpell.language": "en-GB",
+        "editor.formatOnSave": true,
+        "editor.quickSuggestions": {
+            "strings": "on"
+        },
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "node_modules": true,
+            "app": true,
+            "website": true,
+            "server": true
+        },
+        "files.insertFinalNewline": true,
+        "[json]": {
+            "editor.defaultFormatter": "vscode.json-language-features"
+        },
+        "[markdown]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "cSpell.words": ["pipx", "showcontent", "towncrier", "trustless"]
+    },
+    "extensions": {
+        "recommendations": [
+            "esbenp.prettier-vscode",
+            "streetsidesoftware.code-spell-checker",
+            "yzhang.markdown-all-in-one",
+            "github.vscode-github-actions",
+            "Ionic.ionic",
+            "bradlc.vscode-tailwindcss",
+            "ms-python.black-formatter",
+            "ms-python.isort",
+            "tamasfe.even-better-toml",
+            "unifiedjs.vscode-mdx"
+        ]
+    }
+}

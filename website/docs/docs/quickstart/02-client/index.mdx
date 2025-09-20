@@ -1,0 +1,110 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CommonOnboarding from "./_common-onboarding.mdx";
+
+# Client Quickstart
+
+Set up a client to connect to an Excalibur server.
+
+:::important
+
+This quickstart assumes that a [server](../01-server.mdx) is already set up.
+
+:::
+
+## Setting Up the Client
+<Tabs groupId="platform">
+    <TabItem value="android" label="Android" default>
+    TODO: Add android setup
+    </TabItem>
+
+    <TabItem value="pwa" label="Progressive Web App (PWA)">
+    :::note
+    
+    If you obtained a server distributable that includes the PWA, you just need to access the PWA at [`http://localhost:8888`](http://localhost:8888) (or wherever your server is hosted).
+
+    :::
+    
+    TODO: Add PWA setup
+    </TabItem>
+</Tabs>
+
+## Creating a User
+
+<Tabs groupId="user-creation-method">
+    <TabItem value="on-server" label="On Server" default>
+    You have the option to create a new user *directly on the server*. This is the ***recommended*** method for initial signup, since it does not involve sending any sensitive values over the wire.
+
+    On the same device that the server is running, open a terminal and run
+
+    ```bash
+    excalibur user add
+    ```
+
+    You will be prompted to enter the following details:
+    - Username
+    - Password
+    - Vault Key (which should be entered as a Base64 string representing 32 bytes)
+        - You can generate a vault key using [this CyberChef recipe](https://gchq.github.io/CyberChef/#recipe=Pseudo-Random_Number_Generator(32,'Hex')To_Base64('A-Za-z0-9%2B/%3D')).
+
+    :::tip
+
+    You can also specify these values as flags in the above command:
+
+    ```bash
+    excalibur user add --username USERNAME --password PASSWORD --vault-key BASE64_VAULT_KEY
+    ```
+
+    :::
+
+    You should receive a confirmation message like `Added 'USERNAME' to the database`. That means you have successfully created a user! Now we can proceed to logging in on the app.
+
+    </TabItem>
+    
+    <TabItem value="on-app" label="On App">
+    :::danger For The Paranoid
+
+    Although your password is **not** sent over the network, this signup process is ***not encrypted***. Anyone listening to your network traffic can sniff a critical value required to verify the authenticity of the server.
+
+    For more information, see the [authentication protocol](/docs/dev/03-authentication.md).
+
+    :::
+
+    You can create a user via the app's interface.
+
+    <CommonOnboarding />
+
+    Enter your desired username and password into the fields, then click "Log In". You should see the following pop up:
+
+    ![Security Details Not Set Up](../img/security-details-not-set-up.png)
+
+    This indicates that your user is not yet registered on the server. Click "Yes" to continue.
+
+    Once that is done, you should see a new pop up titled "Vault Key":
+
+    ![Initial Vault Key](../img/vault-key-initial.png)
+
+    This key is the actual key used to encrypt your data. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location. Once you have saved this key, click the "X" button to close the pop up.
+
+    </TabItem>
+</Tabs>
+
+## Logging In
+
+<Tabs groupId="user-creation-method">
+    <TabItem value="on-server" label="On Server" default>
+
+    <CommonOnboarding/>
+
+    Enter your username and password into the fields, then click "Log In". You should be redirected to the main screen.
+
+    </TabItem>
+    
+    <TabItem value="on-app" label="On App">
+    Simply click on "Log In" to log in to your account:
+
+    ![Login Screen](../img/login.png)
+    </TabItem>
+</Tabs>
+
+Congratulations! You have successfully set up a client to connect to an Excalibur server. Move on to learning what the [interface](../../interface.md) looks like.

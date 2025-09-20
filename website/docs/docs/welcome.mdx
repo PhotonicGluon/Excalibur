@@ -1,0 +1,21 @@
+---
+slug: /
+---
+
+import { features, signatureFeatures } from "@site/src/pages/index";
+
+# Welcome to Excalibur
+
+Welcome to Excalibur, a trustless secure file management solution using military-grade encryption.
+
+## Features
+
+<ul>
+    {(signatureFeatures.concat(features)).map((feature) => (
+        <li><b>{feature.icon} {feature.title}</b>: {feature.description}</li>
+    ))}
+</ul>
+
+## Quickstart
+
+Ready to begin? Follow the [Quickstart guide](/docs/category/quickstart) to get started with Excalibur.
