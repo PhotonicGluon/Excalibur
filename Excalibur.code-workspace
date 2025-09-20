@@ -42,11 +42,7 @@
             "streetsidesoftware.code-spell-checker",
             "yzhang.markdown-all-in-one",
             "github.vscode-github-actions",
-            "Ionic.ionic",
             "bradlc.vscode-tailwindcss",
-            "ms-python.black-formatter",
-            "ms-python.isort",
-            "tamasfe.even-better-toml",
             "unifiedjs.vscode-mdx"
         ]
     }
