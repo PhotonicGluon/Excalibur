@@ -2,6 +2,7 @@
 dist
 github-act-cache-server
 node_modules
+website
 **/.DS_Store
 
 .github/event.json
