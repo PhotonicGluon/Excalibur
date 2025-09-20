@@ -1,2 +1,7 @@
+.secrets
+dist
+github-act-cache-server
 node_modules
 **/.DS_Store
+
+.github/event.json
