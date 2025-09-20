@@ -44,6 +44,12 @@ jobs:
           npm run build
           zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
+      - name: Attest
+        uses: actions/attest-build-provenance@v3
+        if: ${{ !env.ACT && !github.event.repository.private }}
+        with:
+          subject-path: "app/dist"
+
       - name: Upload PWA Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -84,6 +90,12 @@ jobs:
             mv -- "$f" ./app-${{ github.ref_name }}-release.apk
           done
 
+      - name: Attest
+        uses: actions/attest-build-provenance@v3
+        if: ${{ !env.ACT && !github.event.repository.private }}
+        with:
+          subject-path: "app/android/app/build/outputs/apk/app-${{ github.ref_name }}-release.apk"
+
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
@@ -91,9 +103,8 @@ jobs:
           path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
           if-no-files-found: error
 
-  build-server:
+  build-server-standalone:
     name: Build Server
-    needs: build-app
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -114,22 +125,45 @@ jobs:
           version: "0.8.17"
           cache-dependency-glob: "server/uv.lock"
 
-      - name: Build Server Without PWA
+      - name: Build Server
         working-directory: ./server
         run: uv run --no-dev excalibur build --no-pwa
 
       - name: Attest
         uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT }}
+        if: ${{ !env.ACT && !github.event.repository.private }}
         with:
           subject-path: "server/dist"
 
-      - name: Upload Server Without PWA Artifacts
+      - name: Upload Server Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: server
           path: server/dist
           if-no-files-found: error
+
+  build-server-pwa:
+    name: Build Server PWA
+    needs: build-app
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "./server/pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          version: "0.8.17"
+          cache-dependency-glob: "server/uv.lock"
 
       - name: Download App PWA Artifact
         uses: actions/download-artifact@v5
@@ -161,7 +195,7 @@ jobs:
 
       - name: Attest
         uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT }}
+        if: ${{ !env.ACT && !github.event.repository.private }}
         with:
           subject-path: "server/dist"
 
@@ -176,7 +210,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' }}
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-server, build-app]
+    needs: [build-app, build-server-standalone, build-server-pwa]
     permissions:
       contents: write
     steps:
