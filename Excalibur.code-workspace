@@ -9,10 +9,6 @@
             "path": "server"
         },
         {
-            "name": "Website",
-            "path": "website"
-        },
-        {
             "name": "Root",
             "path": "."
         }
@@ -44,8 +40,7 @@
         },
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "cSpell.words": ["pipx", "showcontent", "towncrier", "trustless"]
+        }
     },
     "extensions": {
         "recommendations": [
@@ -58,7 +53,6 @@
             "ms-python.black-formatter",
             "ms-python.isort",
             "tamasfe.even-better-toml",
-            "unifiedjs.vscode-mdx"
         ]
     }
 }
