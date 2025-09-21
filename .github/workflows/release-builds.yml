@@ -1,277 +1,277 @@
 name: Release Builds
 
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
-  workflow_dispatch:
+    push:
+        tags:
+            - "v[0-9]+.[0-9]+.[0-9]+*"
+    workflow_dispatch:
 
 jobs:
-  build-app:
-    name: Build App
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    steps:
-      - uses: actions/checkout@v5
+    build-app:
+        name: Build App
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+            attestations: write
+        steps:
+            - uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: app/package-lock.json
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: app/package-lock.json
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "gradle"
+            - name: Set up JDK
+              uses: actions/setup-java@v5
+              with:
+                  java-version: "21"
+                  distribution: "temurin"
+                  cache: "gradle"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+            - name: Set up Android SDK
+              uses: android-actions/setup-android@v3
 
-      - name: Install Dependencies
-        working-directory: ./app
-        run: npm ci
+            - name: Install Dependencies
+              working-directory: ./app
+              run: npm ci
 
-      - name: Build PWA
-        working-directory: ./app
-        run: |
-          npm run build
-          zip -r app-${{ github.ref_name }}-pwa.zip ./dist
+            - name: Build PWA
+              working-directory: ./app
+              run: |
+                  npm run build
+                  zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
-      - name: Attest
-        uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT && !github.event.repository.private }}
-        with:
-          subject-path: "app/dist"
+            - name: Attest
+              uses: actions/attest-build-provenance@v3
+              if: ${{ !env.ACT && !github.event.repository.private }}
+              with:
+                  subject-path: "app/dist"
 
-      - name: Upload PWA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-pwa
-          path: app/app-${{ github.ref_name }}-pwa.zip
-          if-no-files-found: error
+            - name: Upload PWA Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-pwa
+                  path: app/app-${{ github.ref_name }}-pwa.zip
+                  if-no-files-found: error
 
-      - name: Sync Capacitor
-        working-directory: ./app
-        run: npm run sync
+            - name: Sync Capacitor
+              working-directory: ./app
+              run: npm run sync
 
-      - name: Grant execute permission for gradlew
-        working-directory: ./app/android
-        run: chmod +x gradlew
+            - name: Grant execute permission for gradlew
+              working-directory: ./app/android
+              run: chmod +x gradlew
 
-      - name: Build with Gradle
-        working-directory: ./app/android
-        run: ./gradlew --console plain build
+            - name: Build with Gradle
+              working-directory: ./app/android
+              run: ./gradlew --console plain build
 
-      - name: Build Unsigned Release APK
-        working-directory: ./app/android
-        run: ./gradlew --console plain assembleRelease
+            - name: Build Unsigned Release APK
+              working-directory: ./app/android
+              run: ./gradlew --console plain assembleRelease
 
-      - name: Sign app APK
-        uses: ilharp/sign-android-release@v2
-        with:
-          releaseDir: ./app/android/app/build/outputs/apk/release
-          signingKey: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
-          keyAlias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-          buildToolsVersion: 36.0.0
+            - name: Sign app APK
+              uses: ilharp/sign-android-release@v2
+              with:
+                  releaseDir: ./app/android/app/build/outputs/apk/release
+                  signingKey: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
+                  keyAlias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+                  keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+                  keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+                  buildToolsVersion: 36.0.0
 
-      - name: Rename Release APK
-        working-directory: ./app/android/app/build/outputs/apk/release
-        run: |
-          for f in *-signed.apk; do
-            mv -- "$f" ./app-${{ github.ref_name }}-release.apk
-          done
+            - name: Rename Release APK
+              working-directory: ./app/android/app/build/outputs/apk/release
+              run: |
+                  for f in *-signed.apk; do
+                    mv -- "$f" ./app-${{ github.ref_name }}-release.apk
+                  done
 
-      - name: Attest
-        uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT && !github.event.repository.private }}
-        with:
-          subject-path: "app/android/app/build/outputs/apk/app-${{ github.ref_name }}-release.apk"
+            - name: Attest
+              uses: actions/attest-build-provenance@v3
+              if: ${{ !env.ACT && !github.event.repository.private }}
+              with:
+                  subject-path: "app/android/app/build/outputs/apk/app-${{ github.ref_name }}-release.apk"
 
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-android
-          path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
-          if-no-files-found: error
+            - name: Upload Release APK
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-android
+                  path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
+                  if-no-files-found: error
 
-  build-server-standalone:
-    name: Build Server
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    steps:
-      - uses: actions/checkout@v5
+    build-server-standalone:
+        name: Build Server
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+            attestations: write
+        steps:
+            - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "./server/pyproject.toml"
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version-file: "./server/pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-          version: "0.8.17"
-          cache-dependency-glob: "server/uv.lock"
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6.5.0
+              with:
+                  enable-cache: true
+                  version: "0.8.17"
+                  cache-dependency-glob: "server/uv.lock"
 
-      - name: Build Server
-        working-directory: ./server
-        run: uv run --no-dev excalibur build --no-pwa
+            - name: Build Server
+              working-directory: ./server
+              run: uv run --no-dev excalibur build --no-pwa
 
-      - name: Attest
-        uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT && !github.event.repository.private }}
-        with:
-          subject-path: "server/dist"
+            - name: Attest
+              uses: actions/attest-build-provenance@v3
+              if: ${{ !env.ACT && !github.event.repository.private }}
+              with:
+                  subject-path: "server/dist"
 
-      - name: Upload Server Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: server
-          path: server/dist
-          if-no-files-found: error
+            - name: Upload Server Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: server
+                  path: server/dist
+                  if-no-files-found: error
 
-  build-server-pwa:
-    name: Build Server PWA
-    needs: build-app
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    steps:
-      - uses: actions/checkout@v5
+    build-server-pwa:
+        name: Build Server PWA
+        needs: build-app
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+            attestations: write
+        steps:
+            - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: "./server/pyproject.toml"
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version-file: "./server/pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-          version: "0.8.17"
-          cache-dependency-glob: "server/uv.lock"
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6.5.0
+              with:
+                  enable-cache: true
+                  version: "0.8.17"
+                  cache-dependency-glob: "server/uv.lock"
 
-      - name: Download App PWA Artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: app-pwa
-          path: ./app/dist
+            - name: Download App PWA Artifact
+              uses: actions/download-artifact@v5
+              with:
+                  name: app-pwa
+                  path: ./app/dist
 
-      - name: Extract PWA
-        working-directory: ./app/dist
-        run: |
-          for f in *.zip; do
-            unzip "$f" -d ..
-            rm "$f"
-          done
+            - name: Extract PWA
+              working-directory: ./app/dist
+              run: |
+                  for f in *.zip; do
+                    unzip "$f" -d ..
+                    rm "$f"
+                  done
 
-      - name: Build Server With PWA
-        working-directory: ./server
-        run: |
-          uv run --no-dev excalibur build --pwa
-          cd dist
+            - name: Build Server With PWA
+              working-directory: ./server
+              run: |
+                  uv run --no-dev excalibur build --pwa
+                  cd dist
 
-          for f in *.whl; do
-            mv -- "$f" "${f%.whl}_pwa.whl"
-          done
+                  for f in *.whl; do
+                    mv -- "$f" "${f%.whl}_pwa.whl"
+                  done
 
-          for f in *.tar.gz; do
-            mv -- "$f" "${f%.tar.gz}_pwa.tar.gz"
-          done
+                  for f in *.tar.gz; do
+                    mv -- "$f" "${f%.tar.gz}_pwa.tar.gz"
+                  done
 
-      - name: Attest
-        uses: actions/attest-build-provenance@v3
-        if: ${{ !env.ACT && !github.event.repository.private }}
-        with:
-          subject-path: "server/dist"
+            - name: Attest
+              uses: actions/attest-build-provenance@v3
+              if: ${{ !env.ACT && !github.event.repository.private }}
+              with:
+                  subject-path: "server/dist"
 
-      - name: Upload Server With PWA Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-pwa
-          path: server/dist
-          if-no-files-found: error
+            - name: Upload Server With PWA Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: server-pwa
+                  path: server/dist
+                  if-no-files-found: error
 
-  create-release:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: [build-app, build-server-standalone, build-server-pwa]
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
+    create-release:
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        name: Create Release
+        runs-on: ubuntu-latest
+        needs: [build-app, build-server-standalone, build-server-pwa]
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v5
-        with:
-          path: artifacts
+            - uses: actions/download-artifact@v5
+              with:
+                  path: artifacts
 
-      - name: Prepare Release Notes
-        id: prepare_release_notes
-        run: |
-          # Read the full content of both changelogs
-          APP_CHANGELOG=$(cat app/changelog/${{ github.ref_name }}.md)
-          SERVER_CHANGELOG=$(cat server/changelog/${{ github.ref_name }}.md)
+            - name: Prepare Release Notes
+              id: prepare_release_notes
+              run: |
+                  # Read the full content of both changelogs
+                  APP_CHANGELOG=$(cat app/changelog/${{ github.ref_name }}.md)
+                  SERVER_CHANGELOG=$(cat server/changelog/${{ github.ref_name }}.md)
 
-          # Extract the header from the app changelog (first line) and change '##' to '#'
-          RELEASE_HEADER=$(echo "$APP_CHANGELOG" | head -n 1 | sed 's/^##/#/')
+                  # Extract the header from the app changelog (first line) and change '##' to '#'
+                  RELEASE_HEADER=$(echo "$APP_CHANGELOG" | head -n 1 | sed 's/^##/#/')
 
-          # Extract the content of the app changelog (from line 3 onwards to skip the header and blank line)
-          APP_BODY=$(echo "$APP_CHANGELOG" | tail -n +3)
+                  # Extract the content of the app changelog (from line 3 onwards to skip the header and blank line)
+                  APP_BODY=$(echo "$APP_CHANGELOG" | tail -n +3)
 
-          # Extract the content of the server changelog (from line 3 onwards)
-          SERVER_BODY=$(echo "$SERVER_CHANGELOG" | tail -n +3)
+                  # Extract the content of the server changelog (from line 3 onwards)
+                  SERVER_BODY=$(echo "$SERVER_CHANGELOG" | tail -n +3)
 
-          # Combine everything into the final release body using the desired format
-          COMBINED_BODY=$(cat <<EOF
-          $RELEASE_HEADER
+                  # Combine everything into the final release body using the desired format
+                  COMBINED_BODY=$(cat <<EOF
+                  $RELEASE_HEADER
 
-          ## App
+                  ## App
 
-          <details>
-          <summary>App Changelog</summary>
+                  <details>
+                  <summary>App Changelog</summary>
 
-          $APP_BODY
-          </details>
+                  $APP_BODY
+                  </details>
 
-          ## Server
+                  ## Server
 
-          <details>
-          <summary>Server Changelog</summary>
+                  <details>
+                  <summary>Server Changelog</summary>
 
-          $SERVER_BODY
-          </details>
-          EOF
-          )
+                  $SERVER_BODY
+                  </details>
+                  EOF
+                  )
 
-          # Use a heredoc to safely pass the multiline string to the step output
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMBINED_BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+                  # Use a heredoc to safely pass the multiline string to the step output
+                  echo "body<<EOF" >> $GITHUB_OUTPUT
+                  echo "$COMBINED_BODY" >> $GITHUB_OUTPUT
+                  echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create Draft Release
-        uses: softprops/action-gh-release@v2
-        if: ${{ github.token }}
-        with:
-          body: ${{ steps.prepare_release_notes.outputs.body }}
-          draft: true # TODO: Make this actually release?
-          files: |
-            artifacts/server/*
-            artifacts/server-pwa/*
-            artifacts/app-pwa/*
-            artifacts/app-android/*
-          preserve_order: true
+            - name: Create Draft Release
+              uses: softprops/action-gh-release@v2
+              if: ${{ github.token }}
+              with:
+                  body: ${{ steps.prepare_release_notes.outputs.body }}
+                  draft: true # TODO: Make this actually release?
+                  files: |
+                      artifacts/server/*
+                      artifacts/server-pwa/*
+                      artifacts/app-pwa/*
+                      artifacts/app-android/*
+                  preserve_order: true

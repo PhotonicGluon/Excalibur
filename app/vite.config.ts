@@ -39,7 +39,10 @@ export default defineConfig({
     test: {
         globals: true,
     },
-    server: { watch: { ignored: ["**/android"] } },
+    server: {
+        watch: { ignored: ["**/android"] },
+        warmup: { clientFiles: ["./src/components/**/*"] },
+    },
     build: {
         chunkSizeWarningLimit: 750, // 750 kB
         rollupOptions: {

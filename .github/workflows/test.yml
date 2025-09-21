@@ -1,0 +1,71 @@
+name: Test
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    test-app:
+        name: Test App
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  sparse-checkout: app/**
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: app/package-lock.json
+
+            - name: Install Dependencies
+              working-directory: ./app
+              run: npm ci
+
+            - name: Run Unit Tests
+              working-directory: ./app
+              run: npm run test:unit-run
+
+            - name: Run Component Tests
+              uses: cypress-io/github-action@v6
+              with:
+                  working-directory: ./app
+                  component: true
+
+    test-server:
+        name: Test Server
+        runs-on: ubuntu-latest
+        if: ${{ !github.event.repository.private }}
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  sparse-checkout: server/**
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version-file: "./server/pyproject.toml"
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6.5.0
+              with:
+                  enable-cache: true
+                  version: "0.8.17"
+                  cache-dependency-glob: "server/uv.lock"
+
+            - name: Set Up Testing Environment
+              working-directory: server
+              run: |
+                  uv run excalibur init -r
+                  uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=
+
+            - name: Run Tests
+              working-directory: server
+              run: |
+                  uv run --group test excalibur test

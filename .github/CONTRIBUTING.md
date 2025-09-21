@@ -37,6 +37,20 @@ See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorep
 
 We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions locally.
 
+### General Tips
+
+- **Specify `-P ubuntu-latest=catthehacker/ubuntu:full-latest` to use the full version of Ubuntu.**
+- **Specify `--container-architecture linux/amd64` on non-AMD64 machines (e.g., Apple Silicon Macs).**
+- If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--action-offline-mode` flag.
+- Consider setting up an [`act` cache server](https://github.com/sp-ricard-valverde/github-act-cache-server/tree/main) to cache package downloads and to speed up the server.
+  1. Run `git clone https://github.com/sp-ricard-valverde/github-act-cache-server.git` within this root directory.
+  2. Set the `ACT_CACHE_AUTH_KEY` to `foo`.
+     - Windows:
+       - Powershell: `$env:ACT_CACHE_AUTH_KEY="foo"`
+       - Command Prompt: `set ACT_CACHE_AUTH_KEY="foo"`
+     - Unix: `export ACT_CACHE_AUTH_KEY="foo"`
+  3. While in `github-act-cache-server`, run `docker compose up --build -d`.
+
 ### Running `release-builds.yml`
 
 The `release-builds.yml` action requires an [Android Key Store](https://developer.android.com/studio/publish/app-signing#generate-key). Once you have one, create a `.secrets` file in the root directory of the repository. The contents of the file should be:
@@ -62,16 +76,3 @@ We can now run the workflow:
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
 ```
-
-### General Tips
-
-- **Specify `--container-architecture linux/amd64` on non-AMD64 machines (e.g., Apple Silicon Macs).**
-- If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--action-offline-mode` flag.
-- Consider setting up an [`act` cache server](https://github.com/sp-ricard-valverde/github-act-cache-server/tree/main) to cache package downloads and to speed up the server.
-  1. Run `git clone https://github.com/sp-ricard-valverde/github-act-cache-server.git` within this root directory.
-  2. Set the `ACT_CACHE_AUTH_KEY` to `foo`.
-     - Windows:
-       - Powershell: `$env:ACT_CACHE_AUTH_KEY="foo"`
-       - Command Prompt: `set ACT_CACHE_AUTH_KEY="foo"`
-     - Unix: `export ACT_CACHE_AUTH_KEY="foo"`
-  3. While in `github-act-cache-server`, run `docker compose up --build -d`.
