@@ -4,4 +4,7 @@ github-act-cache-server
 node_modules
 **/.DS_Store
 
+app
+server
+
 .github/event.json
