@@ -1,0 +1,140 @@
+import { useEffect, useState } from "react";
+
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+
+import Layout from "@theme/Layout";
+
+const DOWNLOAD_TYPES = ["app-android", "app-pwa", "server", "server-pwa"];
+
+// Main component
+const Download: React.FC = () => {
+    // Get download type
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type");
+    if (!DOWNLOAD_TYPES.includes(type)) {
+        window.location.href = "/";
+    }
+
+    // States
+    const { siteConfig } = useDocusaurusContext();
+
+    const [downloadURL, setDownloadURL] = useState<string>("");
+    const [downloadTriggered, setDownloadTriggered] = useState<boolean>(false);
+
+    // Functions
+    function handleDownload(url: string) {
+        const a = document.createElement("a");
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    // Effects
+    useEffect(() => {
+        // Get latest download info
+        const organizationName = siteConfig.organizationName;
+        const projectName = siteConfig.projectName;
+        const releasesURL = `https://api.github.com/repos/${organizationName}/${projectName}/releases`;
+        fetch(releasesURL)
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.status == "200") {
+                    return data[0].assets_url;
+                }
+                return;
+            })
+            .then((assetsURL) => {
+                if (!assetsURL) {
+                    return;
+                }
+                const p = fetch(assetsURL).then((res) => res.json());
+                // TODO: REMOVE
+                // const p = new Promise((resolve) => {
+                //     resolve([
+                //         { name: "app-android-release.apk", browser_download_url: "fake://app-android.com" },
+                //         { name: "app-pwa.zip", browser_download_url: "fake://app-pwa.com" },
+                //         { name: "server-any.whl", browser_download_url: "fake://server-any.com" },
+                //         { name: "server-pwa-any_pwa.whl", browser_download_url: "fake://server-pwa-any_pwa.com" },
+                //     ]);
+                // });
+                p.then((data: { name: string; browser_download_url: string }[]) => {
+                    for (let i = 0; i < data.length; i++) {
+                        const name: string = data[i].name;
+                        const url = data[i].browser_download_url;
+                        if (type === "app-android" && /-release\.apk/i.test(name)) {
+                            setDownloadURL(url);
+                            break;
+                        }
+                        if (type === "app-pwa" && /-pwa\.zip/i.test(name)) {
+                            setDownloadURL(url);
+                            break;
+                        }
+                        if (type === "server" && /-any\.whl/i.test(name)) {
+                            setDownloadURL(url);
+                            break;
+                        }
+                        if (type === "server-pwa" && /-any_pwa\.whl/i.test(name)) {
+                            setDownloadURL(url);
+                            break;
+                        }
+                    }
+                });
+            });
+    });
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (downloadURL) {
+                console.log(`Downloading ${downloadURL}...`);
+                handleDownload(downloadURL);
+                setDownloadTriggered(true);
+            }
+        }, 1000);
+    }, [downloadURL]);
+
+    // Render
+    let downloadTypeHuman: string;
+    switch (type) {
+        case "app-android":
+            downloadTypeHuman = "Android App";
+            break;
+        case "app-pwa":
+            downloadTypeHuman = "PWA App";
+            break;
+        case "server":
+            downloadTypeHuman = "Server";
+            break;
+        case "server-pwa":
+            downloadTypeHuman = "PWA Server";
+            break;
+    }
+    return (
+        <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
+            <div className="flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center">
+                <div className="text-center">
+                    <h1 className="block !text-4xl font-bold text-gray-800 dark:text-white">
+                        Downloading {downloadTypeHuman}...
+                    </h1>
+                    <p className="!text-center text-lg">
+                        Your download should start automatically.{" "}
+                        {downloadTriggered && (
+                            <span>
+                                If it didn't start, try this{" "}
+                                <a href={downloadURL} className="underline">
+                                    direct download link
+                                </a>
+                                .
+                            </span>
+                        )}
+                    </p>
+                </div>
+            </div>
+        </Layout>
+    );
+};
+
+export default Download;

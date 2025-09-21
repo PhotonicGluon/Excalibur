@@ -184,67 +184,10 @@ export const features: FeatureCardProps[] = [
     },
 ];
 
-// Handle download links
-type DownloadLinks = { appAndroid: string; appPWA: string; server: string; serverPWA: string };
-function getDownloadLinks(data: { name: string; browser_download_url: string }[]): DownloadLinks {
-    let output: DownloadLinks = { appAndroid: "", appPWA: "", server: "", serverPWA: "" };
-    for (let i = 0; i < data.length; i++) {
-        const name: string = data[i].name;
-        const url = data[i].browser_download_url;
-        if (/-release\.apk/i.test(name)) {
-            output.appAndroid = url;
-            continue;
-        }
-        if (/-pwa\.zip/i.test(name)) {
-            output.appPWA = url;
-            continue;
-        }
-        if (/-any\.whl/i.test(name)) {
-            output.server = url;
-            continue;
-        }
-        if (/-any_pwa\.whl/i.test(name)) {
-            output.serverPWA = url;
-            continue;
-        }
-    }
-
-    return output;
-}
-
 // Main component
 const Home: React.FC = () => {
     // States
     const { siteConfig } = useDocusaurusContext();
-
-    useEffect(() => {
-        // Get latest download info
-        const organizationName = siteConfig.organizationName;
-        const projectName = siteConfig.projectName;
-        const releasesURL = `https://api.github.com/repos/${organizationName}/${projectName}/releases`;
-        fetch(releasesURL)
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.status == "200") {
-                    return data[0].assets_url;
-                }
-                return null;
-            })
-            .then((assetsURL) => {
-                if (!assetsURL) {
-                    return;
-                }
-                fetch(assetsURL)
-                    .then((res) => res.json())
-                    .then((data) => getDownloadLinks(data))
-                    .then((downloadLinks) => {
-                        document.getElementById("download-app-android")?.setAttribute("href", downloadLinks.appAndroid);
-                        document.getElementById("download-app-pwa")?.setAttribute("href", downloadLinks.appPWA);
-                        document.getElementById("download-server")?.setAttribute("href", downloadLinks.server);
-                        document.getElementById("download-server-pwa")?.setAttribute("href", downloadLinks.serverPWA);
-                    });
-            });
-    });
 
     // Render
     const featureRows = [];
@@ -256,7 +199,7 @@ const Home: React.FC = () => {
     return (
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
             {/* Hero box */}
-            <header className="relative flex min-h-screen items-center justify-center overflow-hidden">
+            <header className="relative flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center overflow-hidden">
                 <CanvasWaveBackground />
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
@@ -286,9 +229,10 @@ const Home: React.FC = () => {
                                     >
                                         <a
                                             id="download-app-android"
-                                            href="#"
+                                            href="/download?type=app-android"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
+                                            target="_blank"
                                         >
                                             <svg
                                                 className="mr-3 size-6 text-gray-400"
@@ -308,9 +252,10 @@ const Home: React.FC = () => {
                                         </a>
                                         <a
                                             id="download-app-pwa"
-                                            href="#"
+                                            href="/download?type=app-pwa"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
+                                            target="_blank"
                                         >
                                             <svg
                                                 className="mr-3 size-6 text-gray-400"
@@ -331,9 +276,10 @@ const Home: React.FC = () => {
                                         <hr className="!my-1" />
                                         <a
                                             id="download-server"
-                                            href="#"
+                                            href="/download?type=server"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
+                                            target="_blank"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -354,9 +300,10 @@ const Home: React.FC = () => {
                                         </a>
                                         <a
                                             id="download-server-pwa"
-                                            href="#"
+                                            href="/download?type=server-pwa"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
+                                            target="_blank"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"

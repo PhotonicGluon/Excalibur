@@ -9,6 +9,10 @@ p {
     @apply text-justify;
 }
 
+.navbar {
+    @apply h-16;
+}
+
 .theme-layout-footer {
     @apply p-4;
 }
