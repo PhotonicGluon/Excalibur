@@ -4,6 +4,8 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import Layout from "@theme/Layout";
 
+import WaveBackground from "@site/src/components/WaveBackground";
+
 const DOWNLOAD_TYPES = ["app-android", "app-pwa", "server", "server-pwa"];
 
 // Main component
@@ -22,6 +24,11 @@ const Download: React.FC = () => {
     const [downloadTriggered, setDownloadTriggered] = useState<boolean>(false);
 
     // Functions
+    /**
+     * Handles the download of a file.
+     *
+     * @param url The URL of the file to download
+     */
     function handleDownload(url: string) {
         const a = document.createElement("a");
         a.href = url;
@@ -115,7 +122,9 @@ const Download: React.FC = () => {
     return (
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
             <div className="flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center">
-                <div className="text-center">
+                <WaveBackground />
+                <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
+                <div className="relative z-10 container px-4 text-center">
                     <h1 className="block !text-4xl font-bold text-gray-800 dark:text-white">
                         Downloading {downloadTypeHuman}...
                     </h1>

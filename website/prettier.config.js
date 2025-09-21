@@ -7,7 +7,7 @@ const config = {
     tabWidth: 4,
     printWidth: 120,
     // Import ordering
-    importOrder: ["^@docusaurus/(.*)$", "^@theme/(.*)$", "^[./]"],
+    importOrder: ["^@docusaurus/(.*)$", "^@theme/(.*)$", "^@site/src/(?:components|pages|variants)(?:/(.*))?$", "^[./]"],
     importOrderSeparation: true,
     importOrderSortSpecifiers: true,
 };

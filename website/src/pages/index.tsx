@@ -1,166 +1,15 @@
-import { Variants, motion } from "motion/react";
-import { useEffect, useRef } from "react";
+import { motion } from "motion/react";
 
-import Link from "@docusaurus/Link";
-import { useColorMode } from "@docusaurus/theme-common";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import Layout from "@theme/Layout";
 
-// Types
-interface FeatureCardProps {
-    title: string;
-    description: string;
-    icon: string;
-}
-
-interface SignatureFeatureProps extends FeatureCardProps {
-    screenshot: React.ReactNode;
-}
-
-// Animation variants
-const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.5, ease: "easeOut" },
-    },
-};
-
-const staggerContainer: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.15,
-        },
-    },
-};
-
-// Helper components
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) => {
-    return (
-        <motion.div
-            variants={fadeInUp}
-            className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800/50"
-        >
-            <div className="text-primary-500 mb-4 text-4xl">{icon}</div>
-            <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
-            <p className="text-gray-600 dark:text-gray-300">{description}</p>
-        </motion.div>
-    );
-};
-
-const GoToDocsButton: React.FC<{ text: string }> = ({ text }) => {
-    return (
-        <Link
-            className="transform-all rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 text-lg font-bold !text-white !no-underline shadow-lg transition-transform duration-300 hover:from-purple-600 hover:to-blue-600"
-            to="/docs"
-        >
-            {text}
-        </Link>
-    );
-};
-
-const CanvasWaveBackground: React.FC = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { colorMode } = useColorMode();
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
-        let animationFrameId: number;
-        let time = 0;
-
-        const resizeCanvas = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-
-        const particleConfig = {
-            rows: 25,
-            cols: 50,
-            spacing: 40,
-            amplitude: 20,
-            frequency: 0.08,
-            speed: 0.02,
-            baseRadius: 1.5,
-        };
-
-        const draw = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const gridWidth = particleConfig.cols * particleConfig.spacing;
-            const gridHeight = particleConfig.rows * particleConfig.spacing;
-            const startX = (canvas.width - gridWidth) / 2;
-            const startY = (canvas.height - gridHeight) / 2;
-
-            const particleColor = colorMode === "dark" ? "rgba(96, 165, 250, 1)" : "rgba(0, 0, 0, 1)";
-            ctx.fillStyle = particleColor;
-
-            for (let i = 0; i < particleConfig.rows; i++) {
-                for (let j = 0; j < particleConfig.cols; j++) {
-                    const x = startX + j * particleConfig.spacing;
-                    const yOffset = Math.sin(j * particleConfig.frequency + time) * particleConfig.amplitude;
-                    const y = startY + i * particleConfig.spacing + yOffset;
-
-                    const opacityFactor = 0.5 + (Math.sin(j * particleConfig.frequency * 0.7 + time) + 1) / 4;
-                    const radius = particleConfig.baseRadius * opacityFactor;
-
-                    ctx.globalAlpha = opacityFactor;
-                    ctx.beginPath();
-                    ctx.arc(x, y, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            ctx.globalAlpha = 1.0;
-        };
-
-        const animate = () => {
-            time += particleConfig.speed;
-            draw();
-            animationFrameId = requestAnimationFrame(animate);
-        };
-
-        resizeCanvas();
-        animate();
-
-        window.addEventListener("resize", resizeCanvas);
-        return () => {
-            window.removeEventListener("resize", resizeCanvas);
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, [colorMode]);
-
-    return <canvas ref={canvasRef} className="absolute inset-0 -z-10 bg-gray-50 dark:bg-gray-900" />;
-};
+import FeatureCard, { FeatureCardProps } from "@site/src/components/FeatureCard";
+import GoToDocsButton from "@site/src/components/GoToDocsButton";
+import WaveBackground from "@site/src/components/WaveBackground";
+import { fadeInUp, staggerContainer } from "@site/src/variants";
 
 // Features
-export const signatureFeatures: SignatureFeatureProps[] = [
-    {
-        title: "Military-Grade Security",
-        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
-        icon: "🛡️",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
-    },
-    {
-        title: "Zero-Trust By Default",
-        description:
-            "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
-        icon: "🕵️",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
-    },
-    {
-        title: "User-Friendly",
-        description: "Simple, intuitive interface that makes secure file sharing effortless.",
-        icon: "✨",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
-    },
-];
-
 export const features: FeatureCardProps[] = [
     {
         title: "End-to-End Encryption",
@@ -184,6 +33,31 @@ export const features: FeatureCardProps[] = [
     },
 ];
 
+interface SignatureFeatureProps extends FeatureCardProps {
+    screenshot: React.ReactNode;
+}
+export const signatureFeatures: SignatureFeatureProps[] = [
+    {
+        title: "Military-Grade Security",
+        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
+        icon: "🛡️",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
+    },
+    {
+        title: "Zero-Trust By Default",
+        description:
+            "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
+        icon: "🕵️",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
+    },
+    {
+        title: "User-Friendly",
+        description: "Simple, intuitive interface that makes secure file sharing effortless.",
+        icon: "✨",
+        screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
+    },
+];
+
 // Main component
 const Home: React.FC = () => {
     // States
@@ -200,7 +74,7 @@ const Home: React.FC = () => {
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
             {/* Hero box */}
             <header className="relative flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center overflow-hidden">
-                <CanvasWaveBackground />
+                <WaveBackground />
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
                     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
