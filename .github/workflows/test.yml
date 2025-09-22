@@ -12,6 +12,7 @@ jobs:
     test-app:
         name: Test App
         runs-on: ubuntu-latest
+        if: ${{ !github.event.repository.private }}
         steps:
             - uses: actions/checkout@v5
               with:
