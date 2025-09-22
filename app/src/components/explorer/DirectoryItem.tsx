@@ -271,15 +271,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         <IonItem id={props.id} className={rowColourClass} button={true}>
             {/* Main item content */}
             <div className="flex h-16 w-full items-center">
-                <IonGrid onClick={() => onClickItem()}>
+                <IonGrid className="w-full" onClick={() => onClickItem()}>
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
                             <IonIcon
                                 className="size-6"
                                 icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
                             />
-                            <div className="pl-4">
-                                <IonLabel className="max-w-92 truncate">
+                            <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
+                                <IonLabel className="max-w-100 truncate">
                                     {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
                                 </IonLabel>
                                 {props.size !== undefined && (
@@ -292,7 +292,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             </div>
 
             {/* Ellipsis button */}
-            <IonButtons className="w-24 justify-end" slot="end">
+            <IonButtons className="m-0 size-12 justify-end" slot="end">
                 {/* Ellipsis menu trigger button */}
                 <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                     <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
