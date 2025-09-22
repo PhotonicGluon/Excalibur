@@ -14,6 +14,8 @@
 - [General](#general)
   - [Generating Changelog](#generating-changelog)
   - [Testing GitHub Actions Locally](#testing-github-actions-locally)
+    - [Running `test.yml`](#running-testyml)
+    - [Running `test-e2e.yml`](#running-test-e2eyml)
     - [Running `release-builds.yml`](#running-release-buildsyml)
 
 ## App
@@ -173,6 +175,22 @@ Some tips:
        - Command Prompt: `set ACT_CACHE_AUTH_KEY="foo"`
      - Unix: `export ACT_CACHE_AUTH_KEY="foo"`
   3. While in `github-act-cache-server`, run `docker compose up --build -d`.
+
+#### Running `test.yml`
+
+Run
+
+```bash
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows .\.github\workflows\test.yml
+```
+
+#### Running `test-e2e.yml`
+
+We need to trigger a pull request action. Run
+
+```bash
+act pull_request -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows .\.github\workflows\test-e2e.yml
+```
 
 #### Running `release-builds.yml`
 
