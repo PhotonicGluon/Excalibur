@@ -49,6 +49,38 @@ describe("Check Server Choice Page", () => {
         }
     });
 
+    describe("Query correct URLs when entering server URLs", () => {
+        beforeEach(() => cy.visit("/server-choice"));
+
+        it("has port", () => {
+            // Intercept request to check validity
+            cy.intercept("GET", "http://example:11111/api/well-known/version", { forceNetworkError: true }).as("check");
+
+            // Make the request
+            cy.get("#server-input").type("http://example:11111");
+            cy.get("#confirm-button").click();
+
+            cy.get("@check").should("exist");
+        });
+
+        it("has no port", () => {
+            // Intercept requests to check validity
+            cy.intercept("GET", "http://example:52419/api/well-known/version", { forceNetworkError: true }).as(
+                "check_default",
+            );
+            cy.intercept("GET", "http://example/api/well-known/version", { forceNetworkError: true }).as(
+                "check_no_port",
+            );
+
+            // Make the request
+            cy.get("#server-input").type("http://example");
+            cy.get("#confirm-button").click();
+
+            cy.get("@check_default").should("exist");
+            cy.get("@check_no_port").should("exist");
+        });
+    });
+
     it("should handle valid URL", () => {
         cy.visit("/server-choice");
         cy.get("#server-input").type("http://127.0.0.1:8989");
