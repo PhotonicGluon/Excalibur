@@ -61,16 +61,17 @@ class TestListdir:
         assert directory.type == "directory"
         assert len(directory.items) == 2
 
-        assert directory.items[0].name == "test-file.txt.exef"
-        assert directory.items[0].fullpath == "test-dir/test-file.txt.exef"
-        assert directory.items[0].type == "file"
-        assert directory.items[0].size == 100 - ExEF.additional_size
-        assert directory.items[0].mimetype == "text/plain"
-        assert directory.items[1].name == "test-file2.txt.exef"
-        assert directory.items[1].fullpath == "test-dir/test-file2.txt.exef"
-        assert directory.items[1].type == "file"
-        assert directory.items[1].size == 100 - ExEF.additional_size
-        assert directory.items[1].mimetype == "text/plain"
+        items = sorted(directory.items, key=lambda item: item.name)
+        assert items[0].name == "test-file.txt.exef"
+        assert items[0].fullpath == "test-dir/test-file.txt.exef"
+        assert items[0].type == "file"
+        assert items[0].size == 100 - ExEF.additional_size
+        assert items[0].mimetype == "text/plain"
+        assert items[1].name == "test-file2.txt.exef"
+        assert items[1].fullpath == "test-dir/test-file2.txt.exef"
+        assert items[1].type == "file"
+        assert items[1].size == 100 - ExEF.additional_size
+        assert items[1].mimetype == "text/plain"
 
     def test_path_not_found(self, auth_client: TestClient):
         response = auth_client.get("/api/files/list/fake/path")
