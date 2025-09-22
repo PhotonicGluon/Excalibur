@@ -16,7 +16,7 @@ const Credits: React.FC = () => {
     return (
         <IonPage>
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/"></IonBackButton>
                     </IonButtons>
