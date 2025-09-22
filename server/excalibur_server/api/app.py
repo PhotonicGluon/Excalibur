@@ -1,7 +1,7 @@
 import logging
 import os
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from excalibur_server.api.middlewares import add_middleware
 from excalibur_server.api.pwa import setup_pwa
@@ -28,18 +28,24 @@ app = FastAPI(
     summary=SUMMARY,
     version=VERSION,
     openapi_tags=TAGS,
-    root_path="/api",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
 # Add middlewares
 add_middleware(app, logger)
 
 # Include routes
-app.include_router(auth_router, prefix="/auth")
-app.include_router(users_router, prefix="/users")
-app.include_router(files_router, prefix="/files")
-app.include_router(well_known_router, prefix="/well-known")
+master_router = APIRouter(prefix="/api")
+
+master_router.include_router(auth_router, prefix="/auth")
+master_router.include_router(users_router, prefix="/users")
+master_router.include_router(files_router, prefix="/files")
+master_router.include_router(well_known_router, prefix="/well-known")
 
 # Include PWA if present
-# TODO: Toggle bundling of PWA
 setup_pwa()
+
+# Finally, include the master router
+app.include_router(master_router)
