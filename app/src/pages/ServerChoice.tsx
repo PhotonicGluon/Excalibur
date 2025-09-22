@@ -63,43 +63,45 @@ const Welcome: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(serverURL)}`);
         setIsLoading(true);
 
-        // Check validity of the server URL
-        const apiURL = `${serverURL}/api`;
+        // Check possible API urls
+        const urlsToCheck = [];
+        if (!/:\d+$/.test(serverURL)) {
+            urlsToCheck.push(`${serverURL}:52419/api`); // 52419 is default Excalibur server port
+        }
+        urlsToCheck.push(`${serverURL}/api`); // Always check the original URL
 
-        console.debug(`Checking validity of ${apiURL}...`);
-        const checkResult = await checkAPIUrl(apiURL);
-        if (!checkResult.reachable) {
-            setIsLoading(false);
-            console.error(`Could not reach ${serverURL}: ${checkResult.error}`);
-
-            let error = checkResult.error;
-            if (error === "Failed to fetch") {
-                error = "Please check your internet connection.";
+        let apiURL;
+        for (const url of urlsToCheck) {
+            console.debug(`Checking validity of ${url}...`);
+            const checkResult = await checkAPIUrl(url);
+            if (!checkResult.reachable) {
+                console.error(`Could not reach ${url}: ${checkResult.error}`);
+                continue;
             }
-
-            presentAlert({
-                header: "Connection Failure",
-                subHeader: `Could not connect to ${serverURL}`,
-                message: error,
-                buttons: ["OK"],
-            });
-            return;
+            if (!checkResult.valid) {
+                console.error(`Invalid API URL: ${url}`);
+                continue;
+            }
+            apiURL = url;
+            break;
         }
-        if (!checkResult.valid) {
+
+        if (!apiURL) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
-                subHeader: "Invalid API URL",
-                message: checkResult.error,
+                message: "Please check your internet connection and the entered URL.",
                 buttons: ["OK"],
             });
             return;
         }
+
+        const checkResult = await checkAPIUrl(apiURL);
         if (!checkResult.compatible) {
             setIsLoading(false);
             presentAlert({
                 header: "Incompatible API",
-                message: "This server is not compatible with this version of Excalibur.",
+                message: checkResult.error!,
                 buttons: ["OK"],
             });
             return;

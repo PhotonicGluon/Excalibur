@@ -2,6 +2,16 @@ import packageInfo from "@root/package.json";
 
 import { timedFetch } from "./fetch";
 
+/**
+ * Checks if the given API url is valid.
+ *
+ * @param apiURL The API URL to check
+ * @returns A promise that resolves to an object with three properties:
+ *      - `reachable`: Whether the server is reachable
+ *      - `valid`: Whether the URL is a valid API URL
+ *      - `compatible`: Whether the API is compatible with the current version of Excalibur
+ *      - `error`: An optional error message
+ */
 export async function checkAPIUrl(
     apiURL: string,
 ): Promise<{ reachable: boolean; valid: boolean | null; compatible: boolean | null; error?: string }> {

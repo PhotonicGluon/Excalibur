@@ -1,17 +1,17 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "command": "uv run excalibur start --debug --port 8888",
-            "name": "Start Excalibur Server (Debug)",
-            "request": "launch",
-            "type": "node-terminal"
-        },
-        {
-            "command": "uv run excalibur start --port 8888",
-            "name": "Start Excalibur Server",
-            "request": "launch",
-            "type": "node-terminal"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "command": "uv run excalibur start --debug --port 52419",
+      "name": "Start Excalibur Server (Debug)",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "uv run excalibur start --port 52419",
+      "name": "Start Excalibur Server",
+      "request": "launch",
+      "type": "node-terminal"
+    }
+  ]
 }

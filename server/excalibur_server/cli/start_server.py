@@ -8,7 +8,7 @@ from excalibur_server.cli import app
 @app.command(name="start")
 def start_server(
     host: Annotated[str, typer.Option(help="Host for the server to listen on.")] = "localhost",
-    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 8888,
+    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 52419,
     debug: Annotated[bool, typer.Option(help="Whether to run the server in debug mode.")] = False,
     encrypt_responses: Annotated[
         bool,
