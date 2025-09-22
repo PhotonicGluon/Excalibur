@@ -2,6 +2,7 @@
     "name": "excalibur-monorepo",
     "private": true,
     "scripts": {
+        "prepare": "husky",
         "update": "npx npm-check-updates --peer -u && cd app && npm run update && cd ../server && uv lock --upgrade",
         "sync": "npm i && cd app && npm i && cd ../server && uv sync --all-groups",
         "app:start": "cd app && npx vite dev --port 5173",
@@ -20,6 +21,7 @@
     },
     "devDependencies": {
         "cross-env": "^10.0.0",
+        "husky": "^9.1.7",
         "start-server-and-test": "^2.1.0"
     }
 }

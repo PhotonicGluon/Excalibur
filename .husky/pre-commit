@@ -1,0 +1,5 @@
+cd app
+npx lint-staged
+
+cd ../server
+uv run --dev ruff check --fix
