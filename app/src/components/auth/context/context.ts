@@ -10,6 +10,8 @@ export interface AuthInfo extends E2EEData {
 export interface ServerInfo {
     /** API URL */
     apiURL: string | null;
+    /** Whether the API URL is fixed and cannot be changed */
+    isFixed?: boolean;
     /** Server version */
     version: string;
     /** Delta of time between server and client */

@@ -14,7 +14,7 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
-import { checkAPIUrl, getServerTime, getServerVersion } from "@lib/network";
+import { checkAPIUrl, getServerTime, getServerVersion, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 
@@ -48,8 +48,10 @@ const Welcome: React.FC = () => {
 
     /**
      * Handles the confirm button click event.
+     *
+     * @param isFixed Whether the API URL is fixed and cannot be changed
      */
-    async function onConfirm() {
+    async function onConfirm(isFixed?: boolean) {
         // Check values
         const serverURL = getServerURL();
         if (!validateURL(serverURL)) {
@@ -130,7 +132,7 @@ const Welcome: React.FC = () => {
         });
 
         // Set server info
-        auth.setServerInfo({ apiURL, version: serverVersion, deltaTime });
+        auth.setServerInfo({ apiURL, isFixed, version: serverVersion, deltaTime });
 
         // Continue with login
         router.push("/login", "forward", "replace");
@@ -146,6 +148,26 @@ const Welcome: React.FC = () => {
             document.querySelector("#server-input")!.setAttribute("value", result!);
         });
     }, []);
+
+    useEffect(() => {
+        // Detect if an API server shares this URL
+        const baseURL = window.location.origin.replace(/:\d+$/, ""); // Replace any port that might appear
+        const possibleAPIUrl = `${baseURL}:52419/api/well-known/version`;
+        timedFetch(possibleAPIUrl)
+            .catch((_error) => {
+                console.log("No API server was autodetected as running on the same host");
+            })
+            .then((result) => {
+                if (!result) {
+                    console.log("No API server was autodetected as running on the same host");
+                    return;
+                }
+
+                console.log("API server was autodetected as running on the same host");
+                document.querySelector("#server-input")!.setAttribute("value", baseURL);
+                onConfirm(true);
+            });
+    });
 
     // Render
     return (

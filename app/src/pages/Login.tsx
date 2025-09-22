@@ -325,19 +325,20 @@ const Login: React.FC = () => {
                                 <IonText className="pl-2">Credits</IonText>
                             </IonLabel>
                         </IonItem>
-
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                auth.logout(true); // Fully log out
-                                router.push("/server-choice", "forward", "replace");
-                            }}
-                        >
-                            <IonLabel>
-                                <IonIcon icon={logOutOutline} size="large" />
-                                <IonText className="pl-2">Change Server</IonText>
-                            </IonLabel>
-                        </IonItem>
+                        {!auth.serverInfo?.isFixed && (
+                            <IonItem
+                                button={true}
+                                onClick={() => {
+                                    auth.logout(true); // Fully log out
+                                    router.push("/server-choice", "forward", "replace");
+                                }}
+                            >
+                                <IonLabel>
+                                    <IonIcon icon={logOutOutline} size="large" />
+                                    <IonText className="pl-2">Change Server</IonText>
+                                </IonLabel>
+                            </IonItem>
+                        )}
                     </IonList>
 
                     <Versions className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block" />
