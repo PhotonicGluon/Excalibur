@@ -26,6 +26,9 @@ import "@ionic/react/css/palettes/dark.class.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
+import packageInfo from "@root/package.json";
+
+import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
@@ -43,15 +46,17 @@ import "@theme/variables.css";
 
 // Set up app
 setupIonicReact();
-if (Capacitor.isNativePlatform()) {
-    PrivacyScreen.enable({
-        android: { privacyModeOnActivityHidden: "dim", dimBackground: true, preventScreenshots: true },
-    });
-}
 
 // Helper functions
 function toggleDarkPalette(shouldAdd: boolean) {
     document.documentElement.classList.toggle("ion-palette-dark", shouldAdd);
+}
+
+// Enable privacy screen if on a release build
+if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
+    PrivacyScreen.enable({
+        android: { privacyModeOnActivityHidden: "dim", dimBackground: true, preventScreenshots: true },
+    });
 }
 
 // App component
