@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.2.0b4"
+version = "0.2.0rc1"
 dependencies = [
     "aiofiles>=24.1.0",
     "alembic>=1.16.5",
