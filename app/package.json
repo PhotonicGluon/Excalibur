@@ -35,6 +35,7 @@
         "@capacitor/app": "7.1.0",
         "@capacitor/core": "7.4.3",
         "@capacitor/filesystem": "7.1.4",
+        "@capacitor/keyboard": "^7.0.3",
         "@capacitor/preferences": "^7.0.2",
         "@capacitor/privacy-screen": "^1.1.1",
         "@capacitor/screen-orientation": "^7.0.2",
