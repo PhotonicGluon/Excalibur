@@ -1,1 +1,1 @@
-Added a small warning if the vault key has changed
+Added a small warning if the vault key has changed manually by the user

@@ -1,1 +1,1 @@
-Fixed missing encryption in some routes
+Added missing encryption in some routes

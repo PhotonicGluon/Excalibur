@@ -1,1 +1,1 @@
-Changed default host when starting the server to `localhost` instead of `0.0.0.0`.
+Changed default host when starting the server to `localhost` (was `0.0.0.0`)
