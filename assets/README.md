@@ -1,10 +1,15 @@
-# Excalibur-Assets
+# Assets
 
-Assets for Excalibur.
+## Typography
 
-## Credits
+We use [Inter](https://fonts.google.com/specimen/Inter) for our the text.
 
-### Splash Screen
+## Banner
+
+The banner background is created by me.
+
+## Splash Screen
+
 The splash screen background is a modified version of _a colorful abstract background with wavy lines_ by [CARTIST](https://unsplash.com/@lilzidesigns?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash) on [Unsplash](https://unsplash.com/photos/a-colorful-abstract-background-with-wavy-lines-3iUE4iEIdJw?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash).
 
 The following modifications were made:

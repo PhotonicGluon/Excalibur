@@ -1,6 +1,8 @@
-# Excalibur
+![Excalibur Banner](./assets/banner.png)
 
-A trustless secure file management solution using military-grade encryption.
+<p style="text-align: center; font-style: italic">
+    A trustless secure file management solution using military-grade encryption.
+</p>
 
 TODO: Add more
 
