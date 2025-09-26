@@ -5,21 +5,25 @@ import TabItem from "@theme/TabItem";
 
 Set up an Excalibur server for clients to connect.
 
-## Obtaining the Server Distributable
+## Installation
 
-<Tabs groupId="server-type">
-    <TabItem value="api-only" label="API Only" default>
-    TODO: Add API only download link
-    </TabItem>
-    
-    <TabItem value="with-pwa" label="With PWA">
-    TODO: Add PWA download link
-    </TabItem>
-</Tabs>
+There are two types of server distributable:
+- [**API Only**](http://localhost:3000/download?type=server): This is the main Excalibur API server.
+    - It does not have a user interface; it just provides the API for clients to connect to.
+- [**With PWA**](http://localhost:3000/download?type=server-pwa): This is the Excalibur API server with a Progressive Web Application (PWA).
+    - This can be thought of as including both the server and client, where you can interact with the API using the provided PWA.
 
-## Installing
+:::tip Which to Choose?
 
-We recommend using [`pipx`](https://pipx.pypa.io/stable/) to install the server. Run
+The choice of which distributable to use depends on your use case.
+- The PWA distributable is most suited for trying out Excalibur.
+    - Note that you are only able to connect to the local API server if you use the server with PWA included.
+- The API-only distributable is most suited for production environments.
+    - The client would need to be installed separately, but you will have the freedom to choose any API server.
+
+:::
+
+Click on any the above links to download the server distributable, which is a `.whl` file. Once done, we can install the server. We recommend using [`pipx`](https://pipx.pypa.io/stable/). Run
 
 ```bash
 pipx install [PATH_TO_WHEEL_FILE]
@@ -33,6 +37,8 @@ excalibur --version
 
 You should see the version of the server printed to the console.
 
+## Setting Up
+
 Now we need to initialize the server by running
 
 ```bash
@@ -41,7 +47,7 @@ excalibur init
 
 This will create a new folder `excalibur-files` in the current working directory.
 
-## Configuration
+### Configuration
 
 The configuration file is a TOML file named `config.toml` in the `excalibur-files` folder. There are a few key values that you might want to edit:
 - **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `20` and `1` respectively.
@@ -54,7 +60,7 @@ The configuration file is a TOML file named `config.toml` in the `excalibur-file
 - **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
 - **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`. 
 
-## Running
+## Starting the Server
 
 Run the following command in a terminal.
 

@@ -12,10 +12,23 @@ This quickstart assumes that a [server](../01-server.mdx) is already set up.
 
 :::
 
-## Setting Up the Client
+## Installation
+
 <Tabs groupId="platform">
     <TabItem value="android" label="Android" default>
-    TODO: Add android setup
+    The Android client is an Android app in the form of an `.apk` file.
+
+    1. Download the Android app from <a href="/download?type=app-android" target="_blank">here</a>; you should now have an `.apk` file.
+    2. Copy the `.apk` file to your Android device.
+    3. Install the app on your Android device.
+        - Do note that you may need to enable installation from unknown sources on your Android device in order to install the `.apk` file.
+
+    :::warning
+
+    It is recommended to *disable* the installation of unknown sources on your Android device after installing the app.
+    
+    :::
+
     </TabItem>
 
     <TabItem value="pwa" label="Progressive Web App (PWA)">
@@ -25,7 +38,24 @@ This quickstart assumes that a [server](../01-server.mdx) is already set up.
 
     :::
     
-    TODO: Add PWA setup
+    The PWA distributable is simply a zip file containing all the web assets to run a PWA.
+
+    1. Download the PWA distributable from <a href="/download?type=app-pwa" target="_blank">here</a>.
+    2. Extract the contents of the zip file to a folder of your choice. It should contain a `dist` folder. This is the PWA.
+
+    By running a HTTP server and serving the files in `dist`, you can access the PWA. For example, using Python, you can run
+
+    ```bash
+    python -m http.server 8080
+    ```
+
+    within the `dist` folder to serve the files. Navigating to [`http://localhost:8080`](http://localhost:8080) should bring you to the PWA.
+
+    :::warning
+
+    The above Python command is not safe for production use. It is only for trying out Excalibur via a PWA. It is recommended to use the other client distributables.
+
+    :::
     </TabItem>
 </Tabs>
 
