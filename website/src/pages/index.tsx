@@ -22,9 +22,19 @@ export const features: FeatureCardProps[] = [
         icon: "🗝️",
     },
     {
+        title: "Multi-Platform",
+        description: "Available as an Android app and a Progressive Web App (PWA).",
+        icon: "📱",
+    },
+    {
         title: "Open Source",
         description: "Fully transparent and auditable codebase for maximum trust.",
         icon: "📦",
+    },
+    {
+        title: "Attestations",
+        description: "Everything has a publicly traceable provenance.",
+        icon: "🗺️",
     },
     {
         title: "Self-Hostable",
@@ -45,14 +55,13 @@ export const signatureFeatures: SignatureFeatureProps[] = [
     },
     {
         title: "Zero-Trust By Default",
-        description:
-            "Designed with zero-trust principles in mind, so even the server doesn't know what you are storing.",
+        description: "Designed with zero-trust principles in mind. Trust no one but yourself.",
         icon: "🕵️",
         screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
     },
     {
         title: "User-Friendly",
-        description: "Simple, intuitive interface that makes secure file sharing effortless.",
+        description: "Simple, intuitive interface that makes secure file storage effortless.",
         icon: "✨",
         screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
     },
@@ -65,7 +74,7 @@ const Home: React.FC = () => {
 
     // Render
     const featureRows = [];
-    const itemsPerRow = 2;
+    const itemsPerRow = 3;
     for (let i = 0; i < features.length; i += itemsPerRow) {
         featureRows.push(features.slice(i, i + itemsPerRow));
     }
@@ -199,7 +208,7 @@ const Home: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <GoToDocsButton text="Learn About Excalibur" />
+                            <GoToDocsButton text="Documentation" />
                         </motion.div>
                     </motion.div>
                 </div>
@@ -263,7 +272,7 @@ const Home: React.FC = () => {
                             {featureRows.map((row, rowIndex) => (
                                 <motion.div
                                     key={rowIndex}
-                                    className="grid grid-cols-2 gap-8"
+                                    className={`grid grid-cols-${itemsPerRow} gap-8`}
                                     variants={staggerContainer}
                                     initial="hidden"
                                     whileInView="visible"
