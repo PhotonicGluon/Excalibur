@@ -46,10 +46,10 @@ def add_user(
     from Crypto.Random import get_random_bytes
     from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-    from excalibur_server.src.config import CONFIG
-    from excalibur_server.src.exef.exef import ExEF
     from excalibur_server.src.auth.keygen import generate_key
     from excalibur_server.src.auth.srp import SRP
+    from excalibur_server.src.config import CONFIG
+    from excalibur_server.src.exef.exef import ExEF
     from excalibur_server.src.users import User, add_user
 
     srp_handler = SRP(CONFIG.security.srp.group)
