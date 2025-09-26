@@ -22,7 +22,9 @@
         "motion": "^12.23.22",
         "prism-react-renderer": "^2.4.1",
         "react": "^19.1.1",
-        "react-dom": "^19.1.1"
+        "react-dom": "^19.1.1",
+        "rehype-katex": "^7.0.1",
+        "remark-math": "^6.0.0"
     },
     "devDependencies": {
         "@docusaurus/module-type-aliases": "3.9.0",
