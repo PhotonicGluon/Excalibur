@@ -170,7 +170,7 @@ export async function e2ee(
                         console.debug(
                             `Server sent invalid public value, retrying (try count: ${state.negotiationIter})`,
                         );
-                        ws.send("ERR");
+                        sendResponse(ws, "Invalid server public value", "ERR");
                         if (state.negotiationIter >= MAX_ITER_COUNT) {
                             ws.close();
                             stopLoading?.();
