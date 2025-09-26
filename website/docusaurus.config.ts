@@ -13,8 +13,9 @@ const config: Config = {
         v4: true, // Improve compatibility with the upcoming Docusaurus v4
     },
 
-    // Set the production url of your site here
-    url: "http://your-docusaurus-site.example.com", // TODO: Change
+    // Production url of your site
+    url: "https://excalibur.photonic.dev",
+
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl: "/",
@@ -23,7 +24,6 @@ const config: Config = {
     projectName: "Excalibur",
 
     onBrokenLinks: "throw",
-    onBrokenMarkdownLinks: "warn",
 
     // Even if you don't use internationalization, you can use this field to set useful metadata like html lang.
     // For example, if your site is Chinese, you may want to replace "en" with "zh-Hans".
@@ -33,6 +33,10 @@ const config: Config = {
     },
 
     markdown: {
+        hooks: {
+            onBrokenMarkdownImages: "warn",
+            onBrokenMarkdownLinks: "warn",
+        },
         mermaid: true,
     },
 
@@ -64,9 +68,8 @@ const config: Config = {
     plugins: ["./src/plugins/tailwind-config.js"],
 
     themeConfig: {
-        colorMode: {
-            defaultMode: "dark",
-        },
+        // Project's social card
+        image: "img/banner.png",
 
         // announcementBar: {
         //     id: "welcome",
@@ -77,8 +80,10 @@ const config: Config = {
         //     isCloseable: true,
         // },
 
-        // Replace with your project's social card
-        image: "img/docusaurus-social-card.jpg", // TODO: Replace with banner
+        colorMode: {
+            defaultMode: "dark",
+        },
+
         navbar: {
             title: "Excalibur",
             logo: {
