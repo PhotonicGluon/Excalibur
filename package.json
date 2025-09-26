@@ -2,7 +2,7 @@
     "name": "excalibur-monorepo",
     "private": true,
     "scripts": {
-        "update": "npx npm-check-updates --peer -u && cd website && npm run update",
-        "sync": "npm i && cd website && npm i"
+        "update": "cd website && npm run update",
+        "sync": "cd website && npm i"
     }
 }
