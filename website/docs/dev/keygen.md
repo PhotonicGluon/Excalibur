@@ -22,7 +22,7 @@ flowchart TD
     I-->HKDF
 
     %% XOR HKDF output with PBKDF2 output
-    PBKDF-->XOR((⊕))
+    PBKDF-->XOR(($$\oplus$$))
     HKDF-->XOR
     XOR-->OK[Output Key]
 ```
