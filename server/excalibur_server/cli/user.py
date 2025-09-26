@@ -23,7 +23,9 @@ def _vault_key_callback(value: str) -> str:
 @user_app.command(name="add")
 def add_user(
     username: Annotated[str, typer.Option(help="Username for the API server.", prompt=True)],
-    password: Annotated[str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True)],
+    password: Annotated[
+        str, typer.Option(help="Password for the API server.", prompt=True, confirmation_prompt=True, hide_input=True)
+    ],
     vault_key: Annotated[
         str,
         typer.Option(
