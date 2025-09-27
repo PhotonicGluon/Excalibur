@@ -15,11 +15,6 @@ name = "🔒 Security"
 showcontent = true
 
 [[tool.towncrier.type]]
-directory = "deprecated"
-name = "⚠️ Deprecations"
-showcontent = true
-
-[[tool.towncrier.type]]
 directory = "added"
 name = "✨ Additions"
 showcontent = true
@@ -40,8 +35,18 @@ name = "🔧 Fixes"
 showcontent = true
 
 [[tool.towncrier.type]]
+directory = "deprecated"
+name = "⚠️ Deprecations"
+showcontent = true
+
+[[tool.towncrier.type]]
 directory = "removed"
 name = "🗑️ Removals"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deps"
+name = "📦 Dependencies"
 showcontent = true
 
 [[tool.towncrier.type]]
