@@ -121,7 +121,7 @@ The full code that implements the server-side checking can be found in the [`com
 
 ## Authenticating Subsequent Requests
 
-Once this initial authentication process is complete, future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted using the [Excalibur Encryption Format](./encryption-format.md).
+Once this initial authentication process is complete, future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted using [the Excalibur Encryption Format (ExEF)](./06-encryption-format.md).
 
 ### Authentication Token
 
