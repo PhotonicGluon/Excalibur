@@ -121,7 +121,7 @@ The full code that implements the server-side checking can be found in the [`com
 
 ## Authenticating Subsequent Requests
 
-Once this initial authentication process is complete, all future requests will require the use of the authentication token obtained from the server.
+Once this initial authentication process is complete, future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted using the [Excalibur Encryption Format](./encryption-format.md).
 
 ### Authentication Token
 
@@ -152,20 +152,12 @@ which has the following data (expressed in JSON):
 
 ### Proof-of-Possession (PoP)
 
-TODO: Edit
+A proof-of-possession (PoP) value needs to be computed in addition to providing the authentication token. This value is computed using a HMAC of the message `<METHOD> <PATH> <TIMESTAMP> <NONCE>`, where
 
-Subsequent requests are authenticated using _both_ the authentication token and a HMAC, in a proof-of-possession (PoP) scheme.
-
-The parameters of the HMAC are as follows:
-
-- The method is the HTTP method (e.g., GET, POST, PUT, DELETE), in ALL CAPS.
-- The path is the path of the request.
-- The timestamp is the current time _in seconds_ since the Unix epoch.
-- The nonce is a random 16 byte value.
-
-The HMAC is of the message `{METHOD} {PATH} {TIMESTAMP} {NONCE}` using the SRP master key as the key, and using SHA-256 as the hash function.
-
-This header's is `X-SRP-PoP` and its value is `{TIMESTAMP} {NONCE} {HMAC}`. In particular, for the header, both `NONCE` and `HMAC` are Base64 encoded.
+- `<METHOD>` is the HTTP method (e.g., `GET`, `POST`, `PUT`, `DELETE`) in ALL CAPS;
+- `<PATH>` is the path of the request (e.g., `/some/path/here`);
+- `<TIMESTAMP>` is the current time _in seconds_ since the Unix epoch; and
+- `<NONCE>` is a random 16 byte value.
 
 :::note Why Not Include the Body?
 
@@ -176,6 +168,17 @@ The body of the message need not be included in the HMAC calculation since it is
 
 :::
 
-<!-- Put this somewhere i guess -->
+The HMAC's key is the SRP master key $K$ and the hash algorithm used is SHA-256. The output PoP value is encoded using Base64 for ease of transmission.
 
-https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF
+A CyberChef demonstration of the PoP generation process can be found [here](<https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF>).
+
+### Proving Possession
+
+Requests to secure endpoints need _both_ the authentication token and a PoP header, and the request/response body will be encrypted using the SRP master key.
+
+To prove that the user is who they claim to be, their request will need to include two headers:
+
+- **`Authorization`**: The format of the header is `Bearer <JWT>` where `<JWT>` is the authentication token.
+- **`X-SRP-PoP`**: The format of the header is `<TIMESTAMP> <NONCE> <PoP>` where `<PoP>` is the Base64 encoded PoP value computed as described above and `<TIMESTAMP>` and `<NONCE>` are the timestamp and nonce used to compute the PoP value, respectively.
+
+Failing to provide both headers will result in a `401 Unauthorized` response.
