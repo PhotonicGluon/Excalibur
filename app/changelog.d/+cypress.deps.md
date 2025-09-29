@@ -1,1 +1,1 @@
-Upgraded Cypress from `14.5.4` to `15.2.0`
+Upgraded Cypress from `14.5.4` to `15.3.0`
