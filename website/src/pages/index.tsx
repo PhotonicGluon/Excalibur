@@ -48,22 +48,22 @@ interface SignatureFeatureProps extends FeatureCardProps {
 }
 export const signatureFeatures: SignatureFeatureProps[] = [
     {
+        title: "User-Friendly",
+        description: "Simple, intuitive interface that makes secure file storage effortless.",
+        icon: "✨",
+        screenshot: <img src="/img/screenshots/explorer.png" alt="Explorer" />,
+    },
+    {
         title: "Military-Grade Security",
         description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
         icon: "🛡️",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 1</div>,
+        screenshot: <img src="/img/screenshots/security.png" alt="Security" />,
     },
     {
         title: "Zero-Trust By Default",
         description: "Designed with zero-trust principles in mind. Trust no one but yourself.",
         icon: "🕵️",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 2</div>,
-    },
-    {
-        title: "User-Friendly",
-        description: "Simple, intuitive interface that makes secure file storage effortless.",
-        icon: "✨",
-        screenshot: <div className="text-gray-500">Screenshot Placeholder 3</div>,
+        screenshot: <img src="/img/screenshots/zero-trust.png" alt="Excalibur Authentication Process" />,
     },
 ];
 
@@ -230,7 +230,7 @@ const Home: React.FC = () => {
                                 <motion.div
                                     className={`flex h-80 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-lg/25 dark:border-gray-700 dark:bg-gray-800 ${
                                         index % 2 === 0 ? "md:order-1" : "md:order-2"
-                                    }`}
+                                    } *:max-h-full`}
                                     variants={fadeInUp}
                                 >
                                     {feature.screenshot}
