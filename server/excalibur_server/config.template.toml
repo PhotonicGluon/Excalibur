@@ -69,6 +69,11 @@ file = "excalibur.duckdb"
 # How long a login session lasts, in seconds
 session_duration = 3600 # 1 hour
 
+# 32-character key that new users have to provide in order to sign up
+# SECURITY NOTE: This was generated using a cryptographically secure pseudo-random number generator.
+#                DO NOT CHANGE THIS VALUE UNLESS YOU KNOW WHAT YOU ARE DOING!
+account_creation_key = "Account Creation Key Goes Here!!"
+
 [security.srp]
 # Secure Remote Password (SRP) group size for authentication
 # Valid values (case insensitive): "small", "medium", "large"

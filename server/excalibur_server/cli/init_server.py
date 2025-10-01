@@ -18,6 +18,8 @@ def init_server(
     import os
     import shutil
 
+    from Crypto.Random.random import choice as secure_random_choice
+
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
 
     # Handle resetting
@@ -31,11 +33,26 @@ def init_server(
     # Make the root folder
     os.makedirs(ROOT_FOLDER, exist_ok=True)
 
-    # Copy the config file
+    # Handle config file
     config_path = ROOT_FOLDER / "config.toml"
     if not config_path.exists():
         typer.secho("Creating config file...", nl=False, fg="yellow")
+
+        # Copy the config file
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
+
+        # Replace the default account creation key
+        # TODO: Is this character space secure enough?
+        KEY_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
+        account_creation_key = "".join(secure_random_choice(KEY_CHARS) for _ in range(32))
+
+        with config_path.open("r+") as f:
+            contents = f.read()
+            contents = contents.replace("Account Creation Key Goes Here!!", account_creation_key)
+            f.seek(0)
+            f.write(contents)
+            f.truncate()
+
         typer.secho("done.", fg="green")
     else:
         typer.secho("Config file already exists; not changing", fg="yellow")

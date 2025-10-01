@@ -34,6 +34,7 @@ class Security(BaseModel):
             return value
 
     session_duration: int
+    account_creation_key: bytes
     srp: SRP
     e2ee: E2EE
     pop: PoP
@@ -43,3 +44,9 @@ class Security(BaseModel):
         if value < 0:
             raise ValueError("must be greater than 0")
         return value
+
+    @field_validator("account_creation_key", mode="before")
+    def validate_account_creation_key(cls, value: str) -> bytes:
+        if len(value) != 32:
+            raise ValueError("must be 32 bytes long")
+        return value.encode("UTF-8")
