@@ -148,15 +148,18 @@ def add_user_endpoint(
 
     # Try decrypting the incoming data
     try:
-        nonce = b64decode(nonce)
-        enc_data = b64decode(enc_data)
-        tag = b64decode(tag)
+        nonce: bytes = b64decode(nonce)
+        enc_data: bytes = b64decode(enc_data)
+        tag: bytes = b64decode(tag)
     except binascii.Error as e:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=f"Invalid base64 string: {e}")
 
-    cipher = AES.new(CONFIG.security.account_creation_key, AES.MODE_GCM)
+    cipher = AES.new(CONFIG.security.account_creation_key, AES.MODE_GCM, nonce=nonce)
     user_data = cipher.decrypt(enc_data)
-    if not cipher.verify(tag):
+
+    try:
+        cipher.verify(tag)
+    except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid tag")
 
     # Parse the user data

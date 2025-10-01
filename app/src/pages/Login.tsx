@@ -105,8 +105,10 @@ const Login: React.FC = () => {
     async function onLoginButtonClick() {
         /**
          * Handles the initial registration of the user on the server.
+         *
+         * @param ack The Account Creation Key (ACK)
          */
-        async function registerOnServer() {
+        async function registerOnServer(ack: string) {
             setIsLoading(true);
 
             // Get SRP group used for communication
@@ -149,14 +151,32 @@ const Login: React.FC = () => {
 
             // Set up security details
             setLoadingState("Adding user...");
-            await addUser(auth.serverInfo!.apiURL!, values.username, aukSalt, srpSalt, srpVerifier, encryptedVaultKey);
-            console.debug("Security details set up");
+            const result = await addUser(
+                auth.serverInfo!.apiURL!,
+                ack,
+                values.username,
+                aukSalt,
+                srpSalt,
+                srpVerifier,
+                encryptedVaultKey,
+            );
+            if (!result.success) {
+                setIsLoading(false);
+                presentToast({
+                    message: `Unable to add user: ${result.error!}`,
+                    duration: 2000,
+                    color: "danger",
+                });
+                return;
+            }
+
+            console.debug("Added user");
 
             // Show vault key
             setIsLoading(false);
             setShowVaultKeyDialog(true);
             presentToast({
-                message: "Security details set up. Please save the vault key in a secure location and log in again.",
+                message: "User created. Please save the vault key in a secure location and log in again.",
                 duration: 5000,
                 color: "success",
             });
@@ -180,25 +200,44 @@ const Login: React.FC = () => {
         if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
             setIsLoading(false);
             presentAlert({
-                header: "Security Details Not Set Up",
-                message: "Security details have not been set up. Would you like to set it up now with your password?",
+                header: "User Not Found",
+                message: "If you want to create a new user, enter the Account Creation Key (ACK) before continuing.",
+                inputs: [
+                    {
+                        type: "text",
+                        name: "ack",
+                        placeholder: "32-Character Account Creation Key",
+                        cssClass: "!font-mono !text-lg text-center",
+                    },
+                ],
                 buttons: [
                     {
-                        text: "No",
+                        text: "Cancel",
                         role: "cancel",
                         handler: () => {
-                            console.debug("Security details setup cancelled");
+                            console.debug("User creation cancelled");
                             presentToast({
-                                message: "Security details setup cancelled",
+                                message: "User creation cancelled",
                                 duration: 2000,
                                 color: "warning",
                             });
                         },
                     },
                     {
-                        text: "Yes",
+                        text: "Continue",
                         role: "confirm",
-                        handler: registerOnServer,
+                        handler: async (data: { ack: string }) => {
+                            const ack = data.ack;
+                            if (ack.length !== 32) {
+                                presentToast({
+                                    message: `Account Creation Key must be 32 characters long (got ${ack.length})`,
+                                    duration: 2000,
+                                    color: "danger",
+                                });
+                                return;
+                            }
+                            registerOnServer(ack);
+                        },
                     },
                 ],
             });

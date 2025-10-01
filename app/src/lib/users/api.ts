@@ -1,3 +1,5 @@
+import { createCipheriv, randomBytes } from "crypto";
+
 import ExEF from "@lib/exef";
 import { popFetch, timedFetch } from "@lib/network";
 import { numberToBuffer } from "@lib/util";
@@ -95,6 +97,7 @@ export async function getVaultKey(
  * Assumes that the user has not already been set up.
  *
  * @param apiURL The URL of the API server to query
+ * @param ack Account Creation Key (ACK)
  * @param username The username to set up security details for
  * @param aukSalt The account unlock key (AUK) salt to set up
  * @param srpSalt The SRP handshake salt to set up
@@ -105,29 +108,49 @@ export async function getVaultKey(
  */
 export async function addUser(
     apiURL: string,
+    ack: string,
     username: string,
     aukSalt: Buffer,
     srpSalt: Buffer,
     verifier: bigint,
     encryptedVaultKey: Buffer,
 ): Promise<{ success: boolean; error?: string }> {
+    // Generate encrypted payload
+    const userData = JSON.stringify({
+        auk_salt: aukSalt.toString("base64"),
+        srp_salt: srpSalt.toString("base64"),
+        verifier: numberToBuffer(verifier).toString("base64"),
+        key_enc: encryptedVaultKey.toString("base64"),
+    });
+
+    const nonce = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", Buffer.from(ack), nonce);
+    const ciphertext = Buffer.concat([cipher.update(userData), cipher.final()]);
+    const tag = cipher.getAuthTag();
+
+    // Send request
     const response = await timedFetch(`${apiURL}/users/add/${username}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            auk_salt: aukSalt.toString("base64"),
-            srp_salt: srpSalt.toString("base64"),
-            verifier: numberToBuffer(verifier).toString("base64"),
-            key_enc: encryptedVaultKey.toString("base64"),
+            nonce: nonce.toString("base64"),
+            enc_data: ciphertext.toString("base64"),
+            tag: tag.toString("base64"),
         }),
     });
+
+    // Handle response
     switch (response.status) {
         case 201:
             return { success: true };
+        case 400:
+            return { success: false, error: "Invalid JSON/base64 string after decryption" };
+        case 401:
+            return { success: false, error: "Invalid account creation key" };
+        case 406:
+            return { success: false, error: "Invalid base64 string" };
         case 409:
             return { success: false, error: "User already exists" };
-        case 422:
-            return { success: false, error: "Invalid base64 string" };
         default:
             return { success: false, error: "Unknown error" };
     }
