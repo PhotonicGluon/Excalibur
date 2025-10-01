@@ -54,6 +54,7 @@ def init_server(
             f.truncate()
 
         typer.secho("done.", fg="green")
+        typer.secho(f"Account Creation Key: {account_creation_key}", fg="cyan")
     else:
         typer.secho("Config file already exists; not changing", fg="yellow")
 
