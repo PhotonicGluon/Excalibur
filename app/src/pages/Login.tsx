@@ -207,7 +207,7 @@ const Login: React.FC = () => {
                         type: "text",
                         name: "ack",
                         placeholder: "32-Character Account Creation Key",
-                        cssClass: "!font-mono !text-lg text-center",
+                        cssClass: "!font-mono !text-xs text-center",
                     },
                 ],
                 buttons: [
