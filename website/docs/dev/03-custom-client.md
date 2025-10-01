@@ -35,16 +35,6 @@ Here's how the official Excalibur client performs the above steps:
 3. Authenticate.
 4. Send a `GET` request to `/api/users/vault/[USERNAME]`.
 
-## Things to Note
-
-Although the process above seems simple (and, in theory, is in fact simple), there are a few practical considerations.
-
-### User Signup
-
-If the user is already present on the server, there's nothing wrong with the above process. The trouble is creating a new user on the server _while sending all the data over an insecure network_. The short answer is that this should be avoided at all costs &mdash; make the user **_directly_** on the server.
-
-If, however, you need to handle the signup on the client, make sure your server is running over HTTPS. Excalibur's [security model](/docs/dev/02-security-model.md) assumes that the server is running over a non-secure connection, such as HTTP or a connection where anyone can read HTTPS data. If your threat model considers HTTPS secure enough, you _can_ consider allowing user signup this way.
-
-### Key Management
+## Key Management
 
 The process above requires us to (a) authenticate and (b) decrypt the user's vault key. **_It is not advisable to use the same key to do both these things_**. Use one key to authenticate (the "SRP key") and another key to unlock the vault (the "Account Unlock Key (AUK)"). Read more in the [key generation](/docs/dev/05-keygen.md) process.
