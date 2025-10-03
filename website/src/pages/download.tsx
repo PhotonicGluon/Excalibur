@@ -10,13 +10,6 @@ const DOWNLOAD_TYPES = ["app-android", "app-pwa", "server", "server-pwa"];
 
 // Main component
 const Download: React.FC = () => {
-    // Get download type
-    const params = new URLSearchParams(window.location.search);
-    const type = params.get("type");
-    if (!DOWNLOAD_TYPES.includes(type)) {
-        window.location.href = "/";
-    }
-
     // States
     const { siteConfig } = useDocusaurusContext();
 
@@ -42,6 +35,31 @@ const Download: React.FC = () => {
 
     // Effects
     useEffect(() => {
+        // Get download type
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get("type");
+        if (!DOWNLOAD_TYPES.includes(type)) {
+            window.location.href = "/";
+        }
+
+        // Update download info
+        let downloadTypeHuman: string;
+        switch (type) {
+            case "app-android":
+                downloadTypeHuman = "Android App";
+                break;
+            case "app-pwa":
+                downloadTypeHuman = "PWA App";
+                break;
+            case "server":
+                downloadTypeHuman = "Server";
+                break;
+            case "server-pwa":
+                downloadTypeHuman = "PWA Server";
+                break;
+        }
+        document.getElementById("human-download-type")!.textContent = " " + downloadTypeHuman;
+
         // Get latest download info
         const organizationName = siteConfig.organizationName;
         const projectName = siteConfig.projectName;
@@ -104,21 +122,7 @@ const Download: React.FC = () => {
     }, [downloadURL]);
 
     // Render
-    let downloadTypeHuman: string;
-    switch (type) {
-        case "app-android":
-            downloadTypeHuman = "Android App";
-            break;
-        case "app-pwa":
-            downloadTypeHuman = "PWA App";
-            break;
-        case "server":
-            downloadTypeHuman = "Server";
-            break;
-        case "server-pwa":
-            downloadTypeHuman = "PWA Server";
-            break;
-    }
+
     return (
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
             <div className="flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center">
@@ -126,7 +130,7 @@ const Download: React.FC = () => {
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
                     <h1 className="block !text-4xl font-bold text-gray-800 dark:text-white">
-                        Downloading {downloadTypeHuman}...
+                        Downloading<span id="human-download-type" className="font-bold"></span>...
                     </h1>
                     <p className="!text-center text-lg">
                         Your download should start automatically.{" "}
