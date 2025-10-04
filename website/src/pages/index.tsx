@@ -73,7 +73,7 @@ const Home: React.FC = () => {
     const { siteConfig } = useDocusaurusContext();
 
     // Render
-    const featureRows = [];
+    const featureRows: FeatureCardProps[][] = [];
     const itemsPerRow = 3;
     for (let i = 0; i < features.length; i += itemsPerRow) {
         featureRows.push(features.slice(i, i + itemsPerRow));
@@ -100,8 +100,18 @@ const Home: React.FC = () => {
                             A trustless secure file management solution using military-grade encryption.
                         </motion.p>
                         <motion.div className="flex flex-col justify-center gap-4 sm:flex-row" variants={fadeInUp}>
-                            <div className="group relative">
-                                <button className="flex items-center rounded-lg bg-blue-600 px-6 py-3 text-lg font-bold text-white hover:bg-blue-700">
+                            {/* Downloads for mobile */}
+                            <a
+                                href="/download?type=app-android"
+                                className="block w-full rounded-lg bg-blue-600 px-8 py-4 text-center text-lg font-bold !text-white !no-underline hover:bg-blue-700 md:w-fit lg:hidden"
+                                target="_blank"
+                            >
+                                Download App (Android)
+                            </a>
+
+                            {/* Downloads for desktop */}
+                            <div className="group relative hidden lg:block">
+                                <button className="w-full rounded-lg bg-blue-600 px-8 py-4 text-center text-lg font-bold text-white hover:cursor-pointer hover:bg-blue-700">
                                     Download
                                 </button>
                                 <div className="ring-opacity-5 invisible absolute left-0 z-50 mt-2 w-72 rounded-md bg-white opacity-0 shadow-lg ring-1 ring-black transition-all duration-150 group-hover:visible group-hover:opacity-100 dark:bg-gray-800">
@@ -111,7 +121,6 @@ const Home: React.FC = () => {
                                         aria-orientation="vertical"
                                     >
                                         <a
-                                            id="download-app-android"
                                             href="/download?type=app-android"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
@@ -134,7 +143,6 @@ const Home: React.FC = () => {
                                             <span>Download App (Android)</span>
                                         </a>
                                         <a
-                                            id="download-app-pwa"
                                             href="/download?type=app-pwa"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
@@ -158,7 +166,6 @@ const Home: React.FC = () => {
                                         </a>
                                         <hr className="!my-1" />
                                         <a
-                                            id="download-server"
                                             href="/download?type=server"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
@@ -182,7 +189,6 @@ const Home: React.FC = () => {
                                             <span>Download Server</span>
                                         </a>
                                         <a
-                                            id="download-server-pwa"
                                             href="/download?type=server-pwa"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                             role="menuitem"
@@ -208,6 +214,8 @@ const Home: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Documentation button */}
                             <GoToDocsButton text="Documentation" />
                         </motion.div>
                     </motion.div>
@@ -221,29 +229,34 @@ const Home: React.FC = () => {
                         {signatureFeatures.map((feature, index) => (
                             <motion.div
                                 key={index}
-                                className="grid items-center gap-12 md:grid-cols-2"
+                                className="grid items-center gap-12 lg:grid-cols-2"
                                 initial="hidden"
                                 whileInView="visible"
                                 viewport={{ once: true, amount: 0.3 }}
                                 variants={staggerContainer}
                             >
                                 <motion.div
-                                    className={`flex h-80 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-lg/25 dark:border-gray-700 dark:bg-gray-800 ${
-                                        index % 2 === 0 ? "md:order-1" : "md:order-2"
+                                    className={`flex items-center justify-center rounded-lg border-gray-200 lg:h-80 lg:border lg:bg-white lg:shadow-lg/25 dark:border-gray-700 lg:dark:bg-gray-800 ${
+                                        index % 2 === 0 ? "lg:order-1" : "lg:order-2"
                                     } *:max-h-full`}
                                     variants={fadeInUp}
                                 >
                                     {feature.screenshot}
                                 </motion.div>
                                 <motion.div
-                                    className={`text-left ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}
+                                    className={`text-left ${index % 2 === 0 ? "lg:order-2" : "lg:order-1"}`}
                                     variants={fadeInUp}
                                 >
-                                    <div className="mb-4 text-5xl">{feature.icon}</div>
-                                    <h3 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-lg text-gray-600 dark:text-gray-400">{feature.description}</p>
+                                    <div className="flex items-center gap-y-4 lg:block lg:gap-0">
+                                        <div className="text-4xl md:text-5xl lg:mb-4">{feature.icon}</div>
+                                        <h3 className="!mb-0 text-3xl font-bold text-gray-900 dark:text-white">
+                                            {feature.title}
+                                        </h3>
+                                    </div>
+
+                                    <p className="!my-4 text-lg text-gray-600 dark:text-gray-400">
+                                        {feature.description}
+                                    </p>
                                 </motion.div>
                             </motion.div>
                         ))}
@@ -253,6 +266,7 @@ const Home: React.FC = () => {
                 {/* "Other" features */}
                 <section id="features" className="bg-white py-24 dark:bg-black/20">
                     <div className="container mx-auto px-4">
+                        {/* Title */}
                         <motion.div
                             className="mb-16 text-center"
                             initial="hidden"
@@ -268,11 +282,27 @@ const Home: React.FC = () => {
                             </p>
                         </motion.div>
 
-                        <div className="space-y-8">
+                        {/* For mobile */}
+                        <div className="lg:hidden">
+                            <motion.div
+                                className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                                variants={staggerContainer}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, amount: 0.3 }}
+                            >
+                                {featureRows.map((row, _rowIndex) =>
+                                    row.map((feature, cardIndex) => <FeatureCard key={cardIndex} {...feature} />),
+                                )}
+                            </motion.div>
+                        </div>
+
+                        {/* For desktop */}
+                        <div className="hidden space-y-8 lg:block">
                             {featureRows.map((row, rowIndex) => (
                                 <motion.div
                                     key={rowIndex}
-                                    className={`grid grid-cols-${itemsPerRow} gap-8`}
+                                    className="grid grid-cols-3 gap-x-8"
                                     variants={staggerContainer}
                                     initial="hidden"
                                     whileInView="visible"
