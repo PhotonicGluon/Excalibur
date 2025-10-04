@@ -20,7 +20,7 @@
         "test:all": "npm run test:unit && npm run test:component && npm run test:server && npm run test:e2e"
     },
     "devDependencies": {
-        "cross-env": "^10.0.0",
+        "cross-env": "^10.1.0",
         "husky": "^9.1.7",
         "start-server-and-test": "^2.1.2"
     }

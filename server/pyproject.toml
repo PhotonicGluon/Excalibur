@@ -43,7 +43,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.5.0", "ruff>=0.13.2"]
+dev = ["ipython>=9.6.0", "ruff>=0.13.3"]
 test = ["httpx>=0.28.1", "pytest>=8.4.2"]
 
 [tool.uv]
