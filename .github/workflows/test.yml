@@ -16,7 +16,7 @@ jobs:
         steps:
             - uses: actions/checkout@v5
               with:
-                  sparse-checkout: app/**
+                  sparse-checkout: app
 
             - name: Set up Node.js
               uses: actions/setup-node@v5
@@ -46,7 +46,7 @@ jobs:
         steps:
             - uses: actions/checkout@v5
               with:
-                  sparse-checkout: server/**
+                  sparse-checkout: server
 
             - name: Set up Python
               uses: actions/setup-python@v5
