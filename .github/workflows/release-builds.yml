@@ -94,7 +94,7 @@ jobs:
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/android/app/build/outputs/apk/app-${{ github.ref_name }}-release.apk"
+                  subject-path: "app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
 
             - name: Upload Release APK
               uses: actions/upload-artifact@v4
