@@ -66,26 +66,12 @@ const Download: React.FC = () => {
         const releasesURL = `https://api.github.com/repos/${organizationName}/${projectName}/releases`;
         fetch(releasesURL)
             .then((res) => res.json())
-            .then((data) => {
-                if (data.status == "200") {
-                    return data[0].assets_url;
-                }
-                return;
-            })
+            .then((data) => data[0].assets_url)
             .then((assetsURL) => {
                 if (!assetsURL) {
                     return;
                 }
                 const p = fetch(assetsURL).then((res) => res.json());
-                // TODO: REMOVE
-                // const p = new Promise((resolve) => {
-                //     resolve([
-                //         { name: "app-android-release.apk", browser_download_url: "fake://app-android.com" },
-                //         { name: "app-pwa.zip", browser_download_url: "fake://app-pwa.com" },
-                //         { name: "server-any.whl", browser_download_url: "fake://server-any.com" },
-                //         { name: "server-pwa-any_pwa.whl", browser_download_url: "fake://server-pwa-any_pwa.com" },
-                //     ]);
-                // });
                 p.then((data: { name: string; browser_download_url: string }[]) => {
                     for (let i = 0; i < data.length; i++) {
                         const name: string = data[i].name;
