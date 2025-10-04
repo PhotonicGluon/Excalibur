@@ -1,1 +1,0 @@
-Updated app credits
