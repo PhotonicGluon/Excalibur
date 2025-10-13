@@ -4,24 +4,14 @@ import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
-import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact, useIonAlert } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-/* Theme variables */
-/* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
 import "@ionic/react/css/flex-utils.css";
 import "@ionic/react/css/float-elements.css";
-/* Basic CSS for apps built with Ionic */
 import "@ionic/react/css/normalize.css";
-/* Optional CSS utils that can be commented out */
 import "@ionic/react/css/padding.css";
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
 import "@ionic/react/css/palettes/dark.class.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/text-alignment.css";
@@ -34,7 +24,6 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
-/* App pages */
 import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
@@ -62,6 +51,7 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 // App component
 const App: React.FC = () => {
     // States
+    const [presentAlert] = useIonAlert();
     const settings = useSettings();
 
     // Effects
@@ -71,6 +61,15 @@ const App: React.FC = () => {
             ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
                 console.warn(error);
             });
+        } else {
+            // Show pending deprecation alert for Firefox users
+            if (navigator.userAgent.includes("Firefox")) {
+                presentAlert({
+                    header: "Firefox Incompatibility",
+                    message: "From version 0.3.0, Firefox will no longer be supported. Please use a different browser.",
+                    buttons: ["OK"],
+                });
+            }
         }
     }, []);
 
