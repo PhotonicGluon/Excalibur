@@ -23,5 +23,6 @@
         "cross-env": "^10.1.0",
         "husky": "^9.1.7",
         "start-server-and-test": "^2.1.2"
-    }
+    },
+    "version": "0.3.0-alpha.1"
 }

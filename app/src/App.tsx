@@ -62,12 +62,20 @@ const App: React.FC = () => {
                 console.warn(error);
             });
         } else {
-            // Show pending deprecation alert for Firefox users
+            // Show deprecation alert for Firefox users
             if (navigator.userAgent.includes("Firefox")) {
                 presentAlert({
                     header: "Firefox Incompatibility",
-                    message: "From version 0.3.0, Firefox will no longer be supported. Please use a different browser.",
-                    buttons: ["OK"],
+                    message: "Firefox is not supported by Excalibur. Please use a different browser.",
+                    buttons: [
+                        {
+                            text: "OK",
+                            role: "cancel",
+                            handler: () => {
+                                window.location.href = "about:blank";
+                            },
+                        },
+                    ],
                 });
             }
         }

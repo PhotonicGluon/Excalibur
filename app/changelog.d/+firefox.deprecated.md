@@ -1,0 +1,1 @@
+Deprecate Firefox support
