@@ -18,6 +18,7 @@
         "url": "git+https://github.com/PhotonicGluon/Excalibur.git"
     },
     "scripts": {
+        "preinstall": "npx only-allow pnpm",
         "dev": "vite --port 8100",
         "preview": "vite preview",
         "build": "npx vite build && npx cap copy",
@@ -83,7 +84,8 @@
         "vitest": "^3.2.4"
     },
     "engines": {
-        "node": ">=22.0.0"
+        "node": ">=22.0.0",
+        "pnpm": ">=10"
     },
     "private": true,
     "lint-staged": {

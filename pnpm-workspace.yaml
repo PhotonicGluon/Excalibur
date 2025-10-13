@@ -1,0 +1,9 @@
+packages:
+  - app
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - core-js
+  - cypress
+  - esbuild
+  - sharp
