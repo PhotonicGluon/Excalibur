@@ -18,20 +18,25 @@ jobs:
               with:
                   sparse-checkout: app
 
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
             - name: Set up Node.js
               uses: actions/setup-node@v5
               with:
                   node-version: "22"
-                  cache: "npm"
-                  cache-dependency-path: app/package-lock.json
+                  cache: "pnpm"
+                  cache-dependency-path: app/pnpm-lock.yaml
 
             - name: Install Dependencies
               working-directory: ./app
-              run: npm ci
+              run: pnpm ci
 
             - name: Run Unit Tests
               working-directory: ./app
-              run: npm run test:unit-run
+              run: pnpm run test:unit-run
 
             - name: Run Component Tests
               uses: cypress-io/github-action@v6

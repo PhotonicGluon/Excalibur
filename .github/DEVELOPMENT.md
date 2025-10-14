@@ -31,10 +31,16 @@ nvm install
 > [!IMPORTANT]
 > For Windows, if you are using [`nvm` for Windows](https://github.com/coreybutler/nvm-windows) run `nvm install lts` and `nvm use lts`.
 
+Next, you will need to get [`pnpm`](https://pnpm.io/). Run
+
+```bash
+npm install -g pnpm@latest-10
+```
+
 Then you can install dependencies by running
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Running
@@ -44,7 +50,7 @@ npm install
 Run the PWA server by running
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 To expose the server to other devices on the local network, you can run

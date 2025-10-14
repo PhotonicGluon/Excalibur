@@ -13,12 +13,17 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
             - name: Set up Node.js
               uses: actions/setup-node@v5
               with:
                   node-version: "22"
-                  cache: "npm"
-                  cache-dependency-path: app/package-lock.json
+                  cache: "pnpm"
+                  cache-dependency-path: app/pnpm-lock.yaml
 
             - name: Set up Python
               uses: actions/setup-python@v5
@@ -34,12 +39,12 @@ jobs:
 
             - name: Install App Dependencies
               working-directory: ./app
-              run: npm ci
+              run: pnpm ci
 
             - name: Install E2E Testing Dependencies
               working-directory: ./
-              run: npm i
+              run: pnpm i
 
             - name: Run E2E Test
               working-directory: ./
-              run: npm run test:e2e
+              run: pnpm run test:e2e

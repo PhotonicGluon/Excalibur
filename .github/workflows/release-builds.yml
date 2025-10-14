@@ -17,12 +17,17 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
             - name: Set up Node.js
               uses: actions/setup-node@v5
               with:
                   node-version: "22"
-                  cache: "npm"
-                  cache-dependency-path: app/package-lock.json
+                  cache: "pnpm"
+                  cache-dependency-path: app/pnpm-lock.yaml
 
             - name: Set up JDK
               uses: actions/setup-java@v5
@@ -36,12 +41,12 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: npm ci
+              run: pnpm ci
 
             - name: Build PWA
               working-directory: ./app
               run: |
-                  npm run build
+                  pnpm run build
                   zip -r app-${{ github.ref_name }}-pwa.zip ./dist
 
             - name: Attest
@@ -59,7 +64,7 @@ jobs:
 
             - name: Sync Capacitor
               working-directory: ./app
-              run: npm run sync
+              run: pnpm run sync
 
             - name: Grant execute permission for gradlew
               working-directory: ./app/android
