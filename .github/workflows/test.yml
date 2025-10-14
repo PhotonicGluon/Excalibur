@@ -32,7 +32,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: pnpm ci
+              run: pnpm install
 
             - name: Run Unit Tests
               working-directory: ./app

@@ -41,7 +41,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: pnpm ci
+              run: pnpm install
 
             - name: Build PWA
               working-directory: ./app

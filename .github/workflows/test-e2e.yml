@@ -39,7 +39,7 @@ jobs:
 
             - name: Install App Dependencies
               working-directory: ./app
-              run: pnpm ci
+              run: pnpm install
 
             - name: Install E2E Testing Dependencies
               working-directory: ./
