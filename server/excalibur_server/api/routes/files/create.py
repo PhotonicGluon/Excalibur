@@ -40,8 +40,8 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
-        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {"description": "File too large"},
-        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "File path too long"},
+        status.HTTP_413_CONTENT_TOO_LARGE: {"description": "File too large"},
+        status.HTTP_414_URI_TOO_LONG: {"description": "File path too long"},
         status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,
@@ -86,7 +86,7 @@ async def upload_file_endpoint(
     # Check file path length
     file_path = user_path / name
     if not check_path_length(file_path):
-        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
+        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
 
     # Check for any attempts at path traversal again
     _, valid = check_path_subdir(file_path, CONFIG.storage.vault_folder / username)
@@ -119,7 +119,7 @@ async def upload_file_endpoint(
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
-        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Directory path too long"},
+        status.HTTP_414_URI_TOO_LONG: {"description": "Directory path too long"},
     },
     status_code=status.HTTP_201_CREATED,
     response_class=PlainTextResponse,
@@ -151,7 +151,7 @@ async def create_directory_endpoint(
     # Check directory path length
     dir_path = user_path / name
     if not check_path_length(dir_path):
-        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="Directory path too long")
+        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="Directory path too long")
 
     # Check if directory already exists
     if dir_path.exists():
