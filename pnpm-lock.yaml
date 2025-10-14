@@ -47,6 +47,9 @@ importers:
       '@capawesome/capacitor-file-picker':
         specifier: ^7.2.0
         version: 7.2.0(@capacitor/core@7.4.3)
+      '@ionic/core':
+        specifier: ^8.7.5
+        version: 8.7.6
       '@ionic/react':
         specifier: ^8.7.5
         version: 8.7.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
