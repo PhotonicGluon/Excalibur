@@ -185,7 +185,7 @@ def add_user_endpoint(
             key_enc=key_enc,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{e}")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"{e}")
 
     add_user(user)
     return "User added"

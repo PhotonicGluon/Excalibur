@@ -16,7 +16,7 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
         status.HTTP_202_ACCEPTED: {"description": "Directory exists"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
-        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Path too long"},
+        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
 )
 async def check_path_endpoint(
@@ -35,7 +35,7 @@ async def check_path_endpoint(
 
     # Check path length
     if not check_path_length(user_path):
-        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="Path too long")
+        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="Path too long")
 
     # Now we can check existence
     if not user_path.exists():
@@ -53,7 +53,7 @@ async def check_path_endpoint(
     name="Check File Size",
     responses={
         status.HTTP_200_OK: {"description": "File size acceptable", "content": None},
-        status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE: {"description": "File size too large"},
+        status.HTTP_416_RANGE_NOT_SATISFIABLE: {"description": "File size too large"},
     },
 )
 async def check_file_size_endpoint(
@@ -65,7 +65,7 @@ async def check_file_size_endpoint(
     """
 
     if size > CONFIG.storage.max_upload_size:
-        raise HTTPException(status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, detail="File size too large")
+        raise HTTPException(status_code=status.HTTP_416_RANGE_NOT_SATISFIABLE, detail="File size too large")
 
     response.status_code = status.HTTP_200_OK
 

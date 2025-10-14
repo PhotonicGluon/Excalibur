@@ -22,7 +22,7 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot rename root directory"},
-        status.HTTP_414_REQUEST_URI_TOO_LONG: {"description": "Path too long"},
+        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
     response_class=PlainTextResponse,
 )
@@ -50,7 +50,7 @@ async def rename_path_endpoint(
     # Check new file path length
     new_path = user_path.parent / new_name
     if not check_path_length(new_path):
-        raise HTTPException(status_code=status.HTTP_414_REQUEST_URI_TOO_LONG, detail="File path too long")
+        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
 
     # Check for any attempts at path traversal again
     _, valid = check_path_subdir(new_path, CONFIG.storage.vault_folder / username)
