@@ -156,9 +156,10 @@ const FileExplorer: React.FC = () => {
      *
      * If the request fails, it displays a toast with an error message.
      *
-     * @returns A promise which resolves when the upload is complete.
+     * @param files The files to upload. If undefined, the user will be prompted to choose a file
+     * @returns A promise which resolves when the upload is complete
      */
-    async function onUploadFile() {
+    async function onUploadFile(files?: PickedFile[]) {
         let force = false;
 
         /**
@@ -166,7 +167,7 @@ const FileExplorer: React.FC = () => {
          *
          * @param rawFile A {@link PickedFile} object
          */
-        async function handleFileUpload(rawFile: PickedFile) {
+        async function _handleFileUpload(rawFile: PickedFile) {
             // Show dialog
             setShowProgressDialog(true);
             setUploadProgress(null);
@@ -257,23 +258,24 @@ const FileExplorer: React.FC = () => {
             setShowProgressDialog(false);
         }
 
-        // Pick the file to upload
-        let result;
-        try {
-            result = await FilePicker.pickFiles({
-                limit: 1, // TODO: allow uploading multiple files
-            });
-        } catch (e: unknown) {
-            const message = (e as Error).message;
-            if (message.includes("pickFiles canceled")) {
-                console.debug("Cancelled upload of file");
+        if (!files) {
+            // Get file picker to let user choose the files
+            try {
+                // TODO: Change limit to more than 1
+                files = (await FilePicker.pickFiles({ limit: 1 })).files;
+            } catch (e: unknown) {
+                const message = (e as Error).message;
+                if (message.includes("pickFiles canceled")) {
+                    console.debug("Cancelled upload of file");
+                    return;
+                }
+                presentSnackbar(`Failed to pick file: ${message}`, "danger");
                 return;
             }
-            presentSnackbar(`Failed to pick file: ${message}`, "danger");
-            return;
         }
 
-        const rawFile = result.files[0];
+        // TODO: Support multiple files. For now we accept one file
+        const rawFile = files[0];
 
         // Check if file size acceptable by server
         const checkSizeResponse = await checkSize(auth, rawFile.size);
@@ -327,7 +329,7 @@ const FileExplorer: React.FC = () => {
                         role: "confirm",
                         handler: () => {
                             force = true;
-                            handleFileUpload(rawFile);
+                            _handleFileUpload(rawFile);
                         },
                     },
                 ],
@@ -335,7 +337,7 @@ const FileExplorer: React.FC = () => {
             return;
         }
 
-        handleFileUpload(rawFile);
+        _handleFileUpload(rawFile);
     }
 
     /**
@@ -587,7 +589,25 @@ const FileExplorer: React.FC = () => {
             </IonPopover>
 
             {/* Main content */}
-            <IonPage id="main-content">
+            <IonPage
+                id="main-content"
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    const files = [...e.dataTransfer.items]
+                        .map((item) => item.getAsFile())
+                        .filter((file) => file !== null)
+                        .map((file) => {
+                            return {
+                                name: file.name,
+                                size: file.size,
+                                mimeType: file.type,
+                                blob: file,
+                            } as PickedFile;
+                        });
+                    onUploadFile(files);
+                }}
+            >
                 {/* Header content */}
                 <IonHeader>
                     <IonToolbar className="[&::part(container)]:min-h-16">
