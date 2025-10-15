@@ -102,3 +102,16 @@ def remove_user(username: Annotated[str, typer.Option(help="Username for the API
         return
 
     typer.secho(f"Removed '{username}' from the database.", fg="green")
+
+
+@user_app.command("ack")
+def get_account_creation_key():
+    """
+    Print the account creation key.
+
+    Assumes the server has been initialized.
+    """
+
+    from excalibur_server.src.config import CONFIG
+
+    typer.secho(CONFIG.security.account_creation_key)
