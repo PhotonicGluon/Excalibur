@@ -34,6 +34,7 @@ import {
 } from "@ionic/react";
 import {
     add,
+    cloudUploadOutline,
     documentOutline,
     ellipsisVertical,
     folderOutline,
@@ -84,7 +85,7 @@ const FileExplorer: React.FC = () => {
     const [dialogMessage, setDialogMessage] = useState("");
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
-
+    const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
 
     // Helper functions
@@ -591,9 +592,17 @@ const FileExplorer: React.FC = () => {
             {/* Main content */}
             <IonPage
                 id="main-content"
-                onDragOver={(event) => event.preventDefault()}
+                onDragOver={(e) => {
+                    e.preventDefault();
+                    setShowFileUploadOverlay(true);
+                }}
+                onDragLeave={(e) => {
+                    e.preventDefault();
+                    setShowFileUploadOverlay(false);
+                }}
                 onDrop={(e) => {
                     e.preventDefault();
+                    setShowFileUploadOverlay(false);
                     const files = [...e.dataTransfer.items]
                         .map((item) => item.getAsFile())
                         .filter((file) => file !== null)
@@ -632,6 +641,14 @@ const FileExplorer: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
+                    {/* File upload overlay */}
+                    {showFileUploadOverlay && (
+                        <div className="fixed top-0 right-0 bottom-0 left-0 z-50 flex flex-col items-center justify-center bg-black/50">
+                            <IonIcon icon={cloudUploadOutline} className="size-20" />
+                            <IonText>Drop files here to upload</IonText>
+                        </div>
+                    )}
+
                     {/* Encryption/Decryption progress indicator */}
                     <ProgressDialog
                         isOpen={showProgressDialog}
