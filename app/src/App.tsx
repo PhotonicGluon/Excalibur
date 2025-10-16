@@ -4,7 +4,7 @@ import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
-import { IonApp, IonRouterOutlet, setupIonicReact, useIonAlert } from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
@@ -51,7 +51,6 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 // App component
 const App: React.FC = () => {
     // States
-    const [presentAlert] = useIonAlert();
     const settings = useSettings();
 
     // Effects
@@ -61,15 +60,6 @@ const App: React.FC = () => {
             ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
                 console.warn(error);
             });
-        } else {
-            // Show pending deprecation alert for Firefox users
-            if (navigator.userAgent.includes("Firefox")) {
-                presentAlert({
-                    header: "Firefox Incompatibility",
-                    message: "From version 0.3.0, Firefox will no longer be supported. Please use a different browser.",
-                    buttons: ["OK"],
-                });
-            }
         }
     }, []);
 
