@@ -1,4 +1,3 @@
-import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
@@ -8,7 +7,8 @@ import { AuthProvider } from "@components/auth/context";
  *
  * @param auth The current authentication provider
  * @param path The path to upload the file to
- * @param file The file to upload
+ * @param fileName The name of the file to upload
+ * @param encryptedFileStream The encrypted file stream to upload
  * @param force If true, forces the file to be uploaded even if it already exists. If false, the
  *      request will fail if the file already exists
  * @returns A promise which resolves to an object with a success boolean and optionally an error
@@ -17,18 +17,17 @@ import { AuthProvider } from "@components/auth/context";
 export async function uploadFile(
     auth: AuthProvider,
     path: string,
-    file: File,
+    fileName: string,
+    encryptedFileStream: ReadableStream<Buffer>,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
-    // Encrypt the file contents
-    // FIXME: This just re-encrypts the entire file, but without any info on progress. Can we do a stream?
-    const exef = new ExEF(auth.authInfo!.key!);
-    const encryptedFile = exef.encrypt(Buffer.from(await file.arrayBuffer()));
+    // Create the file to upload
+    // (A bit cursed but it works)
+    const file = new File([await new Response(encryptedFileStream).blob()], fileName);
 
-    // TODO: Stream upload of file?
     // Send the request
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
+        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(fileName)}&force=${force ? "true" : "false"}`,
         auth.authInfo!.key!,
         {
             method: "POST",
@@ -38,7 +37,7 @@ export async function uploadFile(
                 "X-Encrypted": "true",
                 "X-Content-Type": "application/octet-stream",
             },
-            body: encryptedFile,
+            body: file,
         },
         null, // No timeout; TODO: Determine a timeout for uploading file
     );
