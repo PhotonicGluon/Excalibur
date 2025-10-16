@@ -4,7 +4,7 @@ import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
-import { IonApp, IonRouterOutlet, setupIonicReact, useIonAlert } from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
@@ -51,7 +51,6 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 // App component
 const App: React.FC = () => {
     // States
-    const [presentAlert] = useIonAlert();
     const settings = useSettings();
 
     // Effects
@@ -61,28 +60,8 @@ const App: React.FC = () => {
             ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
                 console.warn(error);
             });
-        } else {
-            // Show (possible) deprecation alert for Firefox users
-            // TODO: Decide if we want to continue with this
-            if (navigator.userAgent.includes("Firefox")) {
-                presentAlert({
-                    // header: "Firefox Incompatibility",
-                    // message: "Firefox is not supported by Excalibur. Please use a different browser.",
-                    header: "Firefox Performance Warning",
-                    message: "Excalibur's performance may be degraded on Firefox.",
-                    buttons: [
-                        {
-                            text: "OK",
-                            // role: "cancel",
-                            // handler: () => {
-                            //     window.location.href = "about:blank";
-                            // },
-                        },
-                    ],
-                });
-            }
         }
-    }, [presentAlert]);
+    }, []);
 
     useEffect(() => {
         // Set app theme
