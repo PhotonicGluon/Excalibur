@@ -62,24 +62,27 @@ const App: React.FC = () => {
                 console.warn(error);
             });
         } else {
-            // Show deprecation alert for Firefox users
+            // Show (possible) deprecation alert for Firefox users
+            // TODO: Decide if we want to continue with this
             if (navigator.userAgent.includes("Firefox")) {
                 presentAlert({
-                    header: "Firefox Incompatibility",
-                    message: "Firefox is not supported by Excalibur. Please use a different browser.",
+                    // header: "Firefox Incompatibility",
+                    // message: "Firefox is not supported by Excalibur. Please use a different browser.",
+                    header: "Firefox Performance Warning",
+                    message: "Excalibur's performance may be degraded on Firefox.",
                     buttons: [
                         {
                             text: "OK",
-                            role: "cancel",
-                            handler: () => {
-                                window.location.href = "about:blank";
-                            },
+                            // role: "cancel",
+                            // handler: () => {
+                            //     window.location.href = "about:blank";
+                            // },
                         },
                     ],
                 });
             }
         }
-    }, []);
+    }, [presentAlert]);
 
     useEffect(() => {
         // Set app theme

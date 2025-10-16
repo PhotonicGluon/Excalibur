@@ -173,46 +173,72 @@ const FileExplorer: React.FC = () => {
             setShowProgressDialog(true);
             setUploadProgress(null);
 
-            // Get contents of file
-            setDialogMessage("Reading file contents...");
-            let rawFileData: Buffer;
+            // Set up file data stream
+            setDialogMessage("Setting up data stream...");
+            const rawFileSize = rawFile.size;
+            let rawFileDataStream: ReadableStream<Buffer>;
             if (rawFile.blob) {
                 // Blob means that we are on web
                 console.debug("On web; using blob for raw file data");
-                rawFileData = Buffer.from(await rawFile.blob.arrayBuffer());
-            } else {
-                // TODO: Should we cap the file size on mobile?
-                // No blob means that we are on mobile
-                console.debug(`On mobile; fetching data from path: ${rawFile.path!}`);
+                const blob = rawFile.blob;
+                rawFileDataStream = new ReadableStream<Buffer>({
+                    start(controller) {
+                        let offset = 0;
+                        const pushChunk = () => {
+                            if (offset >= rawFileSize) {
+                                controller.close();
+                                return;
+                            }
 
-                // TODO: Should we use the `readFileInChunks` method?
-                const result = await Filesystem.readFile({
-                    path: rawFile.path!,
+                            const end = Math.min(offset + settings.cryptoChunkSize, rawFileSize);
+                            const chunk = blob.slice(offset, end);
+                            offset = end;
+
+                            chunk
+                                .arrayBuffer()
+                                .then((buf) => {
+                                    controller.enqueue(Buffer.from(buf));
+                                    pushChunk();
+                                })
+                                .catch((err) => {
+                                    presentSnackbar("Failed to read blob chunk", "danger");
+                                    setShowProgressDialog(false);
+                                    controller.error(err);
+                                });
+                        };
+
+                        pushChunk();
+                    },
                 });
-                rawFileData = Buffer.from(result.data as string, "base64");
-            }
-            if (!rawFileData) {
-                presentSnackbar("Failed to get file contents", "danger");
-                setShowProgressDialog(false);
-                return;
-            }
+            } else {
+                console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
+                rawFileDataStream = new ReadableStream<Buffer>({
+                    start(controller) {
+                        Filesystem.readFileInChunks(
+                            {
+                                path: rawFile.path!,
+                                chunkSize: settings.cryptoChunkSize,
+                            },
+                            (chunk, err) => {
+                                if (err) {
+                                    presentSnackbar("Failed to read file chunk", "danger");
+                                    setShowProgressDialog(false);
+                                    controller.error(err);
+                                    return;
+                                }
 
-            const rawFileSize = rawFileData.length;
+                                if (chunk === null || (chunk!.data as string).length === 0) {
+                                    // File completely read
+                                    controller.close();
+                                    return;
+                                }
 
-            // Set up file data stream
-            const rawFileDataStream = new ReadableStream<Buffer>({
-                start(controller) {
-                    for (let i = 0; i < rawFileSize / settings.cryptoChunkSize; i++) {
-                        controller.enqueue(
-                            rawFileData.subarray(
-                                i * settings.cryptoChunkSize,
-                                i * settings.cryptoChunkSize + settings.cryptoChunkSize,
-                            ),
+                                controller.enqueue(Buffer.from(chunk.data as string, "base64"));
+                            },
                         );
-                    }
-                    controller.close();
-                },
-            });
+                    },
+                });
+            }
 
             // Encrypt the file using a ComLink worker
             setDialogMessage("Encrypting...");
