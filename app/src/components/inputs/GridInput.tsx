@@ -16,7 +16,14 @@ interface ContainerProps {
 
 const GridInput: React.FC<ContainerProps> = ({ id, value = "", onChange = () => {}, disabled }) => {
     // States
-    const [inputs, setInputs] = useState<string[]>(Array(16).fill(""));
+    const [inputs, _setInputs] = useState<string[]>(() => {
+        const newInputs = Array(16).fill("");
+        const sanitizedValue = value.replace(/[^0-9a-f]/gi, "").toUpperCase();
+        for (let i = 0; i < 16; i++) {
+            newInputs[i] = sanitizedValue.substring(i * 4, i * 4 + 4);
+        }
+        return newInputs;
+    });
     const inputRefs = useRef<(HTMLIonInputElement | null)[]>([]);
 
     // Functions
@@ -127,16 +134,6 @@ const GridInput: React.FC<ContainerProps> = ({ id, value = "", onChange = () => 
     }
 
     // Effects
-    useEffect(() => {
-        // Make sure internal state is in sync with props
-        const newInputs = Array(16).fill("");
-        const sanitizedValue = value.replace(/[^0-9a-f]/gi, "").toUpperCase();
-        for (let i = 0; i < 16; i++) {
-            newInputs[i] = sanitizedValue.substring(i * 4, i * 4 + 4);
-        }
-        setInputs(newInputs);
-    }, [value]);
-
     useEffect(() => {
         const refs = inputRefs.current;
 

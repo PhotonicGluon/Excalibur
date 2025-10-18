@@ -2,21 +2,27 @@ import packageInfo from "@root/package.json";
 
 import { timedFetch } from "./fetch";
 
+export interface APICheckResult {
+    /** Whether the server is reachable */
+    reachable: boolean;
+    /** Whether the URL is a valid API URL */
+    valid: boolean | null;
+    /** Whether the API is compatible with the current version of Excalibur */
+    compatible: boolean | null;
+    /** An optional error message */
+    error?: string;
+}
+
 /**
  * Checks if the given API url is valid.
  *
  * @param apiURL The API URL to check
- * @returns A promise that resolves to an object with three properties:
- *      - `reachable`: Whether the server is reachable
- *      - `valid`: Whether the URL is a valid API URL
- *      - `compatible`: Whether the API is compatible with the current version of Excalibur
- *      - `error`: An optional error message
+ * @param timeout The timeout for the request
+ * @returns A promise that resolves to an APICheckResult
  */
-export async function checkAPIUrl(
-    apiURL: string,
-): Promise<{ reachable: boolean; valid: boolean | null; compatible: boolean | null; error?: string }> {
+export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<APICheckResult> {
     // Check connectivity (and validity) of the API server
-    const connectionResult = await checkValidity(apiURL);
+    const connectionResult = await checkValidity(apiURL, timeout);
     if (!connectionResult.reachable) {
         return { reachable: false, valid: null, compatible: null, error: connectionResult.error };
     }
@@ -42,14 +48,18 @@ export async function checkAPIUrl(
  * Checks if the given API url is valid.
  *
  * @param apiURL The API URL to check
+ * @param timeout The timeout for the request
  * @returns A promise that resolves to an object with three properties:
  *      - `reachable`: Whether the server is reachable
  *      - `valid`: Whether the URL is a valid API URL
  *      - `error`: An optional error message
  */
-async function checkValidity(apiURL: string): Promise<{ reachable: boolean; valid: boolean; error?: string }> {
+async function checkValidity(
+    apiURL: string,
+    timeout?: number,
+): Promise<{ reachable: boolean; valid: boolean; error?: string }> {
     try {
-        const response = await timedFetch(`${apiURL}/well-known/version`);
+        const response = await timedFetch(`${apiURL}/well-known/version`, {}, timeout);
         switch (response.status) {
             case 200:
                 return { reachable: true, valid: true };
