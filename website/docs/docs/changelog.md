@@ -8,6 +8,38 @@ This page lists all the changes made to Excalibur.
 
 <!-- Changelog begins below -->
 
+## [v0.2.1](https://github.com/PhotonicGluon/Excalibur/tree/v0.2.1) - 2025-10-18
+
+### App
+
+#### ✏️ Changes
+
+- Hide "Open Excalibur Folder" button if on PWA/Web instead of disabling it
+
+#### 🚄 Performance Improvements
+
+- Reduced API check timeout from 5 seconds to 3 seconds
+- Removed an instance of a redundant server API compatibility check
+- Resolved `react-hooks/set-state-in-effect` lint errors. The app should now run slightly faster
+
+#### 📦 Dependencies
+
+- Updated `typescript-eslint` from `8.45.0` to `8.46.1` and `eslint-plugin-react-hooks` from `6.1.1` to `7.0.0`
+
+### Server
+
+#### ✨ Additions
+
+- Added a command that prints out the account creation key (`excalibur user ack`)
+
+#### ⚙️ Internal
+
+- Changed references to RFC7231 status codes to the latest RFC9110 names (see [Starlette #2939](https://github.com/Kludex/starlette/pull/2939)):
+    - `HTTP_413_REQUEST_ENTITY_TOO_LARGE` to `HTTP_413_CONTENT_TOO_LARGE`
+    - `HTTP_414_REQUEST_URI_TOO_LONG` to `HTTP_414_URI_TOO_LONG`
+    - `HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE` to `HTTP_416_RANGE_NOT_SATISFIABLE`
+    - `HTTP_422_UNPROCESSABLE_ENTITY` to `HTTP_422_UNPROCESSABLE_CONTENT`
+
 ## [v0.2.0](https://github.com/PhotonicGluon/Excalibur/tree/v0.2.0) - 2025-10-04
 
 ### App
