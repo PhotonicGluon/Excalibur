@@ -569,13 +569,13 @@ const FileExplorer: React.FC = () => {
                             </IonLabel>
                         </IonItem>
                         <IonItem
+                            className={!Capacitor.isPluginAvailable("FolderOpener") ? "hidden" : ""}
                             button={true}
                             onClick={() => {
                                 FolderOpener.openExcaliburFolder().catch((error) => {
                                     presentSnackbar(`Failed to open Excalibur folder: ${error}`, "danger");
                                 });
                             }}
-                            disabled={!Capacitor.isPluginAvailable("FolderOpener")}
                         >
                             <IonLabel>
                                 <IonIcon icon={folderOutline} size="large" />
