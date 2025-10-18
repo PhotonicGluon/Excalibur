@@ -59,10 +59,10 @@ jobs:
                   python-version-file: "./server/pyproject.toml"
 
             - name: Install uv
-              uses: astral-sh/setup-uv@v6.5.0
+              uses: astral-sh/setup-uv@v7.1.0
               with:
                   enable-cache: true
-                  version: "0.8.17"
+                  version: "0.9.3"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Set Up Testing Environment

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.8.0,<0.9"]
+requires = ["uv_build>=0.9.3,<0.10.0"]
 build-backend = "uv_build"
 
 [project]
@@ -15,7 +15,7 @@ dependencies = [
     "gitpython>=3.1.45",
     "packaging>=25.0",
     "pycryptodome>=3.23.0",
-    "pydantic>=2.12.2",
+    "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",
     "pyjwt>=2.10.1",
     "semver>=3.0.4",
@@ -43,7 +43,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.6.0", "ruff>=0.13.3"]
+dev = ["ipython>=9.6.0", "ruff>=0.14.1"]
 test = ["httpx>=0.28.1", "pytest>=8.4.2"]
 
 [tool.uv]

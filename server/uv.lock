@@ -195,7 +195,7 @@ requires-dist = [
     { name = "gitpython", specifier = ">=3.1.45" },
     { name = "packaging", specifier = ">=25.0" },
     { name = "pycryptodome", specifier = ">=3.23.0" },
-    { name = "pydantic", specifier = ">=2.12.2" },
+    { name = "pydantic", specifier = ">=2.12.3" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "semver", specifier = ">=3.0.4" },
@@ -210,7 +210,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipython", specifier = ">=9.6.0" },
-    { name = "ruff", specifier = ">=0.13.3" },
+    { name = "ruff", specifier = ">=0.14.1" },
 ]
 test = [
     { name = "httpx", specifier = ">=0.28.1" },

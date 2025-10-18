@@ -97,7 +97,7 @@ Once the app starts on the device, you can access it at `http://[HOST_IP]:8100` 
 
 ### Setup for Server
 
-First install [the `uv` package manager](https://docs.astral.sh/uv/). Then install dependencies by running
+First install the [`uv` package manager](https://docs.astral.sh/uv/), version `0.9.3` or higher. Then install dependencies by running
 
 ```bash
 uv sync --dev --group test
