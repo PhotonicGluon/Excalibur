@@ -14,12 +14,14 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
-import { checkAPIUrl, getServerTime, getServerVersion, timedFetch } from "@lib/network";
+import { APICheckResult, checkAPIUrl, getServerTime, getServerVersion, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
+
+const API_CHECK_TIMEOUT = 3; // In seconds
 
 const Welcome: React.FC = () => {
     // States
@@ -72,23 +74,23 @@ const Welcome: React.FC = () => {
         }
         urlsToCheck.push(`${serverURL}/api`); // Always check the original URL
 
-        let apiURL;
+        let outcome: { url: string; result: APICheckResult } | null = null;
         for (const url of urlsToCheck) {
             console.debug(`Checking validity of ${url}...`);
-            const checkResult = await checkAPIUrl(url);
-            if (!checkResult.reachable) {
-                console.error(`Could not reach ${url}: ${checkResult.error}`);
+            const tempCheckResult = await checkAPIUrl(url, API_CHECK_TIMEOUT);
+            if (!tempCheckResult.reachable) {
+                console.error(`Could not reach ${url}: ${tempCheckResult.error}`);
                 continue;
             }
-            if (!checkResult.valid) {
+            if (!tempCheckResult.valid) {
                 console.error(`Invalid API URL: ${url}`);
                 continue;
             }
-            apiURL = url;
+            outcome = { url, result: tempCheckResult };
             break;
         }
 
-        if (!apiURL) {
+        if (!outcome) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
@@ -98,20 +100,19 @@ const Welcome: React.FC = () => {
             return;
         }
 
-        const checkResult = await checkAPIUrl(apiURL);
-        if (!checkResult.compatible) {
+        if (!outcome.result.compatible) {
             setIsLoading(false);
             presentAlert({
                 header: "Incompatible API",
-                message: checkResult.error!,
+                message: outcome.result.error!,
                 buttons: ["OK"],
             });
             return;
         }
 
         // Get server info
-        const versionResponse = await getServerVersion(apiURL!);
-        const timeResponse = await getServerTime(apiURL!);
+        const versionResponse = await getServerVersion(outcome.url);
+        const timeResponse = await getServerTime(outcome.url);
         if (!versionResponse.success || !timeResponse.success) {
             setIsLoading(false);
             presentAlert({
@@ -132,7 +133,7 @@ const Welcome: React.FC = () => {
         });
 
         // Set server info
-        auth.setServerInfo({ apiURL, isFixed, version: serverVersion, deltaTime });
+        auth.setServerInfo({ apiURL: outcome.url, isFixed, version: serverVersion, deltaTime });
 
         // Continue with login
         router.push("/login", "forward", "replace");
@@ -153,17 +154,15 @@ const Welcome: React.FC = () => {
         // Detect if an API server shares this URL
         const baseURL = window.location.origin.replace(/:\d+$/, ""); // Replace any port that might appear
         const possibleAPIUrl = `${baseURL}:52419/api/well-known/version`;
-        timedFetch(possibleAPIUrl)
-            .catch((_error) => {
-                console.log("No API server was autodetected as running on the same host");
-            })
+        timedFetch(possibleAPIUrl, {}, API_CHECK_TIMEOUT)
+            .catch((_error) => {}) // Don't care about errors
             .then((result) => {
                 if (!result) {
-                    console.log("No API server was autodetected as running on the same host");
+                    console.log("No API server autodetected running on same host");
                     return;
                 }
 
-                console.log("API server was autodetected as running on the same host");
+                console.log("API server autodetected running on same host");
                 document.querySelector("#server-input")!.setAttribute("value", baseURL);
                 onConfirm(true);
             });
