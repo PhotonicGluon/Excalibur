@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
     IonButton,
@@ -39,7 +39,16 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
 
     // States
     const [isValid, setIsValid] = useState<boolean>();
-    const [localVaultKey, setLocalVaultKey] = useState<string>("");
+    const [localVaultKey, setLocalVaultKey] = useState<string>(() => {
+        let vk;
+        if (props.vaultKey) {
+            vk = props.vaultKey!;
+        }
+        if (auth.vaultKey) {
+            vk = auth.vaultKey;
+        }
+        return vk ? vk.toString("hex").toLocaleUpperCase() : "";
+    });
 
     // Functions
     /**
@@ -61,19 +70,6 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
             setIsValid(false);
         }
     }
-
-    // Effects
-    useEffect(() => {
-        let vk;
-        if (props.vaultKey) {
-            vk = props.vaultKey!;
-        }
-        if (auth.vaultKey) {
-            vk = auth.vaultKey;
-        }
-        const vaultKeyRaw = vk ? vk.toString("hex").toLocaleUpperCase() : "";
-        setLocalVaultKey(vaultKeyRaw);
-    }, [auth.vaultKey, props.vaultKey]);
 
     // Render
     return (

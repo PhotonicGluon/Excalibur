@@ -46,8 +46,25 @@ export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children 
  */
 function useProvideAuth(): AuthProvider {
     // States
-    const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
-    const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+    const [authInfo, setAuthInfo] = useState<AuthInfo | null>(() => {
+        // Check if local storage has auth info
+        const storedAuthInfo = localStorage.getItem("authInfo");
+        if (!storedAuthInfo) {
+            return null;
+        }
+
+        // Set context
+        return deserializeAuthInfo(storedAuthInfo);
+    });
+    const [serverInfo, setServerInfo] = useState<ServerInfo | null>(() => {
+        // Check if local storage has server info
+        const storedServerInfo = localStorage.getItem("serverInfo");
+        if (!storedServerInfo) {
+            return null;
+        }
+
+        return JSON.parse(storedServerInfo);
+    });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
@@ -101,15 +118,9 @@ function useProvideAuth(): AuthProvider {
 
     // Effects
     useEffect(() => {
-        // Check if local storage has server info
-        const storedServerInfo = localStorage.getItem("serverInfo");
-        if (!storedServerInfo) {
+        if (!serverInfo) {
             return;
         }
-
-        // Set context
-        const serverInfo: ServerInfo = JSON.parse(storedServerInfo);
-        setServerInfo(serverInfo);
 
         // Is server valid?
         checkAPIUrl(serverInfo.apiURL!).then((result) => {
@@ -119,19 +130,7 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
         });
-    }, [logoutFunc]);
-
-    useEffect(() => {
-        // Check if local storage has auth info
-        const storedAuthInfo = localStorage.getItem("authInfo");
-        if (!storedAuthInfo) {
-            return;
-        }
-
-        // Set context
-        const authInfo = deserializeAuthInfo(storedAuthInfo);
-        setAuthInfo(authInfo);
-    }, []);
+    }, [logoutFunc, serverInfo]);
 
     useEffect(() => {
         if (!authInfo || !serverInfo) {
