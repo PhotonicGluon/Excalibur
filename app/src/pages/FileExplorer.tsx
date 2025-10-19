@@ -212,16 +212,14 @@ const FileExplorer: React.FC = () => {
                 });
             }
 
-            setDialogMessage("Uploading...");
-
             // Create stream that handles the encryption and updates the progress
+            setDialogMessage("Encrypting...");
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
-            let file: File;
+            let blob: Blob;
             try {
-                file = await processor.processStream(
-                    rawFile.name,
+                blob = await processor.processStream(
                     // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                     Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
                     auth.vaultKey!,
@@ -241,6 +239,9 @@ const FileExplorer: React.FC = () => {
             }
 
             // Upload the file
+            setDialogMessage("Uploading...");
+            setUploadProgress(null);
+            const file = new File([blob], rawFile.name + ".exef");
             const uploadResponse = await uploadFile(auth, requestedPath, file, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
@@ -488,7 +489,6 @@ const FileExplorer: React.FC = () => {
 
     useEffect(() => {
         // Refresh directory contents
-         
         refreshContents(false);
     }, [requestedPath, refreshContents]);
 

@@ -5,7 +5,7 @@ import ExEF from "@lib/exef";
 const encryptionProcessor = {
     /**
      * Encrypts a stream of file data, reports progress in a callback, and returns a
-     * doubly-encrypted file.
+     * doubly-encrypted blob.
      *
      * @param name The name of the file to encrypt
      * @param stream The readable stream of data to encrypt
@@ -14,17 +14,16 @@ const encryptionProcessor = {
      * @param fileSize The size of the file
      * @param chunkSize The size of each chunk to encrypt
      * @param onProgress A callback function to report progress (a value from 0 to 1)
-     * @returns A promise that resolves with the doubly-encrypted file
+     * @returns A promise that resolves with the doubly-encrypted blob
      */
     async processStream(
-        name: string,
         stream: ReadableStream<Buffer>,
         vaultKey: Buffer,
         e2eeKey: Buffer,
         fileSize: number,
         chunkSize: number,
         onProgress: (progress: number) => void,
-    ): Promise<File> {
+    ): Promise<Blob> {
         const encryptedFileSize = fileSize + ExEF.additionalSize;
 
         const vaultEXEF = new ExEF(vaultKey, undefined, "encrypt");
@@ -51,8 +50,7 @@ const encryptionProcessor = {
             },
         });
         const eStream = e2eeEXEF.encryptStream(encryptedFileSize, vStream, chunkSize);
-
-        return new File([await new Response(eStream).blob()], name + ".exef");
+        return await new Response(eStream).blob();
     },
 };
 
