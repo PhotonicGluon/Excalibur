@@ -179,35 +179,7 @@ const FileExplorer: React.FC = () => {
                 // Blob means that we are on web
                 console.debug("On web; using blob for raw file data");
                 const blob = rawFile.blob;
-                rawFileDataStream = new ReadableStream<Buffer>({
-                    start(controller) {
-                        let offset = 0;
-                        const pushChunk = () => {
-                            if (offset >= rawFileSize) {
-                                controller.close();
-                                return;
-                            }
-
-                            const end = Math.min(offset + settings.cryptoChunkSize, rawFileSize);
-                            const chunk = blob.slice(offset, end);
-                            offset = end;
-
-                            chunk
-                                .arrayBuffer()
-                                .then((buf) => {
-                                    controller.enqueue(Buffer.from(buf));
-                                    pushChunk();
-                                })
-                                .catch((err) => {
-                                    presentSnackbar("Failed to read blob chunk", "danger");
-                                    setShowProgressDialog(false);
-                                    controller.error(err);
-                                });
-                        };
-
-                        pushChunk();
-                    },
-                });
+                rawFileDataStream = blob.stream() as ReadableStream<Buffer>;
             } else {
                 console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
                 rawFileDataStream = new ReadableStream<Buffer>({
@@ -215,7 +187,7 @@ const FileExplorer: React.FC = () => {
                         Filesystem.readFileInChunks(
                             {
                                 path: rawFile.path!,
-                                chunkSize: settings.cryptoChunkSize,
+                                chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
                             },
                             (chunk, err) => {
                                 if (err) {
@@ -240,48 +212,43 @@ const FileExplorer: React.FC = () => {
 
             setDialogMessage("Uploading...");
 
-            // Form a nested stream that handles both encryptions
-            // TODO: Use Comlink worker?
+            // Create stream that handles the encryption and updates the progress
+            // TODO: Use Comlink worker
+            const encryptedFileSize = rawFileSize + ExEF.additionalSize;
+
             const vaultEXEF = new ExEF(auth.vaultKey!, undefined, "encrypt");
-            const e2eeEXEF = new ExEF(auth.authInfo!.key!, undefined, "encrypt");
-
-            const vStream = vaultEXEF.encryptStream(rawFileSize, rawFileDataStream);
-            const eStream = e2eeEXEF.encryptStream(rawFileSize + ExEF.additionalSize, vStream);
-
-            const eStreamSize = rawFileSize + 2 * ExEF.additionalSize;
-
-            // Create the readable stream that updates the progress
+            const eStream = vaultEXEF.encryptStream(rawFileSize, rawFileDataStream, settings.cryptoChunkSize);
             const stream = new ReadableStream<Buffer>({
-                start(controller) {
+                async start(controller) {
                     const reader = eStream.getReader();
                     let offset = 0;
-                    const pushChunk = () => {
-                        if (offset >= eStreamSize) {
-                            controller.close();
-                            return;
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            break;
                         }
+                        controller.enqueue(value);
+                        offset += value.length;
+                        setUploadProgress(offset / encryptedFileSize);
+                        console.debug(
+                            `Encrypted ${offset} / ${encryptedFileSize} (${((offset / encryptedFileSize) * 100).toFixed(2)}%)`,
+                        );
+                    }
 
-                        reader.read().then(({ done, value }) => {
-                            if (done) {
-                                controller.close();
-                                return;
-                            }
-                            controller.enqueue(value);
-                            offset += value.length;
-                            setUploadProgress(offset / eStreamSize);
-                            console.debug(
-                                `Encrypted ${offset} / ${eStreamSize} (${((offset / eStreamSize) * 100).toFixed(2)}%)`,
-                            );
-                            pushChunk();
-                        });
-                    };
-
-                    pushChunk();
+                    controller.close();
                 },
             });
 
             // Upload the file
-            const uploadResponse = await uploadFile(auth, requestedPath, rawFile.name + ".exef", stream, force);
+            const uploadResponse = await uploadFile(
+                auth,
+                requestedPath,
+                rawFile.name + ".exef",
+                stream,
+                encryptedFileSize,
+                settings.cryptoChunkSize,
+                force,
+            );
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                 setShowProgressDialog(false);

@@ -1,3 +1,4 @@
+import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
@@ -9,6 +10,8 @@ import { AuthProvider } from "@components/auth/context";
  * @param path The path to upload the file to
  * @param fileName The name of the file to upload
  * @param encryptedFileStream The encrypted file stream to upload
+ * @param encryptedFileStreamSize The size of the encrypted file stream
+ * @param chunkSize Size of each chunk
  * @param force If true, forces the file to be uploaded even if it already exists. If false, the
  *      request will fail if the file already exists
  * @returns A promise which resolves to an object with a success boolean and optionally an error
@@ -19,11 +22,17 @@ export async function uploadFile(
     path: string,
     fileName: string,
     encryptedFileStream: ReadableStream<Buffer>,
+    encryptedFileStreamSize: number,
+    chunkSize: number,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
+    // Encrypt the file stream using the E2EE key
+    const e2eeEXEF = new ExEF(auth.authInfo!.key!, undefined, "encrypt");
+    const eStream = e2eeEXEF.encryptStream(encryptedFileStreamSize, encryptedFileStream, chunkSize);
+
     // Create the file to upload
     // (A bit cursed but it works)
-    const file = new File([await new Response(encryptedFileStream).blob()], fileName);
+    const file = new File([await new Response(eStream).blob()], fileName);
 
     // Send the request
     const response = await popFetch(

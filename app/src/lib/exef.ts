@@ -1,5 +1,7 @@
 import { CipherCCM, DecipherCCM, createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
+import { chunkStream } from "@lib/util";
+
 const EXEF_VERSION = 2;
 
 type KeySize = 128 | 192 | 256;
@@ -179,19 +181,20 @@ export default class ExEF {
      *
      * @param ptLen Plaintext length
      * @param ptStream Stream of plaintext
+     * @param chunkSize Size of each chunk
      * @returns A stream of ExEF bytes
      */
-    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>): ReadableStream<Buffer> {
-        const header = new ExEFHeader(this.keysize, this.nonce, ptLen); // Ciphertext length is the same as plaintext length
+    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize: number): ReadableStream<Buffer> {
+        const header = new ExEFHeader(this.keysize, this.nonce, ptLen);
         const cipher = this._cipher as CipherCCM;
-
+        const chunkingStream = chunkStream(ptStream, chunkSize);
         return new ReadableStream<Buffer>({
             async start(controller) {
                 // Yield header
                 controller.enqueue(header.toBuffer());
 
                 // Send ciphertext
-                const reader = ptStream.getReader();
+                const reader = chunkingStream.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {
@@ -245,16 +248,22 @@ export default class ExEF {
      *
      * @param key Key to use for decryption
      * @param exefStream Stream of ExEF bytes
+     * @param chunkSize Size of each chunk
      * @returns A stream of plaintext bytes
      * @throws {Error} If the header is not received properly
      * @throws {Error} If the keysize does not match
      * @throws {Error} If the ciphertext is not received properly
      * @throws {Error} If the data cannot be decrypted (e.g., tag mismatch)
      */
-    static decryptStream(key: Buffer, exefStream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+    static decryptStream(
+        key: Buffer,
+        exefStream: ReadableStream<Uint8Array>,
+        chunkSize: number,
+    ): ReadableStream<Uint8Array> {
+        const chunkingStream = chunkStream(exefStream, chunkSize);
         return new ReadableStream<Uint8Array>({
             async start(controller) {
-                const reader = exefStream.getReader();
+                const reader = chunkingStream.getReader();
 
                 // Receive header
                 let buffer = Buffer.from([]);

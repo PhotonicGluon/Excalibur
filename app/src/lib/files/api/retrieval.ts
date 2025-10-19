@@ -45,12 +45,14 @@ export async function listdir(
  *
  * @param auth The current authentication provider
  * @param path The path to the file to download
+ * @param chunkSize The size of each chunk to download
  * @returns A promise which resolves to an object with a success boolean and optionally an error
  *      message, or the file size and decrypted ReadableStream of the (still encrypted) file data
  */
 export async function downloadFile(
     auth: AuthProvider,
     path: string,
+    chunkSize: number,
 ): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/download/${path}`,
@@ -81,7 +83,7 @@ export async function downloadFile(
     const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
     const dataStream =
         response.headers.get("X-Encrypted") === "true"
-            ? ExEF.decryptStream(auth.authInfo!.key!, response.body!)
+            ? ExEF.decryptStream(auth.authInfo!.key!, response.body!, chunkSize)
             : response.body!;
     return { success: true, fileSize: fileSize, dataStream: dataStream };
 }

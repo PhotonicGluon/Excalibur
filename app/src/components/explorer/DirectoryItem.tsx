@@ -73,7 +73,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             uiFeedback.setProgress(null);
 
             // Send request for file
-            const response = await downloadFile(auth, props.fullpath);
+            const response = await downloadFile(auth, props.fullpath, settings.cryptoChunkSize);
             if (!response.success) {
                 uiFeedback.presentToast({
                     message: `Failed to get file: ${response.error}`,
@@ -89,35 +89,25 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const fileSize = encryptedFileSize - ExEF.additionalSize;
 
             // Create stream that handles the decryption and updates the progress
-            // TODO: Use Comlink worker?
+            // TODO: Use Comlink worker
             uiFeedback.setDialogMessage("Downloading and decrypting...");
-            const dStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!);
+            const dStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!, settings.cryptoChunkSize);
             const stream = new ReadableStream<Uint8Array>({
-                start(controller) {
+                async start(controller) {
                     const reader = dStream.getReader();
                     let offset = 0;
-                    const pushChunk = () => {
-                        if (offset >= fileSize) {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
                             controller.close();
                             return;
                         }
 
-                        reader.read().then(({ done, value }) => {
-                            if (done) {
-                                controller.close();
-                                return;
-                            }
-                            controller.enqueue(value);
-                            offset += value.length;
-                            uiFeedback.setProgress(offset / fileSize);
-                            console.debug(
-                                `Decrypted ${offset} / ${fileSize} (${((offset / fileSize) * 100).toFixed(2)}%)`,
-                            );
-                            pushChunk();
-                        });
-                    };
-
-                    pushChunk();
+                        controller.enqueue(value);
+                        offset += value.length;
+                        uiFeedback.setProgress(offset / fileSize);
+                        console.debug(`Decrypted ${offset} / ${fileSize} (${((offset / fileSize) * 100).toFixed(2)}%)`);
+                    }
                 },
             });
 
