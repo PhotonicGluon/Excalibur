@@ -213,16 +213,6 @@ export default class ExEF {
         });
     }
 
-    // /**
-    //  * Encrypts the given JSON-serializable data.
-    //  *
-    //  * @param data The data to be encrypted, as a JSON serializable object
-    //  * @returns The ExEF bytes
-    //  */
-    // encryptJSON(data: any): Buffer {
-    //     return this.encrypt(Buffer.from(JSON.stringify(data)));
-    // }
-
     /**
      * Decrypts the given ExEF data.
      *
