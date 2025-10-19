@@ -27,6 +27,6 @@ export interface SettingsPreferenceValues {
 export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     theme: "system",
     rowAlternatingColours: "off",
-    cryptoChunkSize: 524288, // 512 KiB
+    cryptoChunkSize: 262144, // 256 KiB
     fileSizeUnits: "si",
 };

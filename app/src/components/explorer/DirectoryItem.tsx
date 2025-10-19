@@ -54,8 +54,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const router = useIonRouter();
     const uiFeedback = useUIFeedback();
 
-    // Popover
-
     // Functions
     /**
      * Handles the user clicking on an item.
