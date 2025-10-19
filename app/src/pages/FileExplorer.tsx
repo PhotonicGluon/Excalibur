@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
+import * as Comlink from "comlink";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -43,10 +44,11 @@ import {
     settingsOutline,
 } from "ionicons/icons";
 
-import ExEF from "@lib/exef";
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { decodeJWT } from "@lib/security/token";
+import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
+import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
@@ -179,7 +181,7 @@ const FileExplorer: React.FC = () => {
                 // Blob means that we are on web
                 console.debug("On web; using blob for raw file data");
                 const blob = rawFile.blob;
-                rawFileDataStream = blob.stream() as ReadableStream<Buffer>;
+                rawFileDataStream = blob.stream() as unknown as ReadableStream<Buffer>;
             } else {
                 console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
                 rawFileDataStream = new ReadableStream<Buffer>({
@@ -213,42 +215,33 @@ const FileExplorer: React.FC = () => {
             setDialogMessage("Uploading...");
 
             // Create stream that handles the encryption and updates the progress
-            // TODO: Use Comlink worker
-            const encryptedFileSize = rawFileSize + ExEF.additionalSize;
+            const worker = new EncryptionProcessorWorker();
+            const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
-            const vaultEXEF = new ExEF(auth.vaultKey!, undefined, "encrypt");
-            const eStream = vaultEXEF.encryptStream(rawFileSize, rawFileDataStream, settings.cryptoChunkSize);
-            const stream = new ReadableStream<Buffer>({
-                async start(controller) {
-                    const reader = eStream.getReader();
-                    let offset = 0;
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) {
-                            break;
-                        }
-                        controller.enqueue(value);
-                        offset += value.length;
-                        setUploadProgress(offset / encryptedFileSize);
-                        console.debug(
-                            `Encrypted ${offset} / ${encryptedFileSize} (${((offset / encryptedFileSize) * 100).toFixed(2)}%)`,
-                        );
-                    }
-
-                    controller.close();
-                },
-            });
+            let file: File;
+            try {
+                file = await processor.processStream(
+                    rawFile.name,
+                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                    Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
+                    auth.vaultKey!,
+                    auth.authInfo!.key!,
+                    rawFileSize,
+                    settings.cryptoChunkSize,
+                    // `proxy()` ensures the callback function works across threads
+                    Comlink.proxy(setUploadProgress),
+                );
+            } catch (e) {
+                presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                setShowProgressDialog(false);
+                return;
+            } finally {
+                // Free up resources
+                worker.terminate();
+            }
 
             // Upload the file
-            const uploadResponse = await uploadFile(
-                auth,
-                requestedPath,
-                rawFile.name + ".exef",
-                stream,
-                encryptedFileSize,
-                settings.cryptoChunkSize,
-                force,
-            );
+            const uploadResponse = await uploadFile(auth, requestedPath, file, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                 setShowProgressDialog(false);
@@ -495,7 +488,7 @@ const FileExplorer: React.FC = () => {
 
     useEffect(() => {
         // Refresh directory contents
-        // eslint-disable-next-line
+         
         refreshContents(false);
     }, [requestedPath, refreshContents]);
 

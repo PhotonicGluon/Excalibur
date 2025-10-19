@@ -1,4 +1,3 @@
-import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
@@ -8,10 +7,8 @@ import { AuthProvider } from "@components/auth/context";
  *
  * @param auth The current authentication provider
  * @param path The path to upload the file to
- * @param fileName The name of the file to upload
- * @param encryptedFileStream The encrypted file stream to upload
- * @param encryptedFileStreamSize The size of the encrypted file stream
- * @param chunkSize Size of each chunk
+ * @param file The encrypted file object to upload. Note that this is a *doubly-encrypted* file:
+ *      once using the vault key and once using the E2EE key
  * @param force If true, forces the file to be uploaded even if it already exists. If false, the
  *      request will fail if the file already exists
  * @returns A promise which resolves to an object with a success boolean and optionally an error
@@ -20,23 +17,11 @@ import { AuthProvider } from "@components/auth/context";
 export async function uploadFile(
     auth: AuthProvider,
     path: string,
-    fileName: string,
-    encryptedFileStream: ReadableStream<Buffer>,
-    encryptedFileStreamSize: number,
-    chunkSize: number,
+    file: File,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string }> {
-    // Encrypt the file stream using the E2EE key
-    const e2eeEXEF = new ExEF(auth.authInfo!.key!, undefined, "encrypt");
-    const eStream = e2eeEXEF.encryptStream(encryptedFileStreamSize, encryptedFileStream, chunkSize);
-
-    // Create the file to upload
-    // (A bit cursed but it works)
-    const file = new File([await new Response(eStream).blob()], fileName);
-
-    // Send the request
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(fileName)}&force=${force ? "true" : "false"}`,
+        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
         auth.authInfo!.key!,
         {
             method: "POST",

@@ -13,7 +13,7 @@ describe("chunkStream", () => {
     for (const streamChunkSize of streamChunkSizes) {
         for (const outputChunkSize of outputChunkSizes) {
             test(`stream chunk ${streamChunkSize}, output chunk ${outputChunkSize}`, async () => {
-                const iterable = new ReadableStream({
+                const iterable = new ReadableStream<Uint8Array>({
                     start(controller) {
                         for (let i = 0; i < data.length; i += streamChunkSize) {
                             controller.enqueue(data.subarray(i, i + streamChunkSize));
@@ -32,8 +32,8 @@ describe("chunkStream", () => {
                         break;
                     }
 
-                    const streamOut = value.toString("utf-8");
-                    const expectOut = data.subarray(i, i + outputChunkSize).toString("utf-8");
+                    const streamOut = Buffer.from(value).toString("utf-8");
+                    const expectOut = Buffer.from(data.subarray(i, i + outputChunkSize)).toString("utf-8");
                     expect(streamOut).toEqual(expectOut);
                     i += outputChunkSize;
                 }

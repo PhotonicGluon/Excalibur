@@ -1,46 +1,58 @@
-import { Buffer } from "buffer";
 import { expose } from "comlink";
 
 import ExEF from "@lib/exef";
 
 const encryptionProcessor = {
     /**
-     * Encrypts a stream of file data and reports progress.
+     * Encrypts a stream of file data, reports progress in a callback, and returns a
+     * doubly-encrypted file.
      *
+     * @param name The name of the file to encrypt
      * @param stream The readable stream of data to encrypt
-     * @param vaultKey The key to use for encryption
+     * @param vaultKey The vault key to use for encryption
+     * @param e2eeKey The E2EE key to use for encryption
      * @param fileSize The size of the file
+     * @param chunkSize The size of each chunk to encrypt
      * @param onProgress A callback function to report progress (a value from 0 to 1)
-     * @returns A promise that resolves with the encrypted file data as a Buffer
+     * @returns A promise that resolves with the doubly-encrypted file
      */
     async processStream(
+        name: string,
         stream: ReadableStream<Buffer>,
         vaultKey: Buffer,
+        e2eeKey: Buffer,
         fileSize: number,
+        chunkSize: number,
         onProgress: (progress: number) => void,
-    ): Promise<Buffer> {
-        // Create the encryption stream inside the worker
-        const exef = new ExEF(vaultKey, undefined, "encrypt");
-        const encryptedStream = exef.encryptStream(fileSize, stream);
-        const reader = encryptedStream.getReader();
-        let data: Buffer = Buffer.from([]);
-
+    ): Promise<File> {
         const encryptedFileSize = fileSize + ExEF.additionalSize;
 
-        // Read the stream and encrypt the data
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
-            }
-            data = Buffer.concat([data, value]);
-            onProgress(data.length / encryptedFileSize);
-            console.debug(
-                `Encrypted ${data.length} / ${encryptedFileSize} (${((data.length / encryptedFileSize) * 100).toFixed(2)}%)`,
-            );
-        }
+        const vaultEXEF = new ExEF(vaultKey, undefined, "encrypt");
+        const e2eeEXEF = new ExEF(e2eeKey, undefined, "encrypt");
 
-        return data;
+        const vStream = new ReadableStream<Buffer>({
+            async start(controller) {
+                const reader = vaultEXEF.encryptStream(fileSize, stream, chunkSize).getReader();
+                let offset = 0;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+                    controller.enqueue(value);
+                    offset += value.length;
+                    onProgress(offset / encryptedFileSize);
+                    console.debug(
+                        `Encrypted ${offset} / ${encryptedFileSize} (${((offset / encryptedFileSize) * 100).toFixed(2)}%)`,
+                    );
+                }
+
+                controller.close();
+            },
+        });
+        const eStream = e2eeEXEF.encryptStream(encryptedFileSize, vStream, chunkSize);
+
+        return new File([await new Response(eStream).blob()], name + ".exef");
     },
 };
 

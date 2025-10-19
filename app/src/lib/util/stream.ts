@@ -20,7 +20,7 @@ export function chunkStream(stream: ReadableStream<Uint8Array>, chunkSize: numbe
                     break;
                 }
 
-                buffer = Buffer.concat([buffer, value]);
+                buffer = Buffer.concat([buffer, value]) as unknown as Uint8Array;
                 if (buffer.length >= chunkSize) {
                     let i = 0;
                     for (; i < buffer.length; i += chunkSize) {

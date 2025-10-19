@@ -29,11 +29,11 @@ test("ExEF encrypt", () => {
 describe("ExEF encrypt stream", () => {
     const pt = Buffer.from("Hello World!", "utf-8");
     const streamChunkSizes = [12, 6, 4, 1];
-    const encryptionChunkSizes = [1, 4, 16];
+    const cryptoChunkSizes = [1, 4, 16];
 
     for (const streamChunkSize of streamChunkSizes) {
-        for (const encryptionChunkSize of encryptionChunkSizes) {
-            test(`stream chunk ${streamChunkSize}, encryption chunk ${encryptionChunkSize}`, async () => {
+        for (const cryptoChunkSize of cryptoChunkSizes) {
+            test(`stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
                 const parsed = new ExEF(KEY, NONCE);
                 const iterable = new ReadableStream({
                     start(controller) {
@@ -44,7 +44,7 @@ describe("ExEF encrypt stream", () => {
                     },
                 });
 
-                const stream = parsed.encryptStream(pt.length, iterable, encryptionChunkSize);
+                const stream = parsed.encryptStream(pt.length, iterable, cryptoChunkSize);
                 const reader = stream.getReader();
                 let output: Buffer = Buffer.from([]);
                 while (true) {
@@ -65,48 +65,36 @@ test("ExEF decrypt", () => {
     expect(ptTest.toString("utf-8")).toBe("Hello World!");
 });
 
-test("ExEF decrypt stream 1", async () => {
-    const iterable = new ReadableStream({
-        start(controller) {
-            controller.enqueue(SAMPLE_EXEF);
-            controller.close();
-        },
-    });
+describe("ExEF decrypt stream", () => {
+    const streamChunkSizes = [12, 6, 4, 1];
+    const cryptoChunkSizes = [1, 4, 16];
 
-    const stream = ExEF.decryptStream(KEY, iterable);
-    const reader = stream.getReader();
-    let output: Buffer = Buffer.from([]);
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
+    for (const streamChunkSize of streamChunkSizes) {
+        for (const cryptoChunkSize of cryptoChunkSizes) {
+            test(`stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
+                const iterable = new ReadableStream({
+                    start(controller) {
+                        for (let i = 0; i < SAMPLE_EXEF.length; i += streamChunkSize) {
+                            controller.enqueue(SAMPLE_EXEF.subarray(i, i + streamChunkSize));
+                        }
+                        controller.close();
+                    },
+                });
+
+                const stream = ExEF.decryptStream(KEY, iterable, cryptoChunkSize);
+                const reader = stream.getReader();
+                let output: Buffer = Buffer.from([]);
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+                    output = Buffer.concat([output, value]);
+                }
+                expect(output.toString("utf-8")).toBe("Hello World!");
+            });
         }
-        output = Buffer.concat([output, value]);
     }
-    expect(output.toString("utf-8")).toBe("Hello World!");
-});
-
-test("ExEF decrypt stream 2", async () => {
-    const iterable = new ReadableStream({
-        start(controller) {
-            for (let i = 0; i < SAMPLE_EXEF.length / 2; i++) {
-                controller.enqueue(SAMPLE_EXEF.subarray(i * 2, i * 2 + 2));
-            }
-            controller.close();
-        },
-    });
-
-    const stream = ExEF.decryptStream(KEY, iterable);
-    const reader = stream.getReader();
-    let output: Buffer = Buffer.from([]);
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-        output = Buffer.concat([output, value]);
-    }
-    expect(output.toString("utf-8")).toBe("Hello World!");
 });
 
 // test("Invalid ExEF", () => {
