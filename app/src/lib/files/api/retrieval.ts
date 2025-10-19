@@ -47,13 +47,21 @@ export async function listdir(
  * @param path The path to the file to download
  * @param chunkSize The size of each chunk to download
  * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message, or the file size and decrypted ReadableStream of the (still encrypted) file data
+ *      message, or the file size, a boolean indicating whether the file is encrypted using the
+ *      E2EE key, and a ReadableStream of data. Note that this stream may be encrypted using the
+ *      vault key only (`e2ee = false`) or double-encrypted using both the vault key and the E2EE
+ *      key (`e2ee = true`)
  */
 export async function downloadFile(
     auth: AuthProvider,
     path: string,
-    chunkSize: number,
-): Promise<{ success: boolean; error?: string; fileSize?: number; dataStream?: ReadableStream<Uint8Array> }> {
+): Promise<{
+    success: boolean;
+    error?: string;
+    fileSize?: number;
+    e2ee?: boolean;
+    dataStream?: ReadableStream<Uint8Array>;
+}> {
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/download/${path}`,
         auth.authInfo!.key!,
@@ -81,9 +89,10 @@ export async function downloadFile(
     }
 
     const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
-    const dataStream =
-        response.headers.get("X-Encrypted") === "true"
-            ? ExEF.decryptStream(auth.authInfo!.key!, response.body!, chunkSize)
-            : response.body!;
-    return { success: true, fileSize: fileSize, dataStream: dataStream };
+    return {
+        success: true,
+        fileSize: fileSize,
+        e2ee: response.headers.get("X-Encrypted") === "true",
+        dataStream: response.body!,
+    };
 }

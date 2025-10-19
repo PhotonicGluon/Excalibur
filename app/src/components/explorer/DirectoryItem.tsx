@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import writeBlob from "capacitor-blob-writer";
+import * as Comlink from "comlink";
 import React from "react";
 
 import {
@@ -26,6 +27,8 @@ import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { mimetypeToIcon } from "@lib/mimetypes";
 import { bytesToHumanReadable } from "@lib/util";
+import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
+import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
 import { useUIFeedback } from "@components/explorer/context";
@@ -73,7 +76,8 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             uiFeedback.setProgress(null);
 
             // Send request for file
-            const response = await downloadFile(auth, props.fullpath, settings.cryptoChunkSize);
+            uiFeedback.setDialogMessage("Downloading...");
+            const response = await downloadFile(auth, props.fullpath);
             if (!response.success) {
                 uiFeedback.presentToast({
                     message: `Failed to get file: ${response.error}`,
@@ -85,33 +89,39 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
 
             // Compute final file size
-            const encryptedFileSize = response.fileSize!;
+            const encryptedFileSize = response.fileSize! - ExEF.additionalSize;
             const fileSize = encryptedFileSize - ExEF.additionalSize;
 
             // Create stream that handles the decryption and updates the progress
-            // TODO: Use Comlink worker
-            uiFeedback.setDialogMessage("Downloading and decrypting...");
-            const dStream = ExEF.decryptStream(auth.vaultKey!, response.dataStream!, settings.cryptoChunkSize);
-            const stream = new ReadableStream<Uint8Array>({
-                async start(controller) {
-                    const reader = dStream.getReader();
-                    let offset = 0;
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) {
-                            controller.close();
-                            return;
-                        }
+            uiFeedback.setDialogMessage("Decrypting...");
 
-                        controller.enqueue(value);
-                        offset += value.length;
-                        uiFeedback.setProgress(offset / fileSize);
-                        console.debug(`Decrypted ${offset} / ${fileSize} (${((offset / fileSize) * 100).toFixed(2)}%)`);
-                    }
-                },
-            });
+            const worker = new DecryptionProcessorWorker();
+            const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
-            const fileDataBlob = await new Response(stream).blob();
+            let fileDataBlob: Blob;
+            try {
+                fileDataBlob = await processor.processStream(
+                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                    Comlink.transfer(response.dataStream!, [response.dataStream!]),
+                    auth.vaultKey!,
+                    response.e2ee ? auth.authInfo!.key! : null,
+                    fileSize,
+                    settings.cryptoChunkSize,
+                    // `proxy()` ensures the callback function works across threads
+                    Comlink.proxy(uiFeedback.setProgress),
+                );
+            } catch (e) {
+                uiFeedback.presentToast({
+                    message: `Failed to decrypt file: ${(e as Error).message}`,
+                    duration: 2000,
+                    color: "danger",
+                });
+                uiFeedback.setShowDialog(false);
+                return;
+            } finally {
+                // Free up resources
+                worker.terminate();
+            }
 
             // Save file
             uiFeedback.setDialogMessage("Saving...");

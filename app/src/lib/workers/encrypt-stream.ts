@@ -7,7 +7,6 @@ const encryptionProcessor = {
      * Encrypts a stream of file data, reports progress in a callback, and returns a
      * doubly-encrypted blob.
      *
-     * @param name The name of the file to encrypt
      * @param stream The readable stream of data to encrypt
      * @param vaultKey The vault key to use for encryption
      * @param e2eeKey The E2EE key to use for encryption
