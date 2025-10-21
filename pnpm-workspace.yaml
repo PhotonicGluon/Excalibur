@@ -7,3 +7,5 @@ onlyBuiltDependencies:
   - cypress
   - esbuild
   - sharp
+
+sideEffectsCache: false
