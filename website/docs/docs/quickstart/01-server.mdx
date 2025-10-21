@@ -5,6 +5,12 @@ import TabItem from "@theme/TabItem";
 
 Set up an Excalibur server for clients to connect.
 
+## Prerequisites
+
+You will require Python 3.11+ installed on your system to run the Excalibur server.
+
+We also recommend using [`pipx`](https://pipx.pypa.io/stable/) to install the server, as it will allow you to run the server without requiring administrator privileges.
+
 ## Installation
 
 There are two types of server distributable:
@@ -23,7 +29,9 @@ The choice of which distributable to use depends on your use case.
 
 :::
 
-Click on any the above links to download the server distributable, which is a `.whl` file. Once done, we can install the server. We recommend using [`pipx`](https://pipx.pypa.io/stable/). Run
+Click on any the above links to download the server distributable, which is a `.whl` file. Once done, we can install the server.
+
+If you are using `pipx`, you can run
 
 ```bash
 pipx install [PATH_TO_WHEEL_FILE]
@@ -72,7 +80,7 @@ You can check if the server is running by going to [`http://localhost:8888/api/w
 
 ```json
 {
-    "version": "0.2.0",
+    "version": "x.y.z",
     "commit": null
 }
 ```
