@@ -2,7 +2,7 @@
     "name": "excalibur-monorepo",
     "private": true,
     "scripts": {
-        "update": "cd website && npm run update",
-        "sync": "cd website && npm i"
+        "update": "cd website && pnpm run update",
+        "sync": "cd website && pnpm i"
     }
 }
