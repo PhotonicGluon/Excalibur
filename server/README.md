@@ -2,6 +2,10 @@
 
 An encrypted file server.
 
+## Prerequisites
+
+You will require Python 3.11+ installed on your system to run the Excalibur server.
+
 ## Installation
 
 We recommend using [`pipx`](https://pipx.pypa.io/stable/) to install the server. Run
