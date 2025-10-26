@@ -13,10 +13,10 @@ from excalibur_server.src.config import CONFIG
 
 
 @pytest.fixture(scope="session", autouse=True)
-def disable_hmac_checks():
-    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "false"
+def disable_proof_checks():
+    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "false"
     yield
-    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "true"
+    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "true"
 
 
 @pytest.fixture(scope="class")

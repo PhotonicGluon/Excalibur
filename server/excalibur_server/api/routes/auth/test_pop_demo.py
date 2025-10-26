@@ -13,23 +13,23 @@ if not is_debug():
 
 
 @pytest.fixture(scope="module", autouse=True)
-def enable_hmac():
-    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "true"
+def enable_proof():
+    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "true"
     yield
-    os.environ["EXCALIBUR_SERVER_HMAC_ENABLED"] = "false"
+    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "false"
 
 
 def _gen_nonce():
     return get_random_bytes(16)
 
 
-class TestBasicHMACChecks:
-    def test_no_hmac(self, auth_client: TestClient):
+class TestBasicPoPChecks:
+    def test_no_pop(self, auth_client: TestClient):
         response = auth_client.get("/api/auth/pop-demo")
         assert response.status_code == 401
         assert response.json()["detail"] == "Missing PoP"
 
-    def test_invalid_hmac(self, auth_client: TestClient):
+    def test_invalid_pop(self, auth_client: TestClient):
         response = auth_client.get("/api/auth/pop-demo", headers={"X-SRP-PoP": "invalid-pop"})
         assert response.status_code == 422
 

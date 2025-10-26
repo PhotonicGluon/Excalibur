@@ -92,7 +92,7 @@ async def get_credentials(
     if comm_uuid not in MASTER_KEYS_CACHE:
         raise CREDENTIALS_EXCEPTION
 
-    if os.getenv("EXCALIBUR_SERVER_HMAC_ENABLED", "true") != "true":
+    if os.getenv("EXCALIBUR_SERVER_POP_ENABLED", "true") != "true":
         # No need to proceed to check header
         return sub
 

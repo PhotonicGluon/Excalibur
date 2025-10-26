@@ -7,12 +7,13 @@ router = APIRouter(tags=["auth"])
 
 from .comms import comms_endpoint as comms_endpoint
 from .info import get_group_size_endpoint as get_group_size_endpoint
+from .token import get_token_endpoint as get_token_endpoint
 
 if is_debug():
     from .ack import get_account_creation_key as get_account_creation_key
     from .pop_demo import demo_get_endpoint as demo_get_endpoint
     from .pop_demo import demo_post_encrypted_endpoint as demo_post_encrypted_endpoint
     from .pop_demo import demo_post_endpoint as demo_post_endpoint
-    from .util import get_token_endpoint as get_token_endpoint
+    from .token import generate_token_endpoint as generate_token_endpoint
 
 __all__ = ["router"]
