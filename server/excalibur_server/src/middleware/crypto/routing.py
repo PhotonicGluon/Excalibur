@@ -13,7 +13,13 @@ AUTH_ROUTING_TREE = RoutingTree(
                     },
                 )
             },
-        )
+        ),
+        "token": RoutingTree(
+            segment="token",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
     },
 )
 FILES_ROUTING_TREE = RoutingTree(

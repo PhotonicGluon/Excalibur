@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, Query
+from fastapi import Depends, Query, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 
 
@@ -26,15 +26,29 @@ def _gen_token(username: str, master_key: bytes, expiry_time: int):
     return token
 
 
-@router.get("/token", name="Get New Token")
-def get_token_endpoint(credential: Annotated[str, Depends(get_credentials)]):
+@router.get(
+    "/token",
+    name="Get New Token",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Successful Response",
+            "content": {"text/plain": {"example": "<JWT Token>"}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {"description": "Unauthorized"},
+    },
+    response_class=PlainTextResponse,
+)
+def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
     """
     Gets a new authentication token for a logged-in user.
+
+    Note that this invalidates the old token.
     """
 
-    # TODO: Add
-    print(credential)
-    return credential
+    from excalibur_server.api.cache import MASTER_KEYS_CACHE
+
+    master_key = MASTER_KEYS_CACHE.pop(credentials.comm_uuid)
+    return _gen_token(credentials.username, master_key, CONFIG.security.session_duration)
 
 
 @router.get("/generate-token", name="Generate Token", tags=["debug"], response_class=PlainTextResponse)
