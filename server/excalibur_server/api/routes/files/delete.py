@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.responses import Response
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_subdir
 
@@ -27,7 +27,7 @@ from excalibur_server.src.path import check_path_subdir
     },
 )
 def delete_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to delete")],
     as_dir: Annotated[bool, Query(description="Delete directory instead of file")] = False,
     force: Annotated[bool, Query(description="Force delete (delete even if directory is not empty)")] = False,
@@ -39,6 +39,8 @@ def delete_endpoint(
     If deleting a directory, you need to specify the `as_dir` parameter. All files and
     subdirectories will be deleted as well.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)

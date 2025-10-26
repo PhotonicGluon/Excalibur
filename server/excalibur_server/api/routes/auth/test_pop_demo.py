@@ -64,7 +64,7 @@ class TestBasicPoPChecks:
             headers={"X-SRP-PoP": header},
         )
         assert response.status_code == 200
-        assert response.json() == "test-user"
+        assert response.json()["username"] == "test-user"
 
         # Second request should fail
         response = auth_client.get(
@@ -91,7 +91,7 @@ def test_get(auth_client: TestClient):
         },
     )
     assert response.status_code == 200
-    assert response.json() == "test-user"
+    assert response.json()["username"] == "test-user"
 
 
 def test_post_no_encrypt(auth_client: TestClient):
@@ -111,10 +111,8 @@ def test_post_no_encrypt(auth_client: TestClient):
         json="hello world",
     )
     assert response.status_code == 200
-
-    response = response.json()
-    assert response["credential"] == "test-user"
-    assert response["data"] == "hello world"
+    assert response.json()["credential"]["username"] == "test-user"
+    assert response.json()["data"] == "hello world"
 
 
 def test_post_encrypted(auth_client: TestClient):
@@ -143,7 +141,6 @@ def test_post_encrypted(auth_client: TestClient):
         content=transit_encrypted_data,
     )
     assert response.status_code == 200
-
     response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
-    assert response["credential"] == "test-user"
+    assert response["credential"]["username"] == "test-user"
     assert response["data"] == "hello world"

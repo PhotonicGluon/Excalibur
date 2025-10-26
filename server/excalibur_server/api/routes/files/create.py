@@ -6,7 +6,7 @@ from fastapi import Body, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
@@ -59,7 +59,7 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
     },
 )
 async def upload_file_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
     name: Annotated[str, Query(description="The name of the file to upload. Should end with `.exef`")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
@@ -68,6 +68,8 @@ async def upload_file_endpoint(
     """
     Uploads a file to a directory.
     """
+
+    username = credentials.username
 
     # Check file extension
     if not name.endswith(".exef"):
@@ -125,7 +127,7 @@ async def upload_file_endpoint(
     response_class=PlainTextResponse,
 )
 async def create_directory_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[
         str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
     ],
@@ -134,6 +136,8 @@ async def create_directory_endpoint(
     """
     Creates a new directory.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)

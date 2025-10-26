@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Header, HTTPException, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
 from excalibur_server.src.auth.consts import KEY
@@ -58,6 +59,15 @@ def check_auth_token(token: str) -> bool:
     return True
 
 
+class Credentials(BaseModel):
+    """
+    The credentials of a user.
+    """
+
+    username: str
+    comm_uuid: str
+
+
 async def get_credentials(
     request: Request,
     hmac_validation: Annotated[
@@ -94,7 +104,7 @@ async def get_credentials(
 
     if os.getenv("EXCALIBUR_SERVER_POP_ENABLED", "true") != "true":
         # No need to proceed to check header
-        return sub
+        return Credentials(username=sub, comm_uuid=comm_uuid)
 
     # Check that the header is valid
     if not hmac_validation:
@@ -137,4 +147,4 @@ async def get_credentials(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid PoP",
         )
-    return sub
+    return Credentials(username=sub, comm_uuid=comm_uuid)

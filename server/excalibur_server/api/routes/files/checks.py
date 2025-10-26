@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Path, Query, Response, status
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
@@ -20,13 +20,15 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
     },
 )
 async def check_path_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
 ):
     """
     Checks the existence of a file or directory.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
@@ -81,13 +83,15 @@ async def check_file_size_endpoint(
     },
 )
 async def check_dir_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
 ):
     """
     Checks the existence of a directory, and whether it is empty.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)

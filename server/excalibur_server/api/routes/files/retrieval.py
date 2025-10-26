@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.responses import FileResponse as FastAPIFileResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
@@ -30,7 +30,7 @@ class FileResponse(FastAPIFileResponse):
     response_class=FileResponse,
 )
 async def download_file_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The file to download")],
 ):
     """
@@ -38,6 +38,8 @@ async def download_file_endpoint(
 
     MIME type of the downloaded file should be inferred by the client.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
@@ -60,7 +62,7 @@ async def download_file_endpoint(
     response_model=Directory,
 )
 def listdir_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to list (use `.` to specify root directory)")],
     with_exef_header: Annotated[
         bool, Query(description="Whether to include ExEF header size in the file sizes")
@@ -71,6 +73,8 @@ def listdir_endpoint(
 
     Any subdirectories in the main directory will *not* have their items listed (i.e. items will be sent as `null`).
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)

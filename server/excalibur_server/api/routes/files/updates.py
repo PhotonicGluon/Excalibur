@@ -5,7 +5,7 @@ from fastapi import Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
@@ -27,13 +27,15 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
     response_class=PlainTextResponse,
 )
 async def rename_path_endpoint(
-    username: Annotated[str, Depends(get_credentials)],
+    credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     new_name: Annotated[str, Body(description="The new name for the item at the leaf of the path")],
 ):
     """
     Renames a file or directory.
     """
+
+    username = credentials.username
 
     # Check for any attempts at path traversal
     user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
