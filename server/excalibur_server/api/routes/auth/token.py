@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.auth import router
@@ -47,6 +47,8 @@ def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentia
 
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
 
+    if credentials.comm_uuid not in MASTER_KEYS_CACHE:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Comm UUID not found in cache")
     master_key = MASTER_KEYS_CACHE.pop(credentials.comm_uuid)
     return _gen_token(credentials.username, master_key, CONFIG.security.session_duration)
 

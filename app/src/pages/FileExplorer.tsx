@@ -46,13 +46,13 @@ import {
 
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
+import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
-import Countdown from "@components/Countdown";
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
 import ProgressDialog from "@components/dialog/ProgressDialog";
@@ -74,7 +74,7 @@ const FileExplorer: React.FC = () => {
 
     // Get token expiry
     const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.token);
-    const tokenExpiry = new Date(expTimestamp * 1000);
+    const tokenExpiry = new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.serverInfo!.deltaTime;
 
     // States
     const [presentAlert] = useIonAlert();
@@ -487,10 +487,27 @@ const FileExplorer: React.FC = () => {
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
+    // Effects
     useEffect(() => {
         // Refresh directory contents
         refreshContents(false);
     }, [requestedPath, refreshContents]);
+
+    useEffect(() => {
+        // Handle token renewal
+        setTimeout(async () => {
+            console.debug("Renewing token as it is expiring soon");
+            const response = await getNewToken(auth);
+            if (!response.success) {
+                // TODO: Add
+                return;
+            }
+            auth.setAuthInfo({ ...auth.authInfo!, token: response.token! });
+            console.log(`Renewed token; new token is ${response.token}`);
+        }, tokenExpiry - 5000); // 5 seconds before token expiry; TODO: allow this to be configured
+    }, [auth, tokenExpiry]);
+
+    // TODO: Handle API operations that occur during a token renewal
 
     // Render
     return (
@@ -619,13 +636,6 @@ const FileExplorer: React.FC = () => {
                         <IonButtons className="w-24" slot="start">
                             <IonMenuButton onClick={() => menuController.open()} />
                         </IonButtons>
-                        <div className="flex" slot="">
-                            <Countdown
-                                className="w-full text-center"
-                                endDate={new Date(tokenExpiry.getTime() - auth.serverInfo!.deltaTime)}
-                                onExpiry={() => handleLogout(false)}
-                            />
-                        </div>
                         <IonButtons className="w-24 justify-end" slot="end">
                             {/* Ellipsis menu trigger button */}
                             <IonButton id="ellipsis-button">
@@ -706,10 +716,16 @@ const FileExplorer: React.FC = () => {
                     )}
 
                     {/* Changed vault key notice */}
-                    {auth.origVaultKey !== auth.vaultKey && (
+                    {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (
                         <div className="fixed bottom-6 w-full">
                             <IonText color="warning" className="block w-full text-center text-sm">
                                 Vault key was changed
+                                {/* <br></br>
+                                {auth.origVaultKey}
+                                <br></br>
+                                {auth.vaultKey}
+                                <br></br>
+                                {auth.origVaultKey !== auth.vaultKey ? "Changed" : "Not Changed"} */}
                             </IonText>
                         </div>
                     )}

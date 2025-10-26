@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useMount } from "@lib/hooks";
 import { heartbeat as _heartbeat, checkAPIUrl } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
@@ -77,13 +78,15 @@ function useProvideAuth(): AuthProvider {
 
     async function loginFunc(apiURL: string, authInfo: AuthInfo) {
         // Set up heartbeat interval
+        // FIXME: The heartbeat interval is using the old `authInfo`'s token for the heartbeat
         const interval = setInterval(async () => {
+            console.log("Heartbeat using token " + authInfo.token);
             const connected = await heartbeat(apiURL!, authInfo.token);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 // TODO: Can we display a toast to inform the user why they were kicked back?
                 console.debug("Heartbeat failed, sending back to login screen");
-                window.location.href = "/login";
+                // window.location.href = "/login";
                 return;
             }
         }, HEARTBEAT_INTERVAL * 1000);
@@ -132,7 +135,7 @@ function useProvideAuth(): AuthProvider {
         });
     }, [logoutFunc, serverInfo]);
 
-    useEffect(() => {
+    useMount(() => {
         if (!authInfo || !serverInfo) {
             return;
         }
@@ -148,7 +151,7 @@ function useProvideAuth(): AuthProvider {
             setVaultKey(resp);
             setOrigVaultKey(resp);
         });
-    }, [authInfo, serverInfo]);
+    });
 
     // Return data
     return {
@@ -156,6 +159,7 @@ function useProvideAuth(): AuthProvider {
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
         origVaultKey: origVaultKey!,
+        setAuthInfo: setAuthInfo,
         setServerInfo: setServerInfoFunc,
         login: loginFunc,
         logout: logoutFunc,

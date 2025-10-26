@@ -27,6 +27,8 @@ export interface AuthProvider {
     vaultKey: Buffer | null;
     /** Original vault key, retrieved upon login */
     origVaultKey: Buffer | null;
+    /** Set the authentication info */
+    setAuthInfo: (authInfo: AuthInfo) => void;
     /** Set the server info */
     setServerInfo: (serverInfo: ServerInfo) => void;
     /** Function to log into the server */
