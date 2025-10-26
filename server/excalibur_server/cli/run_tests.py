@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -6,7 +7,12 @@ from excalibur_server.cli import app
 
 
 @app.command(name="test")
-def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verbosity level.", count=True)] = 0):
+def run_tests(
+    verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verbosity level.", count=True)] = 0,
+    files: Annotated[
+        list[Path], typer.Argument(exists=True, help="Files to run tests on. Leave empty to run all tests.")
+    ] = None,
+):
     """
     Run tests.
 
@@ -29,6 +35,8 @@ def run_tests(verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verb
     args = ["--maxfail", "0", "-rs"]
     if verbose > 0:
         args += ["-" + "v" * verbose]
+    if files:
+        args += [str(file) for file in files]
 
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
     typer.Exit(subprocess.call(["pytest", *args]))

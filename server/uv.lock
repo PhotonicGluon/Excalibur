@@ -150,7 +150,7 @@ wheels = [
 
 [[package]]
 name = "excalibur-server"
-version = "0.3.0a2"
+version = "0.3.0a4"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
