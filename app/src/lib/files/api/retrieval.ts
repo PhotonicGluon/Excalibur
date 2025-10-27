@@ -18,7 +18,7 @@ export async function listdir(
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, auth.authInfo!.key!, {
         method: "GET",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:
@@ -67,7 +67,7 @@ export async function downloadFile(
         auth.authInfo!.key!,
         {
             method: "GET",
-            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+            headers: { Authorization: `Bearer ${auth.getToken()}` },
             cache: "no-store",
         },
         null, // No timeout; TODO: Determine a timeout for downloading file

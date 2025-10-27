@@ -20,13 +20,15 @@ export interface ServerInfo {
 
 export interface AuthProvider {
     /** Authentication info, set upon login */
-    authInfo: AuthInfo | null;
+    authInfo: Omit<AuthInfo, "token"> | null;
     /** Server info, retrieved upon login */
     serverInfo: ServerInfo | null;
     /** Vault key, retrieved upon login */
     vaultKey: Buffer | null;
     /** Original vault key, retrieved upon login */
     origVaultKey: Buffer | null;
+    /** Retrieves the authentication token */
+    getToken(): string | null;
     /** Set the authentication info */
     setAuthInfo: (authInfo: AuthInfo) => void;
     /** Set the server info */

@@ -26,7 +26,7 @@ export async function uploadFile(
         {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${auth.authInfo!.token}`,
+                Authorization: `Bearer ${auth.getToken()}`,
                 "Content-Type": "application/octet-stream",
                 "X-Encrypted": "true",
                 "X-Content-Type": "application/octet-stream",
@@ -78,7 +78,7 @@ export async function mkdir(
 ): Promise<{ success: boolean; error?: string }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, auth.authInfo!.key!, {
         method: "POST",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
         body: name,
     });
     switch (response.status) {

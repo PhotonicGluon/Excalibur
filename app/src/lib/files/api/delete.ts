@@ -26,7 +26,7 @@ export async function deleteItem(
         auth.authInfo!.key!,
         {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+            headers: { Authorization: `Bearer ${auth.getToken()}` },
         },
     );
     switch (response.status) {

@@ -16,7 +16,7 @@ export async function checkPath(
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/path/${path}`, auth.authInfo!.key!, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:
@@ -54,7 +54,7 @@ export async function checkSize(
 ): Promise<{ success: boolean; error?: string; isTooLarge?: boolean }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/size?size=${size}`, auth.authInfo!.key!, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:
@@ -86,7 +86,7 @@ export async function checkDir(
 ): Promise<{ success: boolean; error?: string; isEmpty?: boolean }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/dir/${path}`, auth.authInfo!.key!, {
         method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:

@@ -71,6 +71,20 @@ function useProvideAuth(): AuthProvider {
     const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
+    function getToken(): string | null {
+        // Get token from local storage to ensure that token is up to date
+        const storedAuthInfo = localStorage.getItem("authInfo");
+        if (!storedAuthInfo) {
+            return null;
+        }
+        return deserializeAuthInfo(storedAuthInfo).token;
+    }
+
+    function setAuthInfoFunc(authInfo: AuthInfo) {
+        setAuthInfo(authInfo);
+        localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
+    }
+
     function setServerInfoFunc(serverInfo: ServerInfo) {
         setServerInfo(serverInfo);
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
@@ -80,13 +94,12 @@ function useProvideAuth(): AuthProvider {
         // Set up heartbeat interval
         // FIXME: The heartbeat interval is using the old `authInfo`'s token for the heartbeat
         const interval = setInterval(async () => {
-            console.log("Heartbeat using token " + authInfo.token);
-            const connected = await heartbeat(apiURL!, authInfo.token);
+            const connected = await heartbeat(apiURL!, getToken()!);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
                 // TODO: Can we display a toast to inform the user why they were kicked back?
                 console.debug("Heartbeat failed, sending back to login screen");
-                // window.location.href = "/login";
+                window.location.href = "/login";
                 return;
             }
         }, HEARTBEAT_INTERVAL * 1000);
@@ -159,7 +172,8 @@ function useProvideAuth(): AuthProvider {
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
         origVaultKey: origVaultKey!,
-        setAuthInfo: setAuthInfo,
+        getToken: getToken,
+        setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,
         login: loginFunc,
         logout: logoutFunc,

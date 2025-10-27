@@ -62,6 +62,9 @@ import DirectoryList from "@components/explorer/DirectoryList";
 import { uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
+const TOKEN_EARLY_REFRESH_THRESHOLD = 0.95; // 95% of token expiry then refresh
+const TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME = 5 * 1000; // 5 seconds
+
 const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
@@ -71,10 +74,6 @@ const FileExplorer: React.FC = () => {
     const auth = useAuth();
     const settings = useSettings();
     const router = useIonRouter();
-
-    // Get token expiry
-    const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.authInfo!.token);
-    const tokenExpiry = new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.serverInfo!.deltaTime;
 
     // States
     const [presentAlert] = useIonAlert();
@@ -87,6 +86,20 @@ const FileExplorer: React.FC = () => {
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+
+    const [tokenExpiry, _setTokenExpiry] = useState(() => {
+        const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.getToken()!);
+        return new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.serverInfo!.deltaTime;
+    });
+    const [tokenRefreshInterval, _setTokenRefreshInterval] = useState(() => {
+        const refreshInterval = Math.min(
+            tokenExpiry * TOKEN_EARLY_REFRESH_THRESHOLD, // Wait for threshold until sending request...
+            tokenExpiry - TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME, // or so that we have enough time to receive response
+        );
+        console.debug(`Token refresh interval is ${refreshInterval / 1000} s`);
+        return refreshInterval;
+    });
+    const [tokenTimeoutActive, setTokenTimeoutActive] = useState(false);
 
     // Helper functions
     /**
@@ -495,19 +508,24 @@ const FileExplorer: React.FC = () => {
 
     useEffect(() => {
         // Handle token renewal
+        if (tokenTimeoutActive) {
+            return;
+        }
+
+        setTokenTimeoutActive(true);
         setTimeout(async () => {
             console.debug("Renewing token as it is expiring soon");
             const response = await getNewToken(auth);
             if (!response.success) {
-                // TODO: Add
+                // I guess we fail silently...
                 return;
             }
+
             auth.setAuthInfo({ ...auth.authInfo!, token: response.token! });
             console.log(`Renewed token; new token is ${response.token}`);
-        }, tokenExpiry - 5000); // 5 seconds before token expiry; TODO: allow this to be configured
-    }, [auth, tokenExpiry]);
-
-    // TODO: Handle API operations that occur during a token renewal
+            setTokenTimeoutActive(false);
+        }, tokenRefreshInterval);
+    }, [auth, tokenTimeoutActive, tokenRefreshInterval]);
 
     // Render
     return (

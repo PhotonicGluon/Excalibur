@@ -19,7 +19,7 @@ export async function renameItem(
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/rename/${path}`, auth.authInfo!.key!, {
         method: "POST",
         body: newName,
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:

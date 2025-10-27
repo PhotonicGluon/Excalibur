@@ -32,7 +32,7 @@ export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; err
 export async function getNewToken(auth: AuthProvider): Promise<{ success: boolean; error?: string; token?: string }> {
     const response = await popFetch(`${auth.serverInfo!.apiURL}/auth/token`, auth.authInfo!.key!, {
         method: "GET",
-        headers: { Authorization: `Bearer ${auth.authInfo!.token}` },
+        headers: { Authorization: `Bearer ${auth.getToken()}` },
     });
     switch (response.status) {
         case 200:
