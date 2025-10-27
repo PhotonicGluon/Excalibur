@@ -1,3 +1,5 @@
+import * as path from "path";
+
 describe("Check Files Page Contents", () => {
     it("should redirect to server choice if not onboarded", () => {
         cy.visit("/files/");
@@ -23,9 +25,7 @@ describe("Check File Page Operations", () => {
     it("should handle folder creation", () => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
         cy.visit("/files/");
-
-        // Check that the original page is empty
-        cy.get(".h-16 > ion-grid.md").should("not.exist");
+        cy.url().should("include", "/files");
 
         // Clicking on create folder should have popup
         cy.get(".fab-horizontal-end").click();
@@ -46,16 +46,25 @@ describe("Check File Page Operations", () => {
         cy.get(".h-16 > ion-grid.md").should("contain.text", folderName);
     });
 
-    // it("should handle file upload", () => {
-    //     cy.exec("cd .. && npm run server:setup-for-test");
-    //     cy.login("http://127.0.0.1:8989", "Password");
-    //     cy.visit("/files/");
+    it("should handle file upload and download", () => {
+        const downloadsFolder = Cypress.config("downloadsFolder");
 
-    //     // Check that the original page is empty
-    //     cy.get(".h-16 > ion-grid.md").should("not.exist");
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
 
-    //     // Clicking on upload file should have popup
-    //     cy.get(".fab-horizontal-end").click();
-    //     cy.get('[aria-label="Upload File"]').click();
-    // });
+        // Upload the test file
+        const fileName = `test-file-${Date.now()}.txt`;
+        cy.fixture("1 kB File.txt", null).as("testFile");
+        cy.get("#main-content").selectFile({ contents: "@testFile", fileName: fileName }, { action: "drag-drop" });
+
+        // File should have been uploaded
+        const fileElement = cy.get(`div[data-name='${fileName}']`);
+        fileElement.should("exist");
+        fileElement.should("contain.text", fileName);
+
+        // Try downloading the file
+        fileElement.click();
+        cy.readFile(path.join(downloadsFolder, fileName)).should("exist");
+    });
 });

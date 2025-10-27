@@ -267,7 +267,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     return (
         <IonItem id={props.id} className={rowColourClass} button={true}>
             {/* Main item content */}
-            <div className="flex h-16 w-full items-center">
+            <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
                 <IonGrid className="w-full" onClick={() => onClickItem()}>
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
