@@ -1,5 +1,16 @@
 import * as path from "path";
 
+function randstr(n: number) {
+    const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const chars = [];
+
+    for (let i = 0; i < n; i++) {
+        chars.push(CHARS.charAt(Math.floor(Math.random() * CHARS.length)));
+    }
+
+    return chars.join("");
+}
+
 describe("Check Files Page Contents", () => {
     it("should redirect to server choice if not onboarded", () => {
         cy.visit("/files/");
@@ -47,11 +58,11 @@ describe("Check File Page Operations", () => {
         return folderName;
     }
 
-    function _createFile() {
+    function _createFile(n: number) {
         // Upload the test file
         const fileName = `test-file-${Date.now()}.txt`;
-        cy.fixture("1 kB File.txt", null).as("testFile");
-        cy.get("#main-content").selectFile({ contents: "@testFile", fileName: fileName }, { action: "drag-drop" });
+        const fileContent = Cypress.Buffer.from(randstr(n));
+        cy.get("#main-content").selectFile({ contents: fileContent, fileName: fileName }, { action: "drag-drop" });
 
         // File should have been uploaded
         const fileElement = cy.get(`div[data-name='${fileName}']`);
@@ -72,12 +83,23 @@ describe("Check File Page Operations", () => {
         _createFolder();
     });
 
-    it("should handle file upload and download", () => {
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
+    describe("file upload and download", () => {
+        const SMALL_SIZE = 1024;
+        const LARGE_SIZE = 1e6; // Enough for several chunking to occur
 
-        _createFile();
+        beforeEach(() => {
+            cy.login("http://127.0.0.1:8989", "test-user", "Password");
+            cy.visit("/files/");
+            cy.url().should("include", "/files");
+        });
+
+        it("should handle small file", () => {
+            _createFile(SMALL_SIZE);
+        });
+
+        it("should handle large file", () => {
+            _createFile(LARGE_SIZE);
+        });
     });
 
     describe("nested operations", () => {
@@ -102,7 +124,7 @@ describe("Check File Page Operations", () => {
         });
 
         it("should create nested file", () => {
-            _createFile();
+            _createFile(1000);
         });
     });
 
