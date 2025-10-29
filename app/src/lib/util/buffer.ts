@@ -29,7 +29,7 @@ export function bufferToNumber(buffer: Buffer): bigint {
  * @param buffer The buffer to pad.
  * @param n The desired length of the buffer.
  * @returns A new buffer of length `n` with `buffer` as its suffix.
- * @throws Error if `buffer.length > n`.
+ * @throws {Error} If `buffer.length > n`.
  */
 export function padBuffer(buffer: Buffer, n: number): Buffer {
     if (buffer.length > n) {
@@ -46,7 +46,7 @@ export function padBuffer(buffer: Buffer, n: number): Buffer {
  * @param b The second buffer.
  * @returns A new buffer with the same length as `a` and `b`, where each element is the XOR of the
  *          corresponding elements in `a` and `b`.
- * @throws Error if `a.length != b.length`.
+ * @throws {Error} if `a.length != b.length`.
  */
 export function xorBuffer(a: Buffer, b: Buffer): Buffer {
     if (a.length !== b.length) {
