@@ -8,6 +8,26 @@ This page lists all the changes made to Excalibur.
 
 <!-- Changelog begins below -->
 
+## [v0.2.2](https://github.com/PhotonicGluon/Excalibur/tree/v0.2.2) - 2025-11-01
+
+### App
+
+#### 🔒 Security
+
+- Updated `vite` from `7.1.9` to `7.1.11` to address CVE-2025-62522 ([#13](https://github.com/PhotonicGluon/Excalibur/issues/13))
+
+#### ✏️ Changes
+
+- Increased timeout for fetches from 3 to 5 seconds
+
+#### 🔧 Fixes
+
+- Fixed issues with hanging fetches if the fetch errors out
+
+### Server
+
+No significant changes.
+
 ## [v0.2.1](https://github.com/PhotonicGluon/Excalibur/tree/v0.2.1) - 2025-10-18
 
 ### App
