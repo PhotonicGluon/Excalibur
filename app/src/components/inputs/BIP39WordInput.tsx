@@ -4,8 +4,8 @@ import { IonItem, IonLabel, IonList, IonSearchbar } from "@ionic/react";
 
 import { WORDS, WORD_TRIE } from "@lib/security/bip39";
 
-const DEBOUNCE_TIME = 100; // In ms
-const LOSS_FOCUS_CLEAR_DELAY = 100; // In ms
+export const DEBOUNCE_TIME = 100; // In ms
+export const LOSS_FOCUS_CLEAR_DELAY = 100; // In ms
 
 interface ContainerProps {
     /** Placeholder text to display in the input field */
@@ -57,9 +57,30 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
 
     /**
      * Handles the blur event of the input.
+     *
+     * @param e The blur event
      */
-    function handleBlur() {
-        if (!isSuggestionSelected && !WORDS.map((w) => w.toLowerCase()).includes(searchText.toLowerCase())) {
+    function handleBlur(e: CustomEvent) {
+        // Read value directly from the event target to avoid stale state
+        const searchbarElement = e.target as HTMLIonSearchbarElement;
+        const query = (searchbarElement.value || "").toLowerCase();
+
+        if (query.trim() === "") {
+            // If the input is empty on blur, ensure state is cleared
+            if (searchText !== "") {
+                setSearchText("");
+                props.onWordSelected(null);
+            }
+            return;
+        }
+
+        if (WORDS.includes(query)) {
+            // Synchronize the React state with the final valid word and call the callback
+            setSearchText(searchbarElement.value || "");
+            props.onWordSelected(query);
+            setIsSuggestionSelected(true);
+        } else if (!isSuggestionSelected) {
+            // If text is not a valid word and no suggestion was clicked, clear input
             setSearchText("");
             props.onWordSelected(null);
         }
