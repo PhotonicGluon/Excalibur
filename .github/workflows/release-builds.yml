@@ -273,7 +273,6 @@ jobs:
               if: ${{ github.token }}
               with:
                   body: ${{ steps.prepare_release_notes.outputs.body }}
-                  draft: true # TODO: Make this actually release?
                   files: |
                       artifacts/server/*
                       artifacts/server-pwa/*

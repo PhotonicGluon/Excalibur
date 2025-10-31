@@ -197,50 +197,62 @@ const Login: React.FC = () => {
 
         // Check whether security details have been set up
         setLoadingState("Finding security details...");
-        if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
-            setIsLoading(false);
-            presentAlert({
-                header: "User Not Found",
-                message: "If you want to create a new user, enter the Account Creation Key (ACK) before continuing.",
-                inputs: [
-                    {
-                        type: "text",
-                        name: "ack",
-                        placeholder: "32-Character Account Creation Key",
-                        cssClass: "!font-mono !text-xs text-center",
-                    },
-                ],
-                buttons: [
-                    {
-                        text: "Cancel",
-                        role: "cancel",
-                        handler: () => {
-                            console.debug("User creation cancelled");
-                            presentToast({
-                                message: "User creation cancelled",
-                                duration: 2000,
-                                color: "warning",
-                            });
+        try {
+            if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
+                setIsLoading(false);
+                presentAlert({
+                    header: "User Not Found",
+                    message:
+                        "If you want to create a new user, enter the Account Creation Key (ACK) before continuing.",
+                    inputs: [
+                        {
+                            type: "text",
+                            name: "ack",
+                            placeholder: "32-Character Account Creation Key",
+                            cssClass: "!font-mono !text-xs text-center",
                         },
-                    },
-                    {
-                        text: "Continue",
-                        role: "confirm",
-                        handler: async (data: { ack: string }) => {
-                            const ack = data.ack;
-                            if (ack.length !== 32) {
+                    ],
+                    buttons: [
+                        {
+                            text: "Cancel",
+                            role: "cancel",
+                            handler: () => {
+                                console.debug("User creation cancelled");
                                 presentToast({
-                                    message: `Account Creation Key must be 32 characters long (got ${ack.length})`,
+                                    message: "User creation cancelled",
                                     duration: 2000,
-                                    color: "danger",
+                                    color: "warning",
                                 });
-                                return;
-                            }
-                            registerOnServer(ack);
+                            },
                         },
-                    },
-                ],
+                        {
+                            text: "Continue",
+                            role: "confirm",
+                            handler: async (data: { ack: string }) => {
+                                const ack = data.ack;
+                                if (ack.length !== 32) {
+                                    presentToast({
+                                        message: `Account Creation Key must be 32 characters long (got ${ack.length})`,
+                                        duration: 2000,
+                                        color: "danger",
+                                    });
+                                    return;
+                                }
+                                registerOnServer(ack);
+                            },
+                        },
+                    ],
+                });
+                return;
+            }
+        } catch (error: unknown) {
+            console.error(error);
+            presentToast({
+                message: `An error occurred: ${error}`,
+                duration: 2000,
+                color: "danger",
             });
+            setIsLoading(false);
             return;
         }
 
@@ -278,20 +290,31 @@ const Login: React.FC = () => {
         console.log(`Logged in; using token: ${authInfo.token}`);
 
         // Handle vault key
-        const vaultKey = await retrieveVaultKey(auth.serverInfo!.apiURL!, authInfo, (error) => {
+        try {
+            const vaultKey = await retrieveVaultKey(auth.serverInfo!.apiURL!, authInfo, (error) => {
+                console.error(error);
+                setIsLoading(false);
+                presentAlert({
+                    header: "Vault Key Failure",
+                    message: error,
+                    buttons: ["OK"],
+                });
+            });
+            if (!vaultKey) {
+                // Errors already handled in `retrieveVaultKey()`
+                return;
+            }
+            auth.setVaultKey(vaultKey);
+        } catch (error: unknown) {
             console.error(error);
             setIsLoading(false);
             presentAlert({
                 header: "Vault Key Failure",
-                message: error,
+                message: `Could not retrieve vault key: ${error}`,
                 buttons: ["OK"],
             });
-        });
-        if (!vaultKey) {
-            // Errors already handled in `retrieveVaultKey()`
             return;
         }
-        auth.setVaultKey(vaultKey);
 
         // Update preferences
         Preferences.set({
