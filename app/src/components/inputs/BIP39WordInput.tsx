@@ -8,6 +8,8 @@ export const DEBOUNCE_TIME = 100; // In ms
 export const LOSS_FOCUS_CLEAR_DELAY = 100; // In ms
 
 interface ContainerProps {
+    /** Initial value to display */
+    value?: string;
     /** Placeholder text to display in the input field */
     placeholder?: string;
     /** Maximum number of suggestions to display */
@@ -18,7 +20,7 @@ interface ContainerProps {
 
 const BIP39WordInput: React.FC<ContainerProps> = (props) => {
     // States
-    const [searchText, setSearchText] = useState("");
+    const [searchText, setSearchText] = useState(props.value || "");
     const [suggestions, setSuggestions] = useState<string[] | null>(null);
     const [isSuggestionSelected, setIsSuggestionSelected] = useState(false);
 
@@ -108,7 +110,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
     return (
         <div className="relative">
             <IonSearchbar
-                className="[&_.searchbar-search-icon]:!hidden [&_input]:!pl-4"
+                className="!font-mono [&_.searchbar-search-icon]:!hidden [&_input]:!pr-8 [&_input]:!pl-4"
                 value={searchText}
                 placeholder={props.placeholder}
                 onIonInput={handleInputChange}
