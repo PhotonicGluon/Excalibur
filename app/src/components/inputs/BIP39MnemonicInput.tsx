@@ -2,13 +2,13 @@ import { useState } from "react";
 
 import { IonButton } from "@ionic/react";
 
-import { fromMnemonic } from "@lib/security/bip39";
+import { BIP39MnemonicLength, fromMnemonic } from "@lib/security/bip39";
 
 import BIP39WordInput from "./BIP39WordInput";
 
 interface ContainerProps {
     /** Number of words in the BIP39 mnemonic */
-    numWords: 12 | 15 | 18 | 21 | 24;
+    numWords: BIP39MnemonicLength;
     /** Initial words to display */
     initialWords?: string[];
     /** Maximum number of suggestions to display */
@@ -53,7 +53,7 @@ const BIP39MnemonicInput: React.FC<ContainerProps> = (props) => {
     // Render
     return (
         <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
+            <div className="grid grid-cols-2">
                 {Array.from({ length: props.numWords }).map((_, index) => (
                     <BIP39WordInput
                         key={index}
