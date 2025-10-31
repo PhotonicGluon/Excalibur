@@ -10,6 +10,7 @@ import { getURLEncodedPath } from "@lib/url";
  * @param options The options to pass to fetch
  * @param timeout The timeout, in seconds. If null, no timeout is applied
  * @returns The response from fetch
+ * @throws {TypeError} If the fetch fails
  */
 export async function timedFetch(url: string, options?: RequestInit, timeout: number | null = 3): Promise<Response> {
     return globalThis.fetch(url, {
@@ -26,12 +27,13 @@ export async function timedFetch(url: string, options?: RequestInit, timeout: nu
  * @param options The options to pass to fetch
  * @param timeout The timeout, in seconds. If null, no timeout is applied
  * @returns The response from fetch
+ * @throws {TypeError} If the fetch fails
  */
 export async function popFetch(
     url: string,
     masterKey: Buffer,
     options?: RequestInit,
-    timeout: number | null = 3,
+    timeout: number | null = 5,
 ): Promise<Response> {
     let popHeader;
     if (options && masterKey) {
