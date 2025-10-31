@@ -29,6 +29,7 @@ import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
+import TestPage from "@pages/TestPage";
 import Welcome from "@pages/Welcome";
 
 import "@theme/variables.css";
@@ -105,6 +106,9 @@ const App: React.FC = () => {
                     <PrivateRoute path="/files/*" component={FileExplorer} />
                     <Route path="/settings" component={Settings} />
                     <Route path="/credits" component={Credits} />
+
+                    {/* Testing */}
+                    <Route path="/test" component={TestPage} />
                 </IonRouterOutlet>
             </IonReactRouter>
         </IonApp>

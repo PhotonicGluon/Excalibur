@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 
-import { WORDLIST, WORD_MAP } from "./wordlist";
+import { WORDS, WORD_MAP, WORD_TRIE } from "./words";
 
 /**
  * Converts an array of bytes into a mnemonic sentence
@@ -48,7 +48,7 @@ function toMnemonic(ent: Buffer): string[] {
     }
 
     // "[W]e convert these numbers into words and use the joined words as a mnemonic sentence"
-    const mnemonic = indices.map((index) => WORDLIST[index]);
+    const mnemonic = indices.map((index) => WORDS[index]);
     return mnemonic;
 }
 
@@ -96,4 +96,4 @@ function fromMnemonic(mnemonic: string[]): Buffer {
     return entropy;
 }
 
-export { fromMnemonic, toMnemonic };
+export { WORDS, WORD_TRIE, fromMnemonic, toMnemonic };

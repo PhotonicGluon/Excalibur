@@ -1,0 +1,106 @@
+import { useState } from "react";
+
+import { IonItem, IonLabel, IonList, IonSearchbar } from "@ionic/react";
+
+import { WORDS, WORD_TRIE } from "@lib/security/bip39";
+
+const DEBOUNCE_TIME = 100; // In ms
+const LOSS_FOCUS_CLEAR_DELAY = 100; // In ms
+
+interface ContainerProps {
+    /** Placeholder text to display in the input field */
+    placeholder?: string;
+    /** Maximum number of suggestions to display */
+    maxSuggestions: number;
+    /** Callback function to be called when a word is selected */
+    onWordSelected: (word: string | null) => void;
+}
+
+const BIP39WordInput: React.FC<ContainerProps> = (props) => {
+    // States
+    const [searchText, setSearchText] = useState("");
+    const [suggestions, setSuggestions] = useState<string[] | null>(null);
+    const [isSuggestionSelected, setIsSuggestionSelected] = useState(false);
+
+    // Functions
+    /**
+     * Handles the change event of the input.
+     *
+     * @param e The event object
+     */
+    function handleInputChange(e: CustomEvent) {
+        const newSearchText = e.detail.value || "";
+        setSearchText(newSearchText);
+        setIsSuggestionSelected(false);
+
+        if (newSearchText.trim() === "") {
+            setSuggestions(null);
+            props.onWordSelected(null);
+            return;
+        }
+
+        const foundWords = WORD_TRIE.findWords(newSearchText.toLowerCase());
+        setSuggestions(foundWords.slice(0, props.maxSuggestions));
+    }
+
+    /**
+     * Handles the click event of a suggestion.
+     *
+     * @param word The word of the suggestion
+     */
+    function handleSuggestionClick(word: string) {
+        setSearchText(word);
+        setSuggestions(null);
+        setIsSuggestionSelected(true);
+        props.onWordSelected(word);
+    }
+
+    /**
+     * Handles the blur event of the input.
+     */
+    function handleBlur() {
+        if (!isSuggestionSelected && !WORDS.map((w) => w.toLowerCase()).includes(searchText.toLowerCase())) {
+            setSearchText("");
+            props.onWordSelected(null);
+        }
+
+        // Hide suggestions when the input loses focus
+        setTimeout(() => {
+            setSuggestions(null);
+        }, LOSS_FOCUS_CLEAR_DELAY);
+    }
+
+    // Render
+    let listContents: React.ReactNode = (
+        <IonItem>
+            <IonLabel color="warning">No Matches</IonLabel>
+        </IonItem>
+    );
+    if (suggestions && suggestions.length > 0) {
+        listContents = suggestions.map((word) => (
+            <IonItem key={word} onClick={() => handleSuggestionClick(word)} button>
+                <IonLabel>{word}</IonLabel>
+            </IonItem>
+        ));
+    }
+
+    return (
+        <div className="relative">
+            <IonSearchbar
+                className="[&_.searchbar-search-icon]:!hidden [&_input]:!pl-4"
+                value={searchText}
+                placeholder={props.placeholder}
+                onIonInput={handleInputChange}
+                onIonBlur={handleBlur}
+                debounce={DEBOUNCE_TIME}
+            />
+            {suggestions && (
+                <IonList className="absolute z-10 w-30 rounded-md shadow-md shadow-black" lines="none">
+                    {listContents}
+                </IonList>
+            )}
+        </div>
+    );
+};
+
+export default BIP39WordInput;
