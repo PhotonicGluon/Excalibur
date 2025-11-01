@@ -31,6 +31,7 @@ def update_config():
         from Crypto.Random import get_random_bytes
 
         config["version"] = 2
+        config["security"]["account_creation_key"] = get_random_bytes(32).hex()
         return config
 
     SETTINGS_VERSION = 2

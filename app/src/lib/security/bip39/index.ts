@@ -92,6 +92,13 @@ function fromMnemonic(mnemonic: string[]): Buffer {
     const digest = createHash("sha256").update(entropy).digest();
     const expectedChecksumBits = digest[0].toString(2).padStart(8, "0").slice(0, numChecksumBits);
 
+    if (process.env.NODE_ENV === "development") {
+        const end = bits.length - numChecksumBits;
+        const expectedLastBits = bits.slice(end - (end % 11), end) + expectedChecksumBits;
+        const expectedIndex = parseInt(expectedLastBits, 2);
+        console.debug("Expected last word:", WORDS[expectedIndex]);
+    }
+
     if (expectedChecksumBits !== checksumBits) {
         throw new Error("Invalid checksum");
     }
