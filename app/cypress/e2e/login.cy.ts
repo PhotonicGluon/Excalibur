@@ -14,81 +14,15 @@ describe("Check Login Page Contents", () => {
         cy.get("#save-password-checkbox").should("exist");
         cy.get("#login-button").should("exist");
     });
+
+    it("should have working new user link", () => {
+        cy.get("#new-user-link").should("exist");
+        cy.get("#new-user-link").click();
+        cy.url().should("include", "/new-user");
+    });
 });
 
 describe("Handle Auth Process", () => {
-    beforeEach(() => {
-        cy.onboard("http://127.0.0.1:8989");
-    });
-
-    describe("check account creation key validation", () => {
-        ["", "TooShort", "BLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAH"].forEach((input) => {
-            it(`should reject '${input}'`, () => {
-                cy.visit("/login");
-
-                // Initial checks
-                cy.get("#vault-key-modal").should("not.exist");
-
-                // Fill in login form
-                cy.get("#username-input > .input-wrapper").type(`new-test-user-${Date.now()}`);
-                cy.get("#password-input > .input-wrapper").type("Password123");
-                cy.get("#login-button").click();
-
-                // Assert that the setup confirmation dialog shows up
-                cy.get(".alert-head").should("exist");
-                cy.get(".alert-head").should("have.text", "User Not Found");
-
-                // Type incorrect key
-                if (input) {
-                    cy.get(".alert-input-wrapper").type(input);
-                }
-
-                // Confirm
-                cy.get(".alert-button-role-confirm").click();
-                cy.get(".alert-head").should("not.exist");
-
-                // Assert that the vault key dialog does not show up
-                cy.get("#vault-key-modal").should("not.be.visible");
-            });
-        });
-    });
-
-    it("should handle initial signup gracefully", () => {
-        cy.visit("/login");
-
-        // Initial checks
-        cy.get("#vault-key-modal").should("not.exist");
-
-        // Fill in login form
-        cy.get("#username-input > .input-wrapper").type(`new-test-user-${Date.now()}`);
-        cy.get("#password-input > .input-wrapper").type("Password123");
-        cy.get("#login-button").click();
-
-        // Assert that the setup confirmation dialog shows up
-        cy.get(".alert-head").should("exist");
-        cy.get(".alert-head").should("have.text", "User Not Found");
-
-        // Retrieve Account Creation Key (ACK) from server running on debug mode
-        cy.request({
-            url: "http://127.0.0.1:8989/api/auth/ack",
-            method: "GET",
-        }).then((response) => {
-            cy.get(".alert-input-wrapper").type(response.body);
-        });
-
-        // Confirm
-        cy.get(".alert-button-role-confirm").click();
-        cy.get(".alert-head").should("not.exist");
-
-        // Assert that the vault key dialog shows up
-        cy.get("#vault-key-modal").should("be.visible");
-        cy.get("#vault-key-modal-close").click();
-
-        // Now try to log in again
-        cy.get("#login-button").click();
-        cy.url().should("include", "/files");
-    });
-
     it("should handle login gracefully", () => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
         cy.visit("/files/");

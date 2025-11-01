@@ -18,9 +18,10 @@ def init_server(
     import os
     import shutil
 
-    from Crypto.Random.random import choice as secure_random_choice
+    from Crypto.Random import get_random_bytes
 
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
+    from excalibur_server.src.bip39 import to_mnemonic
 
     # Handle resetting
     if reset:
@@ -42,19 +43,18 @@ def init_server(
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
         # Replace the default account creation key
-        # TODO: Is this character space secure enough?
-        KEY_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
-        account_creation_key = "".join(secure_random_choice(KEY_CHARS) for _ in range(32))
+        account_creation_key = get_random_bytes(32)
 
         with config_path.open("r+") as f:
             contents = f.read()
-            contents = contents.replace("Account Creation Key Goes Here!!", account_creation_key)
+            contents = contents.replace("Account Creation Key Goes Here!!", account_creation_key.hex())
             f.seek(0)
             f.write(contents)
             f.truncate()
 
         typer.secho("done.", fg="green")
-        typer.secho(f"Account Creation Key: {account_creation_key}", fg="cyan")
+        typer.secho("Account Creation Key Mnemonic:", fg="cyan")
+        typer.secho("    " + " ".join(to_mnemonic(account_creation_key)), fg="cyan")
     else:
         typer.secho("Config file already exists; not changing", fg="yellow")
 

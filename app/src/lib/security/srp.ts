@@ -176,7 +176,7 @@ export const SRPGroup = {
  * @param bits The bit size of the SRP group. Supported values are 1024 (`SMALL`), 1536 (`MEDIUM`),
  *      and 2048 (`LARGE`)
  * @returns The SRP group matching the provided bit size
- * @throws Will throw an error if the bit size is not supported
+ * @throws {Error} If the bit size is not supported
  */
 export function getSRPGroup(bits: number): _SRPGroup {
     switch (bits) {

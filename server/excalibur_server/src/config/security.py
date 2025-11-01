@@ -47,6 +47,10 @@ class Security(BaseModel):
 
     @field_validator("account_creation_key", mode="before")
     def validate_account_creation_key(cls, value: str) -> bytes:
+        try:
+            value = bytes.fromhex(value)
+        except ValueError:
+            raise ValueError("must be a valid hex string")
         if len(value) != 32:
             raise ValueError("must be 32 bytes long")
-        return value.encode("UTF-8")
+        return value

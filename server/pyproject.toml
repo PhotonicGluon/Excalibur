@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.3.0a4"
+version = "0.3.0a5"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.17.0",
@@ -22,6 +22,7 @@ dependencies = [
     "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
     "toml>=0.10.2",
+    "tomlkit>=0.13.3",
     "typer>=0.19.2",
     "uvicorn[standard]>=0.37.0",
     "websockets>=15.0.1",

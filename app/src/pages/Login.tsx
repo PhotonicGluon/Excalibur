@@ -1,4 +1,3 @@
-import { randomBytes } from "crypto";
 import { useEffect, useState } from "react";
 
 import { menuController } from "@ionic/core/components";
@@ -26,17 +25,13 @@ import {
 } from "@ionic/react";
 import { informationCircleOutline, logOutOutline, settingsOutline } from "ionicons/icons";
 
-import ExEF from "@lib/exef";
 import Preferences from "@lib/preferences";
-import { getGroup } from "@lib/security/api";
 import { e2ee } from "@lib/security/e2ee";
-import generateKey from "@lib/security/keygen";
-import { addUser, checkUser } from "@lib/users/api";
+import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
-import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 
 import logo from "@assets/icon.png";
 
@@ -50,7 +45,7 @@ interface LoginValues {
 }
 
 const Login: React.FC = () => {
-    // States
+    // Contexts
     const auth = useAuth();
     const router = useIonRouter();
 
@@ -60,9 +55,6 @@ const Login: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
-
-    const [localVaultKey, setLocalVaultKey] = useState<Buffer>();
-    const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     // Functions
     /**
@@ -103,85 +95,6 @@ const Login: React.FC = () => {
      * Handles the login button click event.
      */
     async function onLoginButtonClick() {
-        /**
-         * Handles the initial registration of the user on the server.
-         *
-         * @param ack The Account Creation Key (ACK)
-         */
-        async function registerOnServer(ack: string) {
-            setIsLoading(true);
-
-            // Get SRP group used for communication
-            setLoadingState("Determining SRP group...");
-            const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
-            const srpGroup = groupResponse.group;
-            if (!srpGroup) {
-                setIsLoading(false);
-                presentToast({
-                    message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
-                    duration: 2000,
-                    color: "danger",
-                });
-                return;
-            }
-
-            console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
-
-            // Set up account unlock key (AUK) and vault key
-            setLoadingState("Creating new AUK and vault key...");
-            const additionalInfo = { username: values.username };
-
-            const aukSalt = randomBytes(32);
-            const auk = await generateKey(values.password, additionalInfo, aukSalt);
-            console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
-
-            const vaultKey = randomBytes(32);
-            console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
-            setLocalVaultKey(vaultKey);
-            const exef = new ExEF(auk);
-            const encryptedVaultKey = exef.encrypt(vaultKey);
-
-            // Set up SRP key
-            setLoadingState("Creating new SRP key...");
-            const srpSalt = randomBytes(32);
-            const srpKey = await generateKey(values.password, additionalInfo, srpSalt);
-            console.debug(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
-
-            const srpVerifier = srpGroup.generateVerifier(srpKey);
-
-            // Set up security details
-            setLoadingState("Adding user...");
-            const result = await addUser(
-                auth.serverInfo!.apiURL!,
-                ack,
-                values.username,
-                aukSalt,
-                srpSalt,
-                srpVerifier,
-                encryptedVaultKey,
-            );
-            if (!result.success) {
-                setIsLoading(false);
-                presentToast({
-                    message: `Unable to add user: ${result.error!}`,
-                    duration: 2000,
-                    color: "danger",
-                });
-                return;
-            }
-
-            console.debug("Added user");
-
-            // Show vault key
-            setIsLoading(false);
-            setShowVaultKeyDialog(true);
-            presentToast({
-                message: "User created. Please save the vault key in a secure location and log in again.",
-                duration: 5000,
-                color: "success",
-            });
-        }
-
         // Check values
         const values = getAllValues();
         if (!validateValues(values)) {
@@ -202,44 +115,11 @@ const Login: React.FC = () => {
                 setIsLoading(false);
                 presentAlert({
                     header: "User Not Found",
-                    message:
-                        "If you want to create a new user, enter the Account Creation Key (ACK) before continuing.",
-                    inputs: [
-                        {
-                            type: "text",
-                            name: "ack",
-                            placeholder: "32-Character Account Creation Key",
-                            cssClass: "!font-mono !text-xs text-center",
-                        },
-                    ],
+                    message: "Please create the user first.",
                     buttons: [
                         {
-                            text: "Cancel",
+                            text: "OK",
                             role: "cancel",
-                            handler: () => {
-                                console.debug("User creation cancelled");
-                                presentToast({
-                                    message: "User creation cancelled",
-                                    duration: 2000,
-                                    color: "warning",
-                                });
-                            },
-                        },
-                        {
-                            text: "Continue",
-                            role: "confirm",
-                            handler: async (data: { ack: string }) => {
-                                const ack = data.ack;
-                                if (ack.length !== 32) {
-                                    presentToast({
-                                        message: `Account Creation Key must be 32 characters long (got ${ack.length})`,
-                                        duration: 2000,
-                                        color: "danger",
-                                    });
-                                    return;
-                                }
-                                registerOnServer(ack);
-                            },
                         },
                     ],
                 });
@@ -419,14 +299,6 @@ const Login: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
-                    {/* Vault key info dialog */}
-                    <VaultKeyDialog
-                        vaultKey={localVaultKey}
-                        isOpen={showVaultKeyDialog}
-                        inputDisabled={true}
-                        onDidDismiss={() => setShowVaultKeyDialog(false)}
-                    />
-
                     {/* Main container */}
                     <div className="flex h-full items-center justify-center">
                         <div className="mx-auto flex w-4/5 flex-col">
@@ -480,12 +352,28 @@ const Login: React.FC = () => {
 
                                 <IonButton
                                     id="login-button"
-                                    className="mx-auto pt-4"
+                                    className="mx-auto w-full pt-4"
                                     onClick={() => onLoginButtonClick()}
                                 >
                                     Log In
                                 </IonButton>
                             </form>
+
+                            <hr className="mt-4 mb-2 h-px w-full bg-neutral-200 dark:bg-neutral-700"></hr>
+                            <IonText className="text-center">
+                                No account?{" "}
+                                <a
+                                    id="new-user-link"
+                                    className="text-primary"
+                                    href="#"
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        router.push("/new-user", "forward", "push");
+                                    }}
+                                >
+                                    Sign Up
+                                </a>
+                            </IonText>
                         </div>
                     </div>
 
