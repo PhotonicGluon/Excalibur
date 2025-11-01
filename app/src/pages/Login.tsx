@@ -363,6 +363,7 @@ const Login: React.FC = () => {
                             <IonText className="text-center">
                                 No account?{" "}
                                 <a
+                                    id="new-user-link"
                                     className="text-primary"
                                     href="#"
                                     onClick={(event) => {

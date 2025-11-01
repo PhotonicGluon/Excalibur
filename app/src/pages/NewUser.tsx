@@ -193,7 +193,7 @@ const NewUser: React.FC = () => {
             </IonHeader>
 
             {/* Body content */}
-            <IonContent fullscreen>
+            <IonContent>
                 {/* Vault key info dialog */}
                 <VaultKeyDialog
                     vaultKey={localVaultKey}
@@ -234,7 +234,7 @@ const NewUser: React.FC = () => {
                             </div>
 
                             {/* Account creation key & signup button */}
-                            <div>
+                            <div id="ack-input">
                                 <IonLabel>Account Creation Key</IonLabel>
                                 <BIP39MnemonicInput
                                     numWords={24}
