@@ -27,6 +27,7 @@ import { useSettings } from "@components/settings/context";
 import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
+import NewUser from "@pages/NewUser";
 import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
 import TestPage from "@pages/TestPage";
@@ -100,6 +101,7 @@ const App: React.FC = () => {
                     {/* Authentication */}
                     <Route exact path="/server-choice" component={ServerChoice} />
                     <NeedServerURLRoute exact path="/login" component={Login} />
+                    <NeedServerURLRoute exact path="/new-user" component={NewUser} />
 
                     {/* Main */}
                     <Redirect exact from="/files" to="/files/." />

@@ -27,6 +27,15 @@ describe("<BIP39MnemonicInput />", () => {
         });
     });
 
+    it("handles disabled property", () => {
+        cy.mount(
+            <BIP39MnemonicInput numWords={12} maxSuggestions={5} onEntropy={() => {}} onError={() => {}} disabled />,
+        );
+
+        cy.get("input").should("be.disabled");
+        cy.contains("Confirm").should("not.exist");
+    });
+
     it("allows the user to input words", () => {
         cy.mount(<BIP39MnemonicInput numWords={12} maxSuggestions={5} onEntropy={() => {}} onError={() => {}} />);
 

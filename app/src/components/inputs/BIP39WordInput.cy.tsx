@@ -13,6 +13,19 @@ describe("<BIP39WordInput />", () => {
         cy.get("ion-searchbar").should("have.value", "test");
     });
 
+    it("handles disabled property", () => {
+        cy.mount(
+            <BIP39WordInput
+                maxSuggestions={5}
+                onWordSelected={() => {}}
+                placeholder="Enter a word"
+                value="test"
+                disabled
+            />,
+        );
+        cy.get("ion-searchbar").find("input").should("be.disabled");
+    });
+
     it("shows suggestions as the user types", () => {
         cy.mount(<BIP39WordInput maxSuggestions={5} onWordSelected={() => {}} />);
         cy.get("ion-searchbar").find("input").type("acc");

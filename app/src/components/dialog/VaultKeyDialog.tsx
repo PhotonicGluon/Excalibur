@@ -108,6 +108,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                                         setIsValid(undefined);
                                     }, 2000);
                                 }}
+                                disabled={props.inputDisabled}
                             />
                             <div className="mb-2 h-8 text-center">
                                 {isValid === false && <IonText color="danger">Invalid vault key</IonText>}

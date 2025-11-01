@@ -17,6 +17,8 @@ interface ContainerProps {
     onEntropy: (entropy: Buffer) => void;
     /** Function to call when an error occurs */
     onError: (error: Error) => void;
+    /** Whether the input is disabled */
+    disabled?: boolean;
 }
 
 const BIP39MnemonicInput: React.FC<ContainerProps> = (props) => {
@@ -69,10 +71,11 @@ const BIP39MnemonicInput: React.FC<ContainerProps> = (props) => {
                             newWords[index] = word;
                             setWords(newWords);
                         }}
+                        disabled={props.disabled}
                     />
                 ))}
             </div>
-            <IonButton onClick={handleConfirm}>Confirm</IonButton>
+            {!props.disabled && <IonButton onClick={handleConfirm}>Confirm</IonButton>}
         </div>
     );
 };

@@ -108,7 +108,7 @@ export async function getVaultKey(
  */
 export async function addUser(
     apiURL: string,
-    ack: string,
+    ack: Buffer,
     username: string,
     aukSalt: Buffer,
     srpSalt: Buffer,
@@ -124,7 +124,7 @@ export async function addUser(
     });
 
     const nonce = randomBytes(12);
-    const cipher = createCipheriv("aes-256-gcm", Buffer.from(ack), nonce);
+    const cipher = createCipheriv("aes-256-gcm", ack, nonce);
     const ciphertext = Buffer.concat([cipher.update(userData), cipher.final()]);
     const tag = cipher.getAuthTag();
 

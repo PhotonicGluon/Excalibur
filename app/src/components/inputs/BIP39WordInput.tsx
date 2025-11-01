@@ -16,6 +16,8 @@ interface ContainerProps {
     maxSuggestions: number;
     /** Callback function to be called when a word is selected */
     onWordSelected: (word: string | null) => void;
+    /** Whether the input is disabled */
+    disabled?: boolean;
 }
 
 const BIP39WordInput: React.FC<ContainerProps> = (props) => {
@@ -116,6 +118,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
                 onIonInput={handleInputChange}
                 onIonBlur={handleBlur}
                 debounce={DEBOUNCE_TIME}
+                disabled={props.disabled}
             />
             {suggestions && (
                 <IonList className="absolute z-10 w-30 rounded-md shadow-md shadow-black" lines="none">
