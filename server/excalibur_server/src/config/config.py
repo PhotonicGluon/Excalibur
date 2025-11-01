@@ -7,7 +7,7 @@ from excalibur_server.src.config.security import Security
 from excalibur_server.src.config.server import Server
 from excalibur_server.src.config.storage import Storage
 
-SETTINGS_VERSION = 1
+SETTINGS_VERSION = 2
 
 
 class Config(BaseSettings):
@@ -32,6 +32,11 @@ class Config(BaseSettings):
     # Validators
     @field_validator("version")
     def validate_version(cls, value: int) -> int:
-        if value != SETTINGS_VERSION:
+        if value < SETTINGS_VERSION:
+            raise ValueError(
+                f"Config seems outdated: expected version {SETTINGS_VERSION}, got {value}. "
+                + "Try running `excalibur config update` to update your config."
+            )
+        elif value > SETTINGS_VERSION:
             raise ValueError(f"Config version mismatch: expected {SETTINGS_VERSION}, got {value}")
         return value
