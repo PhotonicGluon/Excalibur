@@ -31,7 +31,7 @@ jobs:
                   cache-dependency-path: pnpm-lock.yaml
 
             - name: Install Dependencies
-              working-directory: ./app
+              # working-directory: ./app
               run: pnpm install
 
             - name: Run Unit Tests
