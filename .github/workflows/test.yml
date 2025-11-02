@@ -39,10 +39,8 @@ jobs:
               run: pnpm run test:unit-run
 
             - name: Run Component Tests
-              uses: cypress-io/github-action@v6
-              with:
-                  working-directory: ./app
-                  command: pnpm cypress run --component
+              working-directory: ./app
+              run: pnpm run test:component
 
     test-server:
         name: Test Server
