@@ -38,7 +38,7 @@ jobs:
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Install App Dependencies
-              # working-directory: ./app
+              working-directory: ./app
               run: pnpm install
 
             - name: Install E2E Testing Dependencies
