@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
@@ -54,7 +54,10 @@ export default defineConfig({
 
                     // For production, we'll split the chunks better
                     if (id.includes("node_modules")) {
-                        const importPath = id.toString().split("node_modules/")[1];
+                        let importPath = id.toString().split("node_modules/")[1];
+                        if (importPath.startsWith(".pnpm")) {
+                            importPath = importPath.split(".pnpm/")[1];
+                        }
                         const packageID = importPath.split("/")[0];
                         return packageID;
                     }

@@ -3,12 +3,12 @@
 ## Table of Contents <!-- omit from toc -->
 
 - [App](#app)
-  - [Setup for App](#setup-for-app)
+  - [Setup](#setup)
   - [Running](#running)
     - [PWA](#pwa)
     - [Android](#android)
 - [Server](#server)
-  - [Setup for Server](#setup-for-server)
+  - [Setup](#setup-1)
   - [Running the API Server](#running-the-api-server)
   - [Linting](#linting)
 - [General](#general)
@@ -20,7 +20,7 @@
 
 ## App
 
-### Setup for App
+### Setup
 
 First, install the correct node version using `nvm` by running
 
@@ -91,11 +91,11 @@ npx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100
 > [!TIP]
 > You can use split terminals to run both the web server and the android app at the same time.
 
-Once the app starts on the device, you can access it at `http://[HOST_IP]:8100` (or `http://10.0.2.2:8000` if running on an android emulator on the same machine).
+Once the app starts on the device, assuming that the server is using the default port `54219`, you can access it at `http://[HOST_IP]:54219` (or `http://10.0.2.2:54219` if running on an android emulator on the same machine).
 
 ## Server
 
-### Setup for Server
+### Setup
 
 First install the [`uv` package manager](https://docs.astral.sh/uv/), version `0.9.3` or higher. Then install dependencies by running
 
