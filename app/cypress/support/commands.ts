@@ -1,7 +1,5 @@
 export {};
 
-// Cypress.session.clearAllSavedSessions();
-
 Cypress.Commands.add("onboard", (serverURL: string) => {
     cy.session(
         serverURL,

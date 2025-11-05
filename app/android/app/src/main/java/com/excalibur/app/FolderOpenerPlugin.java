@@ -2,14 +2,10 @@ package com.excalibur.app;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
-
-import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -22,9 +18,7 @@ import java.io.File;
  * This plugin specifically targets the app's custom folder within the public Documents directory
  * and uses a content URI to ensure compatibility.
  * <p>
- * Requires Android 11 (API 30) or higher.
  */
-@RequiresApi(api=Build.VERSION_CODES.R)
 @CapacitorPlugin(name = "FolderOpener")
 public class FolderOpenerPlugin extends Plugin {
     private static final String TAG = "FolderOpenerPlugin";
