@@ -119,6 +119,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
                 onIonBlur={handleBlur}
                 debounce={DEBOUNCE_TIME}
                 disabled={props.disabled}
+                showClearButton={!props.disabled ? "always" : "never"}
             />
             {suggestions && (
                 <IonList className="absolute z-10 w-30 rounded-md shadow-md shadow-black" lines="none">

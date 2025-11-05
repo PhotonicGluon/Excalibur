@@ -11,6 +11,7 @@ describe("<BIP39WordInput />", () => {
             <BIP39WordInput maxSuggestions={5} onWordSelected={() => {}} placeholder="Enter a word" value="test" />,
         );
         cy.get("ion-searchbar").should("have.value", "test");
+        cy.get("button[aria-label='reset']").should("be.visible");
     });
 
     it("handles disabled property", () => {
@@ -24,6 +25,7 @@ describe("<BIP39WordInput />", () => {
             />,
         );
         cy.get("ion-searchbar").find("input").should("be.disabled");
+        cy.get("button[aria-label='reset']").should("not.be.visible");
     });
 
     it("shows suggestions as the user types", () => {
