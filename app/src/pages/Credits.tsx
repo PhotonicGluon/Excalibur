@@ -154,7 +154,7 @@ const Credits: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="ion-padding-horizontal [--item-bg:theme(colors.neutral.100)] dark:[--item-bg:theme(colors.neutral.900)]">
+            <IonContent className="ion-padding-horizontal [--item-bg:var(--color-neutral-100)] dark:[--item-bg:var(--color-neutral-800)]">
                 <div className="mx-auto max-w-full py-4">
                     <IonText color="medium" className="mb-6 block text-sm">
                         Excalibur was made possible by these open-source frameworks and libraries.
@@ -163,7 +163,7 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Frameworks & Libraries
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
+                    <IonList lines="none" className="mb-4 space-y-3 [background:var(--item-bg)]">
                         {FRAMEWORKS_AND_LIBRARIES.map((item) => (
                             <IonItem
                                 className="[--background:var(--item-bg)]"
@@ -173,9 +173,7 @@ const Credits: React.FC = () => {
                                 target="_blank"
                             >
                                 <IonLabel className="ion-text-wrap">
-                                    <h3 className="mb-1 text-base font-medium text-gray-900 dark:text-white">
-                                        {item.name}
-                                    </h3>
+                                    <h3 className="mb-1 text-base font-medium">{item.name}</h3>
                                     <IonText color="medium" className="mb-2 block text-xs">
                                         {item.desc}
                                     </IonText>
@@ -190,7 +188,7 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Fonts
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
+                    <IonList lines="none" className="mb-4 space-y-3 [background:var(--item-bg)]">
                         {FONTS.map((item) => (
                             <IonItem
                                 className="[--background:var(--item-bg)]"
@@ -217,7 +215,7 @@ const Credits: React.FC = () => {
                     <IonText className="text-primary-600 dark:text-primary-400 block text-lg font-semibold">
                         Others
                     </IonText>
-                    <IonList lines="none" className="!mb-4 space-y-3 [background:var(--item-bg)!important]">
+                    <IonList lines="none" className="mb-4 space-y-3 [background:var(--item-bg)]">
                         {OTHERS.map((item) => (
                             <IonItem
                                 className="[--background:var(--item-bg)]"

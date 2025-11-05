@@ -15,8 +15,10 @@ ion-button::part(native) {
 /* TailwindCSS configuration */
 @layer theme, base, components, utilities;
 
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss/theme.css" layer(theme) important;
+@import "tailwindcss/utilities.css" layer(utilities) important;
+
+@custom-variant dark (&:where(.ion-palette-dark, .ion-palette-dark *));
 
 @theme {
     /* Fonts */

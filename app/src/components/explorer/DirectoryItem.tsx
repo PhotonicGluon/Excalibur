@@ -247,7 +247,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     const Popover = () => (
         <IonContent>
-            <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+            <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
                 <IonItem button={true} onClick={() => onClickRename()}>
                     <IonLabel>
                         <IonIcon icon={pencilOutline} size="large" />

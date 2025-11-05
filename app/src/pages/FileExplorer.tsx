@@ -548,7 +548,7 @@ const FileExplorer: React.FC = () => {
                     {/* Actions */}
                     <IonList
                         lines="none"
-                        className="!bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:!flex [&_ion-label]:!items-center"
+                        className="bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:flex [&_ion-label]:items-center"
                     >
                         <IonItem
                             button={true}
@@ -595,7 +595,7 @@ const FileExplorer: React.FC = () => {
             {/* Ellipsis menu */}
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
                 <IonContent>
-                    <IonList lines="none" className="h-full [&_ion-label]:!flex [&_ion-label]:!items-center">
+                    <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
                         <IonItem button={true} onClick={() => setShowVaultKeyDialog(true)}>
                             <IonLabel>
                                 <IonIcon icon={keyOutline} size="large" />

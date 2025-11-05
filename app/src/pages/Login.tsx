@@ -241,7 +241,7 @@ const Login: React.FC = () => {
                 <IonContent>
                     <IonList
                         lines="none"
-                        className="!bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:!flex [&_ion-label]:!items-center"
+                        className="bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:flex [&_ion-label]:items-center"
                     >
                         <IonItem
                             button={true}
@@ -379,7 +379,7 @@ const Login: React.FC = () => {
 
                     {/* Loading indicator */}
                     <IonLoading
-                        className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
+                        className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
                         isOpen={isLoading}
                         message={loadingState}
                     ></IonLoading>

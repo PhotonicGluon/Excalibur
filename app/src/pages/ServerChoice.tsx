@@ -220,7 +220,7 @@ const Welcome: React.FC = () => {
 
                 {/* Loading indicator */}
                 <IonLoading
-                    className="[&_.loading-wrapper]:!w-full [&_.loading-wrapper_.loading-content]:!w-full"
+                    className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
                     isOpen={isLoading}
                     message={loadingState}
                 ></IonLoading>

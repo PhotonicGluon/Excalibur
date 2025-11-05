@@ -112,7 +112,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
     return (
         <div className="relative">
             <IonSearchbar
-                className="!font-mono [&_.searchbar-search-icon]:!hidden [&_input]:!pr-8 [&_input]:!pl-4"
+                className="font-mono [&_.searchbar-search-icon]:hidden [&_input]:pr-8 [&_input]:pl-4"
                 value={searchText}
                 placeholder={props.placeholder}
                 onIonInput={handleInputChange}

@@ -52,7 +52,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     return (
         <div id={props.id}>
             {/* Sorting Buttons */}
-            <IonGrid className="!pb-1">
+            <IonGrid className="pb-1">
                 <IonRow className="ion-align-items-center">
                     <IonCol className="ml-2 flex items-center font-bold">
                         <div className="flex items-center hover:cursor-pointer" onClick={() => setSortAsc(!sortAsc)}>
@@ -64,7 +64,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             </IonGrid>
 
             {/* Items List */}
-            <IonList lines="none" className="!bg-transparent !pt-0">
+            <IonList lines="none" className="bg-transparent pt-0">
                 {props.items &&
                     props.items.length > 0 &&
                     sortItems().map((item, idx) => (
