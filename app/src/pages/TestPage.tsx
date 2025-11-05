@@ -9,9 +9,10 @@ const TestPage: React.FC = () => {
         <IonPage>
             <IonContent className="ion-padding">
                 <BIP39MnemonicInput
-                    initialWords={"vessel ladder alter error federal sibling chat ability sun glass valve picture".split(
-                        " ",
-                    )}
+                    // initialWords={"vessel ladder alter error federal sibling chat ability sun glass valve picture".split(
+                    //     " ",
+                    // )}
+                    initialWords={"vessel ladder alter error federal".split(" ")}
                     maxSuggestions={5}
                     numWords={12}
                     onEntropy={(entropy) => console.log("Entropy: ", entropy)}

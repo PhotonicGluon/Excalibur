@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 
 import { IonItem, IonLabel, IonList, IonSearchbar } from "@ionic/react";
 
@@ -18,9 +18,11 @@ interface ContainerProps {
     onWordSelected: (word: string | null) => void;
     /** Whether the input is disabled */
     disabled?: boolean;
+    /** Callback function to be called when the input is pasted */
+    onPaste?: (e: React.ClipboardEvent<HTMLIonSearchbarElement>) => void;
 }
 
-const BIP39WordInput: React.FC<ContainerProps> = (props) => {
+const BIP39WordInput = forwardRef<HTMLIonSearchbarElement, ContainerProps>((props, ref) => {
     // States
     const [searchText, setSearchText] = useState(props.value || "");
     const [suggestions, setSuggestions] = useState<string[] | null>(null);
@@ -112,6 +114,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
     return (
         <div className="relative">
             <IonSearchbar
+                ref={ref}
                 className="font-mono [&_.searchbar-search-icon]:hidden [&_input]:pr-8 [&_input]:pl-4"
                 value={searchText}
                 placeholder={props.placeholder}
@@ -120,6 +123,7 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
                 debounce={DEBOUNCE_TIME}
                 disabled={props.disabled}
                 showClearButton={!props.disabled ? "always" : "never"}
+                onPaste={(e) => props.onPaste?.(e)}
             />
             {suggestions && (
                 <IonList className="absolute z-10 w-30 rounded-md shadow-md shadow-black" lines="none">
@@ -128,6 +132,6 @@ const BIP39WordInput: React.FC<ContainerProps> = (props) => {
             )}
         </div>
     );
-};
+});
 
 export default BIP39WordInput;

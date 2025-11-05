@@ -16,7 +16,7 @@ describe("Trie", () => {
         expect(words).toEqual(["hello"]);
     });
 
-    describe("findWords", () => {
+    describe("find words", () => {
         beforeEach(() => {
             for (const word of sampleWords) {
                 trie.insert(word);
@@ -43,6 +43,18 @@ describe("Trie", () => {
         it("should return the exact word if the prefix is the word itself", () => {
             const results = trie.findWords("apple");
             expect(results).toEqual(["apple"]);
+        });
+
+        it("should return true if the word is in the trie", () => {
+            expect(trie.has("apple")).toBe(true);
+        });
+
+        it("should return false if the word is not in the trie", () => {
+            expect(trie.has("fake")).toBe(false);
+        });
+
+        it("should return false if only a partial match", () => {
+            expect(trie.has("app")).toBe(false);
         });
     });
 

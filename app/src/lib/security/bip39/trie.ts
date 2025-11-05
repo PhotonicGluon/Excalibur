@@ -36,6 +36,17 @@ class Trie {
     }
 
     /**
+     * Checks if the trie contains a word
+     *
+     * @param word Word to check
+     * @returns Whether the trie contains the word
+     */
+    public has(word: string): boolean {
+        const matches = this.findWords(word);
+        return matches.length !== 0 && matches[0] === word;
+    }
+
+    /**
      * Finds all words in the trie that start with the given prefix
      *
      * @param prefix Prefix to search for
