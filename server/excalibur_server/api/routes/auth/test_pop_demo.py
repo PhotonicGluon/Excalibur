@@ -46,6 +46,24 @@ class TestBasicPoPChecks:
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid timestamp"
 
+    def test_incorrect_path(self, auth_client: TestClient):
+        import time
+
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={
+                "X-SRP-PoP": generate_pop_header(
+                    master_key=b"one demo 16B key",
+                    method="GET",
+                    path="/api/some-incorrect-path",
+                    timestamp=int(time.time()),
+                    nonce=_gen_nonce(),
+                )
+            },
+        )
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid PoP"
+
     def test_nonce_reuse(self, auth_client: TestClient):
         import time
 
