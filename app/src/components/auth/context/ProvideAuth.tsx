@@ -15,12 +15,13 @@ const HEARTBEAT_RETRY_INTERVAL = 1; // Interval between retries, in seconds
  *
  * @param apiURL API URL
  * @param token Authentication token
+ * @param masterKey The master key to use for authentication
  * @returns Whether the heartbeat was successful
  */
-async function heartbeat(apiURL: string, token: string): Promise<boolean> {
+async function heartbeat(apiURL: string, token: string, masterKey: Buffer): Promise<boolean> {
     // Retry with intervals to make sure that the heartbeat is successful
     for (let i = 0; i < HEARTBEAT_RETRY_COUNT; i++) {
-        const { success: connected, authValid: authenticated } = await _heartbeat(apiURL, token);
+        const { success: connected, authValid: authenticated } = await _heartbeat(apiURL, token, masterKey);
         if (authenticated === false) {
             return false;
         }
@@ -92,12 +93,12 @@ function useProvideAuth(): AuthProvider {
 
     async function loginFunc(apiURL: string, authInfo: AuthInfo) {
         // Set up heartbeat interval
-        // FIXME: The heartbeat interval is using the old `authInfo`'s token for the heartbeat
         const interval = setInterval(async () => {
-            const connected = await heartbeat(apiURL!, getToken()!);
+            const connected = await heartbeat(apiURL!, getToken()!, authInfo.key);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
-                // TODO: Can we display a toast to inform the user why they were kicked back?
+                // TODO: Does this work on mobile?
+                alert("Heartbeat failed, sending back to login screen");
                 console.debug("Heartbeat failed, sending back to login screen");
                 window.location.href = "/login";
                 return;

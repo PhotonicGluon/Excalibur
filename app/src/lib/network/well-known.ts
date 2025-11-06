@@ -1,16 +1,21 @@
-import { timedFetch } from "./fetch";
+import { popFetch, timedFetch } from "./fetch";
 
 /**
  * Checks if the authentication token is valid.
  *
  * @param apiURL The API URL
  * @param token The authentication token
+ * @param masterKey The master key to use for authentication
  * @returns A promise which resolves to an object with a success boolean and optionally a boolean
  *      describing whether the authentication token is still valid
  */
-export async function heartbeat(apiURL: string, token: string): Promise<{ success: boolean; authValid?: boolean }> {
+export async function heartbeat(
+    apiURL: string,
+    token: string,
+    masterKey: Buffer,
+): Promise<{ success: boolean; authValid?: boolean }> {
     try {
-        const response = await timedFetch(`${apiURL}/well-known/heartbeat`, {
+        const response = await popFetch(`${apiURL}/well-known/heartbeat`, masterKey, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
         });

@@ -1,11 +1,13 @@
 from typing import Annotated
 
-from fastapi import Depends, Response, status
+from fastapi import Depends, Header, Request, Response, status
+from fastapi.exceptions import HTTPException
 from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
 from excalibur_server.api.routes.well_known import router
-from excalibur_server.src.auth.credentials import API_TOKEN_HEADER, check_auth_token
+from excalibur_server.src.auth.credentials import API_TOKEN_HEADER, get_credentials
+from excalibur_server.src.auth.pop import POP_HEADER_PATTERN
 
 HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type": "text/plain"}
 
@@ -25,8 +27,17 @@ HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate", "Content-Type
     response_class=PlainTextResponse,
 )
 async def heartbeat_endpoint(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(API_TOKEN_HEADER)],
-    response: Response,
+    hmac_validation: Annotated[
+        str,
+        Header(
+            alias="X-SRP-PoP",
+            pattern=POP_HEADER_PATTERN,
+            description="HMAC for authentication.",
+        ),
+    ] = "",
+    response: Response = ...,
 ) -> str:
     """
     Health check endpoint.
@@ -35,8 +46,12 @@ async def heartbeat_endpoint(
     """
 
     response.headers.update(HEADERS)
-    if credentials and check_auth_token(credentials.credentials):
-        response.status_code = status.HTTP_202_ACCEPTED
-        return "Auth OK"
+    if credentials and hmac_validation:
+        try:
+            await get_credentials(request, hmac_validation, credentials)
+            response.status_code = status.HTTP_202_ACCEPTED
+            return "Auth OK"
+        except HTTPException:
+            pass
 
     return "OK"
