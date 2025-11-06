@@ -268,7 +268,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         <IonItem id={props.id} className={rowColourClass} button={true}>
             {/* Main item content */}
             <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
-                <IonGrid className="w-full" onClick={() => onClickItem()}>
+                <IonGrid
+                    className="w-full"
+                    onClick={() => onClickItem()}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
+                    }}
+                >
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
                             <IonIcon
