@@ -18,9 +18,17 @@ def start_server(
             help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
         ),
     ] = True,
-    delay_responses_duration: Annotated[
-        float, typer.Option("--delay", "-d", help="Duration to delay responses, in seconds.")
-    ] = 0,
+    delay: Annotated[
+        tuple[int, int],
+        typer.Option(
+            "--delay",
+            "-d",
+            help=(
+                "HTTP responses' delays, in milliseconds.\n\n"
+                + "The first value is the incoming delay and the second value is the outgoing delay."
+            ),
+        ),
+    ] = (0, 0),
     enable_cors: Annotated[
         bool,
         typer.Option(
@@ -58,7 +66,7 @@ def start_server(
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1" if debug else "0"
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
     os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
-    os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = str(delay_responses_duration)
+    os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = f"{delay[0]},{delay[1]}"
     os.environ["EXCALIBUR_SERVER_LOGGING"] = "1" if enable_logging else "0"
 
     # Make the folders

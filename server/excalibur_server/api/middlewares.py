@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 
@@ -6,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.middleware.delayer import DelayMiddleware
 from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 
 
@@ -32,15 +32,11 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
         )
 
     # Add artificial delay
-    artificial_delay = float(os.environ.get("EXCALIBUR_SERVER_DELAY_RESPONSES", 0))
-    if artificial_delay > 0:
-        logger.warning(f"Artificial delay of {artificial_delay} seconds enabled.")
-
-        # Add artificial delay
-        @app.middleware("http")
-        async def add_artificial_delay(request, call_next):
-            await asyncio.sleep(artificial_delay)
-            return await call_next(request)
+    delay_str = os.getenv("EXCALIBUR_SERVER_DELAY_RESPONSES", "0,0")
+    if delay_str != "0,0":
+        delays = tuple(map(int, delay_str.split(",")))
+        logger.warning(f"Artificial delay enabled (in {delays[0]} ms, out {delays[1]} ms).")
+        app.add_middleware(DelayMiddleware, delay_in=delays[0], delay_out=delays[1])
 
     # Encrypt responses for specific routes
     from excalibur_server.src.middleware.crypto.middleware import RouteEncryptionMiddleware
