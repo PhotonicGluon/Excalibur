@@ -1,13 +1,7 @@
 {
     "overrides": [
         {
-            "files": "*.yml",
-            "options": {
-                "tabWidth": 4
-            }
-        },
-        {
-            "files": "*.json",
+            "files": "*.(json|yml|code-workspace)",
             "options": {
                 "tabWidth": 4,
                 "printWidth": 120

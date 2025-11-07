@@ -4,6 +4,7 @@ import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { useImmer } from "use-immer";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
 import {
@@ -55,7 +56,6 @@ import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
-import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
@@ -64,6 +64,19 @@ import { useSettings } from "@components/settings/context";
 
 const TOKEN_EARLY_REFRESH_THRESHOLD = 0.95; // 95% of token expiry then refresh
 const TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME = 5 * 1000; // 5 seconds
+
+/** Represents a job that is currently running */
+interface Job {
+    /** Name of the file handled by the job */
+    filename: string;
+    /** Status of the job */
+    status: string;
+    /** Progress of the job.
+     *
+     * A `null` value means indeterminate progress.
+     */
+    progress: number | null;
+}
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -81,10 +94,7 @@ const FileExplorer: React.FC = () => {
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
-
-    const [showProgressDialog, setShowProgressDialog] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-    const [dialogMessage, setDialogMessage] = useState("");
+    const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
@@ -185,12 +195,17 @@ const FileExplorer: React.FC = () => {
          * @param rawFile A {@link PickedFile} object
          */
         async function _handleFileUpload(rawFile: PickedFile) {
-            // Show dialog
-            setShowProgressDialog(true);
-            setUploadProgress(null);
+            // Add to jobs map
+            const jobId = crypto.randomUUID();
+            updateJobs((draft) => {
+                draft.set(jobId, {
+                    filename: rawFile.name,
+                    status: "Setting up data stream...",
+                    progress: null,
+                });
+            });
 
             // Set up file data stream
-            setDialogMessage("Setting up data stream...");
             const rawFileSize = rawFile.size;
             let rawFileDataStream: ReadableStream<Buffer>;
             if (rawFile.blob) {
@@ -210,7 +225,7 @@ const FileExplorer: React.FC = () => {
                             (chunk, err) => {
                                 if (err) {
                                     presentSnackbar("Failed to read file chunk", "danger");
-                                    setShowProgressDialog(false);
+                                    updateJobs((draft) => draft.delete(jobId));
                                     controller.error(err);
                                     return;
                                 }
@@ -229,7 +244,10 @@ const FileExplorer: React.FC = () => {
             }
 
             // Create stream that handles the encryption and updates the progress
-            setDialogMessage("Encrypting...");
+            updateJobs((draft) => {
+                draft.get(jobId)!.status = "Encrypting...";
+            });
+
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
@@ -243,11 +261,15 @@ const FileExplorer: React.FC = () => {
                     rawFileSize,
                     settings.cryptoChunkSize,
                     // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy(setUploadProgress),
+                    Comlink.proxy((progress) => {
+                        updateJobs((draft) => {
+                            draft.get(jobId)!.progress = progress;
+                        });
+                    }),
                 );
             } catch (e) {
                 presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                setShowProgressDialog(false);
+                updateJobs((draft) => draft.delete(jobId));
                 return;
             } finally {
                 // Free up resources
@@ -255,20 +277,23 @@ const FileExplorer: React.FC = () => {
             }
 
             // Upload the file
-            setDialogMessage("Uploading...");
-            setUploadProgress(null);
+            updateJobs((draft) => {
+                const job = draft.get(jobId)!;
+                job.status = "Uploading...";
+                job.progress = null;
+            });
             const file = new File([blob], rawFile.name + ".exef");
             const uploadResponse = await uploadFile(auth, requestedPath, file, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
-                setShowProgressDialog(false);
+                updateJobs((draft) => draft.delete(jobId));
                 return;
             }
 
             // Refresh page
             refreshContents(false);
             presentSnackbar("File uploaded", "success");
-            setShowProgressDialog(false);
+            updateJobs((draft) => draft.delete(jobId));
         }
 
         if (!files) {
@@ -294,12 +319,10 @@ const FileExplorer: React.FC = () => {
         const checkSizeResponse = await checkSize(auth, rawFile.size);
         if (!checkSizeResponse.success) {
             presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
-            setShowProgressDialog(false);
             return;
         }
         if (checkSizeResponse.isTooLarge) {
             presentSnackbar("File too large", "danger");
-            setShowProgressDialog(false);
             return;
         }
 
@@ -669,7 +692,7 @@ const FileExplorer: React.FC = () => {
                                     setShowJobsPopover(true);
                                 }}
                             >
-                                <span>No Jobs</span>
+                                {jobs.size > 0 ? <span>{jobs.size} Jobs</span> : <span>No Jobs</span>}
                             </div>
 
                             {/* Jobs' details */}
@@ -682,7 +705,20 @@ const FileExplorer: React.FC = () => {
                                 onDidDismiss={() => setShowJobsPopover(false)}
                             >
                                 <IonContent className="ion-padding rounded-lg">
-                                    <span className="block w-full text-center">Active jobs go here</span>
+                                    {jobs.size > 0 ? (
+                                        <div className="flex flex-col gap-2">
+                                            {Array.from(jobs.entries()).map(([jobId, job]) => (
+                                                <div key={jobId} className="flex items-center justify-between">
+                                                    {/* TODO: Update */}
+                                                    <span>{job.filename}</span>
+                                                    <span>{job.progress ? `${job.progress * 100}%` : ""}</span>
+                                                    <span>{job.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="block w-full text-center">No jobs</span>
+                                    )}
                                 </IonContent>
                             </IonPopover>
                         </div>
@@ -706,14 +742,6 @@ const FileExplorer: React.FC = () => {
                             <IonText>Drop files here to upload</IonText>
                         </div>
                     )}
-
-                    {/* Encryption/Decryption progress indicator */}
-                    <ProgressDialog
-                        isOpen={showProgressDialog}
-                        message={dialogMessage}
-                        progress={uploadProgress}
-                        onDidDismiss={() => setShowProgressDialog(false)}
-                    />
 
                     {/* Vault key info dialog */}
                     <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
@@ -755,9 +783,11 @@ const FileExplorer: React.FC = () => {
                             value={{
                                 onRename: onRenameItem,
                                 onDelete: onDeleteItem,
-                                setShowDialog: setShowProgressDialog,
-                                setDialogMessage: setDialogMessage,
-                                setProgress: setUploadProgress,
+                                // TODO: Can we remove?
+                                setShowDialog: () => {},
+                                setDialogMessage: () => {},
+                                setProgress: () => {},
+                                // TODO: END Can we remove?
                                 presentAlert: presentAlert,
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
