@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
@@ -78,6 +78,9 @@ const FileExplorer: React.FC = () => {
     // States
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
+
+    const jobsPopover = useRef<HTMLIonPopoverElement>(null);
+    const [showJobsPopover, setShowJobsPopover] = useState(false);
 
     const [showProgressDialog, setShowProgressDialog] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -651,9 +654,40 @@ const FileExplorer: React.FC = () => {
                 {/* Header content */}
                 <IonHeader>
                     <IonToolbar className="[&::part(container)]:min-h-16">
+                        {/* Left-side buttons */}
                         <IonButtons className="w-24" slot="start">
                             <IonMenuButton onClick={() => menuController.open()} />
                         </IonButtons>
+
+                        {/* Jobs display and popover */}
+                        <div className="flex w-full justify-center">
+                            {/* Jobs' summary */}
+                            <div
+                                className="hover:cursor-pointer"
+                                onClick={(e) => {
+                                    jobsPopover.current!.event = e;
+                                    setShowJobsPopover(true);
+                                }}
+                            >
+                                <span>No Jobs</span>
+                            </div>
+
+                            {/* Jobs' details */}
+                            <IonPopover
+                                ref={jobsPopover}
+                                side="bottom"
+                                alignment="center"
+                                style={{ "--offset-y": "calc(var(--spacing)*2)" }}
+                                isOpen={showJobsPopover}
+                                onDidDismiss={() => setShowJobsPopover(false)}
+                            >
+                                <IonContent className="ion-padding rounded-lg">
+                                    <span className="block w-full text-center">Active jobs go here</span>
+                                </IonContent>
+                            </IonPopover>
+                        </div>
+
+                        {/* Right-side buttons */}
                         <IonButtons className="w-24 justify-end" slot="end">
                             {/* Ellipsis menu trigger button */}
                             <IonButton id="ellipsis-button">
