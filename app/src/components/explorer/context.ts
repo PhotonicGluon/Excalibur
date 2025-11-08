@@ -2,6 +2,19 @@ import { createContext, useContext } from "react";
 
 import { AlertOptions, ToastOptions } from "@ionic/core";
 
+import { Job } from "./JobEntry";
+
+/**
+ * Manages jobs and their states.
+ */
+export interface JobsManager {
+    addJob(id: string, job: Job): void;
+    getJob(id: string): Job;
+    updateJob(id: string, newStatus: string, newProgress?: number | null): void;
+    updateProgress(id: string, newProgress: number | null): void;
+    deleteJob(id: string): void;
+}
+
 /**
  * Methods for UI feedback, specifically for file explorer components.
  */

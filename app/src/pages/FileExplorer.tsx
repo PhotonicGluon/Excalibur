@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useImmer } from "use-immer";
 
@@ -59,24 +59,13 @@ import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
-import { uiFeedbackContext } from "@components/explorer/context";
+import { Job } from "@components/explorer/JobEntry";
+import JobsList from "@components/explorer/JobsList";
+import { JobsManager, uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 const TOKEN_EARLY_REFRESH_THRESHOLD = 0.95; // 95% of token expiry then refresh
 const TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME = 5 * 1000; // 5 seconds
-
-/** Represents a job that is currently running */
-interface Job {
-    /** Name of the file handled by the job */
-    filename: string;
-    /** Status of the job */
-    status: string;
-    /** Progress of the job.
-     *
-     * A `null` value means indeterminate progress.
-     */
-    progress: number | null;
-}
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -95,6 +84,36 @@ const FileExplorer: React.FC = () => {
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
     const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
+    const jobsManager: JobsManager = useMemo(() => {
+        return {
+            getJob(id: string): Job {
+                return jobs.get(id)!;
+            },
+            addJob(id: string, job: Job): void {
+                updateJobs((draft) => {
+                    draft.set(id, job);
+                });
+            },
+            updateJob(id: string, newStatus: string, newProgress?: number | null): void {
+                updateJobs((draft) => {
+                    draft.get(id)!.status = newStatus;
+                    if (newProgress) {
+                        draft.get(id)!.progress = newProgress;
+                    }
+                });
+            },
+            updateProgress(id: string, newProgress: number | null): void {
+                updateJobs((draft) => {
+                    draft.get(id)!.progress = newProgress;
+                });
+            },
+            deleteJob(id: string): void {
+                updateJobs((draft) => {
+                    draft.delete(id);
+                });
+            },
+        };
+    }, [jobs, updateJobs]);
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
@@ -133,18 +152,6 @@ const FileExplorer: React.FC = () => {
         },
         [presentToast],
     );
-
-    /**
-     * Deletes a job from the jobs map.
-     *
-     * @param jobID The ID of the job to delete
-     */
-    function deleteJob(jobID: string) {
-        updateJobs((draft) => {
-            // We need to wrap this in braces to avoid 'returning' the delete operation
-            draft.delete(jobID);
-        });
-    }
 
     // Functions
     /**
@@ -207,14 +214,12 @@ const FileExplorer: React.FC = () => {
          * @param rawFile A {@link PickedFile} object
          */
         async function _handleFileUpload(rawFile: PickedFile) {
-            // Add to jobs map
+            // Create new job
             const jobID = crypto.randomUUID();
-            updateJobs((draft) => {
-                draft.set(jobID, {
-                    filename: rawFile.name,
-                    status: "Setting up data stream...",
-                    progress: null,
-                });
+            jobsManager.addJob(jobID, {
+                filename: rawFile.name,
+                status: "Setting up data stream...",
+                progress: null,
             });
 
             // Set up file data stream
@@ -237,7 +242,7 @@ const FileExplorer: React.FC = () => {
                             (chunk, err) => {
                                 if (err) {
                                     presentSnackbar("Failed to read file chunk", "danger");
-                                    deleteJob(jobID);
+                                    jobsManager.deleteJob(jobID);
                                     controller.error(err);
                                     return;
                                 }
@@ -256,10 +261,7 @@ const FileExplorer: React.FC = () => {
             }
 
             // Create stream that handles the encryption and updates the progress
-            updateJobs((draft) => {
-                draft.get(jobID)!.status = "Encrypting...";
-            });
-
+            jobsManager.updateJob(jobID, "Encrypting...");
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
@@ -274,14 +276,12 @@ const FileExplorer: React.FC = () => {
                     settings.cryptoChunkSize,
                     // `proxy()` ensures the callback function works across threads
                     Comlink.proxy((progress) => {
-                        updateJobs((draft) => {
-                            draft.get(jobID)!.progress = progress;
-                        });
+                        jobsManager.updateProgress(jobID, progress);
                     }),
                 );
             } catch (e) {
                 presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                deleteJob(jobID);
+                jobsManager.deleteJob(jobID);
                 return;
             } finally {
                 // Free up resources
@@ -289,24 +289,20 @@ const FileExplorer: React.FC = () => {
             }
 
             // Upload the file
-            console.debug(`Uploading ${rawFile.name}`);
-            updateJobs((draft) => {
-                const job = draft.get(jobID)!;
-                job.status = "Uploading...";
-                job.progress = null;
-            });
+            console.debug(`Uploading file ${rawFile.name}...`);
+            jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
             const file = new File([blob], rawFile.name + ".exef");
             const uploadResponse = await uploadFile(auth, requestedPath, file, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
-                deleteJob(jobID);
+                jobsManager.deleteJob(jobID);
                 return;
             }
 
             // Refresh page
             refreshContents(false);
             presentSnackbar("File uploaded", "success");
-            deleteJob(jobID);
+            jobsManager.deleteJob(jobID);
         }
 
         if (!files) {
@@ -717,22 +713,7 @@ const FileExplorer: React.FC = () => {
                                 isOpen={showJobsPopover}
                                 onDidDismiss={() => setShowJobsPopover(false)}
                             >
-                                <IonContent className="ion-padding rounded-lg">
-                                    {jobs.size > 0 ? (
-                                        <div className="flex flex-col gap-2">
-                                            {Array.from(jobs.entries()).map(([jobId, job]) => (
-                                                <div key={jobId} className="flex items-center justify-between">
-                                                    {/* TODO: Update */}
-                                                    <span>{job.filename}</span>
-                                                    <span>{job.progress ? `${job.progress * 100}%` : ""}</span>
-                                                    <span>{job.status}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="block w-full text-center">No jobs</span>
-                                    )}
-                                </IonContent>
+                                <JobsList jobs={jobs} />
                             </IonPopover>
                         </div>
 
