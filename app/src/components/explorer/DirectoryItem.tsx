@@ -68,15 +68,18 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileName = nameNoExEF;
 
         /**
-         * Actual function handling the download process.
+         * Handles the file download process.
          */
-        async function handleDownload() {
-            uiFeedback.setShowDialog(true);
-            uiFeedback.setDialogMessage("Getting download stream...");
-            uiFeedback.setProgress(null);
+        async function _handleDownload() {
+            // Create new job
+            const jobID = crypto.randomUUID();
+            uiFeedback.jobsManager.addJob(jobID, {
+                filename: fileName,
+                status: "Downloading...",
+                progress: null,
+            });
 
             // Send request for file
-            uiFeedback.setDialogMessage("Downloading...");
             const response = await downloadFile(auth, props.fullpath);
             if (!response.success) {
                 uiFeedback.presentToast({
@@ -84,7 +87,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     duration: 2000,
                     color: "danger",
                 });
-                uiFeedback.setShowDialog(false);
+                uiFeedback.jobsManager.deleteJob(jobID);
                 return;
             }
 
@@ -93,7 +96,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const fileSize = encryptedFileSize - ExEF.additionalSize;
 
             // Create stream that handles the decryption and updates the progress
-            uiFeedback.setDialogMessage("Decrypting...");
+            uiFeedback.jobsManager.updateJob(jobID, "Decrypting...");
 
             const worker = new DecryptionProcessorWorker();
             const processor = Comlink.wrap<DecryptionProcessor>(worker);
@@ -108,7 +111,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     fileSize,
                     settings.cryptoChunkSize,
                     // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy(uiFeedback.setProgress),
+                    Comlink.proxy((progress) => {
+                        uiFeedback.jobsManager.updateProgress(jobID, progress);
+                    }),
                 );
             } catch (e) {
                 uiFeedback.presentToast({
@@ -116,7 +121,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     duration: 2000,
                     color: "danger",
                 });
-                uiFeedback.setShowDialog(false);
+                uiFeedback.jobsManager.deleteJob(jobID);
                 return;
             } finally {
                 // Free up resources
@@ -124,8 +129,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
 
             // Save file
-            uiFeedback.setDialogMessage("Saving...");
-            uiFeedback.setProgress(null);
+            uiFeedback.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
             console.debug(`Saving file ${fileName}...`);
             try {
                 if (Capacitor.getPlatform() === "web") {
@@ -169,7 +173,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     color: "danger",
                 });
             } finally {
-                uiFeedback.setShowDialog(false);
+                uiFeedback.jobsManager.deleteJob(jobID);
             }
         }
 
@@ -200,7 +204,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         {
                             text: "Yes",
                             role: "confirm",
-                            handler: async () => await handleDownload(),
+                            handler: () => _handleDownload(),
                         },
                     ],
                 });
@@ -210,7 +214,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
         }
 
-        await handleDownload();
+        _handleDownload();
     }
 
     /**

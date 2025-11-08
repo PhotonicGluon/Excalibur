@@ -96,15 +96,27 @@ const FileExplorer: React.FC = () => {
             },
             updateJob(id: string, newStatus: string, newProgress?: number | null): void {
                 updateJobs((draft) => {
-                    draft.get(id)!.status = newStatus;
+                    const job = draft.get(id);
+                    if (!job) {
+                        // We will fail semi-silently
+                        console.warn(`Job ${id} not found for job update`);
+                        return;
+                    }
+                    job.status = newStatus;
                     if (newProgress) {
-                        draft.get(id)!.progress = newProgress;
+                        job.progress = newProgress;
                     }
                 });
             },
             updateProgress(id: string, newProgress: number | null): void {
                 updateJobs((draft) => {
-                    draft.get(id)!.progress = newProgress;
+                    const job = draft.get(id);
+                    if (!job) {
+                        // We will fail semi-silently
+                        console.warn(`Job ${id} not found for progress update`);
+                        return;
+                    }
+                    job.progress = newProgress;
                 });
             },
             deleteJob(id: string): void {
@@ -209,11 +221,11 @@ const FileExplorer: React.FC = () => {
         let force = false;
 
         /**
-         * Handles the actual file upload process.
+         * Handles the file upload process.
          *
          * @param rawFile A {@link PickedFile} object
          */
-        async function _handleFileUpload(rawFile: PickedFile) {
+        async function _handleUpload(rawFile: PickedFile) {
             // Create new job
             const jobID = crypto.randomUUID();
             jobsManager.addJob(jobID, {
@@ -374,7 +386,7 @@ const FileExplorer: React.FC = () => {
                         role: "confirm",
                         handler: () => {
                             force = true;
-                            _handleFileUpload(rawFile);
+                            _handleUpload(rawFile);
                         },
                     },
                 ],
@@ -382,7 +394,7 @@ const FileExplorer: React.FC = () => {
             return;
         }
 
-        _handleFileUpload(rawFile);
+        _handleUpload(rawFile);
     }
 
     /**
@@ -775,13 +787,9 @@ const FileExplorer: React.FC = () => {
                     {directoryContents && (
                         <uiFeedbackContext.Provider
                             value={{
+                                jobsManager: jobsManager,
                                 onRename: onRenameItem,
                                 onDelete: onDeleteItem,
-                                // TODO: Can we remove?
-                                setShowDialog: () => {},
-                                setDialogMessage: () => {},
-                                setProgress: () => {},
-                                // TODO: END Can we remove?
                                 presentAlert: presentAlert,
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
