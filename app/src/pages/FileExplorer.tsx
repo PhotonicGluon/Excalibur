@@ -134,6 +134,18 @@ const FileExplorer: React.FC = () => {
         [presentToast],
     );
 
+    /**
+     * Deletes a job from the jobs map.
+     *
+     * @param jobID The ID of the job to delete
+     */
+    function deleteJob(jobID: string) {
+        updateJobs((draft) => {
+            // We need to wrap this in braces to avoid 'returning' the delete operation
+            draft.delete(jobID);
+        });
+    }
+
     // Functions
     /**
      * Logs the user out of the app and navigates back to the login screen.
@@ -196,9 +208,9 @@ const FileExplorer: React.FC = () => {
          */
         async function _handleFileUpload(rawFile: PickedFile) {
             // Add to jobs map
-            const jobId = crypto.randomUUID();
+            const jobID = crypto.randomUUID();
             updateJobs((draft) => {
-                draft.set(jobId, {
+                draft.set(jobID, {
                     filename: rawFile.name,
                     status: "Setting up data stream...",
                     progress: null,
@@ -225,7 +237,7 @@ const FileExplorer: React.FC = () => {
                             (chunk, err) => {
                                 if (err) {
                                     presentSnackbar("Failed to read file chunk", "danger");
-                                    updateJobs((draft) => draft.delete(jobId));
+                                    deleteJob(jobID);
                                     controller.error(err);
                                     return;
                                 }
@@ -245,7 +257,7 @@ const FileExplorer: React.FC = () => {
 
             // Create stream that handles the encryption and updates the progress
             updateJobs((draft) => {
-                draft.get(jobId)!.status = "Encrypting...";
+                draft.get(jobID)!.status = "Encrypting...";
             });
 
             const worker = new EncryptionProcessorWorker();
@@ -263,13 +275,13 @@ const FileExplorer: React.FC = () => {
                     // `proxy()` ensures the callback function works across threads
                     Comlink.proxy((progress) => {
                         updateJobs((draft) => {
-                            draft.get(jobId)!.progress = progress;
+                            draft.get(jobID)!.progress = progress;
                         });
                     }),
                 );
             } catch (e) {
                 presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                updateJobs((draft) => draft.delete(jobId));
+                deleteJob(jobID);
                 return;
             } finally {
                 // Free up resources
@@ -277,8 +289,9 @@ const FileExplorer: React.FC = () => {
             }
 
             // Upload the file
+            console.debug(`Uploading ${rawFile.name}`);
             updateJobs((draft) => {
-                const job = draft.get(jobId)!;
+                const job = draft.get(jobID)!;
                 job.status = "Uploading...";
                 job.progress = null;
             });
@@ -286,14 +299,14 @@ const FileExplorer: React.FC = () => {
             const uploadResponse = await uploadFile(auth, requestedPath, file, force);
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
-                updateJobs((draft) => draft.delete(jobId));
+                deleteJob(jobID);
                 return;
             }
 
             // Refresh page
             refreshContents(false);
             presentSnackbar("File uploaded", "success");
-            updateJobs((draft) => draft.delete(jobId));
+            deleteJob(jobID);
         }
 
         if (!files) {
