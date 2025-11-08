@@ -103,7 +103,7 @@ const FileExplorer: React.FC = () => {
                         return;
                     }
                     job.status = newStatus;
-                    if (newProgress) {
+                    if (newProgress !== undefined) {
                         job.progress = newProgress;
                     }
                 });
@@ -713,12 +713,19 @@ const FileExplorer: React.FC = () => {
                                     setShowJobsPopover(true);
                                 }}
                             >
-                                {jobs.size > 0 ? <span>{jobs.size} Jobs</span> : <span>No Jobs</span>}
+                                {jobs.size > 0 ? (
+                                    <span>
+                                        {jobs.size} Job{jobs.size === 1 ? "" : "s"}
+                                    </span>
+                                ) : (
+                                    <span>No Jobs</span>
+                                )}
                             </div>
 
                             {/* Jobs' details */}
                             <IonPopover
                                 ref={jobsPopover}
+                                className="[&::part(content)]:min-w-80"
                                 side="bottom"
                                 alignment="center"
                                 style={{ "--offset-y": "calc(var(--spacing)*2)" }}

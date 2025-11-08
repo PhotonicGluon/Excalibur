@@ -17,7 +17,7 @@ const JobsList: React.FC<ContainerProps> = (props) => {
                     ))}
                 </div>
             ) : (
-                <span className="block w-full text-center">No jobs</span>
+                <span className="block text-center">No active jobs</span>
             )}
         </IonContent>
     );

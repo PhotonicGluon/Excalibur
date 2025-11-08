@@ -2,22 +2,16 @@ import React from "react";
 
 import { IonContent, IonPage } from "@ionic/react";
 
-import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
+import CircularProgressBar from "@components/CircularProgressBar";
 
 const TestPage: React.FC = () => {
+    const percentage = 0.4;
     return (
         <IonPage>
             <IonContent className="ion-padding">
-                <BIP39MnemonicInput
-                    // initialWords={"vessel ladder alter error federal sibling chat ability sun glass valve picture".split(
-                    //     " ",
-                    // )}
-                    initialWords={"vessel ladder alter error federal".split(" ")}
-                    maxSuggestions={5}
-                    numWords={12}
-                    onEntropy={(entropy) => console.log("Entropy: ", entropy)}
-                    onError={(error) => console.error("Error: ", error)}
-                />
+                <h1>Circular Progress Bars</h1>
+                <CircularProgressBar className="size-20" value={percentage} transitionDuration={0.5} />
+                <CircularProgressBar className="size-20" value={null} transitionDuration={0.5} />
             </IonContent>
         </IonPage>
     );

@@ -1,3 +1,5 @@
+import CircularProgressBar from "@components/CircularProgressBar";
+
 /** Represents a job that is currently running */
 export interface Job {
     /** Name of the file handled by the job */
@@ -17,8 +19,8 @@ const JobEntry: React.FC<Job> = (job) => {
     return (
         <div className="flex items-center justify-between">
             <span>{job.filename}</span>
-            <span>{job.progress ? `${job.progress * 100}%` : ""}</span>
             <span>{job.status}</span>
+            <CircularProgressBar className="size-6" value={job.progress} />
         </div>
     );
 };
