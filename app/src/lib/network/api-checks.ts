@@ -9,6 +9,8 @@ export interface APICheckResult {
     valid: boolean | null;
     /** Whether the API is compatible with the current version of Excalibur */
     compatible: boolean | null;
+    /** The version of the API server; only present if valid and compatible */
+    version?: string;
     /** An optional error message */
     error?: string;
 }
@@ -41,7 +43,7 @@ export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<API
         };
     }
 
-    return { reachable: true, valid: true, compatible: true };
+    return { reachable: true, valid: true, compatible: true, version: connectionResult.version };
 }
 
 /**
@@ -52,17 +54,18 @@ export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<API
  * @returns A promise that resolves to an object with three properties:
  *      - `reachable`: Whether the server is reachable
  *      - `valid`: Whether the URL is a valid API URL
+ *      - `version`: The version of the API server
  *      - `error`: An optional error message
  */
 async function checkValidity(
     apiURL: string,
     timeout?: number,
-): Promise<{ reachable: boolean; valid: boolean; error?: string }> {
+): Promise<{ reachable: boolean; valid: boolean; version?: string; error?: string }> {
     try {
         const response = await timedFetch(`${apiURL}/well-known/version`, {}, timeout);
         switch (response.status) {
             case 200:
-                return { reachable: true, valid: true };
+                return { reachable: true, valid: true, version: (await response.json()).version };
             default:
                 return { reachable: true, valid: false, error: "Given URL does not correspond to an API server" };
         }
