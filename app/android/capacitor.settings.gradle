@@ -21,7 +21,7 @@ include ':capacitor-screen-orientation'
 project(':capacitor-screen-orientation').projectDir = new File('../../node_modules/.pnpm/@capacitor+screen-orientation@7.0.2_@capacitor+core@7.4.4/node_modules/@capacitor/screen-orientation/android')
 
 include ':capawesome-capacitor-file-picker'
-project(':capawesome-capacitor-file-picker').projectDir = new File('../../node_modules/.pnpm/@capawesome+capacitor-file-_abaaa485311380b4466d7939c857664f/node_modules/@capawesome/capacitor-file-picker/android')
+project(':capawesome-capacitor-file-picker').projectDir = new File('../../node_modules/.pnpm/@capawesome+capacitor-file-picker@7.2.0_@capacitor+core@7.4.4/node_modules/@capawesome/capacitor-file-picker/android')
 
 include ':capacitor-blob-writer'
-project(':capacitor-blob-writer').projectDir = new File('../../node_modules/.pnpm/capacitor-blob-writer@1.1.1_6174789dd02428ddc1454efd9f0f09f8/node_modules/capacitor-blob-writer/android')
+project(':capacitor-blob-writer').projectDir = new File('../../node_modules/.pnpm/capacitor-blob-writer@1.1.19_@capacitor+core@7.4.4_@capacitor+filesystem@7.1.4_@capacitor+core@7.4.4_/node_modules/capacitor-blob-writer/android')
