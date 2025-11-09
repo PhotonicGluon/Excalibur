@@ -17,6 +17,7 @@
         "type": "git",
         "url": "git+https://github.com/PhotonicGluon/Excalibur.git"
     },
+    "main": "out/main/index.js",
     "scripts": {
         "preinstall": "npx only-allow pnpm",
         "dev": "vite --port 8100",
@@ -41,6 +42,8 @@
         "@capacitor/privacy-screen": "^1.1.1",
         "@capacitor/screen-orientation": "^7.0.2",
         "@capawesome/capacitor-file-picker": "^7.2.0",
+        "@electron-toolkit/preload": "^3.0.2",
+        "@electron-toolkit/utils": "^4.0.0",
         "@ionic/core": "^8.7.8",
         "@ionic/react": "^8.7.8",
         "@ionic/react-router": "^8.7.8",
@@ -70,6 +73,8 @@
         "@vitejs/plugin-legacy": "^7.2.1",
         "@vitejs/plugin-react": "^5.1.0",
         "cypress": "^15.6.0",
+        "electron": "^39.1.1",
+        "electron-vite": "^4.0.1",
         "eslint": "^9.39.0",
         "eslint-plugin-cypress": "^5.2.0",
         "eslint-plugin-react": "^7.37.5",

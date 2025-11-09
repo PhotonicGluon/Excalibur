@@ -26,7 +26,7 @@ function getAliasesFromTSConfig() {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export const viteConfig = {
     plugins: [
         react(),
         legacy(),
@@ -65,4 +65,5 @@ export default defineConfig({
             },
         },
     },
-});
+};
+export default defineConfig(viteConfig);

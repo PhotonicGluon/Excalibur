@@ -5,6 +5,7 @@ onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - core-js
   - cypress
+  - electron
   - esbuild
   - sharp
 
