@@ -5,7 +5,7 @@
         "preinstall": "npx only-allow pnpm",
         "prepare": "husky",
         "update": "npx npm-check-updates --peer -u && cd app && pnpm run update && cd .. && pnpm i --lockfile-only && cd server && uv lock --upgrade",
-        "sync": "pnpm i && cd app && pnpm i && npx cap sync && cd ../server && uv sync --all-groups",
+        "sync": "pnpm i && cd app && pnpm i && cd ../server && uv sync --all-groups",
         "app:start": "cd app && npx vite dev --port 5173",
         "server:setup-for-test": "cd server && cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"uv run excalibur init -r && uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=\"",
         "server:start": "cd server && uv run excalibur start --port 8989 --debug",

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
-import { useMount } from "@lib/hooks";
+import { useEffectOnce, useMount } from "@lib/hooks";
 import { heartbeat as _heartbeat, checkAPIUrl } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
@@ -134,7 +134,7 @@ function useProvideAuth(): AuthProvider {
     );
 
     // Effects
-    useEffect(() => {
+    useEffectOnce(() => {
         if (!serverInfo) {
             return;
         }
@@ -146,8 +146,10 @@ function useProvideAuth(): AuthProvider {
                 logoutFunc(true);
                 return;
             }
+
+            setServerInfo({ ...serverInfo, version: result.version! }); // Runs once, so no worry of a loop
         });
-    }, [logoutFunc, serverInfo]);
+    });
 
     useMount(() => {
         if (!authInfo || !serverInfo) {
