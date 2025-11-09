@@ -2,16 +2,42 @@ import React from "react";
 
 import { IonContent, IonPage } from "@ionic/react";
 
-import CircularProgressBar from "@components/CircularProgressBar";
+import { Job } from "@components/explorer/JobEntry";
+import JobsList from "@components/explorer/JobsList";
 
 const TestPage: React.FC = () => {
-    const percentage = 0.4;
     return (
         <IonPage>
             <IonContent className="ion-padding">
-                <h1>Circular Progress Bars</h1>
-                <CircularProgressBar className="size-20" value={percentage} transitionDuration={0.5} />
-                <CircularProgressBar className="size-20" value={null} transitionDuration={0.5} />
+                <div className="h-full w-100">
+                    <JobsList
+                        jobs={(() => {
+                            const jobs = new Map<string, Job>();
+                            jobs.set("test", {
+                                filename: "test.txt",
+                                status: "Reading the file...",
+                                progress: 0.123,
+                            });
+                            // jobs.set("test2", {
+                            //     filename: "test2.txt",
+                            //     status: "Encrypting...",
+                            //     progress: 0.456,
+                            // });
+                            // jobs.set("test3", {
+                            //     filename: "test3.txt",
+                            //     status: "Uploading...",
+                            //     progress: 0.789,
+                            // });
+                            // jobs.set("long", {
+                            //     filename: "a-super-long-name-a-super-long-name-a-super-long-name-a-super-long-name.txt",
+                            //     status: "Uploading...",
+                            //     progress: 0.789,
+                            // });
+
+                            return jobs;
+                        })()}
+                    ></JobsList>
+                </div>
             </IonContent>
         </IonPage>
     );

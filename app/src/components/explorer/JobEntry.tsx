@@ -1,3 +1,5 @@
+import { IonLabel } from "@ionic/react";
+
 import CircularProgressBar from "@components/CircularProgressBar";
 
 /** Represents a job that is currently running */
@@ -13,14 +15,17 @@ export interface Job {
     progress: number | null;
 }
 
-// TODO: Update contents
 // TODO: Add tests
 const JobEntry: React.FC<Job> = (job) => {
     return (
-        <div className="flex items-center justify-between">
-            <span>{job.filename}</span>
-            <span>{job.status}</span>
-            <CircularProgressBar className="size-6" value={job.progress} />
+        <div className="grid h-6 grid-cols-2 *:flex *:items-center">
+            <div>
+                <IonLabel className="max-w-40 truncate font-mono font-bold">{job.filename}</IonLabel>
+            </div>
+            <div>
+                <IonLabel className="grow">{job.status}</IonLabel>
+                <CircularProgressBar className="size-6" value={job.progress} />
+            </div>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import { IonContent } from "@ionic/react";
+import { IonContent, IonLabel } from "@ionic/react";
 
 import JobEntry, { Job } from "./JobEntry";
 
@@ -17,7 +17,7 @@ const JobsList: React.FC<ContainerProps> = (props) => {
                     ))}
                 </div>
             ) : (
-                <span className="block text-center">No active jobs</span>
+                <IonLabel className="block h-6 text-center">No active jobs</IonLabel>
             )}
         </IonContent>
     );
