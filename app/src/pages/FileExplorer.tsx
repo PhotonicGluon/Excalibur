@@ -49,7 +49,6 @@ import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem,
 import { Directory } from "@lib/files/structures";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
-import { sleep } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -219,8 +218,6 @@ const FileExplorer: React.FC = () => {
      * @returns A promise which resolves when the upload is complete
      */
     async function onUploadFile(files?: PickedFile[]) {
-        const TOTAL_DURATION = 5; // TODO: REMOVE
-
         /**
          * Handles the file upload process.
          *
@@ -278,7 +275,6 @@ const FileExplorer: React.FC = () => {
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
-            const startTime = new Date().getTime(); // TODO: REMOVE
             let blob: Blob;
             try {
                 blob = await processor.processStream(
@@ -301,12 +297,6 @@ const FileExplorer: React.FC = () => {
                 // Free up resources
                 worker.terminate();
             }
-
-            // TODO: REMOVE
-            const extraDelay = TOTAL_DURATION * 1000 - new Date().getTime() + startTime;
-            console.debug(`Extra delay: ${extraDelay} ms`);
-            await sleep(extraDelay);
-            // TODO: END REMOVE
 
             // Upload the file
             console.debug(`Uploading file ${rawFile.name}...`);

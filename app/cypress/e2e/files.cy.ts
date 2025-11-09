@@ -58,20 +58,43 @@ describe("Check File Page Operations", () => {
         return folderName;
     }
 
-    function _createFile(n: number) {
+    function _createFile(n: number | number[]) {
+        if (!Array.isArray(n)) {
+            n = [n];
+        }
+
         // Upload the test file
-        const fileName = `test-file-${Date.now()}.txt`;
-        const fileContent = Cypress.Buffer.from(randstr(n));
-        cy.get("#main-content").selectFile({ contents: fileContent, fileName: fileName }, { action: "drag-drop" });
+        const fileNames = [];
+        const fileContents = [];
+        const selectFileList = [];
 
-        // File should have been uploaded
-        const fileElement = cy.get(`div[data-name='${fileName}']`);
-        fileElement.should("exist");
-        fileElement.should("contain.text", fileName);
+        const nameBase = `test-file-${Date.now()}`;
+        for (let i = 0; i < n.length; i++) {
+            const fileName = `${nameBase}-${i}.txt`;
+            const fileContent = Cypress.Buffer.from(randstr(n[i]));
+            fileNames.push(fileName);
+            fileContents.push(fileContent);
+            selectFileList.push({ contents: fileContent, fileName: fileName });
+        }
+        cy.get("#main-content").selectFile(selectFileList, { action: "drag-drop" });
 
-        // Try downloading the file
-        fileElement.click();
-        cy.readFile(path.join(downloadsFolder, fileName)).should("exist");
+        // File(s) should have been uploaded
+        const fileElements = [];
+        for (let i = 0; i < n.length; i++) {
+            const fileElement = cy.get(`div[data-name='${fileNames[i]}']`);
+            fileElements.push(fileElement);
+
+            fileElement.should("exist");
+            fileElement.should("contain.text", fileNames[i]);
+        }
+
+        // Try downloading the files
+        for (let i = 0; i < n.length; i++) {
+            fileElements[i].click(); // Trigger all downloads first
+        }
+        for (let i = 0; i < n.length; i++) {
+            cy.readFile(path.join(downloadsFolder, fileNames[i])).should("exist"); // Then check file existence
+        }
     }
 
     // Tests
@@ -83,7 +106,7 @@ describe("Check File Page Operations", () => {
         _createFolder();
     });
 
-    describe("file upload and download", () => {
+    describe("single-file upload and download", () => {
         const SMALL_SIZE = 1024;
         const LARGE_SIZE = 1e6; // Enough for several chunking to occur
 
@@ -99,6 +122,25 @@ describe("Check File Page Operations", () => {
 
         it("should handle large file", () => {
             _createFile(LARGE_SIZE);
+        });
+    });
+
+    describe("multi-file upload and download", () => {
+        const SMALL_SIZE = 1024;
+        const LARGE_SIZE = 1e6; // Enough for several chunking to occur
+
+        beforeEach(() => {
+            cy.login("http://127.0.0.1:8989", "test-user", "Password");
+            cy.visit("/files/");
+            cy.url().should("include", "/files");
+        });
+
+        it("should handle small files", () => {
+            _createFile([SMALL_SIZE, SMALL_SIZE, SMALL_SIZE]);
+        });
+
+        it("should handle large files", () => {
+            _createFile([LARGE_SIZE, LARGE_SIZE, LARGE_SIZE]);
         });
     });
 
