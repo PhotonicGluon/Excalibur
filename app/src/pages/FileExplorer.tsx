@@ -49,6 +49,7 @@ import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem,
 import { Directory } from "@lib/files/structures";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
+import { sleep } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -218,7 +219,7 @@ const FileExplorer: React.FC = () => {
      * @returns A promise which resolves when the upload is complete
      */
     async function onUploadFile(files?: PickedFile[]) {
-        let force = false;
+        const TOTAL_DURATION = 5; // TODO: REMOVE
 
         /**
          * Handles the file upload process.
@@ -277,6 +278,7 @@ const FileExplorer: React.FC = () => {
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
+            const startTime = new Date().getTime(); // TODO: REMOVE
             let blob: Blob;
             try {
                 blob = await processor.processStream(
@@ -300,11 +302,17 @@ const FileExplorer: React.FC = () => {
                 worker.terminate();
             }
 
+            // TODO: REMOVE
+            const extraDelay = TOTAL_DURATION * 1000 - new Date().getTime() + startTime;
+            console.debug(`Extra delay: ${extraDelay} ms`);
+            await sleep(extraDelay);
+            // TODO: END REMOVE
+
             // Upload the file
             console.debug(`Uploading file ${rawFile.name}...`);
             jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
             const file = new File([blob], rawFile.name + ".exef");
-            const uploadResponse = await uploadFile(auth, requestedPath, file, force);
+            const uploadResponse = await uploadFile(auth, requestedPath, file, true); // Always force upload
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                 jobsManager.deleteJob(jobID);
@@ -313,15 +321,13 @@ const FileExplorer: React.FC = () => {
 
             // Refresh page
             refreshContents(false);
-            presentSnackbar("File uploaded", "success");
             jobsManager.deleteJob(jobID);
         }
 
         if (!files) {
             // Get file picker to let user choose the files
             try {
-                // TODO: Change limit to more than 1
-                files = (await FilePicker.pickFiles({ limit: 1 })).files;
+                files = (await FilePicker.pickFiles()).files;
             } catch (e: unknown) {
                 const message = (e as Error).message;
                 if (message.includes("pickFiles canceled")) {
@@ -333,68 +339,75 @@ const FileExplorer: React.FC = () => {
             }
         }
 
-        // TODO: Support multiple files. For now we accept one file
-        const rawFile = files[0];
-
-        // Check if file size acceptable by server
-        const checkSizeResponse = await checkSize(auth, rawFile.size);
-        if (!checkSizeResponse.success) {
-            presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
-            return;
-        }
-        if (checkSizeResponse.isTooLarge) {
-            presentSnackbar("File too large", "danger");
-            return;
-        }
-
-        // Check if file exists
-        const eventualPath = `${requestedPath}/${rawFile.name}` + ".exef"; // The uploaded file has this extension
-        const checkResponse = await checkPath(auth, eventualPath);
-        if (!checkResponse.success) {
-            switch (checkResponse.error) {
-                case "Path not found":
-                    // This is good -- the file doesn't exist, so we can just carry on
-                    break;
-                case "Illegal or invalid path":
-                    presentSnackbar("Illegal or invalid file name", "danger");
-                    return;
-                case "Path too long":
-                    presentSnackbar("File path too long", "danger");
-                    return;
-                default:
-                    presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
-                    return;
+        // Upload all files
+        for (const file of files) {
+            // Check if file size acceptable by server
+            const checkSizeResponse = await checkSize(auth, file.size);
+            if (!checkSizeResponse.success) {
+                presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
+                return;
             }
-        }
-        if (checkResponse.success && checkResponse.type === "file") {
-            // File exists, ask if want to override
-            console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
+            if (checkSizeResponse.isTooLarge) {
+                // We use an alert to make it more visible
+                // TODO: Does this work on mobile?
+                alert(`File ${file.name} is too large`);
+                continue;
+            }
 
-            await presentAlert({
-                header: "File already exists",
-                message: "Do you want to override the existing file?",
-                buttons: [
-                    {
-                        text: "No",
-                        role: "cancel",
-                        handler: () => {
-                            presentSnackbar("File upload cancelled", "warning");
-                        },
-                    },
-                    {
-                        text: "Yes",
-                        role: "confirm",
-                        handler: () => {
-                            force = true;
-                            _handleUpload(rawFile);
-                        },
-                    },
-                ],
-            });
-            return;
-        }
+            // Check if file exists
+            const eventualPath = `${requestedPath}/${file.name}` + ".exef"; // The uploaded file has this extension
+            const checkResponse = await checkPath(auth, eventualPath);
+            if (!checkResponse.success) {
+                switch (checkResponse.error) {
+                    case "Path not found":
+                        // This is good -- the file doesn't exist, so we can just carry on
+                        break;
+                    case "Illegal or invalid path":
+                        presentSnackbar("Illegal or invalid file name", "danger");
+                        return;
+                    case "Path too long":
+                        presentSnackbar("File path too long", "danger");
+                        return;
+                    default:
+                        presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
+                        return;
+                }
+            }
+            if (checkResponse.success && checkResponse.type === "file") {
+                // File exists, ask if want to override
+                console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
 
-        _handleUpload(rawFile);
+                let haltUploads = false;
+                await new Promise<void>((resolve) => {
+                    presentAlert({
+                        header: `${file.name} already exists`,
+                        message: "Do you want to override the existing file?",
+                        onDidDismiss: () => {
+                            resolve();
+                        },
+                        buttons: [
+                            {
+                                text: "No",
+                                role: "cancel",
+                                handler: () => {
+                                    presentSnackbar("File upload cancelled", "warning");
+                                    haltUploads = true;
+                                },
+                            },
+                            {
+                                text: "Yes",
+                                role: "confirm",
+                            },
+                        ],
+                    });
+                });
+                if (haltUploads) {
+                    return;
+                }
+            }
+
+            _handleUpload(file);
+        }
     }
 
     /**
