@@ -8,14 +8,14 @@ export interface Job {
     filename: string;
     /** Status of the job */
     status: string;
-    /** Progress of the job.
+    /**
+     * Progress of the job.
      *
-     * A `null` value means indeterminate progress.
+     * Is either a number from 0 to 1 or a null value (indeterminate).
      */
     progress: number | null;
 }
 
-// TODO: Add tests
 const JobEntry: React.FC<Job> = (job) => {
     return (
         <div className="grid h-6 grid-cols-2 *:flex *:items-center">
