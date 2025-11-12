@@ -738,7 +738,7 @@ const FileExplorer: React.FC = () => {
                             {/* Jobs' details */}
                             <IonPopover
                                 ref={jobsPopover}
-                                className="[&::part(content)]:min-w-100"
+                                className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
                                 side="bottom"
                                 alignment="center"
                                 style={{ "--offset-y": "calc(var(--spacing)*2)" }}
