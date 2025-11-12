@@ -22,7 +22,7 @@ All multi-byte integers are stored in **Big-Endian** format (network byte order)
 | `4`     | **Version**         | 1            | `0x03` for this version.                                                                                                            |
 | `5`     | **Cipher ID**       | 1            | A 1-byte identifier for the encryption algorithm. See table below.                                                                  |
 | `6-17`  | **Nonce / Salt**    | 12           | The unique 12-byte nonce for AES-GCM, also used as the salt for HKDF. **Must be unique for each file encrypted with the same key.** |
-| `18-31` | **Header MAC**      | 16           | The first 16 bytes (128 bits) of the full HMAC-SHA256 output. Used to quickly verify the master key.                                |
+| `18-31` | **Header MAC**      | 14           | The first 14 bytes of the full HMAC-SHA256 output. Used to quickly verify the master key.                                           |
 | `32-39` | **Ciphertext Size** | 8            | The length of the ciphertext data in bytes. An 8-byte unsigned integer.                                                             |
 
 **Ciphersuite IDs:**

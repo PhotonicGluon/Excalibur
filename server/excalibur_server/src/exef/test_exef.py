@@ -5,10 +5,18 @@ from .structures import Footer, Header
 
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
+HEADER_MAC = bytes.fromhex("b91ea9295e4d2aea4f52525aa11a")
 
-HEADER = b"ExEF" + b"\x00\x02" + b"\x00\xc0" + NONCE + b"\x00\x00\x00\x00\x00\x00\x00\x05"
-FOOTER = bytes.fromhex("21eec34610517ba0479a0ed0dd374cba")
-SAMPLE_EXEF = HEADER + bytes.fromhex("2e3aa84b6a") + FOOTER  # HELLO, encrypted
+HEADER = (
+    b"ExEF"  # Magic
+    + b"\x03"  # Version
+    + b"\x02"  # Cipher ID, corresponding to AES-192-GCM
+    + NONCE
+    + HEADER_MAC  # Header MAC
+    + b"\x00\x00\x00\x00\x00\x00\x00\x05"  # Ciphertext length
+)
+FOOTER = bytes.fromhex("ab53286f4fdba38cb106b0bdab7cd527")
+SAMPLE_EXEF = HEADER + bytes.fromhex("0182f374cb") + FOOTER  # HELLO, encrypted
 
 
 # Helper functions
@@ -18,7 +26,7 @@ def _generate_invalid_magic():
 
 
 def _generate_invalid_version():
-    invalid = SAMPLE_EXEF[:4] + b"\xff\xff" + SAMPLE_EXEF[6:]
+    invalid = SAMPLE_EXEF[:4] + b"\xff" + SAMPLE_EXEF[5:]
     return invalid
 
 
@@ -38,8 +46,9 @@ class TestValidExEF:
         # Parse header
         header = Header.from_serialized(SAMPLE_EXEF[: Header.size])
 
-        assert header.keysize == 192
+        assert header.cipher_id == 2
         assert header.nonce == NONCE
+        assert header.header_mac == HEADER_MAC, f"Different header MAC: {header.header_mac.hex()} != {HEADER_MAC.hex()}"
         assert header.ct_len == 5
         assert header.serialize_as_bytes() == HEADER
 
@@ -117,13 +126,19 @@ class TestInvalidExEF:
     def exef(self):
         return ExEF(KEY, nonce=NONCE)
 
-    def test_invalid_key(self):
+    def test_invalid_keysize(self):
         with pytest.raises(ValueError, match="keysize must be 128, 192, or 256"):
             ExEF(key=b"123", nonce=b"123456789012")
 
     def test_invalid_nonce(self):
         with pytest.raises(ValueError, match="nonce must be 12 bytes"):
             ExEF(key=KEY, nonce=b"123")
+
+    def test_invalid_key(self):
+        fake_key = bytearray(KEY)
+        fake_key[0] = 255 - fake_key[0]
+        with pytest.raises(ValueError, match="header MAC mismatch"):
+            ExEF(key=fake_key, nonce=NONCE).decrypt(SAMPLE_EXEF)
 
     def test_magic(self, exef: ExEF):
         invalid_magic = _generate_invalid_magic()
