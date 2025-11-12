@@ -71,6 +71,7 @@ const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
+    const requestedPathRef = useRef(requestedPath); // We use a ref to get the latest value of `requestedPath`
 
     // Get contexts
     const auth = useAuth();
@@ -193,10 +194,18 @@ const FileExplorer: React.FC = () => {
      * component state.
      *
      * @param showToast If true, displays a toast telling the user that the page was refreshed
+     * @param sourceFolder The folder that triggered the refresh
      */
     const refreshContents = useCallback(
-        async (showToast: boolean = true) => {
-            const response = await listdir(auth, requestedPath);
+        async (showToast: boolean = true, sourceFolder?: string) => {
+            const currentPath = requestedPathRef.current;
+            if (sourceFolder && sourceFolder !== currentPath) {
+                console.debug("Not refreshing contents because we are in a different folder");
+                // We are in a different folder than the one we want to refresh, so no need to refresh
+                return;
+            }
+
+            const response = await listdir(auth, currentPath);
             if (!response.success) {
                 presentSnackbar(response.error!, "danger");
                 return;
@@ -206,7 +215,7 @@ const FileExplorer: React.FC = () => {
                 presentSnackbar("Refreshed");
             }
         },
-        [auth, requestedPath, presentSnackbar],
+        [auth, presentSnackbar],
     );
 
     /**
@@ -310,7 +319,7 @@ const FileExplorer: React.FC = () => {
             }
 
             // Refresh page
-            refreshContents(false);
+            refreshContents(false, requestedPath);
             jobsManager.deleteJob(jobID);
         }
 
@@ -552,7 +561,8 @@ const FileExplorer: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Refresh directory contents
+        // Update path
+        requestedPathRef.current = requestedPath;
         refreshContents(false);
     }, [requestedPath, refreshContents]);
 
