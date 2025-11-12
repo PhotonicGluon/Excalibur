@@ -5,7 +5,7 @@ from .structures import Footer, Header
 
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
-HEADER_MAC = bytes.fromhex("b91ea9295e4d2aea4f52525aa11a")
+HEADER_MAC = bytes.fromhex("3a5a8758e2c946869e38d6ae9d7f")
 
 HEADER = (
     b"ExEF"  # Magic
@@ -13,10 +13,10 @@ HEADER = (
     + b"\x02"  # Cipher ID, corresponding to AES-192-GCM
     + NONCE
     + HEADER_MAC  # Header MAC
-    + b"\x00\x00\x00\x00\x00\x00\x00\x05"  # Ciphertext length
+    + b"\x00\x00\x00\x00\x00\x00\x00\x0c"  # Ciphertext length
 )
-FOOTER = bytes.fromhex("ab53286f4fdba38cb106b0bdab7cd527")
-SAMPLE_EXEF = HEADER + bytes.fromhex("0182f374cb") + FOOTER  # HELLO, encrypted
+FOOTER = bytes.fromhex("b50d70e450d7892345f7ce463da59d22")
+SAMPLE_EXEF = HEADER + bytes.fromhex("01a2d354eb2527742fa264b5") + FOOTER  # HELLO, encrypted
 
 
 # Helper functions
@@ -49,7 +49,7 @@ class TestValidExEF:
         assert header.cipher_id == 2
         assert header.nonce == NONCE
         assert header.header_mac == HEADER_MAC, f"Different header MAC: {header.header_mac.hex()} != {HEADER_MAC.hex()}"
-        assert header.ct_len == 5
+        assert header.ct_len == 12
         assert header.serialize_as_bytes() == HEADER
 
         # Parse footer
@@ -61,14 +61,14 @@ class TestValidExEF:
         assert ExEF.validate(SAMPLE_EXEF)
 
     def test_encrypt(self):
-        ct_test = ExEF(KEY, nonce=NONCE).encrypt(b"HELLO")
+        ct_test = ExEF(KEY, nonce=NONCE).encrypt(b"Hello World!")
         assert ct_test == SAMPLE_EXEF
 
     def test_encrypt_stream_1(self):
-        iterable = iter([b"HELLO"])
+        iterable = iter([b"Hello World!"])
 
         encryptor = ExEF(KEY, nonce=NONCE).encryptor
-        encryptor.set_params(length=5)
+        encryptor.set_params(length=12)
 
         output = encryptor.get()  # Header
         for chunk in iterable:
@@ -79,10 +79,10 @@ class TestValidExEF:
         assert output == SAMPLE_EXEF
 
     def test_encrypt_stream_2(self):
-        iterable = iter([b"HE", b"L", b"LO"])
+        iterable = iter([b"He", b"llo Wo", b"rld!"])
 
         encryptor = ExEF(KEY, nonce=NONCE).encryptor
-        encryptor.set_params(length=5)
+        encryptor.set_params(length=12)
 
         output = encryptor.get()  # Header
         for chunk in iterable:
@@ -94,7 +94,7 @@ class TestValidExEF:
 
     def test_decrypt(self):
         pt_test = ExEF(KEY).decrypt(SAMPLE_EXEF)
-        assert pt_test == b"HELLO"
+        assert pt_test == b"Hello World!"
 
     def test_decrypt_stream_1(self):
         iterable = iter([SAMPLE_EXEF])
@@ -106,7 +106,7 @@ class TestValidExEF:
             output += decryptor.get()
 
         decryptor.verify()
-        assert output == b"HELLO"
+        assert output == b"Hello World!"
 
     def test_decrypt_stream_2(self):
         iterable = iter([SAMPLE_EXEF[i : i + 2] for i in range(0, len(SAMPLE_EXEF), 2)])
@@ -118,7 +118,7 @@ class TestValidExEF:
             output += decryptor.get()
 
         decryptor.verify()
-        assert output == b"HELLO"
+        assert output == b"Hello World!"
 
 
 class TestInvalidExEF:

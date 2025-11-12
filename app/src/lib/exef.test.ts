@@ -5,20 +5,20 @@ import ExEF, { ExEFFooter, ExEFHeader } from "./exef";
 const KEY = Buffer.from("111111111111111111111111", "utf-8");
 const NONCE = Buffer.from("abababababababababababab", "hex");
 const SAMPLE_EXEF = Buffer.from(
-    "45784546000200c0abababababababababababab000000000000000c2e1a886b4ae6f2ac2f83f3b357f98e42277c8456d9ecae0dc2aa400e",
+    "457845460302abababababababababababab3a5a8758e2c946869e38d6ae9d7f000000000000000c01a2d354eb2527742fa264b5b50d70e450d7892345f7ce463da59d22",
     "hex",
 );
 
 test("ExEF parsing", () => {
     // Parse header
     const header = ExEFHeader.fromBuffer(SAMPLE_EXEF.subarray(0, ExEFHeader.headerSize));
-    expect(header.keysize).toBe(192);
+    expect(header.cipherID).toBe(2);
     expect(header.nonce.toString("hex")).toBe("abababababababababababab");
     expect(header.ctLen).toBe(12);
 
     // Parse footer
     const footer = ExEFFooter.fromBuffer(SAMPLE_EXEF.subarray(SAMPLE_EXEF.length - ExEFFooter.footerSize));
-    expect(footer.tag.toString("hex")).toBe("57f98e42277c8456d9ecae0dc2aa400e");
+    expect(footer.tag.toString("hex")).toBe("b50d70e450d7892345f7ce463da59d22");
 });
 
 test("ExEF encrypt", () => {

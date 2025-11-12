@@ -116,7 +116,6 @@ class Encryptor(Cryptor):
         hmac = HMAC.new(self._mac_key, header.serialize_as_bytes(), SHA256)
         header_mac = hmac.digest()[:14]  # We keep only first 14 bytes
         header.header_mac = header_mac
-        print(header_mac.hex())
 
         self._header = header
 
