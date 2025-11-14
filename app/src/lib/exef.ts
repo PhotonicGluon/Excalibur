@@ -152,14 +152,21 @@ export default class ExEF {
 
     constructor(key: Buffer, nonce?: Buffer, mode: "encrypt" | "decrypt" = "encrypt") {
         this.key = key;
+        const keylen = key.length * 8;
+        if (keylen !== 128 && keylen !== 192 && keylen !== 256) {
+            throw new Error("keysize must be 128, 192, or 256");
+        }
 
         if (!nonce) {
             nonce = randomBytes(12);
         }
         this.nonce = nonce;
+        if (nonce.length !== 12) {
+            throw new Error("nonce must be 12 bytes");
+        }
 
-        this._cryptoKey = this._genKey(key, nonce, Buffer.from("ExEF Crypto Key"));
-        this._macKey = this._genKey(key, nonce, Buffer.from("ExEF MAC Key"));
+        this._cryptoKey = ExEF._genCryptoKey(key, nonce);
+        this._macKey = ExEF._genMacKey(key, nonce);
 
         if (mode === "encrypt") {
             this._cipher = createCipheriv(this.alg, this._cryptoKey, this.nonce);
@@ -191,23 +198,32 @@ export default class ExEF {
     }
 
     // Helper methods
-    /**
-     * Generates a key using HKDF.
-     */
-    private _genKey(key: Buffer, nonce: Buffer, context: Buffer): Buffer {
+    private static _genKey(key: Buffer, nonce: Buffer, context: Buffer): Buffer {
         return hkdf("sha256", key, nonce, context, key.length);
     }
 
-    private _getHeaderMAC(ctLen: number) {
+    private static _genCryptoKey(key: Buffer, nonce: Buffer): Buffer {
+        return ExEF._genKey(key, nonce, Buffer.from("ExEF Crypto Key"));
+    }
+
+    private static _genMacKey(key: Buffer, nonce: Buffer): Buffer {
+        return ExEF._genKey(key, nonce, Buffer.from("ExEF MAC Key"));
+    }
+
+    private static _getHeaderMAC(macKey: Buffer, cipherID: CipherID, nonce: Buffer, ctLen: number) {
         const header = new ExEFHeader(
-            this.cipherID,
-            this.nonce,
+            cipherID,
+            nonce,
             Buffer.alloc(14), // We first set the header MAC to all zeros
             ctLen,
         );
-        const hmac = createHmac("sha256", this._macKey);
+        const hmac = createHmac("sha256", macKey);
         hmac.update(header.toBuffer());
         return hmac.digest().subarray(0, 14);
+    }
+
+    private _getHeaderMAC(ctLen: number) {
+        return ExEF._getHeaderMAC(this._macKey, this.cipherID, this.nonce, ctLen);
     }
 
     // Public methods
@@ -279,25 +295,36 @@ export default class ExEF {
      * @param exefData Data to decrypt
      * @returns plaintext
      * @throws {Error} If the cipher ID does not match the key size
+     * @throws {Error} If the header MAC does not match the computed header MAC
      * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch)
      */
     static decrypt(key: Buffer, exefData: Buffer): Buffer {
         const header = ExEFHeader.fromBuffer(exefData.subarray(0, ExEFHeader.headerSize));
-        const footer = ExEFFooter.fromBuffer(
-            exefData.subarray(exefData.length - ExEFFooter.footerSize, exefData.length),
-        );
         if (cipherIDToKeysize(header.cipherID) != key.length * 8) {
             throw new Error(`cipher ID ${header.cipherID} does not match key size ${key.length * 8}`);
         }
 
+        const macKey = ExEF._genMacKey(key, header.nonce);
+        const computedHeaderMAC = ExEF._getHeaderMAC(macKey, header.cipherID, header.nonce, header.ctLen);
+        if (!header.headerMAC.equals(computedHeaderMAC)) {
+            throw new Error("header MAC mismatch");
+        }
+
+        const footer = ExEFFooter.fromBuffer(
+            exefData.subarray(exefData.length - ExEFFooter.footerSize, exefData.length),
+        );
         const ciphertext = exefData.subarray(ExEFHeader.headerSize, ExEFHeader.headerSize + header.ctLen);
 
         const instance = new ExEF(key, header.nonce, "decrypt");
         const cipher = instance._cipher as DecipherCCM;
         cipher.setAuthTag(footer.tag);
 
-        const plaintext = Buffer.concat([cipher.update(ciphertext), cipher.final()]);
-        return plaintext;
+        try {
+            const plaintext = Buffer.concat([cipher.update(ciphertext), cipher.final()]);
+            return plaintext;
+        } catch {
+            throw new Error("MAC check failed");
+        }
     }
 
     /**
@@ -308,6 +335,7 @@ export default class ExEF {
      * @returns A stream of plaintext bytes
      * @throws {Error} If the header is not received properly
      * @throws {Error} If the cipher ID does not match the key size
+     * @throws {Error} If the header MAC does not match the computed header MAC
      * @throws {Error} If the ciphertext is not received properly
      * @throws {Error} If the data cannot be decrypted (e.g., tag mismatch)
      */
@@ -335,6 +363,13 @@ export default class ExEF {
                 buffer = buffer.subarray(ExEFHeader.headerSize);
                 if (cipherIDToKeysize(header.cipherID) != key.length * 8) {
                     throw new Error(`cipher ID ${header.cipherID} does not match key size ${key.length * 8}`);
+                }
+
+                // Check header MAC
+                const macKey = ExEF._genMacKey(key, header.nonce);
+                const computedHeaderMAC = ExEF._getHeaderMAC(macKey, header.cipherID, header.nonce, header.ctLen);
+                if (!header.headerMAC.equals(computedHeaderMAC)) {
+                    throw new Error("header MAC mismatch");
                 }
 
                 // Set up cipher
@@ -378,7 +413,12 @@ export default class ExEF {
                 // Check tag
                 const footer = ExEFFooter.fromBuffer(buffer);
                 cipher.setAuthTag(footer.tag);
-                controller.enqueue(cipher.final());
+
+                try {
+                    controller.enqueue(cipher.final());
+                } catch {
+                    throw new Error("MAC check failed");
+                }
 
                 // Close stream
                 controller.close();

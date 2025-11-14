@@ -140,25 +140,25 @@ class TestInvalidExEF:
         with pytest.raises(ValueError, match="header MAC mismatch"):
             ExEF(key=fake_key, nonce=NONCE).decrypt(SAMPLE_EXEF)
 
-    def test_magic(self, exef: ExEF):
+    def test_invalid_magic(self, exef: ExEF):
         invalid_magic = _generate_invalid_magic()
         assert not ExEF.validate(invalid_magic)
-        with pytest.raises(ValueError, match="data must start with ExEF"):
+        with pytest.raises(ValueError, match="data must start with 'ExEF'"):
             exef.decrypt(invalid_magic)
 
-    def test_version(self, exef: ExEF):
+    def test_invalid_version(self, exef: ExEF):
         invalid_version = _generate_invalid_version()
         assert not ExEF.validate(invalid_version)
         with pytest.raises(ValueError, match="version must be"):
             exef.decrypt(invalid_version)
 
-    def test_footer(self, exef: ExEF):
+    def test_invalid_footer(self, exef: ExEF):
         invalid_footer = _generate_invalid_footer()
         assert ExEF.validate(invalid_footer)  # Technically, this is valid ExEF data
         with pytest.raises(ValueError, match="header and footer must be set"):
             exef.decrypt(invalid_footer)
 
-    def test_tag(self, exef: ExEF):
+    def test_invalid_tag(self, exef: ExEF):
         invalid_tag = _generate_invalid_tag()
         assert ExEF.validate(invalid_tag)  # Technically, this is valid ExEF data
         with pytest.raises(ValueError, match="MAC check failed"):

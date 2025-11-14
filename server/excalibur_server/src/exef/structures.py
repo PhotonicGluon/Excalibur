@@ -46,7 +46,7 @@ class Header(BaseModel):
             raise ValueError(f"header must be {cls.size} bytes")
 
         if data[:4] != b"ExEF":
-            raise ValueError("data must start with ExEF")
+            raise ValueError("data must start with 'ExEF'")
 
         version = int.from_bytes(data[4:5], "big")
         if version != EXEF_VERSION:
