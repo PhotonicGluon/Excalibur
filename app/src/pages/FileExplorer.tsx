@@ -240,6 +240,7 @@ const FileExplorer: React.FC = () => {
                 status: "Setting up data stream...",
                 progress: null,
             });
+            presentSnackbar(`Uploading '${rawFile.name}'...`);
 
             // Set up file data stream
             const rawFileSize = rawFile.size;
