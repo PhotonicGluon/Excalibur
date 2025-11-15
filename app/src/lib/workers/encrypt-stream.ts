@@ -23,14 +23,15 @@ const encryptionProcessor = {
         chunkSize: number,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
+        // Define ExEF encryption instances
+        const vaultExEF = new ExEF(vaultKey, undefined, "encrypt");
+        const e2eeExEF = new ExEF(e2eeKey, undefined, "encrypt");
+
+        // Form nesting of streams for encryption
         const encryptedFileSize = fileSize + ExEF.additionalSize;
-
-        const vaultEXEF = new ExEF(vaultKey, undefined, "encrypt");
-        const e2eeEXEF = new ExEF(e2eeKey, undefined, "encrypt");
-
         const vStream = new ReadableStream<Buffer>({
             async start(controller) {
-                const reader = vaultEXEF.encryptStream(fileSize, stream, chunkSize).getReader();
+                const reader = vaultExEF.encryptStream(fileSize, stream, chunkSize).getReader();
                 let offset = 0;
                 while (true) {
                     const { done, value } = await reader.read();
@@ -48,8 +49,21 @@ const encryptionProcessor = {
                 controller.close();
             },
         });
-        const eStream = e2eeEXEF.encryptStream(encryptedFileSize, vStream, chunkSize);
-        return await new Response(eStream).blob();
+        const eStream = e2eeExEF.encryptStream(encryptedFileSize, vStream, chunkSize);
+
+        // Generate encrypted chunks
+        const reader = eStream.getReader();
+        const chunks: Buffer[] = [];
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            chunks.push(value);
+        }
+
+        // Return chunks as a blob
+        return new Blob(chunks as BlobPart[]);
     },
 };
 

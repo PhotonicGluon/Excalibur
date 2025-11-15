@@ -78,6 +78,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 status: "Downloading...",
                 progress: null,
             });
+            console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
             // Send request for file
             const response = await downloadFile(auth, props.fullpath);
@@ -91,9 +92,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 return;
             }
 
-            // Compute final file size
-            const encryptedFileSize = response.fileSize! - ExEF.additionalSize;
-            const fileSize = encryptedFileSize - ExEF.additionalSize;
+            const fileSize = response.fileSize! - ExEF.additionalSize;
 
             // Create stream that handles the decryption and updates the progress
             uiFeedback.jobsManager.updateJob(jobID, "Decrypting...");
