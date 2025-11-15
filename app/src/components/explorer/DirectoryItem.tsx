@@ -20,12 +20,12 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, folderOutline, pencilOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, pencilOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
-import { mimetypeToIcon } from "@lib/mimetypes";
+import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
@@ -292,7 +292,11 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         <IonCol className="flex items-center">
                             <IonIcon
                                 className="size-6"
-                                icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
+                                icon={
+                                    isFile
+                                        ? mimetypeToIcon(props.mimetype, settings.iconStyle)
+                                        : getIcon("folder", settings.iconStyle)
+                                }
                             />
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
                                 <IonLabel className="max-w-100 truncate">

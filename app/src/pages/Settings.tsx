@@ -24,6 +24,7 @@ import { arrowBack } from "ionicons/icons";
 import {
     CryptoChunkSize,
     FileSizeUnits,
+    IconStyle,
     RowAlternatingColours,
     SettingsPreferenceValues,
     Theme,
@@ -82,6 +83,7 @@ const Settings: React.FC = () => {
 
         // Get final data
         const theme = (document.getElementById("theme")! as HTMLIonSelectElement).value as Theme;
+        const iconStyle = (document.getElementById("icon-style")! as HTMLIonSelectElement).value as IconStyle;
         const rowAlternatingColours = (document.getElementById("row-alternating-colours")! as HTMLIonSelectElement)
             .value as RowAlternatingColours;
         const cryptoChunkSize = parseInt(
@@ -92,6 +94,7 @@ const Settings: React.FC = () => {
 
         const newSettings: SettingsPreferenceValues = {
             theme,
+            iconStyle,
             rowAlternatingColours,
             fileSizeUnits,
             cryptoChunkSize,
@@ -157,6 +160,30 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="system">System</IonSelectOption>
                                 <IonSelectOption value="light">Light</IonSelectOption>
                                 <IonSelectOption value="dark">Dark</IonSelectOption>
+                            </IonSelect>
+                        }
+                    />
+                    <SettingsItem
+                        label={<IonLabel>Icon Style</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="icon-style"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select icon style"
+                                value={settings.iconStyle}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        iconStyle: e.detail.value as IconStyle,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="default">Default</IonSelectOption>
+                                <IonSelectOption value="reversed">Reversed Default</IonSelectOption>
+                                <IonSelectOption value="outline">All Outlined</IonSelectOption>
+                                <IonSelectOption value="solid">All Solid</IonSelectOption>
                             </IonSelect>
                         }
                     />
