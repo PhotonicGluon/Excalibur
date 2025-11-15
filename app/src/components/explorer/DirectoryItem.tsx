@@ -115,11 +115,20 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     }),
                 );
             } catch (e) {
-                uiFeedback.presentToast({
-                    message: `Failed to decrypt file: ${(e as Error).message}`,
-                    duration: 2000,
-                    color: "danger",
-                });
+                const err = e as Error;
+                if (err.message.includes("header MAC")) {
+                    uiFeedback.presentToast({
+                        message: `Failed to decrypt file: vault key may be incorrect`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                } else {
+                    uiFeedback.presentToast({
+                        message: `Failed to decrypt file: ${err.message}`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                }
                 uiFeedback.jobsManager.deleteJob(jobID);
                 return;
             } finally {
