@@ -21,7 +21,7 @@ To communicate with an Excalibur server, the following steps should be performed
 4. Get user's encrypted vault key.
     - This request _needs to be authenticated_ with the JWT and a Proof-of-Possession (PoP). Again, more details on the authentication protocol can be found at the link above.
 
-Once this is complete, your client is free to request any other data from the server, _provided that authentication is performed_. Do note that all encrypted data will be stored in / sent as [the Excalibur Encryption Format (ExEF)](/docs/dev/06-encryption-format.md).
+Once this is complete, your client is free to request any other data from the server, _provided that authentication is performed_. Do note that all encrypted data will be stored in / sent as [the Excalibur Encryption Format (ExEF)](/docs/dev/06-exef.md).
 
 ### Example
 

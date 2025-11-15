@@ -1,6 +1,6 @@
-# Key Generation
+# Network Key Generation
 
-This document describes the key generation process used in Excalibur, which is based on 1Password's key generation process as described in [their security whitepaper](https://1passwordstatic.com/files/security/1password-white-paper.pdf).
+This document describes the network key generation process used in Excalibur, which is based on 1Password's key generation process as described in [their security whitepaper](https://1passwordstatic.com/files/security/1password-white-paper.pdf).
 
 The key generation process can be concisely summarized in the following flowchart.
 
