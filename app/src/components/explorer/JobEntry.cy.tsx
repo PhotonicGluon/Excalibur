@@ -1,6 +1,7 @@
 import { mount } from "cypress/react";
 
 import { IonApp } from "@ionic/react";
+import { arrowDown, arrowUp } from "ionicons/icons";
 
 import JobEntry, { Job } from "./JobEntry";
 
@@ -14,8 +15,9 @@ describe("<JobEntry />", () => {
     }
 
     const baseJob: Job = {
+        direction: "upload",
         filename: "my-file.zip",
-        status: "Uploading",
+        description: "Uploading",
         progress: 0.5,
     };
 
@@ -23,15 +25,30 @@ describe("<JobEntry />", () => {
         mountComponent(baseJob);
 
         cy.get("ion-label").contains(baseJob.filename).should("be.visible");
-        cy.get("ion-label").contains(baseJob.status).should("be.visible");
+        cy.get("ion-label").contains(baseJob.description).should("be.visible");
         cy.get(".circular-progress-bar").should("be.visible");
     });
 
-    it("displays different statuses correctly", () => {
-        const job: Job = { ...baseJob, status: "My Custom Status" };
+    describe("display different directions", () => {
+        it("upload", () => {
+            const job: Job = { ...baseJob, direction: "upload" };
+            mountComponent(job);
+
+            cy.get("ion-icon").should("have.attr", "icon", arrowUp);
+        });
+        it("download", () => {
+            const job: Job = { ...baseJob, direction: "download" };
+            mountComponent(job);
+
+            cy.get("ion-icon").should("have.attr", "icon", arrowDown);
+        });
+    });
+
+    it("displays different descriptions correctly", () => {
+        const job: Job = { ...baseJob, description: "My Custom Description" };
         mountComponent(job);
 
-        cy.get("ion-label").contains("My Custom Status").should("be.visible");
+        cy.get("ion-label").contains("My Custom Description").should("be.visible");
     });
 
     it("truncates a long filename", () => {

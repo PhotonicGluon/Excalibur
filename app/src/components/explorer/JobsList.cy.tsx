@@ -22,7 +22,9 @@ describe("<JobsList />", () => {
     });
 
     it("does not render the 'No active jobs' message when there are jobs", () => {
-        const jobs = new Map<string, Job>([["job1", { filename: "file1.txt", status: "Uploading", progress: 0.25 }]]);
+        const jobs = new Map<string, Job>([
+            ["job1", { filename: "file1.txt", description: "Uploading", progress: 0.25 }],
+        ]);
         mountComponent({ jobs });
 
         cy.contains("No active jobs").should("not.exist");
@@ -30,9 +32,9 @@ describe("<JobsList />", () => {
 
     it("renders a list of JobEntry components when jobs are provided", () => {
         const jobs = new Map<string, Job>([
-            ["job1", { filename: "file1.txt", status: "Uploading", progress: 0.25 }],
-            ["job2", { filename: "image.png", status: "Processing", progress: 0.8 }],
-            ["job3", { filename: "archive.zip", status: "Complete", progress: 1 }],
+            ["job1", { filename: "file1.txt", description: "Uploading", progress: 0.25 }],
+            ["job2", { filename: "image.png", description: "Processing", progress: 0.8 }],
+            ["job3", { filename: "archive.zip", description: "Complete", progress: 1 }],
         ]);
 
         mountComponent({ jobs });
@@ -45,7 +47,7 @@ describe("<JobsList />", () => {
 
     it("renders a single job entry correctly", () => {
         const jobs = new Map<string, Job>([
-            ["single-job", { filename: "document.pdf", status: "Downloading", progress: 0.6 }],
+            ["single-job", { filename: "document.pdf", description: "Downloading", progress: 0.6 }],
         ]);
         mountComponent({ jobs });
 

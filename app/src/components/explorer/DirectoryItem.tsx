@@ -75,10 +75,18 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             // Create new job
             const jobID = randID();
             uiFeedback.jobsManager.addJob(jobID, {
+                direction: "download",
                 filename: fileName,
-                status: "Downloading...",
+                description: "Downloading...",
                 progress: null,
             });
+            if (Capacitor.getPlatform() === "web") {
+                uiFeedback.presentToast({
+                    message: "Downloading...",
+                    duration: 2000,
+                    color: "primary",
+                });
+            }
             console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
             // Send request for file
@@ -170,7 +178,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         },
                     });
                     uiFeedback.presentToast({
-                        message: "File downloaded to the documents folder",
+                        message: "File saved to the documents folder",
                         duration: 2000,
                         color: "success",
                     });

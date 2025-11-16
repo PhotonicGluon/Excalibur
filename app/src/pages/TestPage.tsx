@@ -20,7 +20,7 @@ const TestPage: React.FC = () => {
                             const jobs = new Map<string, Job>();
                             jobs.set("test", {
                                 filename: "test.txt",
-                                status: "Reading the file...",
+                                description: "Reading the file...",
                                 progress: 0.123,
                             });
                             // jobs.set("test2", {

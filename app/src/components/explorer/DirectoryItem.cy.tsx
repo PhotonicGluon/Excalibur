@@ -42,7 +42,7 @@ describe("<DirectoryItem />", () => {
                             jobsManager: {
                                 addJob: (_id: string, _job: Job) => {},
                                 getJob: (_id: string) => {
-                                    return { id: _id, filename: "", status: "", progress: 0 };
+                                    return { id: _id, filename: "", description: "", progress: 0 };
                                 },
                                 updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
                                 updateProgress: (_id: string, _newProgress: number | null) => {},

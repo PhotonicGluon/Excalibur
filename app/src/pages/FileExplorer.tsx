@@ -104,7 +104,7 @@ const FileExplorer: React.FC = () => {
                         console.warn(`Job ${id} not found for job update`);
                         return;
                     }
-                    job.status = newStatus;
+                    job.description = newStatus;
                     if (newProgress !== undefined) {
                         job.progress = newProgress;
                     }
@@ -237,11 +237,11 @@ const FileExplorer: React.FC = () => {
             // Create new job
             const jobID = randID();
             jobsManager.addJob(jobID, {
+                direction: "upload",
                 filename: rawFile.name,
-                status: "Setting up data stream...",
+                description: "Setting up data stream...",
                 progress: null,
             });
-            presentSnackbar(`Uploading '${rawFile.name}'...`);
 
             // Set up file data stream
             const rawFileSize = rawFile.size;
@@ -341,6 +341,7 @@ const FileExplorer: React.FC = () => {
         }
 
         // Upload all files
+        presentSnackbar("Uploading...");
         for (const file of files) {
             // Check if file size acceptable by server
             const checkSizeResponse = await checkSize(auth, file.size);
