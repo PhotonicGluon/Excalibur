@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { randbits } from "./util";
+import { randID, randbits } from "./util";
 
 test("randbits", () => {
     const rand1 = randbits(8);
@@ -10,4 +10,10 @@ test("randbits", () => {
     expect(randbits(0)).toBe(0n);
 
     expect(randbits(5)).toBeLessThan(32n);
+});
+
+test("randID", () => {
+    const id = randID();
+    expect(id).toHaveLength(32);
+    expect(id).toMatch(/^[0-9a-f]{32}$/);
 });

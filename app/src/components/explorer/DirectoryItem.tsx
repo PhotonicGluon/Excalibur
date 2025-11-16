@@ -26,6 +26,7 @@ import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
+import { randID } from "@lib/security/util";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
@@ -72,7 +73,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
          */
         async function _handleDownload() {
             // Create new job
-            const jobID = crypto.randomUUID();
+            const jobID = randID();
             uiFeedback.jobsManager.addJob(jobID, {
                 filename: fileName,
                 status: "Downloading...",

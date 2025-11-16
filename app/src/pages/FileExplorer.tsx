@@ -49,6 +49,7 @@ import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem,
 import { Directory } from "@lib/files/structures";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
+import { randID } from "@lib/security/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -234,7 +235,7 @@ const FileExplorer: React.FC = () => {
          */
         async function _handleUpload(rawFile: PickedFile) {
             // Create new job
-            const jobID = crypto.randomUUID();
+            const jobID = randID();
             jobsManager.addJob(jobID, {
                 filename: rawFile.name,
                 status: "Setting up data stream...",

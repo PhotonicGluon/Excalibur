@@ -13,3 +13,12 @@ export function randbits(bits: number): bigint {
     const bytes = randomBytes(Math.ceil(bits / 8));
     return mask & bufferToNumber(bytes);
 }
+
+/**
+ * @returns A random ID
+ */
+export function randID() {
+    const LENGTH = 32;
+    const bytes = randomBytes(LENGTH / 2); // Divide by 2 since each byte is 2 hex characters
+    return bytes.toString("hex");
+}
