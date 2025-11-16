@@ -14,6 +14,7 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
+import { useEffectOnce } from "@lib/hooks";
 import { APICheckResult, checkAPIUrl, getServerTime, getServerVersion, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
@@ -74,23 +75,29 @@ const Welcome: React.FC = () => {
         }
         urlsToCheck.push(`${serverURL}/api`); // Always check the original URL
 
-        let outcome: { url: string; result: APICheckResult } | null = null;
-        for (const url of urlsToCheck) {
-            console.debug(`Checking validity of ${url}...`);
-            const tempCheckResult = await checkAPIUrl(url, API_CHECK_TIMEOUT);
-            if (!tempCheckResult.reachable) {
-                console.error(`Could not reach ${url}: ${tempCheckResult.error}`);
-                continue;
-            }
-            if (!tempCheckResult.valid) {
-                console.error(`Invalid API URL: ${url}`);
-                continue;
-            }
-            outcome = { url, result: tempCheckResult };
-            break;
-        }
+        const checkPromises = urlsToCheck.map(
+            (url) =>
+                new Promise<{ url: string; result: APICheckResult }>((resolve, reject) => {
+                    console.debug(`Checking validity of ${url}...`);
+                    checkAPIUrl(url, API_CHECK_TIMEOUT).then((result) => {
+                        if (!result.reachable) {
+                            console.debug(`Could not reach ${url}: ${result.error}`);
+                            reject({ url, result });
+                        }
+                        if (!result.valid) {
+                            console.debug(`Invalid API URL: ${url}`);
+                            reject({ url, result });
+                        }
+                        console.debug(`Found valid API URL: ${url}`);
+                        resolve({ url, result });
+                    });
+                }),
+        );
 
-        if (!outcome) {
+        let outcome: { url: string; result: APICheckResult };
+        try {
+            outcome = await Promise.any(checkPromises);
+        } catch {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
@@ -150,7 +157,7 @@ const Welcome: React.FC = () => {
         });
     }, []);
 
-    useEffect(() => {
+    useEffectOnce(() => {
         // Detect if an API server shares this URL
         const baseURL = window.location.origin.replace(/:\d+$/, ""); // Replace any port that might appear
         const possibleAPIUrl = `${baseURL}:52419/api/well-known/version`;
