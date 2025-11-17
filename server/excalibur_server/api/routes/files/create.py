@@ -2,10 +2,10 @@ import tempfile
 from typing import Annotated, Generator
 
 import aiofiles
-from fastapi import Body, Depends, HTTPException, Path, Query, Request, status
+from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.routes.files import router
+from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
@@ -29,7 +29,7 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
         spooled_file.close()
 
 
-@router.post(
+@encrypted_router.post(
     "/upload/{path:path}",
     name="Upload File",
     responses={
@@ -59,6 +59,7 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
     },
 )
 async def upload_file_endpoint(
+    background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
     name: Annotated[str, Query(description="The name of the file to upload. Should end with `.exef`")],
@@ -70,6 +71,7 @@ async def upload_file_endpoint(
     """
 
     username = credentials.username
+    base_path = CONFIG.storage.vault_folder / username
 
     # Check file extension
     if not name.endswith(".exef"):
@@ -78,7 +80,7 @@ async def upload_file_endpoint(
         )
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
+    user_path, valid = check_path_subdir(path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -91,7 +93,7 @@ async def upload_file_endpoint(
         raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
 
     # Check for any attempts at path traversal again
-    _, valid = check_path_subdir(file_path, CONFIG.storage.vault_folder / username)
+    _, valid = check_path_subdir(file_path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -106,10 +108,11 @@ async def upload_file_endpoint(
         while content := file.read(CONFIG.storage.write_chunk_size):
             await out_file.write(content)
 
+    background_tasks.add_task(add_folder_change, username, path)
     return "File uploaded"
 
 
-@router.post(
+@encrypted_router.post(
     "/mkdir/{path:path}",
     name="Create Directory",
     responses={
@@ -127,6 +130,7 @@ async def upload_file_endpoint(
     response_class=PlainTextResponse,
 )
 async def create_directory_endpoint(
+    background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[
         str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
@@ -138,9 +142,10 @@ async def create_directory_endpoint(
     """
 
     username = credentials.username
+    base_path = CONFIG.storage.vault_folder / username
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
+    user_path, valid = check_path_subdir(path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -164,4 +169,5 @@ async def create_directory_endpoint(
     # Create the directory
     dir_path.mkdir(parents=True)
 
+    background_tasks.add_task(add_folder_change, username, path)
     return "Directory created"

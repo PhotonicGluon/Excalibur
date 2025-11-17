@@ -1,16 +1,16 @@
 from pathlib import Path as PathlibPath
 from typing import Annotated
 
-from fastapi import Body, Depends, HTTPException, Path, status
+from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.routes.files import router
+from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
 
-@router.post(
+@encrypted_router.post(
     "/rename/{path:path}",
     name="Rename Item",
     responses={
@@ -27,6 +27,7 @@ from excalibur_server.src.path import check_path_length, check_path_subdir
     response_class=PlainTextResponse,
 )
 async def rename_path_endpoint(
+    background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     new_name: Annotated[str, Body(description="The new name for the item at the leaf of the path")],
@@ -36,9 +37,10 @@ async def rename_path_endpoint(
     """
 
     username = credentials.username
+    base_path = CONFIG.storage.vault_folder / username
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
+    user_path, valid = check_path_subdir(path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -55,7 +57,7 @@ async def rename_path_endpoint(
         raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
 
     # Check for any attempts at path traversal again
-    _, valid = check_path_subdir(new_path, CONFIG.storage.vault_folder / username)
+    _, valid = check_path_subdir(new_path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -65,5 +67,6 @@ async def rename_path_endpoint(
 
     # Rename the file
     user_path.rename(new_path)
+    background_tasks.add_task(add_folder_change, username, str(user_path.relative_to(base_path).parent))
 
     return "Item renamed"

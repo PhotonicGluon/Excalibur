@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Query, status
+from fastapi import Depends, HTTPException, Path, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import FileResponse as FastAPIFileResponse
 
-from excalibur_server.api.routes.files import router
-from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.api.routes.files import encrypted_router, router, file_update_manager
+from excalibur_server.src.auth.credentials import Credentials, get_credentials, get_credentials_ws
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
@@ -17,7 +17,7 @@ class FileResponse(FastAPIFileResponse):
     chunk_size = CONFIG.storage.send_chunk_size
 
 
-@router.get(
+@encrypted_router.get(
     "/download/{path:path}",
     name="Download File",
     responses={
@@ -52,7 +52,7 @@ async def download_file_endpoint(
     return FileResponse(user_path, media_type="application/octet-stream")
 
 
-@router.get(
+@encrypted_router.get(
     "/list/{path:path}",
     name="List Directory Contents",
     responses={
@@ -86,3 +86,20 @@ def listdir_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
     return contents
+
+
+@router.websocket("/listdir")
+async def listdir_listener_endpoint(
+    websocket: WebSocket, credentials: Annotated[Credentials, Depends(get_credentials_ws)]
+):
+    """
+    Listens for directory changes and sends updates to the client.
+    """
+
+    await file_update_manager.connect(credentials.username, websocket)
+    try:
+        # Keep the connection alive
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        file_update_manager.disconnect(credentials.username)
