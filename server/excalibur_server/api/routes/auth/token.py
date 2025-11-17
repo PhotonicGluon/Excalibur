@@ -64,3 +64,22 @@ def generate_token_endpoint(
     """
 
     return _gen_token(username, master_key.encode("utf-8"), expiry_time)
+
+
+@router.get("/generate-pop", name="Generate PoP", tags=["debug"], response_class=PlainTextResponse)
+def generate_pop_endpoint(
+    method: Annotated[str, Query(description="The method to use for the PoP")],
+    path: Annotated[str, Query(description="The path to use for the PoP")],
+    master_key: Annotated[str, Query(description="The master key to use for the token")] = "one demo 16B key",
+):
+    """
+    Generate a PoP for a user.
+    """
+
+    import time
+
+    from Crypto.Random import get_random_bytes
+
+    from excalibur_server.src.auth.pop import generate_pop_header
+
+    return generate_pop_header(master_key.encode("utf-8"), method, path, int(time.time()), get_random_bytes(16))
