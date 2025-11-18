@@ -1,3 +1,6 @@
+from excalibur_server.api.misc import is_debug
+from excalibur_server.api.pwa import PWA_PATH
+
 TAGS = [
     {"name": "auth", "description": "Authentication endpoints."},
     {"name": "users", "description": "User management endpoints."},
@@ -14,6 +17,14 @@ TAGS = [
             + "Responses follow the Excalibur Encryption Format (ExEF). See the documentation for more information."
         ),
     },
-    {"name": "pwa", "description": "Progressive Web App (PWA) endpoints."},
-    {"name": "debug", "description": "Endpoints that are accessible only in debug mode."},
 ]
+
+if PWA_PATH.exists():
+    TAGS.append(
+        {"name": "pwa", "description": "Progressive Web App (PWA) endpoints."},
+    )
+
+if is_debug():
+    TAGS.append(
+        {"name": "debug", "description": "Endpoints that are accessible only in debug mode."},
+    )
