@@ -2,10 +2,11 @@
 import asyncio
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, WebSocket, status
+from fastapi import APIRouter, Depends, status
 
 from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.files.update_manager import file_update_manager
 
 router = APIRouter(tags=["files"])
 encrypted_router = APIRouter(
@@ -16,26 +17,6 @@ encrypted_router = APIRouter(
 
 
 # Handle folder changes
-class FileUpdateManager:
-    def __init__(self):
-        self.active_connections: dict[str, WebSocket] = {}
-
-    async def connect(self, user: str, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections[user] = websocket
-
-    def disconnect(self, user: str):
-        del self.active_connections[user]
-
-    async def send_update(self, user: str, path: Path):
-        if user in self.active_connections:
-            # TODO: Do we encrypt?
-            await self.active_connections[user].send_text(path)
-
-
-file_update_manager = FileUpdateManager()
-
-
 def add_folder_change(user: str, path: Path):
     if path == "":
         path = "."
@@ -49,9 +30,9 @@ from .checks import check_path_endpoint as check_path_endpoint
 from .create import create_directory_endpoint as create_directory_endpoint
 from .create import upload_file_endpoint as upload_file_endpoint
 from .delete import delete_endpoint as delete_endpoint
+from .listeners import directory_changes_listener_endpoint as directory_changes_listener_endpoint
 from .retrieval import download_file_endpoint as download_file_endpoint
 from .retrieval import listdir_endpoint as listdir_endpoint
-from .retrieval import listdir_listener_endpoint as listdir_listener_endpoint
 from .updates import rename_path_endpoint as rename_path_endpoint
 
 # Add encrypted routes to overall router
