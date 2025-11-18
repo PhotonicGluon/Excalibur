@@ -108,7 +108,7 @@ async def upload_file_endpoint(
         while content := file.read(CONFIG.storage.write_chunk_size):
             await out_file.write(content)
 
-    background_tasks.add_task(add_folder_change, username, path)
+    background_tasks.add_task(add_folder_change, credentials, path)
     return "File uploaded"
 
 
@@ -169,5 +169,5 @@ async def create_directory_endpoint(
     # Create the directory
     dir_path.mkdir(parents=True)
 
-    background_tasks.add_task(add_folder_change, username, path)
+    background_tasks.add_task(add_folder_change, credentials, path)
     return "Directory created"

@@ -14,7 +14,7 @@ from excalibur_server.src.exef import ExEF
 class TestDirectoryChangesListener:
     @pytest.fixture
     def ws_client(self, auth_client: TestClient):
-        header = generate_pop_header(
+        pop_header = generate_pop_header(
             master_key=b"one demo 16B key",
             method="WEBSOCKET",
             path="/api/files/listen",
@@ -22,7 +22,9 @@ class TestDirectoryChangesListener:
             nonce=get_random_bytes(16),
         )
 
-        with auth_client.websocket_connect("/api/files/listen", headers={"X-SRP-PoP": header}) as ws:
+        with auth_client.websocket_connect(
+            "/api/files/listen", headers={"X-SRP-PoP": pop_header, "X-Encrypted": "false"}
+        ) as ws:
             yield ws
 
     @pytest.fixture(scope="class")
@@ -36,6 +38,40 @@ class TestDirectoryChangesListener:
 
     def test_connect(self, ws_client: WebSocketTestSession):
         assert ws_client, "Failed to connect to the WebSocket"
+
+    def test_encrypted(self, auth_client: TestClient, test_user_vault_folder: Path):
+        from base64 import b64decode
+
+        from Crypto.Cipher import AES
+
+        pop_header = generate_pop_header(
+            master_key=b"one demo 16B key",
+            method="WEBSOCKET",
+            path="/api/files/listen",
+            timestamp=int(time.time()),
+            nonce=get_random_bytes(16),
+        )
+
+        with auth_client.websocket_connect("/api/files/listen", headers={"X-SRP-PoP": pop_header}) as ws:
+            # Create a folder
+            uuid = uuid4().hex
+            response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+            assert response.status_code == 201
+            assert (test_user_vault_folder / f"test-dir-{uuid}").exists()
+
+            # Check if the update was transmitted
+            enc_data = ws.receive_json()
+            assert enc_data
+
+            # Check received path
+            cipher = AES.new(
+                b"one demo 16B key",
+                AES.MODE_GCM,
+                nonce=b64decode(enc_data["nonce"]),
+            )
+            path = cipher.decrypt(b64decode(enc_data["path"]))
+            cipher.verify(b64decode(enc_data["tag"]))
+            assert path.decode("utf-8") == "."
 
     def test_new_folder_in_root(
         self, auth_client: TestClient, ws_client: WebSocketTestSession, test_user_vault_folder: Path

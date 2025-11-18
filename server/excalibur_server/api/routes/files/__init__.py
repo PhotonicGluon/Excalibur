@@ -4,8 +4,10 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, status
 
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.api.misc import is_debug
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.files.update_manager import file_update_manager
 
 router = APIRouter(tags=["files"])
@@ -17,12 +19,12 @@ encrypted_router = APIRouter(
 
 
 # Handle folder changes
-def add_folder_change(user: str, path: Path):
+def add_folder_change(credentials: Credentials, path: Path):
     if path == "":
         path = "."
 
-    logger.debug(f"Noticed '{user}' folder content change: {path}")
-    asyncio.run(file_update_manager.send_update(user, path))
+    logger.debug(f"Noticed '{credentials.username}' folder content change: {path}")
+    asyncio.run(file_update_manager.send_update(credentials.username, path, MASTER_KEYS_CACHE[credentials.comm_uuid]))
 
 
 # Add endpoints
@@ -34,6 +36,9 @@ from .listeners import directory_changes_listener_endpoint as directory_changes_
 from .retrieval import download_file_endpoint as download_file_endpoint
 from .retrieval import listdir_endpoint as listdir_endpoint
 from .updates import rename_path_endpoint as rename_path_endpoint
+
+if is_debug():
+    from .listeners import directory_changes_listener_debug_endpoint as directory_changes_listener_debug_endpoint
 
 # Add encrypted routes to overall router
 router.include_router(encrypted_router)

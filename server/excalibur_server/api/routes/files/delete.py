@@ -55,7 +55,7 @@ def delete_endpoint(
     if user_path == base_path:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
-    background_tasks.add_task(add_folder_change, username, str(user_path.relative_to(base_path).parent))
+    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
     # Handle deletion
     if user_path.is_dir():

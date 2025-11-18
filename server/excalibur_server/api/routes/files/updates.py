@@ -67,6 +67,6 @@ async def rename_path_endpoint(
 
     # Rename the file
     user_path.rename(new_path)
-    background_tasks.add_task(add_folder_change, username, str(user_path.relative_to(base_path).parent))
+    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
     return "Item renamed"
