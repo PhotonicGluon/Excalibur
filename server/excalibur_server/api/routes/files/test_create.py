@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.src.exef.exef import ExEF
+from excalibur_server.src.exef import ExEF
 
 
 class TestUploadFile:

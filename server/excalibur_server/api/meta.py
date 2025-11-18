@@ -1,7 +1,11 @@
 TAGS = [
     {"name": "auth", "description": "Authentication endpoints."},
     {"name": "users", "description": "User management endpoints."},
-    {"name": "files", "description": "File management endpoints."},
+    {
+        "name": "files",
+        "description": "File management endpoints.\n\n"
+        + "Users can use a WebSocket connection to `/api/files/listen` to listen for any changes to their folders.",
+    },
     {"name": "well-known", "description": "Well-known endpoints."},
     {
         "name": "encrypted",

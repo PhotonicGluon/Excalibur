@@ -10,7 +10,7 @@ def generate_pop(master_key: bytes, method: str, path: str, timestamp: int, nonc
     Generates a valid Proof of Possession (PoP).
 
     :param master_key: the master key
-    :param method: the HTTP method
+    :param method: the HTTP method, or `WEBSOCKET` for WebSocket connections
     :param path: the path
     :param timestamp: the timestamp
     :param nonce: the nonce
@@ -26,7 +26,7 @@ def generate_pop_header(master_key: bytes, method: str, path: str, timestamp: in
     Generates a valid Proof of Possession (PoP) header.
 
     :param master_key: the master key
-    :param method: the HTTP method
+    :param method: the HTTP method, or `WEBSOCKET` for WebSocket connections
     :param path: the path
     :param timestamp: the timestamp
     :param nonce: the nonce

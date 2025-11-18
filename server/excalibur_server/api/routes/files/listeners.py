@@ -15,10 +15,12 @@ async def directory_changes_listener_endpoint(
     Listens for directory changes and sends updates to the client.
     """
 
-    await file_update_manager.connect(credentials.username, websocket)
+    username = credentials.username
+
+    await file_update_manager.connect(username, websocket)
     try:
         # Keep the connection alive
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        file_update_manager.disconnect(credentials.username)
+        file_update_manager.disconnect(username)
