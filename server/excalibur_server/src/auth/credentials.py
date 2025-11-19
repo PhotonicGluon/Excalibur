@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from typing import Annotated, Callable
 
-from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketException, status
+from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -168,13 +168,12 @@ async def get_credentials(
 
 async def get_credentials_ws(
     websocket: WebSocket,
-    bearer_header: Annotated[str, Header(alias="Authorization", pattern="^Bearer ")],
+    auth_token: Annotated[str, Query(description="Authorization token")],
     hmac_validation: Annotated[
         str,
-        Header(
-            alias="X-SRP-PoP",
+        Query(
             pattern=POP_HEADER_PATTERN,
-            description="HMAC for authentication.",
+            description="HMAC for authentication",
         ),
     ] = "",
 ) -> Credentials:
@@ -182,7 +181,7 @@ async def get_credentials_ws(
     WebSocket-specific method that gets the authorization credentials.
 
     :param websocket: the WebSocket
-    :param bearer_header: authorization credentials included as the "Bearer" header
+    :param auth_token: authorization credentials
     :param hmac_validation: the SRP HMAC
     :raises CREDENTIALS_EXCEPTION: if the token is missing or invalid
     :return: the credentials
@@ -201,9 +200,7 @@ async def get_credentials_ws(
         return await _verify_and_extract_credentials(
             get_path_and_method=get_path_and_method,
             raise_exception=raise_ws_exception,
-            credentials=HTTPAuthorizationCredentials(
-                scheme="Bearer", credentials=bearer_header.removeprefix("Bearer ")
-            ),
+            credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_token.removeprefix("Bearer ")),
             hmac_validation=hmac_validation,
         )
     except HTTPException:

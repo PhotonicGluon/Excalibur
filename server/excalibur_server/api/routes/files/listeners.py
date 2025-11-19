@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Header, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.misc import is_debug
 from excalibur_server.api.routes.files import router
@@ -22,9 +22,7 @@ async def _main_logic(username: str, websocket: WebSocket, encrypted: bool):
 async def directory_changes_listener_endpoint(
     websocket: WebSocket,
     credentials: Annotated[Credentials, Depends(get_credentials_ws)],
-    encrypted: Annotated[
-        bool, Header(alias="X-Encrypted", description="Whether the connection should be encrypted")
-    ] = True,
+    encrypted: Annotated[bool, Query(description="Whether the connection should be encrypted")] = True,
 ):
     """
     Listens for directory changes and sends updates to the client.
@@ -39,9 +37,7 @@ if is_debug():
     async def directory_changes_listener_debug_endpoint(
         websocket: WebSocket,
         username: Annotated[str, Query()],
-        encrypted: Annotated[
-            bool, Header(alias="X-Encrypted", description="Whether the connection should be encrypted")
-        ] = True,
+        encrypted: Annotated[bool, Query(description="Whether the connection should be encrypted")] = True,
     ):
         """
         Listens for directory changes and sends updates to the client.
