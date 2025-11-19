@@ -238,9 +238,6 @@ const NewUser: React.FC = () => {
                                 <IonLabel>Account Creation Key</IonLabel>
                                 <BIP39MnemonicInput
                                     numWords={24}
-                                    // initialWords={"artist flavor happy stand sheriff circle jazz south segment domain number zebra analyst business rare daughter catalog term yard aunt alien goose track faint".split(
-                                    //     " ",
-                                    // )}
                                     maxSuggestions={5}
                                     onEntropy={(ack) => {
                                         onACKConfirm(ack);

@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { PrivacyScreen } from "@capacitor/privacy-screen";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
+import { enableMapSet } from "immer";
 import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
@@ -37,6 +38,7 @@ import "@theme/variables.css";
 
 // Set up app
 setupIonicReact();
+enableMapSet(); // To allow immer to update maps
 
 // Helper functions
 function toggleDarkPalette(shouldAdd: boolean) {

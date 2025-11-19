@@ -20,12 +20,13 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, folderOutline, pencilOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, pencilOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
-import { mimetypeToIcon } from "@lib/mimetypes";
+import { getIcon, mimetypeToIcon } from "@lib/icons";
+import { randID } from "@lib/security/util";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
@@ -68,15 +69,27 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         const fileName = nameNoExEF;
 
         /**
-         * Actual function handling the download process.
+         * Handles the file download process.
          */
-        async function handleDownload() {
-            uiFeedback.setShowDialog(true);
-            uiFeedback.setDialogMessage("Getting download stream...");
-            uiFeedback.setProgress(null);
+        async function _handleDownload() {
+            // Create new job
+            const jobID = randID();
+            uiFeedback.jobsManager.addJob(jobID, {
+                direction: "download",
+                filename: fileName,
+                description: "Downloading...",
+                progress: null,
+            });
+            if (Capacitor.getPlatform() === "web") {
+                uiFeedback.presentToast({
+                    message: "Downloading...",
+                    duration: 2000,
+                    color: "primary",
+                });
+            }
+            console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
             // Send request for file
-            uiFeedback.setDialogMessage("Downloading...");
             const response = await downloadFile(auth, props.fullpath);
             if (!response.success) {
                 uiFeedback.presentToast({
@@ -84,16 +97,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     duration: 2000,
                     color: "danger",
                 });
-                uiFeedback.setShowDialog(false);
+                uiFeedback.jobsManager.deleteJob(jobID);
                 return;
             }
 
-            // Compute final file size
-            const encryptedFileSize = response.fileSize! - ExEF.additionalSize;
-            const fileSize = encryptedFileSize - ExEF.additionalSize;
+            const fileSize = response.fileSize! - ExEF.additionalSize;
 
             // Create stream that handles the decryption and updates the progress
-            uiFeedback.setDialogMessage("Decrypting...");
+            uiFeedback.jobsManager.updateJob(jobID, "Decrypting...");
 
             const worker = new DecryptionProcessorWorker();
             const processor = Comlink.wrap<DecryptionProcessor>(worker);
@@ -108,15 +119,26 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     fileSize,
                     settings.cryptoChunkSize,
                     // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy(uiFeedback.setProgress),
+                    Comlink.proxy((progress) => {
+                        uiFeedback.jobsManager.updateProgress(jobID, progress);
+                    }),
                 );
             } catch (e) {
-                uiFeedback.presentToast({
-                    message: `Failed to decrypt file: ${(e as Error).message}`,
-                    duration: 2000,
-                    color: "danger",
-                });
-                uiFeedback.setShowDialog(false);
+                const err = e as Error;
+                if (err.message.includes("header MAC")) {
+                    uiFeedback.presentToast({
+                        message: `Failed to decrypt file: vault key may be incorrect`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                } else {
+                    uiFeedback.presentToast({
+                        message: `Failed to decrypt file: ${err.message}`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                }
+                uiFeedback.jobsManager.deleteJob(jobID);
                 return;
             } finally {
                 // Free up resources
@@ -124,8 +146,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
 
             // Save file
-            uiFeedback.setDialogMessage("Saving...");
-            uiFeedback.setProgress(null);
+            uiFeedback.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
             console.debug(`Saving file ${fileName}...`);
             try {
                 if (Capacitor.getPlatform() === "web") {
@@ -157,7 +178,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         },
                     });
                     uiFeedback.presentToast({
-                        message: "File downloaded to the documents folder",
+                        message: "File saved to the documents folder",
                         duration: 2000,
                         color: "success",
                     });
@@ -169,7 +190,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     color: "danger",
                 });
             } finally {
-                uiFeedback.setShowDialog(false);
+                uiFeedback.jobsManager.deleteJob(jobID);
             }
         }
 
@@ -200,7 +221,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         {
                             text: "Yes",
                             role: "confirm",
-                            handler: async () => await handleDownload(),
+                            handler: () => _handleDownload(),
                         },
                     ],
                 });
@@ -210,7 +231,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
         }
 
-        await handleDownload();
+        _handleDownload();
     }
 
     /**
@@ -280,7 +301,11 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         <IonCol className="flex items-center">
                             <IonIcon
                                 className="size-6"
-                                icon={isFile ? mimetypeToIcon(props.mimetype) : folderOutline}
+                                icon={
+                                    isFile
+                                        ? mimetypeToIcon(props.mimetype, settings.iconStyle)
+                                        : getIcon("folder", settings.iconStyle)
+                                }
                             />
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
                                 <IonLabel className="max-w-100 truncate">

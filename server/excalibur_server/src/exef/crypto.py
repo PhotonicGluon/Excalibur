@@ -1,11 +1,31 @@
 from queue import Empty, Queue
 
 from Crypto.Cipher import AES, _mode_gcm
+from Crypto.Hash import HMAC, SHA256
+from Crypto.Protocol.KDF import HKDF
 
 from .structures import Footer, Header
 
 
-class Encryptor:
+class Cryptor:
+    """
+    Base class for encryption and decryption.
+    """
+
+    @staticmethod
+    def _gen_key(key: bytes, nonce: bytes, context: bytes):
+        return HKDF(key, len(key), nonce, SHA256, context=context)
+
+    @staticmethod
+    def _gen_crypto_key(key: bytes, nonce: bytes):
+        return Cryptor._gen_key(key, nonce, b"ExEF Crypto Key")
+
+    @staticmethod
+    def _gen_mac_key(key: bytes, nonce: bytes):
+        return Cryptor._gen_key(key, nonce, b"ExEF MAC Key")
+
+
+class Encryptor(Cryptor):
     """
     Class that handles the encryption of ExEF messages.
     """
@@ -14,12 +34,15 @@ class Encryptor:
         """
         Initializes the Encryptor with a given key and nonce.
 
-        :param key: The encryption key as bytes.
-        :param nonce: The nonce used for AES-GCM encryption.
+        :param key: The main key as bytes
+        :param nonce: The nonce used for AES-GCM encryption
         """
 
         self.key = key
         self._nonce = nonce
+
+        self._crypto_key = self._gen_crypto_key(key, nonce)
+        self._mac_key = self._gen_mac_key(key, nonce)
 
         self._ct_len: int = -1
         self._header: Header | None = None
@@ -43,7 +66,7 @@ class Encryptor:
         if self._cipher is None:
             if self._nonce is None or self._ct_len == -1 or self._header is None:
                 raise ValueError("parameters must be set")
-            self._cipher = AES.new(self.key, AES.MODE_GCM, nonce=self._nonce)
+            self._cipher = AES.new(self._crypto_key, AES.MODE_GCM, nonce=self._nonce)
 
         return self._cipher
 
@@ -65,12 +88,36 @@ class Encryptor:
         """
         Sets the parameters for the encryption process.
 
-        :param length: The length of the plaintext to be encrypted.
-        :raises ValueError: If parameters are set before requesting the cipher.
+        :param length: The length of the plaintext to be encrypted
+        :raises ValueError: If the key size is not 128, 192, or 256
+        :raises ValueError: If parameters are set before requesting the cipher
         """
 
         self._ct_len = length  # Ciphertext length is equal to plaintext length
-        self._header = Header(keysize=len(self.key) * 8, nonce=self._nonce, ct_len=length)
+
+        # Determine cipher ID
+        keysize = len(self.key) * 8
+        if keysize == 128:
+            cipher_id = 1
+        elif keysize == 192:
+            cipher_id = 2
+        elif keysize == 256:
+            cipher_id = 3
+        else:
+            raise ValueError("keysize must be 128, 192, or 256")
+
+        # Generate header MAC
+        header = Header(
+            cipher_id=cipher_id,
+            nonce=self._nonce,
+            header_mac="\x00" * 14,  # We first set the header MAC to all zeros
+            ct_len=length,
+        )
+        hmac = HMAC.new(self._mac_key, header.serialize_as_bytes(), SHA256)
+        header_mac = hmac.digest()[:14]  # We keep only first 14 bytes
+        header.header_mac = header_mac
+
+        self._header = header
 
     def update(self, data: bytes):
         """
@@ -126,7 +173,7 @@ class Encryptor:
         return output
 
 
-class Decryptor:
+class Decryptor(Cryptor):
     """
     Class that handles the decryption of ExEF messages.
     """
@@ -139,6 +186,9 @@ class Decryptor:
         """
 
         self.key = key
+
+        self._crypto_key: bytes | None = None
+        self._mac_key: bytes | None = None
 
         self._header: Header | None = None
         self._footer: Footer | None = None
@@ -157,14 +207,27 @@ class Decryptor:
         """
         The AES-GCM cipher object used for decryption.
 
-        :raises ValueError: If the header is not set before requesting the cipher.
-        :return: The AES-GCM cipher object.
+        :raises ValueError: If the header is not set before requesting the cipher
+        :raises ValueError: If the header MAC check fails
+        :return: The AES-GCM cipher object
         """
 
         if self._cipher is None:
             if self._header is None:
                 raise ValueError("header must be set")
-            self._cipher = AES.new(self.key, AES.MODE_GCM, nonce=self._header.nonce)
+
+            self._crypto_key = self._gen_crypto_key(self.key, self._header.nonce)
+            self._mac_key = self._gen_mac_key(self.key, self._header.nonce)
+
+            # Verify header MAC
+            header_copy = self._header.model_copy()
+            header_copy.header_mac = b"\x00" * 14
+            hmac = HMAC.new(self._mac_key, header_copy.serialize_as_bytes(), SHA256)
+            header_mac = hmac.digest()[:14]
+            if header_mac != self._header.header_mac:
+                raise ValueError("header MAC mismatch")
+
+            self._cipher = AES.new(self._crypto_key, AES.MODE_GCM, nonce=self._header.nonce)
 
         return self._cipher
 

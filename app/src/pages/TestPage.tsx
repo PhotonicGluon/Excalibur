@@ -1,23 +1,48 @@
 import React from "react";
+import { Redirect } from "react-router";
 
 import { IonContent, IonPage } from "@ionic/react";
 
-import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
+import { Job } from "@components/explorer/JobEntry";
+import JobsList from "@components/explorer/JobsList";
 
 const TestPage: React.FC = () => {
+    if (process.env.NODE_ENV !== "development") {
+        return <Redirect from={location.pathname} to="/" />;
+    }
+
     return (
         <IonPage>
             <IonContent className="ion-padding">
-                <BIP39MnemonicInput
-                    // initialWords={"vessel ladder alter error federal sibling chat ability sun glass valve picture".split(
-                    //     " ",
-                    // )}
-                    initialWords={"vessel ladder alter error federal".split(" ")}
-                    maxSuggestions={5}
-                    numWords={12}
-                    onEntropy={(entropy) => console.log("Entropy: ", entropy)}
-                    onError={(error) => console.error("Error: ", error)}
-                />
+                <div className="h-full w-100">
+                    <JobsList
+                        jobs={(() => {
+                            const jobs = new Map<string, Job>();
+                            jobs.set("test", {
+                                filename: "test.txt",
+                                description: "Reading the file...",
+                                progress: 0.123,
+                            });
+                            // jobs.set("test2", {
+                            //     filename: "test2.txt",
+                            //     status: "Encrypting...",
+                            //     progress: 0.456,
+                            // });
+                            // jobs.set("test3", {
+                            //     filename: "test3.txt",
+                            //     status: "Uploading...",
+                            //     progress: 0.789,
+                            // });
+                            // jobs.set("long", {
+                            //     filename: "a-super-long-name-a-super-long-name-a-super-long-name-a-super-long-name.txt",
+                            //     status: "Uploading...",
+                            //     progress: 0.789,
+                            // });
+
+                            return jobs;
+                        })()}
+                    ></JobsList>
+                </div>
             </IonContent>
         </IonPage>
     );

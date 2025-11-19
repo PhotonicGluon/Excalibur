@@ -38,7 +38,10 @@ public class FolderOpenerPlugin extends Plugin {
         Log.d(TAG, "openExcaliburFolder() called");
 
         // Ensure that the Excalibur folder exists
-        File excaliburFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), EXCALIBUR_FOLDER);
+        File excaliburFolder = new File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
+                EXCALIBUR_FOLDER
+        );
         if (!excaliburFolder.exists()) {
             Log.d(TAG, "Excalibur folder does not yet exist... creating it");
             if (!excaliburFolder.mkdirs()) {

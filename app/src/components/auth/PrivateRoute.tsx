@@ -12,7 +12,7 @@ const PrivateRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
     const location = useLocation();
     return (
         <NeedServerURLRoute {...rest}>
-            {auth.authInfo?.token ? children : <Redirect from={location.pathname} to="/login" />}
+            {auth.getToken() ? children : <Redirect from={location.pathname} to="/login" />}
         </NeedServerURLRoute>
     );
 };

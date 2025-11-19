@@ -1,5 +1,6 @@
 // Types
 export type Theme = "light" | "dark" | "system";
+export type IconStyle = "default" | "reversed" | "outline" | "solid";
 export type RowAlternatingColours = "off" | "normal" | "inverted";
 export type FileSizeUnits = "si" | "iec";
 export type CryptoChunkSize = 65536 | 131072 | 262144 | 524288 | 1_048_576 | 2_097_152 | 4_194_304;
@@ -11,6 +12,9 @@ export interface SettingsPreferenceValues {
     // Interface
     /** Theme to use */
     theme: Theme;
+    /** Icon style to use */
+    iconStyle: IconStyle;
+    /** Row alternating colours preset to use */
     rowAlternatingColours: RowAlternatingColours;
     /**
      * File size units to use.
@@ -26,6 +30,7 @@ export interface SettingsPreferenceValues {
 
 export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     theme: "system",
+    iconStyle: "default",
     rowAlternatingColours: "off",
     cryptoChunkSize: 262144, // 256 KiB
     fileSizeUnits: "si",

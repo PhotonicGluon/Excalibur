@@ -179,15 +179,6 @@ class EncryptionHandler:
         headers = MutableHeaders(raw=self._scope["headers"])
         headers["Content-Length"] = str(len(decrypted_body))
 
-        # TODO: Determine if `X-Content-Type` needs to be deleted
-        # if "X-Content-Type" in headers:
-        #     headers["Content-Type"] = headers["X-Content-Type"]
-        #     del headers["X-Content-Type"]
-
-        # UPDATE: We stop deleting `X-Encrypted` because this was messing up some of the large file uploads
-        # if "X-Encrypted" in headers:
-        #     del headers["X-Encrypted"]
-
         self._scope["headers"] = headers.raw
 
         logger.debug(f"< {len(decrypted_body)} decrypted bytes")

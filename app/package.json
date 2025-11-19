@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.3.0-alpha.5",
+    "version": "0.3.0-alpha.8",
     "description": "A trustless, secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
@@ -50,15 +50,18 @@
         "@tailwindcss/vite": "^4.1.16",
         "capacitor-blob-writer": "^1.1.19",
         "comlink": "^4.4.2",
+        "immer": "^10.2.0",
         "ionicons": "^8.0.13",
         "js-sha3": "^0.9.3",
         "jsonwebtoken": "^9.0.2",
         "react": "19.2.0",
+        "react-circular-progressbar": "^2.2.0",
         "react-dom": "19.2.0",
         "react-router": "^5.3.4",
         "react-router-dom": "^5.3.4",
         "semver-parser": "^4.1.8",
-        "tailwindcss": "^4.1.16"
+        "tailwindcss": "^4.1.16",
+        "use-immer": "^0.11.0"
     },
     "devDependencies": {
         "@capacitor/assets": "^3.0.5",

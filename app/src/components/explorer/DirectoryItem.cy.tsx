@@ -4,6 +4,7 @@ import { documentOutline, musicalNotesOutline } from "ionicons/icons";
 import { settingsContext } from "@components/settings/context";
 
 import DirectoryItem, { ContainerProps } from "./DirectoryItem";
+import { Job } from "./JobEntry";
 import { uiFeedbackContext } from "./context";
 
 describe("<DirectoryItem />", () => {
@@ -38,13 +39,19 @@ describe("<DirectoryItem />", () => {
                 >
                     <uiFeedbackContext.Provider
                         value={{
+                            jobsManager: {
+                                addJob: (_id: string, _job: Job) => {},
+                                getJob: (_id: string) => {
+                                    return { id: _id, filename: "", description: "", progress: 0 };
+                                },
+                                updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
+                                updateProgress: (_id: string, _newProgress: number | null) => {},
+                                deleteJob: (_id: string) => {},
+                            },
                             onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
                             presentToast: () => Promise.resolve(),
-                            setProgress: () => {},
-                            setShowDialog: () => {},
-                            setDialogMessage: () => {},
                         }}
                     >
                         <DirectoryItem id="directory-item" {...defaultProps} />

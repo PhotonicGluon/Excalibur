@@ -2,8 +2,9 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { useImmer } from "use-immer";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
 import {
@@ -48,6 +49,7 @@ import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem,
 import { Directory } from "@lib/files/structures";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
+import { randID } from "@lib/security/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -55,11 +57,12 @@ import FolderOpener from "@native/FolderOpenerPlugin";
 
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
-import ProgressDialog from "@components/dialog/ProgressDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
-import { uiFeedbackContext } from "@components/explorer/context";
+import { Job } from "@components/explorer/JobEntry";
+import JobsList from "@components/explorer/JobsList";
+import { JobsManager, uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 const TOKEN_EARLY_REFRESH_THRESHOLD = 0.95; // 95% of token expiry then refresh
@@ -69,6 +72,7 @@ const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
+    const requestedPathRef = useRef(requestedPath); // We use a ref to get the latest value of `requestedPath`
 
     // Get contexts
     const auth = useAuth();
@@ -79,9 +83,51 @@ const FileExplorer: React.FC = () => {
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
-    const [showProgressDialog, setShowProgressDialog] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-    const [dialogMessage, setDialogMessage] = useState("");
+    const jobsPopover = useRef<HTMLIonPopoverElement>(null);
+    const [showJobsPopover, setShowJobsPopover] = useState(false);
+    const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
+    const jobsManager: JobsManager = useMemo(() => {
+        return {
+            getJob(id: string): Job {
+                return jobs.get(id)!;
+            },
+            addJob(id: string, job: Job): void {
+                updateJobs((draft) => {
+                    draft.set(id, job);
+                });
+            },
+            updateJob(id: string, newStatus: string, newProgress?: number | null): void {
+                updateJobs((draft) => {
+                    const job = draft.get(id);
+                    if (!job) {
+                        // We will fail semi-silently
+                        console.warn(`Job ${id} not found for job update`);
+                        return;
+                    }
+                    job.description = newStatus;
+                    if (newProgress !== undefined) {
+                        job.progress = newProgress;
+                    }
+                });
+            },
+            updateProgress(id: string, newProgress: number | null): void {
+                updateJobs((draft) => {
+                    const job = draft.get(id);
+                    if (!job) {
+                        // We will fail semi-silently
+                        console.warn(`Job ${id} not found for progress update`);
+                        return;
+                    }
+                    job.progress = newProgress;
+                });
+            },
+            deleteJob(id: string): void {
+                updateJobs((draft) => {
+                    draft.delete(id);
+                });
+            },
+        };
+    }, [jobs, updateJobs]);
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
@@ -149,10 +195,18 @@ const FileExplorer: React.FC = () => {
      * component state.
      *
      * @param showToast If true, displays a toast telling the user that the page was refreshed
+     * @param sourceFolder The folder that triggered the refresh
      */
     const refreshContents = useCallback(
-        async (showToast: boolean = true) => {
-            const response = await listdir(auth, requestedPath);
+        async (showToast: boolean = true, sourceFolder?: string) => {
+            const currentPath = requestedPathRef.current;
+            if (sourceFolder && sourceFolder !== currentPath) {
+                console.debug("Not refreshing contents because we are in a different folder");
+                // We are in a different folder than the one we want to refresh, so no need to refresh
+                return;
+            }
+
+            const response = await listdir(auth, currentPath);
             if (!response.success) {
                 presentSnackbar(response.error!, "danger");
                 return;
@@ -162,7 +216,7 @@ const FileExplorer: React.FC = () => {
                 presentSnackbar("Refreshed");
             }
         },
-        [auth, requestedPath, presentSnackbar],
+        [auth, presentSnackbar],
     );
 
     /**
@@ -174,20 +228,22 @@ const FileExplorer: React.FC = () => {
      * @returns A promise which resolves when the upload is complete
      */
     async function onUploadFile(files?: PickedFile[]) {
-        let force = false;
-
         /**
-         * Handles the actual file upload process.
+         * Handles the file upload process.
          *
          * @param rawFile A {@link PickedFile} object
          */
-        async function _handleFileUpload(rawFile: PickedFile) {
-            // Show dialog
-            setShowProgressDialog(true);
-            setUploadProgress(null);
+        async function _handleUpload(rawFile: PickedFile) {
+            // Create new job
+            const jobID = randID();
+            jobsManager.addJob(jobID, {
+                direction: "upload",
+                filename: rawFile.name,
+                description: "Setting up data stream...",
+                progress: null,
+            });
 
             // Set up file data stream
-            setDialogMessage("Setting up data stream...");
             const rawFileSize = rawFile.size;
             let rawFileDataStream: ReadableStream<Buffer>;
             if (rawFile.blob) {
@@ -207,7 +263,7 @@ const FileExplorer: React.FC = () => {
                             (chunk, err) => {
                                 if (err) {
                                     presentSnackbar("Failed to read file chunk", "danger");
-                                    setShowProgressDialog(false);
+                                    jobsManager.deleteJob(jobID);
                                     controller.error(err);
                                     return;
                                 }
@@ -226,7 +282,7 @@ const FileExplorer: React.FC = () => {
             }
 
             // Create stream that handles the encryption and updates the progress
-            setDialogMessage("Encrypting...");
+            jobsManager.updateJob(jobID, "Encrypting...");
             const worker = new EncryptionProcessorWorker();
             const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
@@ -240,11 +296,13 @@ const FileExplorer: React.FC = () => {
                     rawFileSize,
                     settings.cryptoChunkSize,
                     // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy(setUploadProgress),
+                    Comlink.proxy((progress) => {
+                        jobsManager.updateProgress(jobID, progress);
+                    }),
                 );
             } catch (e) {
                 presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                setShowProgressDialog(false);
+                jobsManager.deleteJob(jobID);
                 return;
             } finally {
                 // Free up resources
@@ -252,27 +310,25 @@ const FileExplorer: React.FC = () => {
             }
 
             // Upload the file
-            setDialogMessage("Uploading...");
-            setUploadProgress(null);
+            console.debug(`Uploading file ${rawFile.name}...`);
+            jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
             const file = new File([blob], rawFile.name + ".exef");
-            const uploadResponse = await uploadFile(auth, requestedPath, file, force);
+            const uploadResponse = await uploadFile(auth, requestedPath, file, true); // Always force upload
             if (!uploadResponse.success) {
                 presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
-                setShowProgressDialog(false);
+                jobsManager.deleteJob(jobID);
                 return;
             }
 
             // Refresh page
-            refreshContents(false);
-            presentSnackbar("File uploaded", "success");
-            setShowProgressDialog(false);
+            refreshContents(false, requestedPath);
+            jobsManager.deleteJob(jobID);
         }
 
         if (!files) {
             // Get file picker to let user choose the files
             try {
-                // TODO: Change limit to more than 1
-                files = (await FilePicker.pickFiles({ limit: 1 })).files;
+                files = (await FilePicker.pickFiles()).files;
             } catch (e: unknown) {
                 const message = (e as Error).message;
                 if (message.includes("pickFiles canceled")) {
@@ -284,70 +340,76 @@ const FileExplorer: React.FC = () => {
             }
         }
 
-        // TODO: Support multiple files. For now we accept one file
-        const rawFile = files[0];
-
-        // Check if file size acceptable by server
-        const checkSizeResponse = await checkSize(auth, rawFile.size);
-        if (!checkSizeResponse.success) {
-            presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
-            setShowProgressDialog(false);
-            return;
-        }
-        if (checkSizeResponse.isTooLarge) {
-            presentSnackbar("File too large", "danger");
-            setShowProgressDialog(false);
-            return;
-        }
-
-        // Check if file exists
-        const eventualPath = `${requestedPath}/${rawFile.name}` + ".exef"; // The uploaded file has this extension
-        const checkResponse = await checkPath(auth, eventualPath);
-        if (!checkResponse.success) {
-            switch (checkResponse.error) {
-                case "Path not found":
-                    // This is good -- the file doesn't exist, so we can just carry on
-                    break;
-                case "Illegal or invalid path":
-                    presentSnackbar("Illegal or invalid file name", "danger");
-                    return;
-                case "Path too long":
-                    presentSnackbar("File path too long", "danger");
-                    return;
-                default:
-                    presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
-                    return;
+        // Upload all files
+        presentSnackbar("Uploading...");
+        for (const file of files) {
+            // Check if file size acceptable by server
+            const checkSizeResponse = await checkSize(auth, file.size);
+            if (!checkSizeResponse.success) {
+                presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
+                return;
             }
-        }
-        if (checkResponse.success && checkResponse.type === "file") {
-            // File exists, ask if want to override
-            console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
+            if (checkSizeResponse.isTooLarge) {
+                // We use an alert to make it more visible
+                // TODO: Does this work on mobile?
+                alert(`File ${file.name} is too large`);
+                continue;
+            }
 
-            await presentAlert({
-                header: "File already exists",
-                message: "Do you want to override the existing file?",
-                buttons: [
-                    {
-                        text: "No",
-                        role: "cancel",
-                        handler: () => {
-                            presentSnackbar("File upload cancelled", "warning");
-                        },
-                    },
-                    {
-                        text: "Yes",
-                        role: "confirm",
-                        handler: () => {
-                            force = true;
-                            _handleFileUpload(rawFile);
-                        },
-                    },
-                ],
-            });
-            return;
-        }
+            // Check if file exists
+            const eventualPath = `${requestedPath}/${file.name}` + ".exef"; // The uploaded file has this extension
+            const checkResponse = await checkPath(auth, eventualPath);
+            if (!checkResponse.success) {
+                switch (checkResponse.error) {
+                    case "Path not found":
+                        // This is good -- the file doesn't exist, so we can just carry on
+                        break;
+                    case "Illegal or invalid path":
+                        presentSnackbar("Illegal or invalid file name", "danger");
+                        return;
+                    case "Path too long":
+                        presentSnackbar("File path too long", "danger");
+                        return;
+                    default:
+                        presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
+                        return;
+                }
+            }
+            if (checkResponse.success && checkResponse.type === "file") {
+                // File exists, ask if want to override
+                console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
 
-        _handleFileUpload(rawFile);
+                let haltUploads = false;
+                await new Promise<void>((resolve) => {
+                    presentAlert({
+                        header: `${file.name} already exists`,
+                        message: "Do you want to override the existing file?",
+                        onDidDismiss: () => {
+                            resolve();
+                        },
+                        buttons: [
+                            {
+                                text: "No",
+                                role: "cancel",
+                                handler: () => {
+                                    presentSnackbar("File upload cancelled", "warning");
+                                    haltUploads = true;
+                                },
+                            },
+                            {
+                                text: "Yes",
+                                role: "confirm",
+                            },
+                        ],
+                    });
+                });
+                if (haltUploads) {
+                    return;
+                }
+            }
+
+            _handleUpload(file);
+        }
     }
 
     /**
@@ -502,7 +564,8 @@ const FileExplorer: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Refresh directory contents
+        // Update path
+        requestedPathRef.current = requestedPath;
         refreshContents(false);
     }, [requestedPath, refreshContents]);
 
@@ -651,9 +714,47 @@ const FileExplorer: React.FC = () => {
                 {/* Header content */}
                 <IonHeader>
                     <IonToolbar className="[&::part(container)]:min-h-16">
+                        {/* Left-side buttons */}
                         <IonButtons className="w-24" slot="start">
                             <IonMenuButton onClick={() => menuController.open()} />
                         </IonButtons>
+
+                        {/* Jobs display and popover */}
+                        <div className="flex w-full justify-center">
+                            {/* Jobs' summary */}
+                            <div
+                                className="hover:cursor-pointer"
+                                onClick={(e) => {
+                                    jobsPopover.current!.event = e;
+                                    setShowJobsPopover(true);
+                                }}
+                            >
+                                {jobs.size > 0 ? (
+                                    <span>
+                                        {jobs.size} Job{jobs.size === 1 ? "" : "s"}
+                                    </span>
+                                ) : (
+                                    <span>No Jobs</span>
+                                )}
+                            </div>
+
+                            {/* Jobs' details */}
+                            <IonPopover
+                                ref={jobsPopover}
+                                className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
+                                side="bottom"
+                                alignment="center"
+                                style={{ "--offset-y": "calc(var(--spacing)*2)" }}
+                                isOpen={showJobsPopover}
+                                onDidDismiss={() => setShowJobsPopover(false)}
+                            >
+                                <IonContent className="ion-padding rounded-lg">
+                                    <JobsList jobs={jobs} />
+                                </IonContent>
+                            </IonPopover>
+                        </div>
+
+                        {/* Right-side buttons */}
                         <IonButtons className="w-24 justify-end" slot="end">
                             {/* Ellipsis menu trigger button */}
                             <IonButton id="ellipsis-button">
@@ -672,14 +773,6 @@ const FileExplorer: React.FC = () => {
                             <IonText>Drop files here to upload</IonText>
                         </div>
                     )}
-
-                    {/* Encryption/Decryption progress indicator */}
-                    <ProgressDialog
-                        isOpen={showProgressDialog}
-                        message={dialogMessage}
-                        progress={uploadProgress}
-                        onDidDismiss={() => setShowProgressDialog(false)}
-                    />
 
                     {/* Vault key info dialog */}
                     <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
@@ -719,11 +812,9 @@ const FileExplorer: React.FC = () => {
                     {directoryContents && (
                         <uiFeedbackContext.Provider
                             value={{
+                                jobsManager: jobsManager,
                                 onRename: onRenameItem,
                                 onDelete: onDeleteItem,
-                                setShowDialog: setShowProgressDialog,
-                                setDialogMessage: setDialogMessage,
-                                setProgress: setUploadProgress,
                                 presentAlert: presentAlert,
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),

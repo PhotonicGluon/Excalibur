@@ -5,6 +5,7 @@ import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
     FileSizeUnits,
+    IconStyle,
     RowAlternatingColours,
     SettingsPreferenceValues,
     Theme,
@@ -25,6 +26,7 @@ export const ProvideSettings: React.FC<{ children: React.ReactNode }> = ({ child
 function useProvideSettings(): SettingsProvider {
     // States
     const [theme, setTheme] = useState<Theme>(DEFAULT_SETTINGS_VALUES.theme);
+    const [iconStyle, setIconStyle] = useState<IconStyle>(DEFAULT_SETTINGS_VALUES.iconStyle);
     const [rowAlternatingColours, setRowAlternatingColours] = useState<RowAlternatingColours>(
         DEFAULT_SETTINGS_VALUES.rowAlternatingColours,
     );
@@ -33,6 +35,7 @@ function useProvideSettings(): SettingsProvider {
 
     function changeFunc(settings: SettingsPreferenceValues) {
         setTheme(settings.theme);
+        setIconStyle(settings.iconStyle);
         setRowAlternatingColours(settings.rowAlternatingColours);
         setFileSizeUnits(settings.fileSizeUnits);
         setCryptoChunkSize(settings.cryptoChunkSize);
@@ -74,6 +77,7 @@ function useProvideSettings(): SettingsProvider {
 
     return {
         theme,
+        iconStyle,
         rowAlternatingColours,
         fileSizeUnits,
         cryptoChunkSize,
