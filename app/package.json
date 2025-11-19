@@ -17,12 +17,15 @@
         "type": "git",
         "url": "git+https://github.com/PhotonicGluon/Excalibur.git"
     },
-    "main": "out/main/index.js",
+    "main": "out/main.mjs",
     "scripts": {
         "preinstall": "npx only-allow pnpm",
         "dev": "vite --port 8100",
+        "dev:electron": "electron-vite dev",
         "preview": "vite preview",
+        "preview:electron": "electron-vite preview",
         "build": "npx vite build && npx cap copy",
+        "build:electron": "electron-vite build",
         "sync": "npx cap sync --inline",
         "cy:open": "cypress open",
         "cy:run": "cypress run",
