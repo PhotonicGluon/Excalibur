@@ -6,7 +6,7 @@ sidebar_label: Custom Client
 
 Any Excalibur server exposes a common API for clients to connect to. The documentation for this API is available at the `/api/docs` endpoint for any Excalibur server.
 
-## Data Flow
+## Authentication Process
 
 To communicate with an Excalibur server, the following steps should be performed.
 

@@ -159,6 +159,12 @@ A proof-of-possession (PoP) value needs to be computed in addition to providing 
 - `<TIMESTAMP>` is the current time _in seconds_ since the Unix epoch; and
 - `<NONCE>` is a random 16 byte value.
 
+:::note For WebSockets
+
+Some WebSocket endpoints require a proof-of-possession as well. In this case, the only change is that the `<METHOD>` is the string `WEBSOCKET`.
+
+:::
+
 :::note Why Not Include the Body?
 
 The body of the message need not be included in the HMAC calculation since it is already verified by the encryption:
