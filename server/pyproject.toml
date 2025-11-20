@@ -34,7 +34,6 @@ authors = [
 description = "A trustless, secure file management solution using military-grade encryption"
 readme = "README.md"
 license = "GPL-3.0-or-later"
-license-files = ["LICENSE"]
 
 [project.urls]
 Repository = "https://github.com/PhotonicGluon/Excalibur.git"
