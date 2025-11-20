@@ -9,13 +9,13 @@ from excalibur_server.src.files.update_manager import file_update_manager
 
 
 async def _main_logic(username: str, websocket: WebSocket, encrypted: bool):
-    await file_update_manager.connect(username, websocket, encrypted)
+    conn_id = await file_update_manager.connect(username, websocket, encrypted)
     try:
         # Keep the connection alive
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        file_update_manager.disconnect(username)
+        file_update_manager.disconnect(username, conn_id)
 
 
 @router.websocket("/listen")

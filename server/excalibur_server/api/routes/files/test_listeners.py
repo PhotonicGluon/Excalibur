@@ -12,25 +12,30 @@ from excalibur_server.src.auth.pop import generate_pop_header
 from excalibur_server.src.exef import ExEF
 
 
+def _make_websocket(auth_client: TestClient, path: str, encrypted: bool = True):
+    auth_token = auth_client.headers["Authorization"].removeprefix("Bearer ")
+    pop_header = generate_pop_header(
+        master_key=b"one demo 16B key",
+        method="WEBSOCKET",
+        path=path,
+        timestamp=int(time.time()),
+        nonce=get_random_bytes(16),
+    )
+
+    with auth_client.websocket_connect(
+        f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted={encrypted}"
+    ) as ws:
+        yield ws
+
+
 class TestDirectoryChangesListener:
-    @pytest.fixture(scope="class")
-    def auth_token(self, auth_client: TestClient):
-        return auth_client.headers["Authorization"].removeprefix("Bearer ")
-
     @pytest.fixture
-    def ws_client(self, auth_client: TestClient, auth_token: str):
-        pop_header = generate_pop_header(
-            master_key=b"one demo 16B key",
-            method="WEBSOCKET",
-            path="/api/files/listen",
-            timestamp=int(time.time()),
-            nonce=get_random_bytes(16),
-        )
+    def ws_client(self, auth_client: TestClient):
+        yield from _make_websocket(auth_client, "/api/files/listen", encrypted=False)
 
-        with auth_client.websocket_connect(
-            f"/api/files/listen?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
-        ) as ws:
-            yield ws
+    @pytest.fixture()
+    def ws_client_encrypted(self, auth_client: TestClient):
+        yield from _make_websocket(auth_client, "/api/files/listen", encrypted=True)
 
     @pytest.fixture(scope="class")
     def example_file(self, tmp_path_factory: pytest.TempPathFactory) -> Path:
@@ -43,42 +48,6 @@ class TestDirectoryChangesListener:
 
     def test_connect(self, ws_client: WebSocketTestSession):
         assert ws_client, "Failed to connect to the WebSocket"
-
-    def test_encrypted(self, auth_client: TestClient, test_user_vault_folder: Path, auth_token: str):
-        from base64 import b64decode
-
-        from Crypto.Cipher import AES
-
-        pop_header = generate_pop_header(
-            master_key=b"one demo 16B key",
-            method="WEBSOCKET",
-            path="/api/files/listen",
-            timestamp=int(time.time()),
-            nonce=get_random_bytes(16),
-        )
-
-        with auth_client.websocket_connect(
-            f"/api/files/listen?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted=true"
-        ) as ws:
-            # Create a folder
-            uuid = uuid4().hex
-            response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
-            assert response.status_code == 201
-            assert (test_user_vault_folder / f"test-dir-{uuid}").exists()
-
-            # Check if the update was transmitted
-            enc_data = ws.receive_json()
-            assert enc_data
-
-            # Check received path
-            cipher = AES.new(
-                b"one demo 16B key",
-                AES.MODE_GCM,
-                nonce=b64decode(enc_data["nonce"]),
-            )
-            path = cipher.decrypt(b64decode(enc_data["path"]))
-            cipher.verify(b64decode(enc_data["tag"]))
-            assert path.decode("utf-8") == "."
 
     def test_new_folder_in_root(
         self, auth_client: TestClient, ws_client: WebSocketTestSession, test_user_vault_folder: Path
@@ -193,3 +162,37 @@ class TestDirectoryChangesListener:
         # Check if the updates was transmitted
         assert ws_client.receive_text() == "."  # Once for creation...
         assert ws_client.receive_text() == "."  # ...once for update
+
+    def test_encrypted(
+        self, auth_client: TestClient, ws_client_encrypted: WebSocketTestSession, test_user_vault_folder: Path
+    ):
+        # Create a folder
+        uuid = uuid4().hex
+        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+        assert response.status_code == 201
+        assert (test_user_vault_folder / f"test-dir-{uuid}").exists()
+
+        # Check if the update was transmitted
+        enc_data = ws_client_encrypted.receive_bytes()
+        assert enc_data
+
+        # Check received path
+        path = ExEF(b"one demo 16B key").decrypt(enc_data)
+        assert path.decode("utf-8") == "."
+
+    def test_multi_connection(
+        self,
+        auth_client: TestClient,
+        ws_client: WebSocketTestSession,
+        ws_client_encrypted: WebSocketTestSession,
+        test_user_vault_folder: Path,
+    ):
+        # Create a folder
+        uuid = uuid4().hex
+        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+        assert response.status_code == 201
+        assert (test_user_vault_folder / f"test-dir-{uuid}").exists()
+
+        # Check if the updates were transmitted
+        assert ws_client.receive_text() == "."
+        assert ExEF(b"one demo 16B key").decrypt(ws_client_encrypted.receive_bytes()).decode("utf-8") == "."

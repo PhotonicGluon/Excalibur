@@ -45,6 +45,7 @@ export function directoryChangesListener(auth: AuthProvider, onPathUpdate: (path
         const data = event.data as Blob;
         const pathEncrypted = Buffer.from(await data.arrayBuffer());
         const path = ExEF.decrypt(auth.authInfo!.key, pathEncrypted).toString("utf-8");
+        console.debug(`Noticed '${path}' folder content change`);
         onPathUpdate(path);
     });
 
