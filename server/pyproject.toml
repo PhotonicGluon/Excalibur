@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.3.0a7"
+version = "0.3.0a8"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.17.1",
@@ -34,7 +34,6 @@ authors = [
 description = "A trustless, secure file management solution using military-grade encryption"
 readme = "README.md"
 license = "GPL-3.0-or-later"
-license-files = ["LICENSE"]
 
 [project.urls]
 Repository = "https://github.com/PhotonicGluon/Excalibur.git"
