@@ -5,8 +5,9 @@ import { enableMapSet } from "immer";
 import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
+import { isPlatform } from "@ionic/core";
 import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
-import { IonReactRouter } from "@ionic/react-router";
+import { IonReactHashRouter, IonReactRouter } from "@ionic/react-router";
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
 import "@ionic/react/css/flex-utils.css";
@@ -52,6 +53,10 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
     });
 }
 
+// Change router for electron build
+// (https://github.com/ionic-team/ionic-framework/issues/19246#issuecomment-552858490)
+const TheRouter = isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
+
 // App component
 const App: React.FC = () => {
     // States
@@ -88,7 +93,7 @@ const App: React.FC = () => {
     // Render app
     return (
         <IonApp>
-            <IonReactRouter>
+            <TheRouter>
                 <IonRouterOutlet>
                     {/* Index */}
                     {localStorage.getItem("hasSeenWelcome") === "true" ? (
@@ -114,7 +119,7 @@ const App: React.FC = () => {
                     {/* Testing */}
                     <Route path="/test" component={TestPage} />
                 </IonRouterOutlet>
-            </IonReactRouter>
+            </TheRouter>
         </IonApp>
     );
 };

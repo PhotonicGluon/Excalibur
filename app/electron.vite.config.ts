@@ -36,8 +36,6 @@ export default defineConfig({
         resolve: viteConfig.resolve,
         plugins: viteConfig.plugins,
         build: {
-            // FIXME: This controls where the assets are stored. However, the `index.html` for `renderer` is not able to access this location during `preview`... How to fix?
-            assetsDir: "my-assets",
             rollupOptions: {
                 input: {
                     index: resolve(__dirname, "index.html"),
