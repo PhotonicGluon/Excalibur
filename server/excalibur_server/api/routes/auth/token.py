@@ -75,15 +75,20 @@ if is_debug():
         method: Annotated[str, Query(description="The method to use for the PoP")],
         path: Annotated[str, Query(description="The path to use for the PoP")],
         master_key: Annotated[str, Query(description="The master key to use for the token")] = "one demo 16B key",
+        quoted: Annotated[bool, Query(description="Whether the PoP should be quoted")] = False,
     ):
         """
         Generate a PoP for a user.
         """
 
         import time
+        from urllib.parse import quote_plus
 
         from Crypto.Random import get_random_bytes
 
         from excalibur_server.src.auth.pop import generate_pop_header
 
-        return generate_pop_header(master_key.encode("utf-8"), method, path, int(time.time()), get_random_bytes(16))
+        header = generate_pop_header(master_key.encode("utf-8"), method, path, int(time.time()), get_random_bytes(16))
+        if quoted:
+            return quote_plus(header)
+        return header

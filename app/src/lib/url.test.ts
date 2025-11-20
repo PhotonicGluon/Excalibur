@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { getURLEncodedPath } from "./url";
+import { getURLEncodedPath, quotePlus } from "./url";
 
 describe("getURLEncodedPath", () => {
     it("no path", () => {
@@ -29,5 +29,23 @@ describe("getURLEncodedPath", () => {
 
     it("path with unicode", () => {
         expect(getURLEncodedPath("http://example.com/測試/測")).toBe("/%E6%B8%AC%E8%A9%A6/%E6%B8%AC");
+    });
+});
+
+describe("quotePlus", () => {
+    it("works with no spaces", () => {
+        expect(quotePlus("test")).toBe("test");
+    });
+
+    it("works with spaces", () => {
+        expect(quotePlus("John Doe")).toBe("John+Doe");
+    });
+
+    it("works with unicode", () => {
+        expect(quotePlus("/El Niño/")).toBe("%2FEl+Ni%C3%B1o%2F");
+    });
+
+    it("works with mixed characters", () => {
+        expect(quotePlus("John Doe+the III")).toBe("John+Doe%2Bthe+III");
     });
 });

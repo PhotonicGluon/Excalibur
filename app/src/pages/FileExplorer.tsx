@@ -46,7 +46,9 @@ import {
 } from "ionicons/icons";
 
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
+import { directoryChangesListener } from "@lib/files/api/listeners";
 import { Directory } from "@lib/files/structures";
+import { useEffectOnce } from "@lib/hooks";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
 import { randID } from "@lib/security/util";
@@ -589,6 +591,12 @@ const FileExplorer: React.FC = () => {
             setTokenTimeoutActive(false);
         }, tokenRefreshInterval);
     }, [auth, tokenTimeoutActive, tokenRefreshInterval]);
+
+    useEffectOnce(() => {
+        directoryChangesListener(auth, (path) => {
+            refreshContents(false, path);
+        });
+    });
 
     // Render
     return (

@@ -24,3 +24,14 @@ export function getURLEncodedPath(url: string) {
     const encodedPath = encodeURIComponent(basePath);
     return encodedPath.replaceAll("%2F", "/"); // Slashes are safe
 }
+
+/**
+ * Encodes a string for use in a URL query parameter.
+ *
+ * @param str The string to encode
+ * @returns The encoded string
+ */
+export function quotePlus(str: string) {
+    const base = encodeURIComponent(str);
+    return base.replaceAll("%20", "+");
+}

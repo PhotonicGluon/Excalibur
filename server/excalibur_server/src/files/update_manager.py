@@ -1,8 +1,8 @@
-from base64 import b64encode
 from pathlib import Path
 
-from Crypto.Cipher import AES
 from fastapi import WebSocket
+
+from excalibur_server.src.exef import ExEF
 
 
 class FileUpdateManager:
@@ -46,17 +46,7 @@ class FileUpdateManager:
         if username in self.active_connections:
             ws, encrypted = self.active_connections[username]
             if encrypted:
-                # Encrypt the path using the end-to-end encryption key
-                cipher = AES.new(e2ee_key, AES.MODE_GCM)
-                path_enc = cipher.encrypt(str(path).encode("UTF-8"))
-                tag = cipher.digest()
-                await ws.send_json(
-                    {
-                        "nonce": b64encode(cipher.nonce).decode("utf-8"),
-                        "path": b64encode(path_enc).decode("utf-8"),
-                        "tag": b64encode(tag).decode("utf-8"),
-                    }
-                )
+                await ws.send_bytes(ExEF(e2ee_key).encrypt(str(path).encode("UTF-8")))
             else:
                 # Just send the path as plaintext
                 await ws.send_text(path)
