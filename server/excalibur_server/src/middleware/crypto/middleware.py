@@ -1,5 +1,6 @@
 from typing import Awaitable, Callable
 
+from starlette import status
 from starlette.datastructures import MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -7,7 +8,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.consts import KEY
-from excalibur_server.src.auth.credentials import CREDENTIALS_EXCEPTION, decode_token
+from excalibur_server.src.auth.credentials import decode_token
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
@@ -113,9 +114,9 @@ class EncryptionHandler:
         """
 
         response = JSONResponse(
-            {"detail": f"Middleware processing: {CREDENTIALS_EXCEPTION.detail}"},
-            status_code=CREDENTIALS_EXCEPTION.status_code,
-            headers=CREDENTIALS_EXCEPTION.headers,
+            {"detail": "Middleware processing: missing, invalid, or expired bearer token"},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            headers={"WWW-Authenticate": "Bearer"},
             media_type="application/json",
         )
         await response(self._scope, self._receive, self._send)

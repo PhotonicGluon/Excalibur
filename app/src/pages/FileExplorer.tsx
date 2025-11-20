@@ -46,7 +46,9 @@ import {
 } from "ionicons/icons";
 
 import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
+import { directoryChangesListener } from "@lib/files/api/listeners";
 import { Directory } from "@lib/files/structures";
+import { useEffectOnce } from "@lib/hooks";
 import { getNewToken } from "@lib/security/api";
 import { decodeJWT } from "@lib/security/token";
 import { randID } from "@lib/security/util";
@@ -198,7 +200,7 @@ const FileExplorer: React.FC = () => {
      * @param sourceFolder The folder that triggered the refresh
      */
     const refreshContents = useCallback(
-        async (showToast: boolean = true, sourceFolder?: string) => {
+        async (sourceFolder?: string) => {
             const currentPath = requestedPathRef.current;
             if (sourceFolder && sourceFolder !== currentPath) {
                 console.debug("Not refreshing contents because we are in a different folder");
@@ -212,9 +214,6 @@ const FileExplorer: React.FC = () => {
                 return;
             }
             setDirectoryContents(response.directory!);
-            if (showToast) {
-                presentSnackbar("Refreshed");
-            }
         },
         [auth, presentSnackbar],
     );
@@ -321,7 +320,7 @@ const FileExplorer: React.FC = () => {
             }
 
             // Refresh page
-            refreshContents(false, requestedPath);
+            refreshContents(requestedPath);
             jobsManager.deleteJob(jobID);
         }
 
@@ -464,7 +463,6 @@ const FileExplorer: React.FC = () => {
                             return;
                         }
 
-                        refreshContents(false);
                         presentSnackbar("Folder created", "success");
                     },
                 },
@@ -512,7 +510,6 @@ const FileExplorer: React.FC = () => {
                             return;
                         }
 
-                        refreshContents(false);
                         presentSnackbar("Item renamed", "success");
                     },
                 },
@@ -558,7 +555,6 @@ const FileExplorer: React.FC = () => {
             return;
         }
 
-        refreshContents(false);
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
@@ -566,7 +562,7 @@ const FileExplorer: React.FC = () => {
     useEffect(() => {
         // Update path
         requestedPathRef.current = requestedPath;
-        refreshContents(false);
+        refreshContents();
     }, [requestedPath, refreshContents]);
 
     useEffect(() => {
@@ -589,6 +585,12 @@ const FileExplorer: React.FC = () => {
             setTokenTimeoutActive(false);
         }, tokenRefreshInterval);
     }, [auth, tokenTimeoutActive, tokenRefreshInterval]);
+
+    useEffectOnce(() => {
+        directoryChangesListener(auth, (path) => {
+            refreshContents(path);
+        });
+    });
 
     // Render
     return (
@@ -782,7 +784,7 @@ const FileExplorer: React.FC = () => {
                         slot="fixed"
                         onIonRefresh={async (event: CustomEvent<RefresherEventDetail>) => {
                             setTimeout(async () => {
-                                await refreshContents(false);
+                                await refreshContents();
                                 event.detail.complete();
                             }, 500);
                         }}

@@ -2,13 +2,13 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Query, Response, status
 
-from excalibur_server.api.routes.files import router
+from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
 
 
-@router.head(
+@encrypted_router.head(
     "/check/path/{path:path}",
     name="Check Existence",
     responses={
@@ -50,7 +50,7 @@ async def check_path_endpoint(
     response.status_code = status.HTTP_202_ACCEPTED
 
 
-@router.head(
+@encrypted_router.head(
     "/check/size",
     name="Check File Size",
     responses={
@@ -72,7 +72,7 @@ async def check_file_size_endpoint(
     response.status_code = status.HTTP_200_OK
 
 
-@router.head(
+@encrypted_router.head(
     "/check/dir/{path:path}",
     name="Check Directory Type",
     responses={

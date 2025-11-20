@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.responses import FileResponse as FastAPIFileResponse
 
-from excalibur_server.api.routes.files import router
+from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
@@ -17,7 +17,7 @@ class FileResponse(FastAPIFileResponse):
     chunk_size = CONFIG.storage.send_chunk_size
 
 
-@router.get(
+@encrypted_router.get(
     "/download/{path:path}",
     name="Download File",
     responses={
@@ -52,7 +52,7 @@ async def download_file_endpoint(
     return FileResponse(user_path, media_type="application/octet-stream")
 
 
-@router.get(
+@encrypted_router.get(
     "/list/{path:path}",
     name="List Directory Contents",
     responses={

@@ -14,6 +14,7 @@ if is_debug():
     from .pop_demo import demo_get_endpoint as demo_get_endpoint
     from .pop_demo import demo_post_encrypted_endpoint as demo_post_encrypted_endpoint
     from .pop_demo import demo_post_endpoint as demo_post_endpoint
+    from .token import generate_pop_endpoint as generate_pop_endpoint
     from .token import generate_token_endpoint as generate_token_endpoint
 
 __all__ = ["router"]

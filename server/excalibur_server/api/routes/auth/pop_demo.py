@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import Body, Depends
+from fastapi import Body, Depends, WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials, get_credentials_ws
 
 
 @router.get("/pop-demo", tags=["debug"])
@@ -43,3 +43,17 @@ def demo_post_encrypted_endpoint(
         "credential": credentials,
         "data": data,
     }
+
+
+@router.websocket("/pop-demo/ws")
+async def demo_websocket_endpoint(
+    websocket: WebSocket,
+    credentials: Annotated[Credentials, Depends(get_credentials_ws)],
+):
+    await websocket.accept()
+    try:
+        while True:
+            text = await websocket.receive_text()
+            await websocket.send_text(f"{credentials.username}: {text}")
+    except WebSocketDisconnect:
+        pass

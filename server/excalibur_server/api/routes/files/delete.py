@@ -1,17 +1,16 @@
 import shutil
-from pathlib import Path as PathlibPath
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Query, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, status
 from fastapi.responses import Response
 
-from excalibur_server.api.routes.files import router
+from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_subdir
 
 
-@router.delete(
+@encrypted_router.delete(
     "/delete/{path:path}",
     name="Delete Path",
     responses={
@@ -27,6 +26,7 @@ from excalibur_server.src.path import check_path_subdir
     },
 )
 def delete_endpoint(
+    background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to delete")],
     as_dir: Annotated[bool, Query(description="Delete directory instead of file")] = False,
@@ -41,9 +41,10 @@ def delete_endpoint(
     """
 
     username = credentials.username
+    base_path = CONFIG.storage.vault_folder / username
 
     # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
+    user_path, valid = check_path_subdir(path, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -51,8 +52,10 @@ def delete_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
     # Check if user is trying to delete root directory
-    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
+    if user_path == base_path:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
+
+    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
     # Handle deletion
     if user_path.is_dir():

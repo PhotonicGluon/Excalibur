@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, randomBytes } from "crypto";
 
 /**
  * Generates a Proof of Possession (PoP).
@@ -21,17 +21,19 @@ export function generatePoP(masterKey: Buffer, method: string, path: string, tim
  * @param masterKey The master key
  * @param method The HTTP method
  * @param path The path
- * @param timestamp The timestamp
- * @param nonce The nonce
+ * @param timestamp The timestamp; if not provided, the current time is used
+ * @param nonce The nonce; if not provided, a random nonce is generated
  * @returns The PoP header
  */
 export function generatePoPHeader(
     masterKey: Buffer,
     method: string,
     path: string,
-    timestamp: number,
-    nonce: Buffer,
+    timestamp?: number,
+    nonce?: Buffer,
 ): string {
+    timestamp = timestamp ?? Math.floor(Date.now() / 1e3);
+    nonce = nonce ?? randomBytes(16);
     const pop = generatePoP(masterKey, method, path, timestamp, nonce);
     return `${timestamp} ${nonce.toString("base64")} ${pop.toString("base64")}`;
 }
