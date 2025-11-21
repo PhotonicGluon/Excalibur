@@ -1,5 +1,4 @@
 from excalibur_server.api.misc import is_debug
-from excalibur_server.api.pwa import PWA_PATH
 
 TAGS = [
     {"name": "auth", "description": "Authentication endpoints."},
@@ -18,11 +17,6 @@ TAGS = [
         ),
     },
 ]
-
-if PWA_PATH.exists():
-    TAGS.append(
-        {"name": "pwa", "description": "Progressive Web App (PWA) endpoints."},
-    )
 
 if is_debug():
     TAGS.append(

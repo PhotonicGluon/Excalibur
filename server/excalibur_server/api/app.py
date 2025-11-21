@@ -4,7 +4,6 @@ import os
 from fastapi import APIRouter, FastAPI
 
 from excalibur_server.api.middlewares import add_middleware
-from excalibur_server.api.pwa import setup_pwa
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
 
 from .logging import logger
@@ -43,9 +42,6 @@ master_router.include_router(auth_router, prefix="/auth")
 master_router.include_router(users_router, prefix="/users")
 master_router.include_router(files_router, prefix="/files")
 master_router.include_router(well_known_router, prefix="/well-known")
-
-# Include PWA if present
-setup_pwa()
 
 # Finally, include the master router
 app.include_router(master_router)
