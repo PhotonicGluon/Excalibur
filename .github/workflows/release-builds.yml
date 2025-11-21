@@ -108,7 +108,7 @@ jobs:
                   path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
                   if-no-files-found: error
 
-    build-server-standalone:
+    build-server:
         name: Build Server
         runs-on: ubuntu-latest
         permissions:
@@ -132,7 +132,7 @@ jobs:
 
             - name: Build Server
               working-directory: ./server
-              run: uv run --no-dev excalibur build --no-pwa
+              run: uv run --no-dev excalibur build
 
             - name: Attest
               uses: actions/attest-build-provenance@v3
@@ -147,75 +147,11 @@ jobs:
                   path: server/dist
                   if-no-files-found: error
 
-    build-server-pwa:
-        name: Build Server PWA
-        needs: build-app
-        runs-on: ubuntu-latest
-        permissions:
-            id-token: write
-            contents: read
-            attestations: write
-        steps:
-            - uses: actions/checkout@v5
-
-            - name: Set up Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version-file: "./server/pyproject.toml"
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v7.1.0
-              with:
-                  enable-cache: true
-                  version: "0.9.3"
-                  cache-dependency-glob: "server/uv.lock"
-
-            - name: Download App PWA Artifact
-              uses: actions/download-artifact@v5
-              with:
-                  name: app-pwa
-                  path: ./app/dist
-
-            - name: Extract PWA
-              working-directory: ./app/dist
-              run: |
-                  for f in *.zip; do
-                    unzip "$f" -d ..
-                    rm "$f"
-                  done
-
-            - name: Build Server With PWA
-              working-directory: ./server
-              run: |
-                  uv run --no-dev excalibur build --pwa
-                  cd dist
-
-                  for f in *.whl; do
-                    mv -- "$f" "${f%.whl}_pwa.whl"
-                  done
-
-                  for f in *.tar.gz; do
-                    mv -- "$f" "${f%.tar.gz}_pwa.tar.gz"
-                  done
-
-            - name: Attest
-              uses: actions/attest-build-provenance@v3
-              if: ${{ !env.ACT && !github.event.repository.private }}
-              with:
-                  subject-path: "server/dist"
-
-            - name: Upload Server With PWA Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: server-pwa
-                  path: server/dist
-                  if-no-files-found: error
-
     create-release:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         name: Create Release
         runs-on: ubuntu-latest
-        needs: [build-app, build-server-standalone, build-server-pwa]
+        needs: [build-app, build-server]
         permissions:
             contents: write
         steps:
@@ -275,7 +211,6 @@ jobs:
                   body: ${{ steps.prepare_release_notes.outputs.body }}
                   files: |
                       artifacts/server/*
-                      artifacts/server-pwa/*
                       artifacts/app-pwa/*
                       artifacts/app-android/*
                   preserve_order: true
