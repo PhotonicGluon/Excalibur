@@ -6,6 +6,7 @@ onlyBuiltDependencies:
   - core-js
   - cypress
   - electron
+  - electron-winstaller
   - esbuild
   - sharp
 

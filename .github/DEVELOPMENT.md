@@ -7,6 +7,9 @@
   - [Running](#running)
     - [PWA](#pwa)
     - [Android](#android)
+  - [Building](#building)
+    - [Electron](#electron)
+      - [Windows](#windows)
 - [Server](#server)
   - [Setup](#setup-1)
   - [Running the API Server](#running-the-api-server)
@@ -92,6 +95,23 @@ npx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100
 > You can use split terminals to run both the web server and the android app at the same time.
 
 Once the app starts on the device, assuming that the server is using the default port `54219`, you can access it at `http://[HOST_IP]:54219` (or `http://10.0.2.2:54219` if running on an android emulator on the same machine).
+
+### Building
+
+> [!NOTE]
+> This section is a work-in-progress.
+
+#### Electron
+
+##### Windows
+
+Run
+
+```bash
+pnpm run build:electron:win
+```
+
+There may be an issue where a "Cannot create symbolic link" error is thrown. Follow [the solution described here](https://github.com/electron-userland/electron-builder/issues/8149#issuecomment-2079252400) and it should work.
 
 ## Server
 

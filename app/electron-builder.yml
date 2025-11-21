@@ -1,5 +1,5 @@
 appId: com.excalibur.app
-productName: excalibur
+productName: Excalibur
 directories:
     buildResources: build
 files:
@@ -13,6 +13,7 @@ asarUnpack:
     - resources/**
 win:
     executableName: excalibur
+    icon: resources/icon-full.png
 nsis:
     artifactName: ${name}-${version}-setup.${ext}
     shortcutName: ${productName}
@@ -33,7 +34,7 @@ linux:
         - AppImage
         - snap
         - deb
-    maintainer: electronjs.org
+    maintainer: excalibur
     category: Utility
 appImage:
     artifactName: ${name}-${version}.${ext}
@@ -41,5 +42,3 @@ npmRebuild: false
 publish:
     provider: generic
     url: https://example.com/auto-updates
-electronDownload:
-    mirror: https://npmmirror.com/mirrors/electron/
