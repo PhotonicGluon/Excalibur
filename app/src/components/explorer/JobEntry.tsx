@@ -5,8 +5,8 @@ import { arrowDown, arrowUp, closeCircleOutline } from "ionicons/icons";
 
 import CircularProgressBar from "@components/CircularProgressBar";
 
-/** Represents a job that is currently running */
-export interface Job {
+/** Represents the details of a running job */
+interface JobDetails {
     /** Direction of the job */
     direction: "upload" | "download";
     /** Name of the file handled by the job */
@@ -19,6 +19,13 @@ export interface Job {
      * Is either a number from 0 to 1 or a null value (indeterminate).
      */
     progress: number | null;
+}
+
+export interface Job extends JobDetails {
+    /** Controller used to abort the job */
+    controller?: AbortController;
+    /** Worker used to handle crypto operations */
+    worker?: Worker; // Defined as optional as it will be set mid-operation
 }
 
 interface ContainerProps extends Job {

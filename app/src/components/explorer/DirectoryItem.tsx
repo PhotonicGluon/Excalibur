@@ -74,12 +74,17 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         async function _handleDownload() {
             // Create new job
             const jobID = randID();
+            const controller = new AbortController();
+            const signal = controller.signal;
+
             uiFeedback.jobsManager.addJob(jobID, {
                 direction: "download",
                 filename: fileName,
                 description: "Downloading...",
                 progress: null,
+                controller: controller,
             });
+
             if (Capacitor.getPlatform() === "web") {
                 uiFeedback.presentToast({
                     message: "Downloading...",
@@ -89,106 +94,120 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             }
             console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
-            // Send request for file
-            const response = await downloadFile(auth, props.fullpath);
-            if (!response.success) {
-                uiFeedback.presentToast({
-                    message: `Failed to get file: ${response.error}`,
-                    duration: 2000,
-                    color: "danger",
-                });
-                uiFeedback.jobsManager.deleteJob(jobID);
-                return;
-            }
-
-            const fileSize = response.fileSize! - ExEF.additionalSize;
-
-            // Create stream that handles the decryption and updates the progress
-            uiFeedback.jobsManager.updateJob(jobID, "Decrypting...");
-
-            const worker = new DecryptionProcessorWorker();
-            const processor = Comlink.wrap<DecryptionProcessor>(worker);
-
-            let fileDataBlob: Blob;
             try {
-                fileDataBlob = await processor.processStream(
-                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
-                    Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                    auth.vaultKey!,
-                    response.e2ee ? auth.authInfo!.key! : null,
-                    fileSize,
-                    settings.cryptoChunkSize,
-                    // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy((progress) => {
-                        uiFeedback.jobsManager.updateProgress(jobID, progress);
-                    }),
-                );
+                // Send request for file
+                const response = await downloadFile(auth, props.fullpath, signal);
+                if (!response.success) {
+                    uiFeedback.presentToast({
+                        message: `Failed to get file: ${response.error}`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                    throw new Error(response.error); // Propagate error to outer try-catch
+                }
+
+                const fileSize = response.fileSize! - ExEF.additionalSize;
+
+                if (signal.aborted) throw new Error("Cancelled");
+
+                // Create stream that handles the decryption and updates the progress
+                const worker = new DecryptionProcessorWorker();
+                const processor = Comlink.wrap<DecryptionProcessor>(worker);
+
+                uiFeedback.jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
+
+                let fileDataBlob: Blob;
+                try {
+                    fileDataBlob = await processor.processStream(
+                        // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                        Comlink.transfer(response.dataStream!, [response.dataStream!]),
+                        auth.vaultKey!,
+                        response.e2ee ? auth.authInfo!.key! : null,
+                        fileSize,
+                        settings.cryptoChunkSize,
+                        // `proxy()` ensures the callback function works across threads
+                        Comlink.proxy((progress) => {
+                            if (!signal.aborted) {
+                                uiFeedback.jobsManager.updateProgress(jobID, progress);
+                            }
+                        }),
+                    );
+                } catch (e) {
+                    if (signal.aborted) throw new Error("Cancelled");
+
+                    const err = e as Error;
+                    if (err.message.includes("header MAC")) {
+                        uiFeedback.presentToast({
+                            message: `Failed to decrypt file: vault key may be incorrect`,
+                            duration: 2000,
+                            color: "danger",
+                        });
+                    } else {
+                        uiFeedback.presentToast({
+                            message: `Failed to decrypt file: ${err.message}`,
+                            duration: 2000,
+                            color: "danger",
+                        });
+                    }
+                    throw e; // Propagate error to outer try-catch
+                } finally {
+                    // Free up resources
+                    worker.terminate();
+                }
+
+                if (signal.aborted) throw new Error("Cancelled");
+
+                // Save file
+                uiFeedback.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
+                console.debug(`Saving file ${fileName}...`);
+                try {
+                    if (Capacitor.getPlatform() === "web") {
+                        // Create a new a element to download the file
+                        const a = document.createElement("a");
+                        const url = URL.createObjectURL(fileDataBlob);
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(function () {
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        }, 0);
+                        uiFeedback.presentToast({
+                            message: "File downloaded",
+                            duration: 2000,
+                            color: "success",
+                        });
+                    } else {
+                        // Write file to documents folder
+                        await writeBlob({
+                            path: `Excalibur/${fileName}`,
+                            directory: Directory.Documents,
+                            blob: fileDataBlob,
+                            recursive: true,
+                            on_fallback(error) {
+                                console.error(error);
+                            },
+                        });
+                        uiFeedback.presentToast({
+                            message: "File saved to the documents folder",
+                            duration: 2000,
+                            color: "success",
+                        });
+                    }
+                } catch (e) {
+                    uiFeedback.presentToast({
+                        message: `Failed to save file: ${(e as Error).message}`,
+                        duration: 2000,
+                        color: "danger",
+                    });
+                }
             } catch (e) {
                 const err = e as Error;
-                if (err.message.includes("header MAC")) {
-                    uiFeedback.presentToast({
-                        message: `Failed to decrypt file: vault key may be incorrect`,
-                        duration: 2000,
-                        color: "danger",
-                    });
-                } else {
-                    uiFeedback.presentToast({
-                        message: `Failed to decrypt file: ${err.message}`,
-                        duration: 2000,
-                        color: "danger",
-                    });
+                if (err.message == "Cancelled" || err.name === "AbortError") {
+                    console.debug(`Job ${jobID} (download) cancelled`);
+                    return;
                 }
-                uiFeedback.jobsManager.deleteJob(jobID);
-                return;
-            } finally {
-                // Free up resources
-                worker.terminate();
-            }
-
-            // Save file
-            uiFeedback.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
-            console.debug(`Saving file ${fileName}...`);
-            try {
-                if (Capacitor.getPlatform() === "web") {
-                    // Create a new a element to download the file
-                    const a = document.createElement("a");
-                    const url = URL.createObjectURL(fileDataBlob);
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(function () {
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                    }, 0);
-                    uiFeedback.presentToast({
-                        message: "File downloaded",
-                        duration: 2000,
-                        color: "success",
-                    });
-                } else {
-                    // Write file to documents folder
-                    await writeBlob({
-                        path: `Excalibur/${fileName}`,
-                        directory: Directory.Documents,
-                        blob: fileDataBlob,
-                        recursive: true,
-                        on_fallback(error) {
-                            console.error(error);
-                        },
-                    });
-                    uiFeedback.presentToast({
-                        message: "File saved to the documents folder",
-                        duration: 2000,
-                        color: "success",
-                    });
-                }
-            } catch (e) {
-                uiFeedback.presentToast({
-                    message: `Failed to save file: ${(e as Error).message}`,
-                    duration: 2000,
-                    color: "danger",
-                });
             } finally {
                 uiFeedback.jobsManager.deleteJob(jobID);
             }

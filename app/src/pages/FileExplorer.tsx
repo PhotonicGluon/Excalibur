@@ -98,7 +98,7 @@ const FileExplorer: React.FC = () => {
                     draft.set(id, job);
                 });
             },
-            updateJob(id: string, newStatus: string, newProgress?: number | null): void {
+            updateJob(id: string, newStatus: string, newProgress?: number | null, newWorker?: Worker): void {
                 updateJobs((draft) => {
                     const job = draft.get(id);
                     if (!job) {
@@ -109,6 +109,9 @@ const FileExplorer: React.FC = () => {
                     job.description = newStatus;
                     if (newProgress !== undefined) {
                         job.progress = newProgress;
+                    }
+                    if (newWorker) {
+                        job.worker = newWorker;
                     }
                 });
             },
@@ -121,6 +124,23 @@ const FileExplorer: React.FC = () => {
                         return;
                     }
                     job.progress = newProgress;
+                });
+            },
+            cancelJob(id: string): void {
+                updateJobs((draft) => {
+                    const job = draft.get(id);
+                    if (!job) {
+                        console.warn(`Job ${id} not found for job cancelling`);
+                        return;
+                    }
+                    console.debug(`Cancelling job '${id}'`);
+
+                    job.controller!.abort();
+                    if (job.worker) {
+                        job.worker.terminate();
+                    }
+
+                    draft.delete(id);
                 });
             },
             deleteJob(id: string): void {
@@ -235,12 +255,19 @@ const FileExplorer: React.FC = () => {
         async function _handleUpload(rawFile: PickedFile) {
             // Create new job
             const jobID = randID();
+            const controller = new AbortController();
+            // const signal = controller.signal;
+
             jobsManager.addJob(jobID, {
                 direction: "upload",
                 filename: rawFile.name,
                 description: "Setting up data stream...",
                 progress: null,
+                controller: controller,
             });
+            console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
+
+            // TODO: UPDATE LOGIC TO USE CONTROLLER
 
             // Set up file data stream
             const rawFileSize = rawFile.size;
@@ -751,7 +778,12 @@ const FileExplorer: React.FC = () => {
                                 onDidDismiss={() => setShowJobsPopover(false)}
                             >
                                 <IonContent className="ion-padding rounded-lg">
-                                    <JobsList jobs={jobs} />
+                                    <JobsList
+                                        jobs={jobs}
+                                        onCancelJob={(jobID: string) => {
+                                            jobsManager.cancelJob(jobID);
+                                        }}
+                                    />
                                 </IonContent>
                             </IonPopover>
                         </div>
