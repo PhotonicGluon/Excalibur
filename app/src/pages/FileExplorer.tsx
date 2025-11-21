@@ -256,7 +256,7 @@ const FileExplorer: React.FC = () => {
             // Create new job
             const jobID = randID();
             const controller = new AbortController();
-            // const signal = controller.signal;
+            const signal = controller.signal;
 
             jobsManager.addJob(jobID, {
                 direction: "upload",
@@ -267,88 +267,97 @@ const FileExplorer: React.FC = () => {
             });
             console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
 
-            // TODO: UPDATE LOGIC TO USE CONTROLLER
-
-            // Set up file data stream
-            const rawFileSize = rawFile.size;
-            let rawFileDataStream: ReadableStream<Buffer>;
-            if (rawFile.blob) {
-                // Blob means that we are on web
-                console.debug("On web; using blob for raw file data");
-                const blob = rawFile.blob;
-                rawFileDataStream = blob.stream() as unknown as ReadableStream<Buffer>;
-            } else {
-                console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
-                rawFileDataStream = new ReadableStream<Buffer>({
-                    start(controller) {
-                        Filesystem.readFileInChunks(
-                            {
-                                path: rawFile.path!,
-                                chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
-                            },
-                            (chunk, err) => {
-                                if (err) {
-                                    presentSnackbar("Failed to read file chunk", "danger");
-                                    jobsManager.deleteJob(jobID);
-                                    controller.error(err);
-                                    return;
-                                }
-
-                                if (chunk === null || (chunk!.data as string).length === 0) {
-                                    // File completely read
-                                    controller.close();
-                                    return;
-                                }
-
-                                controller.enqueue(Buffer.from(chunk.data as string, "base64"));
-                            },
-                        );
-                    },
-                });
-            }
-
-            // Create stream that handles the encryption and updates the progress
-            jobsManager.updateJob(jobID, "Encrypting...");
-            const worker = new EncryptionProcessorWorker();
-            const processor = Comlink.wrap<EncryptionProcessor>(worker);
-
-            let blob: Blob;
             try {
-                blob = await processor.processStream(
-                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
-                    Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
-                    auth.vaultKey!,
-                    auth.authInfo!.key!,
-                    rawFileSize,
-                    settings.cryptoChunkSize,
-                    // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy((progress) => {
-                        jobsManager.updateProgress(jobID, progress);
-                    }),
-                );
+                // Set up file data stream
+                const rawFileSize = rawFile.size;
+                let rawFileDataStream: ReadableStream<Buffer>;
+                if (rawFile.blob) {
+                    // Blob means that we are on web
+                    console.debug("On web; using blob for raw file data");
+                    const blob = rawFile.blob;
+                    rawFileDataStream = blob.stream() as unknown as ReadableStream<Buffer>;
+                } else {
+                    console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
+                    rawFileDataStream = new ReadableStream<Buffer>({
+                        start(controller) {
+                            Filesystem.readFileInChunks(
+                                {
+                                    path: rawFile.path!,
+                                    chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
+                                },
+                                (chunk, err) => {
+                                    if (err) {
+                                        presentSnackbar("Failed to read file chunk", "danger");
+                                        jobsManager.deleteJob(jobID);
+                                        controller.error(err);
+                                        return;
+                                    }
+
+                                    if (chunk === null || (chunk!.data as string).length === 0) {
+                                        // File completely read
+                                        controller.close();
+                                        return;
+                                    }
+
+                                    controller.enqueue(Buffer.from(chunk.data as string, "base64"));
+                                },
+                            );
+                        },
+                    });
+                }
+
+                // Create worker that handles the encryption and updates the progress
+                jobsManager.updateJob(jobID, "Encrypting...");
+                const worker = new EncryptionProcessorWorker();
+                const processor = Comlink.wrap<EncryptionProcessor>(worker);
+
+                let blob: Blob;
+                try {
+                    blob = await processor.processStream(
+                        // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                        Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
+                        auth.vaultKey!,
+                        auth.authInfo!.key!,
+                        rawFileSize,
+                        settings.cryptoChunkSize,
+                        // `proxy()` ensures the callback function works across threads
+                        Comlink.proxy(async () => signal.aborted),
+                        Comlink.proxy((progress) => {
+                            if (!signal.aborted) {
+                                jobsManager.updateProgress(jobID, progress);
+                            }
+                        }),
+                    );
+                } catch (e) {
+                    if (signal.aborted) throw new Error("Cancelled");
+                    presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                    throw e;
+                } finally {
+                    // Free up resources
+                    worker.terminate();
+                }
+
+                if (signal.aborted) throw new Error("Cancelled");
+
+                // Upload the file
+                console.debug(`Uploading file ${rawFile.name}...`);
+                jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
+                const file = new File([blob], rawFile.name + ".exef");
+                const uploadResponse = await uploadFile(auth, requestedPath, file, true, signal); // Always force upload
+                if (!uploadResponse.success) {
+                    presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
+                    throw new Error(uploadResponse.error);
+                }
             } catch (e) {
-                presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                jobsManager.deleteJob(jobID);
-                return;
+                const err = e as Error;
+                if (err.message == "Cancelled" || err.name === "AbortError") {
+                    console.debug(`Job '${jobID}' (upload) cancelled`);
+                    return;
+                }
+                console.error(err);
             } finally {
-                // Free up resources
-                worker.terminate();
-            }
-
-            // Upload the file
-            console.debug(`Uploading file ${rawFile.name}...`);
-            jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
-            const file = new File([blob], rawFile.name + ".exef");
-            const uploadResponse = await uploadFile(auth, requestedPath, file, true); // Always force upload
-            if (!uploadResponse.success) {
-                presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                 jobsManager.deleteJob(jobID);
-                return;
             }
-
-            // Refresh page
-            refreshContents(requestedPath);
-            jobsManager.deleteJob(jobID);
         }
 
         if (!files) {

@@ -205,7 +205,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             } catch (e) {
                 const err = e as Error;
                 if (err.message == "Cancelled" || err.name === "AbortError") {
-                    console.debug(`Job ${jobID} (download) cancelled`);
+                    console.debug(`Job '${jobID}' (download) cancelled`);
                     return;
                 }
             } finally {

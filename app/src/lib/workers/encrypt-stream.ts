@@ -12,7 +12,10 @@ const encryptionProcessor = {
      * @param e2eeKey The E2EE key to use for encryption
      * @param fileSize The size of the file
      * @param chunkSize The size of each chunk to encrypt
+     * @param getSignalAborted A function that returns a promise that resolves to true if the
+     *      encryption process is cancelled
      * @param onProgress A callback function to report progress (a value from 0 to 1)
+     * @throws {Error} If the encryption process is cancelled
      * @returns A promise that resolves with the doubly-encrypted blob
      */
     async processStream(
@@ -21,6 +24,7 @@ const encryptionProcessor = {
         e2eeKey: Buffer,
         fileSize: number,
         chunkSize: number,
+        getSignalAborted: () => Promise<boolean>,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
         // Define ExEF encryption instances
@@ -38,6 +42,8 @@ const encryptionProcessor = {
                     if (done) {
                         break;
                     }
+                    // TODO: This feels silly. Is there a better way?
+                    if (await getSignalAborted()) throw new Error("Cancelled");
                     controller.enqueue(value);
                     offset += value.length;
                     onProgress(offset / encryptedFileSize);
