@@ -20,6 +20,7 @@
     - [Running `test.yml`](#running-testyml)
     - [Running `test-e2e.yml`](#running-test-e2eyml)
     - [Running `release-builds.yml`](#running-release-buildsyml)
+      - [Running Electron Builds](#running-electron-builds)
 
 ## App
 
@@ -234,7 +235,8 @@ Now, create an `event.json` file in the `.github` folder with the following cont
 ```json
 {
   "ref": "refs/tags/THE_TAG_HERE",
-  "ref_type": "tag"
+  "ref_type": "tag",
+  "act_skip_electron_builds": true
 }
 ```
 
@@ -242,4 +244,35 @@ We can now run the workflow:
 
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
+```
+
+##### Running Electron Builds
+
+We first need to enable `act` to run local Electron builds. Modify the `event.json` file:
+
+```json
+{
+  // ...
+  "act_skip_electron_builds": false // <-- Change to `false`
+}
+```
+
+Now, you might want to test each platform's building process for the application. For such cases, we assume that the host OS is the same as the target OS, thereby allowing us to do it ['self-hosted'](https://nektosact.com/usage/runners.html#:~:text=If%20you%20want%20to%20run%20Windows%20and%20macOS%20based%20platforms%20and%20you%20are%20running%20act%20within%20that%20specific%20environment%20you%20can%20opt%20out%20of%20docker%20and%20run%20them%20directly%20on%20your%20host%20system.). In that case, you can use the following commands:
+
+- Windows
+
+```bash
+act -P windows-latest=-self-hosted --matrix os:windows-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+```
+
+- macOS
+
+```bash
+act -P macos-latest=-self-hosted --matrix os:macos-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+```
+
+- Linux
+
+```bash
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --matrix os:ubuntu-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
 ```
