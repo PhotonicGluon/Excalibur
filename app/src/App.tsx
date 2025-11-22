@@ -20,6 +20,7 @@ import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import packageInfo from "@root/package.json";
 
+import { useEffectOnce } from "@lib/hooks";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
@@ -63,14 +64,14 @@ const App: React.FC = () => {
     const settings = useSettings();
 
     // Effects
-    useEffect(() => {
+    useEffectOnce(() => {
         if (Capacitor.isNativePlatform()) {
             // Lock screen orientation to portrait
             ScreenOrientation.lock({ orientation: "portrait" }).catch((error: Error) => {
                 console.warn(error);
             });
         }
-    }, []);
+    });
 
     useEffect(() => {
         // Set app theme
