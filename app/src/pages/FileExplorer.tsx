@@ -311,6 +311,13 @@ const FileExplorer: React.FC = () => {
                 const worker = new EncryptionProcessorWorker();
                 const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
+                const abortHandler = () => {
+                    // We catch errors here because if the worker is already terminating, calling
+                    // `abort()` might fail, which we can ignore
+                    processor.abort().catch(() => {});
+                };
+                signal.addEventListener("abort", abortHandler);
+
                 let blob: Blob;
                 try {
                     blob = await processor.processStream(
@@ -321,7 +328,6 @@ const FileExplorer: React.FC = () => {
                         rawFileSize,
                         settings.cryptoChunkSize,
                         // `proxy()` ensures the callback function works across threads
-                        Comlink.proxy(async () => signal.aborted),
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {
                                 jobsManager.updateProgress(jobID, progress);
@@ -334,6 +340,7 @@ const FileExplorer: React.FC = () => {
                     throw e;
                 } finally {
                     // Free up resources
+                    signal.removeEventListener("abort", abortHandler);
                     worker.terminate();
                 }
 
