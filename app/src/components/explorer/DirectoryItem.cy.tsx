@@ -30,6 +30,7 @@ describe("<DirectoryItem />", () => {
                 <settingsContext.Provider
                     value={{
                         theme: "dark",
+                        iconStyle: "default",
                         rowAlternatingColours: "normal",
                         fileSizeUnits: "si",
                         cryptoChunkSize: 262144,
@@ -42,10 +43,11 @@ describe("<DirectoryItem />", () => {
                             jobsManager: {
                                 addJob: (_id: string, _job: Job) => {},
                                 getJob: (_id: string) => {
-                                    return { id: _id, filename: "", description: "", progress: 0 };
+                                    return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
                                 },
                                 updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
                                 updateProgress: (_id: string, _newProgress: number | null) => {},
+                                cancelJob: (_id: string) => {},
                                 deleteJob: (_id: string) => {},
                             },
                             onRename: (_path, _isDir) => props.renameHook!(),

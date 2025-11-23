@@ -6,10 +6,10 @@ import { arrowDown, arrowUp } from "ionicons/icons";
 import JobEntry, { Job } from "./JobEntry";
 
 describe("<JobEntry />", () => {
-    function mountComponent(props: Job) {
+    function mountComponent(props: Job, onCancel?: () => void) {
         mount(
             <IonApp>
-                <JobEntry {...props} />
+                <JobEntry {...props} onCancel={onCancel ?? (() => {})} />
             </IonApp>,
         );
     }
@@ -42,6 +42,17 @@ describe("<JobEntry />", () => {
 
             cy.get("ion-icon").should("have.attr", "icon", arrowDown);
         });
+    });
+
+    it("cancels the job when onCancel is called", () => {
+        const onCancel = cy.stub();
+        const job: Job = { ...baseJob, progress: 0.5 };
+        mountComponent(job, onCancel);
+
+        const cancelArea = cy.get(".group");
+        cancelArea.should("exist");
+        cancelArea.click();
+        cy.wrap(onCancel).should("have.been.called");
     });
 
     it("displays different descriptions correctly", () => {
