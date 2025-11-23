@@ -768,6 +768,7 @@ const FileExplorer: React.FC = () => {
                         <div className="flex w-full justify-center">
                             {/* Jobs' summary */}
                             <div
+                                id="jobs-summary"
                                 className="hover:cursor-pointer"
                                 onClick={(e) => {
                                     jobsPopover.current!.event = e;
@@ -786,6 +787,7 @@ const FileExplorer: React.FC = () => {
                             {/* Jobs' details */}
                             <IonPopover
                                 ref={jobsPopover}
+                                id="jobs-popover"
                                 className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
                                 side="bottom"
                                 alignment="center"

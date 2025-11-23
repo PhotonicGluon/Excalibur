@@ -11,7 +11,7 @@ function randstr(n: number) {
     return chars.join("");
 }
 
-describe("Check Files Page Contents", () => {
+describe("Check Page Contents", () => {
     it("should redirect to server choice if not onboarded", () => {
         cy.visit("/files/");
         cy.url().should("include", "/server-choice");
@@ -32,7 +32,7 @@ describe("Check Files Page Contents", () => {
     });
 });
 
-describe("Check File Page Operations", () => {
+describe("Check Page Operations", () => {
     const downloadsFolder = Cypress.config("downloadsFolder");
 
     // Helper functions
@@ -58,7 +58,7 @@ describe("Check File Page Operations", () => {
         return folderName;
     }
 
-    function _createFile(n: number | number[]) {
+    function _createFile(n: number | number[], dropOnly?: boolean): string[] {
         if (!Array.isArray(n)) {
             n = [n];
         }
@@ -78,6 +78,10 @@ describe("Check File Page Operations", () => {
         }
         cy.get("#main-content").selectFile(selectFileList, { action: "drag-drop" });
 
+        if (dropOnly) {
+            return fileNames;
+        }
+
         // File(s) should have been uploaded
         const fileElements = [];
         for (let i = 0; i < n.length; i++) {
@@ -95,6 +99,8 @@ describe("Check File Page Operations", () => {
         for (let i = 0; i < n.length; i++) {
             cy.readFile(path.join(downloadsFolder, fileNames[i])).should("exist"); // Then check file existence
         }
+
+        return fileNames;
     }
 
     // Tests
@@ -167,6 +173,57 @@ describe("Check File Page Operations", () => {
 
         it("should create nested file", () => {
             _createFile(1000);
+        });
+    });
+
+    describe("cancellations", () => {
+        beforeEach(() => {
+            cy.login("http://127.0.0.1:8989", "test-user", "Password");
+            cy.visit("/files/");
+            cy.url().should("include", "/files");
+        });
+
+        it("should handle upload cancellations", () => {
+            // Create a file upload task
+            const fileName = _createFile(1e6, true)[0];
+
+            // Check that the job is listed
+            cy.get("#jobs-summary").click();
+            cy.get("#jobs-popover").should("exist");
+            cy.get("#jobs-popover").should("not.have.text", "No active jobs");
+
+            const jobEntry = cy.get(".grid");
+            jobEntry.should("contain.text", fileName);
+
+            // Cancel the job
+            jobEntry.get(".circular-progress-bar").parent().click();
+
+            cy.get("#jobs-popover").should("have.text", "No active jobs");
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+        });
+
+        it("should handle download cancellations", () => {
+            // Upload a file
+            const fileName = _createFile(1e6, true)[0];
+            const fileElement = cy.get(`div[data-name='${fileName}']`);
+            fileElement.should("exist");
+
+            // Create a file download task
+            fileElement.click();
+
+            // Check that the job is listed
+            cy.get("#jobs-summary").click();
+            cy.get("#jobs-popover").should("exist");
+            cy.get("#jobs-popover").should("not.have.text", "No active jobs");
+
+            const jobEntry = cy.get(".grid");
+            jobEntry.should("contain.text", fileName);
+
+            // Cancel the job
+            jobEntry.get(".circular-progress-bar").parent().click();
+
+            cy.get("#jobs-popover").should("have.text", "No active jobs");
+            cy.readFile(path.join(downloadsFolder, fileName)).should("not.exist");
         });
     });
 
