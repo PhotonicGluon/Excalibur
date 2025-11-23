@@ -98,7 +98,7 @@ const FileExplorer: React.FC = () => {
                     draft.set(id, job);
                 });
             },
-            updateJob(id: string, newStatus: string, newProgress?: number | null): void {
+            updateJob(id: string, newStatus: string, newProgress?: number | null, newWorker?: Worker): void {
                 updateJobs((draft) => {
                     const job = draft.get(id);
                     if (!job) {
@@ -109,6 +109,9 @@ const FileExplorer: React.FC = () => {
                     job.description = newStatus;
                     if (newProgress !== undefined) {
                         job.progress = newProgress;
+                    }
+                    if (newWorker) {
+                        job.worker = newWorker;
                     }
                 });
             },
@@ -121,6 +124,23 @@ const FileExplorer: React.FC = () => {
                         return;
                     }
                     job.progress = newProgress;
+                });
+            },
+            cancelJob(id: string): void {
+                updateJobs((draft) => {
+                    const job = draft.get(id);
+                    if (!job) {
+                        console.warn(`Job ${id} not found for job cancelling`);
+                        return;
+                    }
+                    console.debug(`Cancelling job '${id}'`);
+
+                    job.controller!.abort();
+                    if (job.worker) {
+                        job.worker.terminate();
+                    }
+
+                    draft.delete(id);
                 });
             },
             deleteJob(id: string): void {
@@ -235,93 +255,116 @@ const FileExplorer: React.FC = () => {
         async function _handleUpload(rawFile: PickedFile) {
             // Create new job
             const jobID = randID();
+            const controller = new AbortController();
+            const signal = controller.signal;
+
             jobsManager.addJob(jobID, {
                 direction: "upload",
                 filename: rawFile.name,
                 description: "Setting up data stream...",
                 progress: null,
+                controller: controller,
             });
+            console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
 
-            // Set up file data stream
-            const rawFileSize = rawFile.size;
-            let rawFileDataStream: ReadableStream<Buffer>;
-            if (rawFile.blob) {
-                // Blob means that we are on web
-                console.debug("On web; using blob for raw file data");
-                const blob = rawFile.blob;
-                rawFileDataStream = blob.stream() as unknown as ReadableStream<Buffer>;
-            } else {
-                console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
-                rawFileDataStream = new ReadableStream<Buffer>({
-                    start(controller) {
-                        Filesystem.readFileInChunks(
-                            {
-                                path: rawFile.path!,
-                                chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
-                            },
-                            (chunk, err) => {
-                                if (err) {
-                                    presentSnackbar("Failed to read file chunk", "danger");
-                                    jobsManager.deleteJob(jobID);
-                                    controller.error(err);
-                                    return;
-                                }
-
-                                if (chunk === null || (chunk!.data as string).length === 0) {
-                                    // File completely read
-                                    controller.close();
-                                    return;
-                                }
-
-                                controller.enqueue(Buffer.from(chunk.data as string, "base64"));
-                            },
-                        );
-                    },
-                });
-            }
-
-            // Create stream that handles the encryption and updates the progress
-            jobsManager.updateJob(jobID, "Encrypting...");
-            const worker = new EncryptionProcessorWorker();
-            const processor = Comlink.wrap<EncryptionProcessor>(worker);
-
-            let blob: Blob;
             try {
-                blob = await processor.processStream(
-                    // `transfer()` moves datastream ownership to the worker instead of trying to clone it
-                    Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
-                    auth.vaultKey!,
-                    auth.authInfo!.key!,
-                    rawFileSize,
-                    settings.cryptoChunkSize,
-                    // `proxy()` ensures the callback function works across threads
-                    Comlink.proxy((progress) => {
-                        jobsManager.updateProgress(jobID, progress);
-                    }),
-                );
+                // Set up file data stream
+                const rawFileSize = rawFile.size;
+                let rawFileDataStream: ReadableStream<Buffer>;
+                if (rawFile.blob) {
+                    // Blob means that we are on web
+                    console.debug("On web; using blob for raw file data");
+                    const blob = rawFile.blob;
+                    rawFileDataStream = blob.stream() as unknown as ReadableStream<Buffer>;
+                } else {
+                    console.debug(`On mobile; fetching data in chunks from path: ${rawFile.path!}`);
+                    rawFileDataStream = new ReadableStream<Buffer>({
+                        start(controller) {
+                            Filesystem.readFileInChunks(
+                                {
+                                    path: rawFile.path!,
+                                    chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
+                                },
+                                (chunk, err) => {
+                                    if (err) {
+                                        presentSnackbar("Failed to read file chunk", "danger");
+                                        jobsManager.deleteJob(jobID);
+                                        controller.error(err);
+                                        return;
+                                    }
+
+                                    if (chunk === null || (chunk!.data as string).length === 0) {
+                                        // File completely read
+                                        controller.close();
+                                        return;
+                                    }
+
+                                    controller.enqueue(Buffer.from(chunk.data as string, "base64"));
+                                },
+                            );
+                        },
+                    });
+                }
+
+                // Create worker that handles the encryption and updates the progress
+                jobsManager.updateJob(jobID, "Encrypting...");
+                const worker = new EncryptionProcessorWorker();
+                const processor = Comlink.wrap<EncryptionProcessor>(worker);
+
+                const abortHandler = () => {
+                    // We catch errors here because if the worker is already terminating, calling
+                    // `abort()` might fail, which we can ignore
+                    processor.abort().catch(() => {});
+                };
+                signal.addEventListener("abort", abortHandler);
+
+                let blob: Blob;
+                try {
+                    blob = await processor.processStream(
+                        // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                        Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
+                        auth.vaultKey!,
+                        auth.authInfo!.key!,
+                        rawFileSize,
+                        settings.cryptoChunkSize,
+                        // `proxy()` ensures the callback function works across threads
+                        Comlink.proxy((progress) => {
+                            if (!signal.aborted) {
+                                jobsManager.updateProgress(jobID, progress);
+                            }
+                        }),
+                    );
+                } catch (e) {
+                    if (signal.aborted) throw new Error("Cancelled");
+                    presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                    throw e;
+                } finally {
+                    // Free up resources
+                    signal.removeEventListener("abort", abortHandler);
+                    worker.terminate();
+                }
+
+                if (signal.aborted) throw new Error("Cancelled");
+
+                // Upload the file
+                console.debug(`Uploading file ${rawFile.name}...`);
+                jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
+                const file = new File([blob], rawFile.name + ".exef");
+                const uploadResponse = await uploadFile(auth, requestedPath, file, true, signal); // Always force upload
+                if (!uploadResponse.success) {
+                    presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
+                    throw new Error(uploadResponse.error);
+                }
             } catch (e) {
-                presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
-                jobsManager.deleteJob(jobID);
-                return;
+                const err = e as Error;
+                if (err.message == "Cancelled" || err.name === "AbortError") {
+                    console.debug(`Job '${jobID}' (upload) cancelled`);
+                    return;
+                }
+                console.error(err);
             } finally {
-                // Free up resources
-                worker.terminate();
-            }
-
-            // Upload the file
-            console.debug(`Uploading file ${rawFile.name}...`);
-            jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
-            const file = new File([blob], rawFile.name + ".exef");
-            const uploadResponse = await uploadFile(auth, requestedPath, file, true); // Always force upload
-            if (!uploadResponse.success) {
-                presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                 jobsManager.deleteJob(jobID);
-                return;
             }
-
-            // Refresh page
-            refreshContents(requestedPath);
-            jobsManager.deleteJob(jobID);
         }
 
         if (!files) {
@@ -725,6 +768,7 @@ const FileExplorer: React.FC = () => {
                         <div className="flex w-full justify-center">
                             {/* Jobs' summary */}
                             <div
+                                id="jobs-summary"
                                 className="hover:cursor-pointer"
                                 onClick={(e) => {
                                     jobsPopover.current!.event = e;
@@ -743,6 +787,7 @@ const FileExplorer: React.FC = () => {
                             {/* Jobs' details */}
                             <IonPopover
                                 ref={jobsPopover}
+                                id="jobs-popover"
                                 className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
                                 side="bottom"
                                 alignment="center"
@@ -751,7 +796,12 @@ const FileExplorer: React.FC = () => {
                                 onDidDismiss={() => setShowJobsPopover(false)}
                             >
                                 <IonContent className="ion-padding rounded-lg">
-                                    <JobsList jobs={jobs} />
+                                    <JobsList
+                                        jobs={jobs}
+                                        onCancelJob={(jobID: string) => {
+                                            jobsManager.cancelJob(jobID);
+                                        }}
+                                    />
                                 </IonContent>
                             </IonPopover>
                         </div>

@@ -11,6 +11,7 @@ import { AuthProvider } from "@components/auth/context";
  *      once using the vault key and once using the E2EE key
  * @param force If true, forces the file to be uploaded even if it already exists. If false, the
  *      request will fail if the file already exists
+ * @param signal An abort signal to cancel the request
  * @returns A promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
@@ -19,6 +20,7 @@ export async function uploadFile(
     path: string,
     file: File,
     force?: boolean,
+    signal?: AbortSignal,
 ): Promise<{ success: boolean; error?: string }> {
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
@@ -32,6 +34,7 @@ export async function uploadFile(
                 "X-Content-Type": "application/octet-stream",
             },
             body: file,
+            signal,
         },
         null, // No timeout; TODO: Determine a timeout for uploading file
     );

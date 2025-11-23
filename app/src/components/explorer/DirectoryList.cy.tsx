@@ -40,6 +40,7 @@ describe("<DirectoryList />", () => {
                 <settingsContext.Provider
                     value={{
                         theme: "dark",
+                        iconStyle: "default",
                         rowAlternatingColours,
                         fileSizeUnits: "si",
                         cryptoChunkSize: 262144,

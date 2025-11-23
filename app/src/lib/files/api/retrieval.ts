@@ -45,7 +45,7 @@ export async function listdir(
  *
  * @param auth The current authentication provider
  * @param path The path to the file to download
- * @param chunkSize The size of each chunk to download
+ * @param signal An abort signal to cancel the request
  * @returns A promise which resolves to an object with a success boolean and optionally an error
  *      message, or the file size, a boolean indicating whether the file is encrypted using the
  *      E2EE key, and a ReadableStream of data. Note that this stream may be encrypted using the
@@ -55,6 +55,7 @@ export async function listdir(
 export async function downloadFile(
     auth: AuthProvider,
     path: string,
+    signal?: AbortSignal,
 ): Promise<{
     success: boolean;
     error?: string;
@@ -69,9 +70,11 @@ export async function downloadFile(
             method: "GET",
             headers: { Authorization: `Bearer ${auth.getToken()}` },
             cache: "no-store",
+            signal,
         },
         null, // No timeout; TODO: Determine a timeout for downloading file
     );
+    // TODO: Handle abort?
     switch (response.status) {
         case 200:
             // Continue with normal flow

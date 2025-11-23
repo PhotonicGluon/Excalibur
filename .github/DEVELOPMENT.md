@@ -208,7 +208,7 @@ Some tips:
 Run
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows .\.github\workflows\test.yml
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./app/.github/workflows/test.yml
 ```
 
 #### Running `test-e2e.yml`
@@ -216,7 +216,7 @@ act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows .\.github\workf
 We need to trigger a pull request action. Run
 
 ```bash
-act pull_request -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows .\.github\workflows\test-e2e.yml
+act pull_request -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/test-e2e.yml
 ```
 
 #### Running `release-builds.yml`

@@ -3,6 +3,18 @@ import { expose } from "comlink";
 import ExEF from "@lib/exef";
 
 const encryptionProcessor = {
+    /** Flag to track cancellation */
+    _isAborted: false,
+
+    /**
+     * Method exposed to main thread to abort encryption.
+     *
+     * May take a few seconds before the encryption process is actually cancelled.
+     */
+    abort() {
+        this._isAborted = true;
+    },
+
     /**
      * Encrypts a stream of file data, reports progress in a callback, and returns a
      * doubly-encrypted blob.
@@ -13,6 +25,7 @@ const encryptionProcessor = {
      * @param fileSize The size of the file
      * @param chunkSize The size of each chunk to encrypt
      * @param onProgress A callback function to report progress (a value from 0 to 1)
+     * @throws {Error} If the encryption process is cancelled
      * @returns A promise that resolves with the doubly-encrypted blob
      */
     async processStream(
@@ -23,6 +36,8 @@ const encryptionProcessor = {
         chunkSize: number,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
+        this._isAborted = false;
+
         // Define ExEF encryption instances
         const vaultExEF = new ExEF(vaultKey, undefined, "encrypt");
         const e2eeExEF = new ExEF(e2eeKey, undefined, "encrypt");
@@ -30,7 +45,7 @@ const encryptionProcessor = {
         // Form nesting of streams for encryption
         const encryptedFileSize = fileSize + ExEF.additionalSize;
         const vStream = new ReadableStream<Buffer>({
-            async start(controller) {
+            start: async (controller) => {
                 const reader = vaultExEF.encryptStream(fileSize, stream, chunkSize).getReader();
                 let offset = 0;
                 while (true) {
@@ -38,6 +53,11 @@ const encryptionProcessor = {
                     if (done) {
                         break;
                     }
+                    if (this._isAborted) {
+                        await reader.cancel();
+                        throw new Error("Cancelled");
+                    }
+
                     controller.enqueue(value);
                     offset += value.length;
                     onProgress(offset / encryptedFileSize);

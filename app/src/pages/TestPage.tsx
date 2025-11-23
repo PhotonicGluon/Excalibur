@@ -22,25 +22,30 @@ const TestPage: React.FC = () => {
                                 filename: "test.txt",
                                 description: "Reading the file...",
                                 progress: 0.123,
+                                direction: "download",
                             });
-                            // jobs.set("test2", {
-                            //     filename: "test2.txt",
-                            //     status: "Encrypting...",
-                            //     progress: 0.456,
-                            // });
-                            // jobs.set("test3", {
-                            //     filename: "test3.txt",
-                            //     status: "Uploading...",
-                            //     progress: 0.789,
-                            // });
-                            // jobs.set("long", {
-                            //     filename: "a-super-long-name-a-super-long-name-a-super-long-name-a-super-long-name.txt",
-                            //     status: "Uploading...",
-                            //     progress: 0.789,
-                            // });
+                            jobs.set("test2", {
+                                filename: "test2.txt",
+                                description: "Encrypting...",
+                                progress: 0.456,
+                                direction: "upload",
+                            });
+                            jobs.set("test3", {
+                                filename: "test3.txt",
+                                description: "Uploading...",
+                                progress: 0.789,
+                                direction: "upload",
+                            });
+                            jobs.set("long", {
+                                filename: "a-super-long-name-a-super-long-name-a-super-long-name-a-super-long-name.txt",
+                                description: "Uploading...",
+                                progress: 0.789,
+                                direction: "upload",
+                            });
 
                             return jobs;
                         })()}
+                        onCancelJob={(jobId) => console.log("Cancelling job", jobId)}
                     ></JobsList>
                 </div>
             </IonContent>
