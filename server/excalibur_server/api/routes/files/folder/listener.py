@@ -1,11 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
-
 from excalibur_server.api.misc import is_debug
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
 from excalibur_server.src.files.update_manager import file_update_manager
+from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
 
 
 async def _main_logic(username: str, websocket: WebSocket, encrypted: bool):
