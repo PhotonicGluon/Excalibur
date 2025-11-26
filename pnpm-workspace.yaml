@@ -10,4 +10,8 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
 
+overrides:
+  "glob": "^11.1.0"
+  "js-yaml": "^4.1.1"
+
 sideEffectsCache: false
