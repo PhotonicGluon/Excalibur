@@ -11,7 +11,7 @@ const NeedServerURLRoute: React.FC<RouteProps> = ({ children, ...rest }) => {
     const location = useLocation();
     return (
         <Route {...rest}>
-            {auth.serverInfo ? children : <Redirect from={location.pathname} to="/server-choice" />}
+            {auth.serverInfo !== null ? children : <Redirect from={location.pathname} to="/server-choice" />}
         </Route>
     );
 };

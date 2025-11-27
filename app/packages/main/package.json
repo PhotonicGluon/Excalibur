@@ -46,6 +46,7 @@
         "@capacitor/cli": "7.4.4",
         "@tailwindcss/vite": "^4.1.17",
         "@types/jsonwebtoken": "^9.0.10",
+        "@types/node": "^24.10.1",
         "@types/react": "19.2.6",
         "@types/react-dom": "19.2.3",
         "@types/react-router": "^5.1.20",

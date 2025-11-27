@@ -56,7 +56,6 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 
 // Change router for electron build
 // (https://github.com/ionic-team/ionic-framework/issues/19246#issuecomment-552858490)
-console.log(isPlatform("electron"));
 const TheRouter =
     process.env.NODE_ENV !== "development" && isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
 
@@ -99,7 +98,7 @@ const App: React.FC = () => {
             <TheRouter>
                 <IonRouterOutlet>
                     {/* Index */}
-                    {localStorage.getItem("hasSeenWelcome") === "true" ? (
+                    {window.localStorage.getItem("hasSeenWelcome") === "true" ? (
                         <Redirect exact from="/" to="/login" />
                     ) : (
                         <Redirect exact from="/" to="/welcome" />
