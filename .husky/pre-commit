@@ -1,5 +1,5 @@
 cd app
-npx lint-staged
+pnpx lint-staged
 
 cd ../server
 uv run --dev ruff check --fix

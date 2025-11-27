@@ -1,5 +1,15 @@
 {
+    "name": "excalibur-electron",
     "main": "out/main.mjs",
+    "scripts": {
+        "dev": "electron-vite dev",
+        "preview": "electron-vite preview",
+        "build": "electron-vite build",
+        "build:unpack": "electron-vite build && electron-builder --dir --config",
+        "build:win": "electron-vite build && electron-builder --win --config",
+        "build:mac": "electron-vite build && electron-builder --mac --config",
+        "build:linux": "electron-vite build && electron-builder --linux --config"
+    },
     "dependencies": {
         "@electron-toolkit/preload": "^3.0.2",
         "@electron-toolkit/utils": "^4.0.0",
@@ -9,10 +19,6 @@
         "electron": "^39.2.3",
         "electron-builder": "^26.0.12",
         "electron-vite": "^4.0.1"
-    },
-    "engines": {
-        "node": ">=22.0.0",
-        "pnpm": ">=10"
     },
     "private": true
 }

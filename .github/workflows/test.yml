@@ -32,7 +32,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: pnpm install --no-optional
+              run: pnpm install --filter !excalibur-electron
 
             - name: Run Unit Tests
               working-directory: ./app

@@ -107,7 +107,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: pnpm install --no-optional
+              run: pnpm install --filter !excalibur-electron
 
             - name: Build PWA
               working-directory: ./app

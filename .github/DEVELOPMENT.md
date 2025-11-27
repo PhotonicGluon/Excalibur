@@ -60,7 +60,7 @@ pnpm run dev
 To expose the server to other devices on the local network, you can run
 
 ```bash
-npx vite --no-open --host=0.0.0.0 --port=8100
+pnpx vite --no-open --host=0.0.0.0 --port=8100
 ```
 
 You can change the `host` IP to restrict access.
@@ -81,7 +81,7 @@ Next, start the [Excalibur Server](../server/README.md) _with CORS disabled_.
 Now find your android device using
 
 ```bash
-npx cap run android --list
+pnpx cap run android --list
 ```
 
 Note the target ID of the device you want to run the app on.
@@ -89,7 +89,7 @@ Note the target ID of the device you want to run the app on.
 Finally, without closing the web server, we can run
 
 ```bash
-npx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
+pnpx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
 ```
 
 > [!TIP]

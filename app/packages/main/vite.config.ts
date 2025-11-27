@@ -28,8 +28,8 @@ function getAliasesFromTSConfig() {
 // https://vitejs.dev/config/
 export const viteConfig = {
     plugins: [
-        react(),
-        legacy(),
+        react({}),
+        legacy({}),
         tailwindcss(),
         nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
     ],
@@ -40,7 +40,6 @@ export const viteConfig = {
         globals: true,
     },
     server: {
-        watch: { ignored: ["**/android"] },
         warmup: { clientFiles: ["./src/components/**/*"] },
     },
     build: {
