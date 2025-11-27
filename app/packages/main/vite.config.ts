@@ -14,7 +14,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
  * @returns A dictionary of aliases
  */
 function getAliasesFromTSConfig() {
-    const tsconfigStr = fs.readFileSync("./tsconfig.json", "utf-8").replace(/\/\/.*$/gm, ""); // Removing comments
+    const tsconfigStr = fs.readFileSync(path.resolve(__dirname, "tsconfig.json"), "utf-8").replace(/\/\/.*$/gm, ""); // Removing comments
     const tsconfig = JSON.parse(tsconfigStr);
     const aliases = {};
     for (const [key, value] of Object.entries(tsconfig.compilerOptions.paths)) {

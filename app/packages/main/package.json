@@ -11,6 +11,7 @@
         "test:unit-run": "vitest run",
         "test:component": "cypress run --component"
     },
+    "type": "module",
     "dependencies": {
         "@capacitor/android": "7.4.4",
         "@capacitor/app": "7.1.0",
@@ -24,7 +25,6 @@
         "@ionic/core": "^8.7.10",
         "@ionic/react": "^8.7.10",
         "@ionic/react-router": "^8.7.10",
-        "@tailwindcss/vite": "^4.1.17",
         "capacitor-blob-writer": "^1.1.19",
         "comlink": "^4.4.2",
         "immer": "^11.0.0",
@@ -43,6 +43,7 @@
     "devDependencies": {
         "@capacitor/assets": "^3.0.5",
         "@capacitor/cli": "7.4.4",
+        "@tailwindcss/vite": "^4.1.17",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/react": "19.2.6",
         "@types/react-dom": "19.2.3",

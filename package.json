@@ -2,7 +2,7 @@
     "name": "excalibur-monorepo",
     "private": true,
     "scripts": {
-        "preinstall": "pnpx only-allow pnpm",
+        "preinstall": "npx only-allow pnpm",
         "prepare": "husky",
         "update": "pnpx npm-check-updates --peer -u && cd app && pnpm run update && cd .. && pnpm i --lockfile-only && cd server && uv lock --upgrade",
         "sync": "pnpm i && cd server && uv sync --all-groups",

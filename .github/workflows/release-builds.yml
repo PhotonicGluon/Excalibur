@@ -31,26 +31,26 @@ jobs:
                   cache-dependency-path: pnpm-lock.yaml
 
             - name: Install Dependencies
-              working-directory: ./app
+              working-directory: ./app/packages/electron
               run: pnpm install
 
             - name: Build Windows
               if: matrix.os == 'windows-latest'
-              working-directory: ./app
+              working-directory: ./app/packages/electron
               run: |
-                  pnpm run build:electron:win
+                  pnpm run build:win
 
             - name: Build macOS
               if: matrix.os == 'macos-latest'
-              working-directory: ./app
+              working-directory: ./app/packages/electron
               run: |
-                  pnpm run build:electron:mac
+                  pnpm run build:mac
 
             - name: Build Linux
               if: matrix.os == 'ubuntu-latest'
-              working-directory: ./app
+              working-directory: ./app/packages/electron
               run: |
-                  pnpm run build:electron:linux
+                  pnpm run build:linux
 
             - name: Attest
               uses: actions/attest-build-provenance@v3
@@ -59,18 +59,18 @@ jobs:
                   subject-path: "app/dist"
 
             - name: Upload Electron Artifacts
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                   name: app-electron-${{ matrix.os }}
                   path: |
-                      app/dist/*.exe
-                      app/dist/*.zip
-                      app/dist/*.dmg
-                      app/dist/*.AppImage
-                      app/dist/*.snap
-                      app/dist/*.deb
-                      app/dist/*.rpm
-                      app/dist/*.tar.gz
+                      app/packages/electron/dist/*.exe
+                      app/packages/electron/dist/*.zip
+                      app/packages/electron/dist/*.dmg
+                      app/packages/electron/dist/*.AppImage
+                      app/packages/electron/dist/*.snap
+                      app/packages/electron/dist/*.deb
+                      app/packages/electron/dist/*.rpm
+                      app/packages/electron/dist/*.tar.gz
                   if-no-files-found: error
 
     build-app-pwa-android:
@@ -122,7 +122,7 @@ jobs:
                   subject-path: "app/dist"
 
             - name: Upload PWA Artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                   name: app-pwa
                   path: app/app-${{ github.ref_name }}-pwa.zip
@@ -168,7 +168,7 @@ jobs:
                   subject-path: "app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
 
             - name: Upload Release APK
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                   name: app-android
                   path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
@@ -207,7 +207,7 @@ jobs:
                   subject-path: "server/dist"
 
             - name: Upload Server Artifacts
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                   name: server
                   path: server/dist

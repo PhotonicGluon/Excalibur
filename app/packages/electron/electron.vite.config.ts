@@ -1,7 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import { resolve } from "path";
 
-import viteConfig from "./vite.config";
+import viteConfig from "../main/vite.config";
 
 export default defineConfig({
     main: {
@@ -9,7 +9,7 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, "electron/main.ts"),
+                    index: resolve(__dirname, "main.ts"),
                 },
                 output: {
                     dir: resolve(__dirname, "out"),
@@ -23,7 +23,7 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, "electron/preload.ts"),
+                    index: resolve(__dirname, "preload.ts"),
                 },
                 output: {
                     dir: resolve(__dirname, "out", "preload"),
@@ -32,13 +32,13 @@ export default defineConfig({
         },
     },
     renderer: {
-        root: ".",
+        root: "../main",
         resolve: viteConfig.resolve,
         plugins: viteConfig.plugins,
         build: {
             rollupOptions: {
                 input: {
-                    index: resolve(__dirname, "index.html"),
+                    index: resolve(__dirname, "../main/index.html"),
                 },
                 output: viteConfig.build!.rollupOptions!.output,
             },

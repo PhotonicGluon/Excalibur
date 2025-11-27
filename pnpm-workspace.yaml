@@ -3,7 +3,7 @@ packages:
   - app/packages/**
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - core-js
   - cypress
   - electron
