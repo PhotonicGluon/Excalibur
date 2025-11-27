@@ -8,6 +8,8 @@
     - [PWA](#pwa)
     - [Android](#android)
   - [Building](#building)
+    - [PWA](#pwa-1)
+    - [Android](#android-1)
     - [Electron](#electron)
       - [Windows](#windows)
 - [Server](#server)
@@ -99,17 +101,53 @@ Once the app starts on the device, assuming that the server is using the default
 
 ### Building
 
+#### PWA
+
 > [!NOTE]
-> This section is a work-in-progress.
+> All these commands are to be run within the `main` project.
+
+Run
+
+```bash
+pnpm run build
+```
+
+#### Android
+
+> [!NOTE]
+> This assumes that the [PWA app](#pwa-1) has been built.
+>
+> All these commands are to be run within the `android` project.
+
+You might need to first grant `gradlew` executable permissions if you are on Unix. You can do that by running
+
+```bash
+chmod +x ./gradlew
+```
+
+We can now build the app using gradle by running
+
+```bash
+./gradlew build
+```
+
+To generate an unsigned release APK, run
+
+```bash
+./gradlew assembleRelease
+```
 
 #### Electron
+
+> [!NOTE]
+> All these commands are to be run within the `electron` project.
 
 ##### Windows
 
 Run
 
 ```bash
-pnpm run build:electron:win
+pnpm run build:win
 ```
 
 There may be an issue where a "Cannot create symbolic link" error is thrown. Follow [the solution described here](https://github.com/electron-userland/electron-builder/issues/8149#issuecomment-2079252400) and it should work.
@@ -247,6 +285,12 @@ We can now run the workflow:
 
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
+```
+
+To run only a specific job, use the `-j` flag. For example, to run only the `Build App (PWA & Mobile)` job, run
+
+```bash
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-pwa-mobile
 ```
 
 ##### Running Electron Builds

@@ -32,7 +32,7 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app/packages/electron
-              run: pnpm install
+              run: pnpm install --no-optional
 
             - name: Build Windows
               if: matrix.os == 'windows-latest'
@@ -56,7 +56,7 @@ jobs:
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/dist"
+                  subject-path: "app/packages/electron/dist"
 
             - name: Upload Electron Artifacts
               uses: actions/upload-artifact@v5
@@ -73,7 +73,7 @@ jobs:
                       app/packages/electron/dist/*.tar.gz
                   if-no-files-found: error
 
-    build-app-pwa-android:
+    build-app-pwa-mobile:
         name: Build App (PWA & Mobile)
         runs-on: ubuntu-latest
         permissions:
@@ -107,10 +107,10 @@ jobs:
 
             - name: Install Dependencies
               working-directory: ./app
-              run: pnpm install --filter !excalibur-electron
+              run: pnpm install --filter !excalibur-electron --no-optional
 
             - name: Build PWA
-              working-directory: ./app
+              working-directory: ./app/packages/main
               run: |
                   pnpm run build
                   zip -r app-${{ github.ref_name }}-pwa.zip ./dist
@@ -119,35 +119,35 @@ jobs:
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/dist"
+                  subject-path: "app/packages/main/dist"
 
             - name: Upload PWA Artifact
               uses: actions/upload-artifact@v5
               with:
                   name: app-pwa
-                  path: app/app-${{ github.ref_name }}-pwa.zip
+                  path: app/packages/main/app-${{ github.ref_name }}-pwa.zip
                   if-no-files-found: error
 
             - name: Sync Capacitor
-              working-directory: ./app
+              working-directory: ./app/packages/main
               run: pnpm run sync
 
             - name: Grant execute permission for gradlew
-              working-directory: ./app/android
+              working-directory: ./app/packages/android
               run: chmod +x gradlew
 
             - name: Build with Gradle
-              working-directory: ./app/android
+              working-directory: ./app/packages/android
               run: ./gradlew --console plain build
 
             - name: Build Unsigned Release APK
-              working-directory: ./app/android
+              working-directory: ./app/packages/android
               run: ./gradlew --console plain assembleRelease
 
             - name: Sign app APK
               uses: ilharp/sign-android-release@v2
               with:
-                  releaseDir: ./app/android/app/build/outputs/apk/release
+                  releaseDir: ./app/packages/android/app/build/outputs/apk/release
                   signingKey: ${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}
                   keyAlias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
                   keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
@@ -155,7 +155,7 @@ jobs:
                   buildToolsVersion: 36.0.0
 
             - name: Rename Release APK
-              working-directory: ./app/android/app/build/outputs/apk/release
+              working-directory: ./app/packages/android/app/build/outputs/apk/release
               run: |
                   for f in *-signed.apk; do
                     mv -- "$f" ./app-${{ github.ref_name }}-release.apk
@@ -165,13 +165,13 @@ jobs:
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
+                  subject-path: "app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
 
             - name: Upload Release APK
               uses: actions/upload-artifact@v5
               with:
                   name: app-android
-                  path: app/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
+                  path: app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
                   if-no-files-found: error
 
     build-server:
@@ -217,7 +217,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         name: Create Release
         runs-on: ubuntu-latest
-        needs: [build-app-electron, build-app-pwa-android, build-server]
+        needs: [build-app-electron, build-app-pwa-mobile, build-server]
         permissions:
             contents: write
         steps:
