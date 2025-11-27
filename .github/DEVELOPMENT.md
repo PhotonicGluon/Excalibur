@@ -249,7 +249,7 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 Run
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./app/.github/workflows/test.yml
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/test.yml
 ```
 
 #### Running `test-e2e.yml`
@@ -285,12 +285,6 @@ We can now run the workflow:
 
 ```bash
 act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
-```
-
-To run only a specific job, use the `-j` flag. For example, to run only the `Build App (PWA & Mobile)` job, run
-
-```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-pwa-mobile
 ```
 
 ##### Running Electron Builds

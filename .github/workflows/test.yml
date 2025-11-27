@@ -35,11 +35,11 @@ jobs:
               run: pnpm install --filter !excalibur-electron
 
             - name: Run Unit Tests
-              working-directory: ./app
+              working-directory: ./app/packages/main
               run: pnpm run test:unit-run
 
             - name: Run Component Tests
-              working-directory: ./app
+              working-directory: ./app/packages/main
               run: pnpm run test:component
 
     test-server:
