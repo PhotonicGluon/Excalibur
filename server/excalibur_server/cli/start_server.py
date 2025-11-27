@@ -38,19 +38,25 @@ def start_server(
             "(e.g., when using an Android emulator).",
         ),
     ] = True,
-    enable_logging: Annotated[
+    log_to_console: Annotated[
         bool,
         typer.Option(
-            "--logging/--no-logging",
+            "--log/--no-log",
             "-l/-L",
+            help="Whether to enable logging to console.",
+        ),
+    ] = True,
+    log_to_file: Annotated[
+        bool,
+        typer.Option(
+            "--log-to-file/--no-log-to-file",
+            "-f/-F",
             help="Whether to enable logging to file.",
         ),
     ] = True,
 ):
     """
     Start API server.
-
-    This starts the API server.
     """
 
     import os
@@ -67,7 +73,7 @@ def start_server(
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
     os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = f"{delay[0]},{delay[1]}"
-    os.environ["EXCALIBUR_SERVER_LOGGING"] = "1" if enable_logging else "0"
+    os.environ["EXCALIBUR_SERVER_LOGGING"] = "1" if log_to_file else "0"
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
@@ -86,7 +92,11 @@ def start_server(
         host=host,
         port=port,
         log_config=log_config,
+        access_log=log_to_console,
         reload=debug,
         reload_dirs=[Path(__file__).parent.parent],
         reload_excludes=["test_*.py"],
+        workers=1,  # We do not support more than one worker
+        ws="websockets",
+        ws_ping_interval=30.0,
     )
