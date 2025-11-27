@@ -8,6 +8,8 @@
     - [PWA](#pwa)
     - [Android](#android)
   - [Building](#building)
+    - [PWA](#pwa-1)
+    - [Android](#android-1)
     - [Electron](#electron)
       - [Windows](#windows)
 - [Server](#server)
@@ -60,7 +62,7 @@ pnpm run dev
 To expose the server to other devices on the local network, you can run
 
 ```bash
-npx vite --no-open --host=0.0.0.0 --port=8100
+pnpx vite --no-open --host=0.0.0.0 --port=8100
 ```
 
 You can change the `host` IP to restrict access.
@@ -81,7 +83,7 @@ Next, start the [Excalibur Server](../server/README.md) _with CORS disabled_.
 Now find your android device using
 
 ```bash
-npx cap run android --list
+pnpx cap run android --list
 ```
 
 Note the target ID of the device you want to run the app on.
@@ -89,7 +91,7 @@ Note the target ID of the device you want to run the app on.
 Finally, without closing the web server, we can run
 
 ```bash
-npx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
+pnpx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
 ```
 
 > [!TIP]
@@ -99,17 +101,53 @@ Once the app starts on the device, assuming that the server is using the default
 
 ### Building
 
+#### PWA
+
 > [!NOTE]
-> This section is a work-in-progress.
+> All these commands are to be run within the `main` project.
+
+Run
+
+```bash
+pnpm run build
+```
+
+#### Android
+
+> [!NOTE]
+> This assumes that the [PWA app](#pwa-1) has been built.
+>
+> All these commands are to be run within the `android` project.
+
+You might need to first grant `gradlew` executable permissions if you are on Unix. You can do that by running
+
+```bash
+chmod +x ./gradlew
+```
+
+We can now build the app using gradle by running
+
+```bash
+./gradlew build
+```
+
+To generate an unsigned release APK, run
+
+```bash
+./gradlew assembleRelease
+```
 
 #### Electron
+
+> [!NOTE]
+> All these commands are to be run within the `electron` project.
 
 ##### Windows
 
 Run
 
 ```bash
-pnpm run build:electron:win
+pnpm run build:win
 ```
 
 There may be an issue where a "Cannot create symbolic link" error is thrown. Follow [the solution described here](https://github.com/electron-userland/electron-builder/issues/8149#issuecomment-2079252400) and it should work.
@@ -211,7 +249,7 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 Run
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./app/.github/workflows/test.yml
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/test.yml
 ```
 
 #### Running `test-e2e.yml`

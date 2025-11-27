@@ -6,15 +6,24 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
         () => {
             cy.visit("/welcome");
             cy.get("#continue-button").click();
+
             cy.url().should("include", "/server-choice");
             cy.get("#server-input").type(serverURL);
             cy.get("#confirm-button").click();
+
             cy.url().should("include", "/login");
         },
         {
             validate: () => {
+                // We should be able to access the login page
                 cy.visit("/login");
                 cy.url().should("include", "/login");
+
+                // We should *not* be able to access the files page
+                cy.visit("/files/");
+                cy.url()
+                    .should("include", "/login")
+                    .then(() => expect(window.localStorage.getItem("hasSeenWelcome"), "stored value").to.equal("true"));
             },
             cacheAcrossSpecs: true,
         },
@@ -23,7 +32,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
 
 Cypress.Commands.add("login", (serverURL: string, username: string, password: string) => {
     cy.session(
-        username,
+        `${serverURL}|${username}`,
         () => {
             cy.onboard(serverURL);
             cy.visit("/login");
@@ -37,8 +46,15 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
         },
         {
             validate: () => {
+                // We should be able to access the files page
                 cy.visit("/files/");
-                cy.url().should("include", "/files");
+                cy.url()
+                    .should("include", "/files")
+                    .then(() => {
+                        const ls = window.localStorage;
+                        expect(ls.getItem("hasSeenWelcome"), "stored value").to.equal("true");
+                        expect(ls.getItem("CapacitorStorage.username"), "stored value").to.equal(username);
+                    });
             },
             cacheAcrossSpecs: true,
         },

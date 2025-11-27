@@ -17,13 +17,13 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
-            "@assets/*": ["./resources/*"],
             "@components/*": ["./src/components/*"],
             "@lib/*": ["./src/lib/*"],
             "@native/*": ["src/native/*"],
             "@pages/*": ["./src/pages/*"],
             "@theme/*": ["./src/theme/*"],
-            "@root/*": ["./*"]
+            "@assets/*": ["../../resources/*"],
+            "@root/*": ["../../*"]
         },
         "types": ["vitest/globals", "cypress", "./cypress.d.ts"]
     },

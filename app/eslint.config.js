@@ -5,7 +5,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-    { ignores: ["dist", "out", "cypress.config.ts", "android"] },
+    { ignores: ["dist", "out", "packages/main/cypress.config.ts", "packages/android"] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ["**/*.{ts,tsx}"],

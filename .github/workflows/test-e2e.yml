@@ -39,7 +39,7 @@ jobs:
 
             - name: Install App Dependencies
               working-directory: ./app
-              run: pnpm install --no-optional
+              run: pnpm install --filter !excalibur-electron
 
             - name: Install E2E Testing Dependencies
               working-directory: ./

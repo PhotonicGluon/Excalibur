@@ -1,5 +1,8 @@
 import * as path from "path";
 
+const SMALL_SIZE = 1024;
+const LARGE_SIZE = 1e6; // Enough for several chunking to occur
+
 function randstr(n: number) {
     const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const chars = [];
@@ -103,6 +106,12 @@ describe("Check Page Operations", () => {
         return fileNames;
     }
 
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
+
     // Tests
     it("should handle folder creation", () => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
@@ -113,15 +122,6 @@ describe("Check Page Operations", () => {
     });
 
     describe("single-file upload and download", () => {
-        const SMALL_SIZE = 1024;
-        const LARGE_SIZE = 1e6; // Enough for several chunking to occur
-
-        beforeEach(() => {
-            cy.login("http://127.0.0.1:8989", "test-user", "Password");
-            cy.visit("/files/");
-            cy.url().should("include", "/files");
-        });
-
         it("should handle small file", () => {
             _createFile(SMALL_SIZE);
         });
@@ -132,15 +132,6 @@ describe("Check Page Operations", () => {
     });
 
     describe("multi-file upload and download", () => {
-        const SMALL_SIZE = 1024;
-        const LARGE_SIZE = 1e6; // Enough for several chunking to occur
-
-        beforeEach(() => {
-            cy.login("http://127.0.0.1:8989", "test-user", "Password");
-            cy.visit("/files/");
-            cy.url().should("include", "/files");
-        });
-
         it("should handle small files", () => {
             _createFile([SMALL_SIZE, SMALL_SIZE, SMALL_SIZE]);
         });
@@ -152,10 +143,6 @@ describe("Check Page Operations", () => {
 
     describe("nested operations", () => {
         beforeEach(() => {
-            cy.login("http://127.0.0.1:8989", "test-user", "Password");
-            cy.visit("/files/");
-            cy.url().should("include", "/files");
-
             // Create super folder
             const superFolderName = _createFolder();
             const superFolder = cy.get(`div[data-name='${superFolderName}']`);
@@ -177,12 +164,6 @@ describe("Check Page Operations", () => {
     });
 
     describe("cancellations", () => {
-        beforeEach(() => {
-            cy.login("http://127.0.0.1:8989", "test-user", "Password");
-            cy.visit("/files/");
-            cy.url().should("include", "/files");
-        });
-
         it("should handle upload cancellations", () => {
             // Create a file upload task
             const fileName = _createFile(1e6, true)[0];

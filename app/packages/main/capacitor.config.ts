@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
     appName: "Excalibur",
     webDir: "dist",
     android: {
-        // See also: https://developer.android.com/reference/android/R.attr#windowOptOutEdgeToEdgeEnforcement
-        adjustMarginsForEdgeToEdge: "auto",
+        path: "../android",
+        adjustMarginsForEdgeToEdge: "auto", // See also: https://developer.android.com/reference/android/R.attr#windowOptOutEdgeToEdgeEnforcement
     },
     server: {
         androidScheme: "http",
