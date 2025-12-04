@@ -1,13 +1,11 @@
-from pathlib import Path as PathlibPath
 from typing import Annotated
 
-from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
+from fastapi import BackgroundTasks, Body, Depends, Path, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.routes.files import add_folder_change, encrypted_router
+from excalibur_server.api.routes.files import encrypted_router
+from excalibur_server.api.routes.files.move import _move_helper
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.config import CONFIG
-from excalibur_server.src.path import check_path_length, check_path_subdir
 
 
 @encrypted_router.post(
@@ -38,37 +36,5 @@ async def rename_path_endpoint(
     Cannot rename root directory (`.`).
     """
 
-    username = credentials.username
-    base_path = CONFIG.storage.vault_folder / username
-
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not user_path.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
-
-    # Check if user is trying to rename root directory
-    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
-        raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot rename root directory")
-
-    # Check new file path length
-    new_path = user_path.parent / new_name
-    if not check_path_length(new_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
-
-    # Check for any attempts at path traversal again
-    _, valid = check_path_subdir(new_path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    # Check if file already exists
-    if new_path.exists():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
-
-    # Rename the file
-    user_path.rename(new_path)
-    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
-
+    _move_helper(background_tasks, credentials, "rename", path, None, new_name)
     return "Item renamed"

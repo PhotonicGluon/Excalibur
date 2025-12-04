@@ -1,6 +1,6 @@
 import os
 from pathlib import Path as PathlibPath
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
@@ -9,6 +9,69 @@ from excalibur_server.api.routes.files import add_folder_change, encrypted_route
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
+
+
+def _move_helper(
+    background_tasks: BackgroundTasks,
+    credentials: Credentials,
+    modification_type: Literal["move", "rename"],
+    path: str,
+    new_location: PathlibPath | None,
+    new_name: str,
+):
+    """
+    Helper method for moving or renaming a file or directory.
+
+    :param background_tasks: The background tasks to add the folder change to
+    :param credentials: The credentials of the user
+    :param modification_type: The type of modification to perform
+    :param path: The path of the file or directory to move or rename
+    :param new_location: The new location of the file or directory
+    :param new_name: The new name of the file or directory
+    :raises HTTPException: If the given path leads to a path traversal
+    :raises HTTPException: If the given path does not exist
+    :raises HTTPException: If the given path refers to the root directory
+    :raises HTTPException: If the new path leads to a path traversal
+    :raises HTTPException: If the new path is too long
+    :raises HTTPException: If the new path already exists
+    """
+
+    username = credentials.username
+    base_path = CONFIG.storage.vault_folder / username
+
+    # Check for any attempts at path traversal
+    user_path, valid = check_path_subdir(path, base_path)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
+
+    if not user_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    # Check if user is trying to rename root directory
+    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED, detail=f"Cannot {modification_type} root directory"
+        )
+
+    # Check for any attempts at path traversal again
+    if new_location is None:
+        new_location = user_path.parent
+
+    new_path, valid = check_path_subdir(new_location / new_name, base_path)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
+
+    # Check new file path length
+    if not check_path_length(new_path):
+        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
+
+    # Check if file already exists
+    if new_path.exists():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
+
+    # Rename the file
+    user_path.rename(new_path)
+    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
 
 @encrypted_router.post(
@@ -39,36 +102,5 @@ async def move_path_endpoint(
     Cannot move root directory (`.`).
     """
 
-    username = credentials.username
-    base_path = CONFIG.storage.vault_folder / username
-
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not user_path.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
-
-    # Check if user is trying to rename root directory
-    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
-        raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot rename root directory")
-
-    # Check for any attempts at path traversal again
-    new_path, valid = check_path_subdir(PathlibPath(new_location) / os.path.basename(path), base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    # Check new file path length
-    if not check_path_length(new_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
-
-    # Check if file already exists
-    if new_path.exists():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
-
-    # Rename the file
-    user_path.rename(new_path)
-    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
-
+    _move_helper(background_tasks, credentials, "move", path, PathlibPath(new_location), os.path.basename(path))
     return "Item moved"
