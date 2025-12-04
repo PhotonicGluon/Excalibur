@@ -45,7 +45,17 @@ import {
     settingsOutline,
 } from "ionicons/icons";
 
-import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
+import {
+    checkDir,
+    checkPath,
+    checkSize,
+    deleteItem,
+    listdir,
+    mkdir,
+    moveItem,
+    renameItem,
+    uploadFile,
+} from "@lib/files/api";
 import { directoryChangesListener } from "@lib/files/api/listeners";
 import { Directory } from "@lib/files/structures";
 import { useEffectOnce } from "@lib/hooks";
@@ -561,6 +571,51 @@ const FileExplorer: React.FC = () => {
     }
 
     /**
+     * Handles the user clicking the move button on a directory item.
+     *
+     * @param path The path of the item to move
+     */
+    async function onMoveItem(path: string) {
+        // TODO: Update this method to be less janky - should just allow moving within GUI, not make a popup
+        const origPath = ("./" + path.split("/").slice(0, -1).join("/")).replace(/\/$/, "");
+
+        // Ask for user input
+        presentAlert({
+            header: "Enter New Destination Folder",
+            subHeader: "'.' means root directory",
+            inputs: [
+                {
+                    type: "text",
+                    name: "newPath",
+                    placeholder: "New Path",
+                    value: origPath,
+                },
+            ],
+            buttons: [
+                "Cancel",
+                {
+                    text: "Move",
+                    handler: async (data: { newPath: string }) => {
+                        const newPath = data.newPath;
+                        if (newPath === "") {
+                            presentSnackbar("New path cannot be empty", "danger");
+                            return;
+                        }
+
+                        const moveResponse = await moveItem(auth, path, newPath);
+                        if (!moveResponse.success) {
+                            presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
+                            return;
+                        }
+
+                        presentSnackbar("Item moved", "success");
+                    },
+                },
+            ],
+        });
+    }
+
+    /**
      * Handles the user clicking the delete button on a directory item.
      *
      * @param path The path of the item to delete
@@ -866,6 +921,7 @@ const FileExplorer: React.FC = () => {
                             value={{
                                 jobsManager: jobsManager,
                                 onRename: onRenameItem,
+                                onMove: onMoveItem,
                                 onDelete: onDeleteItem,
                                 presentAlert: presentAlert,
                                 presentToast: (options: ToastOptions) =>

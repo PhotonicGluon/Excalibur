@@ -20,7 +20,7 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, pencilOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
@@ -254,7 +254,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     /**
-     * Handles the user clicking the rename button an item.
+     * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
         await uiFeedback.onRename(props.fullpath, !isFile);
@@ -262,7 +262,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     /**
-     * Handles the user clicking the delete button an item.
+     * Handles the user clicking the move button on an item.
+     */
+    async function onClickMove() {
+        await uiFeedback.onMove(props.fullpath);
+        dismissPopover();
+    }
+
+    /**
+     * Handles the user clicking the delete button on an item.
      */
     async function onClickDelete() {
         await uiFeedback.onDelete(props.fullpath, !isFile);
@@ -292,6 +300,12 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     <IonLabel>
                         <IonIcon icon={pencilOutline} size="large" />
                         <IonText className="pl-2">Rename</IonText>
+                    </IonLabel>
+                </IonItem>
+                <IonItem button={true} onClick={() => onClickMove()}>
+                    <IonLabel>
+                        <IonIcon icon={moveOutline} size="large" />
+                        <IonText className="pl-2">Move</IonText>
                     </IonLabel>
                 </IonItem>
                 <IonItem button={true} onClick={() => onClickDelete()}>

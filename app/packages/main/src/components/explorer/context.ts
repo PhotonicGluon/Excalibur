@@ -23,6 +23,8 @@ export interface UIFeedbackMethods {
     jobsManager: JobsManager;
     /** Function to call when renaming is requested */
     onRename: (path: string, isDir: boolean) => Promise<void>;
+    /** Function to call when moving is requested */
+    onMove: (path: string) => Promise<void>;
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
