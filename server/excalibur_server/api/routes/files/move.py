@@ -16,7 +16,7 @@ def _move_helper(
     credentials: Credentials,
     modification_type: Literal["move", "rename"],
     path: str,
-    new_location: PathlibPath | None,
+    new_folder: PathlibPath | None,
     new_name: str,
 ):
     """
@@ -26,7 +26,8 @@ def _move_helper(
     :param credentials: The credentials of the user
     :param modification_type: The type of modification to perform
     :param path: The path of the file or directory to move or rename
-    :param new_location: The new location of the file or directory
+    :param new_folder: The new location of the file or directory, or None to keep in current
+        location
     :param new_name: The new name of the file or directory
     :raises HTTPException: If the given path leads to a path traversal
     :raises HTTPException: If the given path does not exist
@@ -53,11 +54,12 @@ def _move_helper(
             status_code=status.HTTP_412_PRECONDITION_FAILED, detail=f"Cannot {modification_type} root directory"
         )
 
-    # Check for any attempts at path traversal again
-    if new_location is None:
-        new_location = user_path.parent
+    # Check if new folder exists
+    if new_folder is None:
+        new_folder = user_path.parent
 
-    new_path, valid = check_path_subdir(new_location / new_name, base_path)
+    # Check for any attempts at path traversal again
+    new_path, valid = check_path_subdir(new_folder / new_name, base_path)
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
@@ -70,7 +72,10 @@ def _move_helper(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
 
     # Rename the file
-    user_path.rename(new_path)
+    try:
+        user_path.rename(new_path)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Destination not found")
     background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
 
@@ -82,7 +87,7 @@ def _move_helper(
             "description": "Item moved",
             "content": {"text/plain": {"example": "Item moved", "schema": None}},
         },
-        status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Item/destination not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot move root directory"},

@@ -28,7 +28,7 @@ export async function moveItem(
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:
-            return { success: false, error: "Item not found" };
+            return { success: false, error: "Item/destination not found" };
         case 406:
             return { success: false, error: "Illegal or invalid path" };
         case 409:

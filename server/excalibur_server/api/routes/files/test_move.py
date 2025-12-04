@@ -71,6 +71,12 @@ def test_already_exists(auth_client: TestClient, move_folder: Path):
     assert response.status_code == 409  # Item already exists
 
 
+def test_destination_nonexistent(auth_client: TestClient, move_folder: Path):
+    (move_folder / "m-file").touch()
+    response = auth_client.post("/api/files/move/move-folder/m-file", json="fake-folder")
+    assert response.status_code == 404  # Destination not found
+
+
 def test_rename_root(auth_client: TestClient):
     response = auth_client.post("/api/files/move/.", json="new-name")
     assert response.status_code == 412  # Cannot move root
