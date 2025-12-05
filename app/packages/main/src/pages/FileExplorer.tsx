@@ -2,9 +2,8 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { useImmer } from "use-immer";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
 import {
@@ -45,21 +44,8 @@ import {
     settingsOutline,
 } from "ionicons/icons";
 
-import {
-    checkDir,
-    checkPath,
-    checkSize,
-    deleteItem,
-    directoryChangesListener,
-    listdir,
-    mkdir,
-    renameItem,
-    uploadFile,
-} from "@lib/files/api";
-import { Directory } from "@lib/files/structures";
-import { useEffectOnce } from "@lib/hooks";
-import { getNewToken } from "@lib/security/api";
-import { decodeJWT } from "@lib/security/token";
+import { checkDir, checkPath, checkSize, deleteItem, mkdir, renameItem, uploadFile } from "@lib/files/api";
+import { useDirectory, useJobsManager, useTokenManager } from "@lib/hooks";
 import { randID } from "@lib/security/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
@@ -71,13 +57,9 @@ import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import DirectoryList from "@components/explorer/DirectoryList";
-import { Job } from "@components/explorer/JobEntry";
 import JobsList from "@components/explorer/JobsList";
-import { JobsManager, uiFeedbackContext } from "@components/explorer/context";
+import { uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
-
-const TOKEN_EARLY_REFRESH_THRESHOLD = 0.95; // 95% of token expiry then refresh
-const TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME = 5 * 1000; // 5 seconds
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -96,87 +78,9 @@ const FileExplorer: React.FC = () => {
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
-    const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
-    const jobsManager: JobsManager = useMemo(() => {
-        return {
-            getJob(id: string): Job {
-                return jobs.get(id)!;
-            },
-            addJob(id: string, job: Job): void {
-                updateJobs((draft) => {
-                    draft.set(id, job);
-                });
-            },
-            updateJob(id: string, newStatus: string, newProgress?: number | null, newWorker?: Worker): void {
-                updateJobs((draft) => {
-                    const job = draft.get(id);
-                    if (!job) {
-                        // We will fail semi-silently
-                        console.warn(`Job ${id} not found for job update`);
-                        return;
-                    }
-                    job.description = newStatus;
-                    if (newProgress !== undefined) {
-                        job.progress = newProgress;
-                    }
-                    if (newWorker) {
-                        job.worker = newWorker;
-                    }
-                });
-            },
-            updateProgress(id: string, newProgress: number | null): void {
-                updateJobs((draft) => {
-                    const job = draft.get(id);
-                    if (!job) {
-                        // We will fail semi-silently
-                        console.warn(`Job ${id} not found for progress update`);
-                        return;
-                    }
-                    job.progress = newProgress;
-                });
-            },
-            cancelJob(id: string): void {
-                updateJobs((draft) => {
-                    const job = draft.get(id);
-                    if (!job) {
-                        console.warn(`Job ${id} not found for job cancelling`);
-                        return;
-                    }
-                    console.debug(`Cancelling job '${id}'`);
-
-                    job.controller!.abort();
-                    if (job.worker) {
-                        job.worker.terminate();
-                    }
-
-                    draft.delete(id);
-                });
-            },
-            deleteJob(id: string): void {
-                updateJobs((draft) => {
-                    draft.delete(id);
-                });
-            },
-        };
-    }, [jobs, updateJobs]);
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
-    const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
-
-    const [tokenExpiry, _setTokenExpiry] = useState(() => {
-        const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.getToken()!);
-        return new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.serverInfo!.deltaTime;
-    });
-    const [tokenRefreshInterval, _setTokenRefreshInterval] = useState(() => {
-        const refreshInterval = Math.min(
-            tokenExpiry * TOKEN_EARLY_REFRESH_THRESHOLD, // Wait for threshold until sending request...
-            tokenExpiry - TOKEN_EARLY_REFRESH_MIN_REQUEST_TIME, // or so that we have enough time to receive response
-        );
-        console.debug(`Token refresh interval is ${refreshInterval / 1000} s`);
-        return refreshInterval;
-    });
-    const [tokenTimeoutActive, setTokenTimeoutActive] = useState(false);
 
     // Helper functions
     /**
@@ -198,6 +102,11 @@ const FileExplorer: React.FC = () => {
         [presentToast],
     );
 
+    // Hooks
+    const { jobs, jobsManager } = useJobsManager();
+    const { directoryContents, refreshContents } = useDirectory(requestedPathRef, presentSnackbar);
+    useTokenManager();
+
     // Functions
     /**
      * Logs the user out of the app and navigates back to the login screen.
@@ -217,35 +126,6 @@ const FileExplorer: React.FC = () => {
             await auth.logout();
         }
     }
-
-    /**
-     * Fetches the contents of the current directory and updates the component state to reflect
-     * the new contents.
-     *
-     * If the request fails, it displays a toast with an error message and does not update the
-     * component state.
-     *
-     * @param showToast If true, displays a toast telling the user that the page was refreshed
-     * @param sourceFolder The folder that triggered the refresh
-     */
-    const refreshContents = useCallback(
-        async (sourceFolder?: string) => {
-            const currentPath = requestedPathRef.current;
-            if (sourceFolder && sourceFolder !== currentPath) {
-                console.debug("Not refreshing contents because we are in a different folder");
-                // We are in a different folder than the one we want to refresh, so no need to refresh
-                return;
-            }
-
-            const response = await listdir(auth, currentPath);
-            if (!response.success) {
-                presentSnackbar(response.error!, "danger");
-                return;
-            }
-            setDirectoryContents(response.directory!);
-        },
-        [auth, presentSnackbar],
-    );
 
     /**
      * Prompts the user to choose a file, encrypts it, and uploads it to the current directory.
@@ -616,33 +496,6 @@ const FileExplorer: React.FC = () => {
         requestedPathRef.current = requestedPath;
         refreshContents();
     }, [requestedPath, refreshContents]);
-
-    useEffect(() => {
-        // Handle token renewal
-        if (tokenTimeoutActive) {
-            return;
-        }
-
-        setTokenTimeoutActive(true);
-        setTimeout(async () => {
-            console.debug("Renewing token as it is expiring soon");
-            const response = await getNewToken(auth);
-            if (!response.success) {
-                // I guess we fail silently...
-                return;
-            }
-
-            auth.setAuthInfo({ ...auth.authInfo!, token: response.token! });
-            console.log(`Renewed token; new token is ${response.token}`);
-            setTokenTimeoutActive(false);
-        }, tokenRefreshInterval);
-    }, [auth, tokenTimeoutActive, tokenRefreshInterval]);
-
-    useEffectOnce(() => {
-        directoryChangesListener(auth, (path) => {
-            refreshContents(path);
-        });
-    });
 
     // Render
     return (
