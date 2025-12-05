@@ -1,12 +1,13 @@
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, Path, Query, status
+
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.path import check_path_subdir
-from fastapi import Depends, HTTPException, Path, Query, status
 
 
 @encrypted_router.get(

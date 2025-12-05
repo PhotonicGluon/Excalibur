@@ -1,12 +1,13 @@
 from pathlib import Path as PathlibPath
 from typing import Annotated
 
+from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
+from fastapi.responses import PlainTextResponse
+
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
-from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
-from fastapi.responses import PlainTextResponse
 
 
 @encrypted_router.post(

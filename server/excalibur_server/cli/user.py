@@ -112,7 +112,7 @@ def get_account_creation_key():
     Assumes the server has been initialized.
     """
 
-    from excalibur_server.src.config import CONFIG
     from excalibur_server.src.bip39 import to_mnemonic
+    from excalibur_server.src.config import CONFIG
 
     typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation_key)))
