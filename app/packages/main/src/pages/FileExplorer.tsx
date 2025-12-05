@@ -45,8 +45,17 @@ import {
     settingsOutline,
 } from "ionicons/icons";
 
-import { checkDir, checkPath, checkSize, deleteItem, listdir, mkdir, renameItem, uploadFile } from "@lib/files/api";
-import { directoryChangesListener } from "@lib/files/api/listeners";
+import {
+    checkDir,
+    checkPath,
+    checkSize,
+    deleteItem,
+    directoryChangesListener,
+    listdir,
+    mkdir,
+    renameItem,
+    uploadFile,
+} from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { useEffectOnce } from "@lib/hooks";
 import { getNewToken } from "@lib/security/api";
