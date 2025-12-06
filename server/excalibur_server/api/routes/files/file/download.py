@@ -1,11 +1,12 @@
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, Path, status
+from fastapi.responses import FileResponse as FastAPIFileResponse
+
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_subdir
-from fastapi import Depends, HTTPException, Path, status
-from fastapi.responses import FileResponse as FastAPIFileResponse
 
 
 class FileResponse(FastAPIFileResponse):

@@ -2,12 +2,13 @@ import tempfile
 from typing import Annotated, Generator
 
 import aiofiles
+from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, Request, status
+from fastapi.responses import PlainTextResponse
+
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.path import check_path_length, check_path_subdir
-from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, Request, status
-from fastapi.responses import PlainTextResponse
 
 
 async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
