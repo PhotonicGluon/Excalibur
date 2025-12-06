@@ -668,7 +668,7 @@ const FileExplorer: React.FC = () => {
                                     presentSnackbar(`${options.message}`, options.color),
                             }}
                         >
-                            <DirectoryList {...directoryContents!} />
+                            <DirectoryList {...directoryContents!} showParentButton={requestedPath !== "."} />
                         </uiFeedbackContext.Provider>
                     )}
 

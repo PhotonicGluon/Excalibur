@@ -62,7 +62,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     async function onClickItem() {
         if (!isFile) {
             // Navigate into the directory
-            router.push(`/files/${props.fullpath}`, "forward", "push");
+            router.push(`/files/${props.fullpath}`, props.type !== "parent" ? "forward" : "back", "push");
             return;
         }
 
@@ -285,24 +285,38 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             break;
     }
 
-    const Popover = () => (
-        <IonContent>
-            <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
-                <IonItem button={true} onClick={() => onClickRename()}>
-                    <IonLabel>
-                        <IonIcon icon={pencilOutline} size="large" />
-                        <IonText className="pl-2">Rename</IonText>
-                    </IonLabel>
-                </IonItem>
-                <IonItem button={true} onClick={() => onClickDelete()}>
-                    <IonLabel>
-                        <IonIcon icon={trashOutline} size="large" />
-                        <IonText className="pl-2">Delete</IonText>
-                    </IonLabel>
-                </IonItem>
-            </IonList>
-        </IonContent>
-    );
+    let icon;
+    switch (props.type) {
+        case "file":
+            icon = mimetypeToIcon(props.mimetype, settings.iconStyle);
+            break;
+        case "directory":
+            icon = getIcon("folder", settings.iconStyle);
+            break;
+        case "parent":
+            icon = getIcon("returnUpBack", settings.iconStyle);
+            break;
+    }
+
+    const Popover = () =>
+        props.type !== "parent" && (
+            <IonContent>
+                <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
+                    <IonItem button={true} onClick={() => onClickRename()}>
+                        <IonLabel>
+                            <IonIcon icon={pencilOutline} size="large" />
+                            <IonText className="pl-2">Rename</IonText>
+                        </IonLabel>
+                    </IonItem>
+                    <IonItem button={true} onClick={() => onClickDelete()}>
+                        <IonLabel>
+                            <IonIcon icon={trashOutline} size="large" />
+                            <IonText className="pl-2">Delete</IonText>
+                        </IonLabel>
+                    </IonItem>
+                </IonList>
+            </IonContent>
+        );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
     return (
         <IonItem id={props.id} className={rowColourClass} button={true}>
@@ -312,20 +326,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     className="w-full"
                     onClick={() => onClickItem()}
                     onContextMenu={(e) => {
+                        if (props.type === "parent") return;
                         e.preventDefault();
                         showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
                     }}
                 >
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
-                            <IonIcon
-                                className="size-6"
-                                icon={
-                                    isFile
-                                        ? mimetypeToIcon(props.mimetype, settings.iconStyle)
-                                        : getIcon("folder", settings.iconStyle)
-                                }
-                            />
+                            <IonIcon className="size-6" icon={icon} />
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
                                 <IonLabel className="max-w-100 truncate">
                                     {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
@@ -339,12 +347,13 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 </IonGrid>
             </div>
 
-            {/* Ellipsis button */}
             <IonButtons className="m-0 size-12 justify-end" slot="end">
-                {/* Ellipsis menu trigger button */}
-                <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
-                    <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
-                </IonButton>
+                {/* Ellipsis menu button */}
+                {props.type !== "parent" && (
+                    <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
+                        <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
+                    </IonButton>
+                )}
             </IonButtons>
         </IonItem>
     );
