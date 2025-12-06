@@ -7,14 +7,10 @@ import {
     IonCheckbox,
     IonContent,
     IonHeader,
-    IonIcon,
     IonInput,
     IonInputPasswordToggle,
-    IonItem,
     IonLabel,
-    IonList,
     IonLoading,
-    IonMenu,
     IonMenuButton,
     IonPage,
     IonText,
@@ -23,14 +19,13 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { informationCircleOutline, logOutOutline, settingsOutline } from "ionicons/icons";
 
 import Preferences from "@lib/preferences";
 import { e2ee } from "@lib/security/e2ee";
 import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
-import Versions from "@components/Versions";
+import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 
 import logo from "@assets/icon.png";
@@ -237,55 +232,16 @@ const Login: React.FC = () => {
     return (
         <>
             {/* Hamburger menu */}
-            <IonMenu type="overlay" contentId="main-content">
-                <IonContent>
-                    <IonList
-                        lines="none"
-                        className="bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:flex [&_ion-label]:items-center"
-                    >
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                router.push("/settings", "forward", "push");
-                                menuController.close();
-                            }}
-                        >
-                            <IonLabel>
-                                <IonIcon icon={settingsOutline} size="large" />
-                                <IonText className="pl-2">Settings</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                router.push("/credits", "forward", "push");
-                                menuController.close();
-                            }}
-                        >
-                            <IonLabel>
-                                <IonIcon icon={informationCircleOutline} size="large" />
-                                <IonText className="pl-2">Credits</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        {!auth.serverInfo?.isFixed && (
-                            <IonItem
-                                button={true}
-                                onClick={() => {
-                                    auth.logout(true); // Fully log out
-                                    router.push("/server-choice", "forward", "replace");
-                                }}
-                            >
-                                <IonLabel>
-                                    <IonIcon icon={logOutOutline} size="large" />
-                                    <IonText className="pl-2">Change Server</IonText>
-                                </IonLabel>
-                            </IonItem>
-                        )}
-                    </IonList>
-
-                    <Versions className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block" />
-                </IonContent>
-            </IonMenu>
+            <SidebarMenu
+                mainContentID="main-content"
+                menuController={menuController}
+                preventExit={auth.serverInfo?.isFixed}
+                exitButtonText="Logout"
+                onExit={() => {
+                    auth.logout(true); // Also remove saved API URL
+                    router.push("/server-choice", "forward", "replace");
+                }}
+            ></SidebarMenu>
 
             <IonPage id="main-content">
                 {/* Header content */}

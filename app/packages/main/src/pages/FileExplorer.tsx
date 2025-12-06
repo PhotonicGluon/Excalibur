@@ -18,31 +18,19 @@ import {
     IonItem,
     IonLabel,
     IonList,
-    IonMenu,
     IonMenuButton,
     IonPage,
     IonPopover,
     IonRefresher,
     IonRefresherContent,
     IonText,
-    IonTitle,
     IonToolbar,
     RefresherEventDetail,
     useIonAlert,
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import {
-    add,
-    cloudUploadOutline,
-    documentOutline,
-    ellipsisVertical,
-    folderOutline,
-    informationCircleOutline,
-    keyOutline,
-    logOutOutline,
-    settingsOutline,
-} from "ionicons/icons";
+import { add, cloudUploadOutline, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, checkSize, deleteItem, mkdir, renameItem, uploadFile } from "@lib/files/api";
 import { useDirectory, useJobsManager, useTokenManager } from "@lib/hooks";
@@ -52,7 +40,7 @@ import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
-import Versions from "@components/Versions";
+import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
@@ -501,66 +489,12 @@ const FileExplorer: React.FC = () => {
     return (
         <>
             {/* Hamburger menu */}
-            <IonMenu type="overlay" contentId="main-content">
-                <IonHeader>
-                    <IonToolbar className="ion-padding-top min-h-16">
-                        <IonTitle>
-                            <div className="flex items-center gap-4">
-                                <IonText className="flex-none font-bold [font-variant:small-caps]">Excalibur</IonText>
-                                <IonText className="grow truncate text-right font-mono text-sm font-bold">
-                                    {auth.authInfo?.username}
-                                </IonText>
-                            </div>
-                        </IonTitle>
-                    </IonToolbar>
-                </IonHeader>
-                <IonContent>
-                    {/* Actions */}
-                    <IonList
-                        lines="none"
-                        className="bg-transparent [&_ion-item]:[--background:transparent] [&_ion-label]:flex [&_ion-label]:items-center"
-                    >
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                router.push("/settings", "forward", "push");
-                                menuController.close();
-                            }}
-                        >
-                            <IonLabel>
-                                <IonIcon icon={settingsOutline} size="large" />
-                                <IonText className="pl-2">Settings</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                router.push("/credits", "forward", "push");
-                                menuController.close();
-                            }}
-                        >
-                            <IonLabel>
-                                <IonIcon icon={informationCircleOutline} size="large" />
-                                <IonText className="pl-2">Credits</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem button={true} onClick={() => handleLogout()}>
-                            <IonLabel>
-                                <IonIcon icon={logOutOutline} size="large" />
-                                <IonText className="pl-2">Logout</IonText>
-                            </IonLabel>
-                        </IonItem>
-                    </IonList>
-
-                    {/* Details */}
-                    <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block *:text-xs md:*:text-sm">
-                        <Versions />
-                        <IonText color="medium">
-                            Delta time: <span className="font-mono">{auth.serverInfo!.deltaTime} ms</span>
-                        </IonText>
-                    </div>
-                </IonContent>
-            </IonMenu>
+            <SidebarMenu
+                mainContentID="main-content"
+                menuController={menuController}
+                exitButtonText="Logout"
+                onExit={() => handleLogout()}
+            ></SidebarMenu>
 
             {/* Ellipsis menu */}
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
