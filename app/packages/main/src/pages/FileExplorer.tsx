@@ -61,7 +61,7 @@ const FileExplorer: React.FC = () => {
     const router = useIonRouter();
 
     // States
-    const [presentAlert] = useIonAlert();
+    const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
@@ -270,7 +270,6 @@ const FileExplorer: React.FC = () => {
             }
             if (checkSizeResponse.isTooLarge) {
                 // We use an alert to make it more visible
-                // TODO: Does this work on mobile?
                 alert(`File ${file.name} is too large`);
                 continue;
             }
@@ -710,6 +709,7 @@ const FileExplorer: React.FC = () => {
                                 onMove: onMoveItem,
                                 onDelete: onDeleteItem,
                                 presentAlert: presentAlert,
+                                dismissAlert: dismissAlert,
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
                             }}

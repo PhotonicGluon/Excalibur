@@ -240,7 +240,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         {
                             text: "Yes",
                             role: "confirm",
-                            handler: () => _handleDownload(),
+                            handler: () => {
+                                _handleDownload();
+                                uiFeedback.dismissAlert();
+                            },
                         },
                     ],
                 });

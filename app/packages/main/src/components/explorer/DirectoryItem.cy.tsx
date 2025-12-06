@@ -53,6 +53,7 @@ describe("<DirectoryItem />", () => {
                             onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
+                            dismissAlert: () => Promise.resolve(),
                             presentToast: () => Promise.resolve(),
                         }}
                     >

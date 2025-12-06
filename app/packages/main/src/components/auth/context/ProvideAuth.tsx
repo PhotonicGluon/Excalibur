@@ -97,7 +97,6 @@ function useProvideAuth(): AuthProvider {
             const connected = await heartbeat(apiURL!, getToken()!, authInfo.key);
             if (!connected) {
                 // Heartbeat failed; kick back to login screen
-                // TODO: Does this work on mobile?
                 alert("Heartbeat failed, sending back to login screen");
                 console.debug("Heartbeat failed, sending back to login screen");
                 window.location.href = "/login";
