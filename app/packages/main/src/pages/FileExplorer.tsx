@@ -270,7 +270,6 @@ const FileExplorer: React.FC = () => {
             }
             if (checkSizeResponse.isTooLarge) {
                 // We use an alert to make it more visible
-                // TODO: Does this work on mobile?
                 alert(`File ${file.name} is too large`);
                 continue;
             }

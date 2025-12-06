@@ -16,3 +16,4 @@ overrides:
   "js-yaml": "^4.1.1"
 
 sideEffectsCache: false
+virtualStoreDirMaxLength: 60 # Make this a common setting between different operating systems
