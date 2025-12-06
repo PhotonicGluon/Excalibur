@@ -27,6 +27,8 @@ export interface UIFeedbackMethods {
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
     presentAlert: (options: AlertOptions) => void;
+    /** Dismiss a presented alert */
+    dismissAlert: () => void;
     /** Present a toast */
     presentToast: (options: ToastOptions) => void;
 }

@@ -61,7 +61,7 @@ const FileExplorer: React.FC = () => {
     const router = useIonRouter();
 
     // States
-    const [presentAlert] = useIonAlert();
+    const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
@@ -663,6 +663,7 @@ const FileExplorer: React.FC = () => {
                                 onRename: onRenameItem,
                                 onDelete: onDeleteItem,
                                 presentAlert: presentAlert,
+                                dismissAlert: dismissAlert,
                                 presentToast: (options: ToastOptions) =>
                                     presentSnackbar(`${options.message}`, options.color),
                             }}
