@@ -7,9 +7,11 @@ import { Directory, FileLike } from "@lib/files/structures";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
-interface ContainerProps extends Omit<Directory, "fullpath"> {
+interface ContainerProps extends Directory {
     /** The ID of the directory list */
     id?: string;
+    /** Whether to show the parent directory button */
+    showParentButton?: boolean;
 }
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -65,12 +67,20 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             {/* Items List */}
             <IonList lines="none" className="h-[calc(80vh-2rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
+                {props.showParentButton && (
+                    <DirectoryItem
+                        oddRow={false}
+                        name="(Go Back)"
+                        fullpath={props.fullpath.split("/").slice(0, -1).join("/")}
+                        type="parent"
+                    ></DirectoryItem>
+                )}
                 {props.items &&
                     props.items.length > 0 &&
                     sortItems().map((item, idx) => (
                         <DirectoryItem
                             key={idx}
-                            oddRow={idx % 2 === 0} // Treat row of index 0 as the first odd row
+                            oddRow={idx % 2 === (props.showParentButton ? 1 : 0)} // Treat row 0 as the first odd row
                             name={item.name}
                             fullpath={item.fullpath}
                             type={item.type}

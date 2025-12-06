@@ -40,6 +40,10 @@ const ICONS = {
         outline: icon.musicalNotesOutline,
         solid: icon.musicalNotes,
     },
+    returnUpBack: {
+        outline: icon.returnUpBackOutline,
+        solid: icon.returnUpBack,
+    },
 };
 export type IconName = keyof typeof ICONS;
 

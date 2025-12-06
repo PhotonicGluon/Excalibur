@@ -1,4 +1,4 @@
-export type ItemType = "file" | "directory";
+export type ItemType = "file" | "directory" | "parent";
 
 export interface FileLike {
     /** Name of item */
