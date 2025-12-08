@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
@@ -33,6 +33,7 @@ import {
 import { add, cloudUploadOutline, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, checkSize, deleteItem, mkdir, moveItem, renameItem, uploadFile } from "@lib/files/api";
+import { getAllFileEntries } from "@lib/files/webkit";
 import { useDirectory, useJobsManager, useTokenManager } from "@lib/hooks";
 import { randID } from "@lib/security/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
@@ -48,6 +49,8 @@ import DirectoryList from "@components/explorer/DirectoryList";
 import JobsList from "@components/explorer/JobsList";
 import { uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
+
+type UploadFile = PickedFile & { directory?: string };
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -123,13 +126,13 @@ const FileExplorer: React.FC = () => {
      * @param files The files to upload. If undefined, the user will be prompted to choose a file
      * @returns A promise which resolves when the upload is complete
      */
-    async function onUploadFile(files?: PickedFile[]) {
+    async function onUploadFile(files?: UploadFile[]) {
         /**
          * Handles the file upload process.
          *
-         * @param rawFile A {@link PickedFile} object
+         * @param rawFile A {@link UploadFile} object
          */
-        async function _handleUpload(rawFile: PickedFile) {
+        async function _handleUpload(rawFile: UploadFile) {
             // Create new job
             const jobID = randID();
             const controller = new AbortController();
@@ -227,6 +230,7 @@ const FileExplorer: React.FC = () => {
                 console.debug(`Uploading file ${rawFile.name}...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
                 const file = new File([blob], rawFile.name + ".exef");
+                // TODO: Handle included directory
                 const uploadResponse = await uploadFile(auth, requestedPath, file, true, signal); // Always force upload
                 if (!uploadResponse.success) {
                     presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
@@ -328,6 +332,57 @@ const FileExplorer: React.FC = () => {
 
             _handleUpload(file);
         }
+    }
+
+    /**
+     * Handles drag-and-drop of file item(s).
+     *
+     * @param e Drag and drop event
+     */
+    async function onDropFileItem(e: DragEvent<HTMLIonContentElement>) {
+        // Gather items
+        const items = [...e.dataTransfer.items]
+            .filter((item) => item.kind === "file") // Drag data item is a file _or_ directory
+            .map((item) => {
+                const entry = item.webkitGetAsEntry();
+                const file = item.getAsFile();
+                if (entry === null || file === null) return null;
+                return { entry, file };
+            })
+            .filter((item) => item !== null);
+
+        // Get the file objects to be uploaded
+        const files: File[] = [];
+        for await (const handle of items) {
+            if (handle.entry.isDirectory) {
+                console.log(`Dropped directory: ${handle.entry.name}`);
+
+                // TODO: Handle directory checking & creation
+                const entries = await getAllFileEntries([handle.entry]);
+                for (const entry of entries) {
+                    const file = await new Promise<File>((resolve, reject) => {
+                        entry.file(resolve, reject);
+                    });
+                    files.push(file);
+                }
+            } else {
+                console.debug(`Dropped file: ${handle.entry.name}`);
+                files.push(handle.file);
+            }
+        }
+
+        // Call upload file methods
+        onUploadFile(
+            files.map((file) => {
+                return {
+                    name: file.name,
+                    size: file.size,
+                    mimeType: file.type,
+                    blob: file,
+                    directory: file.webkitRelativePath.split("/").slice(0, -1).join("/"),
+                } as UploadFile;
+            }),
+        );
     }
 
     /**
@@ -579,21 +634,11 @@ const FileExplorer: React.FC = () => {
                     e.preventDefault();
                     setShowFileUploadOverlay(false);
                 }}
-                onDrop={(e) => {
+                onDrop={async (e: DragEvent<HTMLIonContentElement>) => {
                     e.preventDefault();
                     setShowFileUploadOverlay(false);
-                    const files = [...e.dataTransfer.items]
-                        .map((item) => item.getAsFile())
-                        .filter((file) => file !== null)
-                        .map((file) => {
-                            return {
-                                name: file.name,
-                                size: file.size,
-                                mimeType: file.type,
-                                blob: file,
-                            } as PickedFile;
-                        });
-                    onUploadFile(files);
+
+                    onDropFileItem(e);
                 }}
             >
                 {/* Header content */}
