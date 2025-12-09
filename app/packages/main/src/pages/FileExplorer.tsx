@@ -36,6 +36,7 @@ import { checkDir, checkPath, checkSize, deleteItem, mkdir, moveItem, renameItem
 import { getAllFileEntries } from "@lib/files/webkit";
 import { useDirectory, useJobsManager, useTokenManager } from "@lib/hooks";
 import { randID } from "@lib/security/util";
+import { getParent } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -192,8 +193,8 @@ const FileExplorer: React.FC = () => {
                 const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
                 const abortHandler = () => {
-                    // We catch errors here because if the worker is already terminating, calling
-                    // `abort()` might fail, which we can ignore
+                    // We catch errors here because if the worker is already terminating, calling `abort()` might fail,
+                    // which we can ignore
                     processor.abort().catch(() => {});
                 };
                 signal.addEventListener("abort", abortHandler);
@@ -371,7 +372,7 @@ const FileExplorer: React.FC = () => {
             }
         }
 
-        // Call upload file methods
+        // Call upload file method
         onUploadFile(
             files.map((file) => {
                 return {
@@ -379,7 +380,7 @@ const FileExplorer: React.FC = () => {
                     size: file.size,
                     mimeType: file.type,
                     blob: file,
-                    directory: file.webkitRelativePath.split("/").slice(0, -1).join("/"),
+                    directory: getParent(file.webkitRelativePath),
                 } as UploadFile;
             }),
         );
@@ -498,7 +499,7 @@ const FileExplorer: React.FC = () => {
      */
     async function onMoveItem(path: string) {
         // TODO: Update this method to be less janky - should just allow moving within GUI, not make a popup
-        const origPath = ("./" + path.split("/").slice(0, -1).join("/")).replace(/\/$/, "");
+        const origPath = getParent("./" + path);
 
         // Ask for user input
         presentAlert({

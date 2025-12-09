@@ -4,6 +4,7 @@ import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/reac
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
 import { Directory, FileLike } from "@lib/files/structures";
+import { getParent } from "@lib/util";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
@@ -71,7 +72,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                     <DirectoryItem
                         oddRow={false}
                         name="(Go Back)"
-                        fullpath={props.fullpath.split("/").slice(0, -1).join("/")}
+                        fullpath={getParent(props.fullpath)}
                         type="parent"
                     ></DirectoryItem>
                 )}
