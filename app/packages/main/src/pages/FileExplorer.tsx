@@ -36,7 +36,7 @@ import { checkDir, checkPath, checkSize, deleteItem, mkdir, moveItem, renameItem
 import { getAllFileEntries } from "@lib/files/webkit";
 import { useDirectory, useJobsManager, useTokenManager } from "@lib/hooks";
 import { randID } from "@lib/security/util";
-import { getParent } from "@lib/util";
+import { getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -231,8 +231,13 @@ const FileExplorer: React.FC = () => {
                 console.debug(`Uploading file ${rawFile.name}...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
                 const file = new File([blob], rawFile.name + ".exef");
-                // TODO: Handle included directory
-                const uploadResponse = await uploadFile(auth, requestedPath, file, true, signal); // Always force upload
+                const uploadResponse = await uploadFile(
+                    auth,
+                    requestedPath + (rawFile.directory ? "/" + rawFile.directory : ""),
+                    file,
+                    true,
+                    signal,
+                ); // Always force upload
                 if (!uploadResponse.success) {
                     presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                     throw new Error(uploadResponse.error);
@@ -279,8 +284,35 @@ const FileExplorer: React.FC = () => {
                 continue;
             }
 
+            // Check if containing directories exist
+            if (file.directory) {
+                let dirs = getParents(file.directory + "/redundant"); // So that the target directory is included
+                dirs = dirs.toReversed().slice(1);
+
+                for (const dir of dirs) {
+                    const checkDirResponse = await checkPath(auth, dir);
+                    if (checkDirResponse.success) {
+                        // Directory exists, continue
+                    } else if (checkDirResponse.error === "Path not found") {
+                        // Make directory
+                        const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir));
+                        if (!createDirResponse.success) {
+                            presentSnackbar(
+                                `Failed to create containing directory: ${createDirResponse.error}`,
+                                "danger",
+                            );
+                            return;
+                        }
+                    } else {
+                        presentSnackbar(`Failed to check containing directory: ${checkDirResponse.error}`, "danger");
+                        return;
+                    }
+                }
+            }
+
             // Check if file exists
-            const eventualPath = `${requestedPath}/${file.name}` + ".exef"; // The uploaded file has this extension
+            const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
+            const eventualPath = `${requestedPath}/${filePath}` + ".exef"; // The uploaded file has this extension
             const checkResponse = await checkPath(auth, eventualPath);
             if (!checkResponse.success) {
                 switch (checkResponse.error) {
@@ -358,7 +390,6 @@ const FileExplorer: React.FC = () => {
             if (handle.entry.isDirectory) {
                 console.log(`Dropped directory: ${handle.entry.name}`);
 
-                // TODO: Handle directory checking & creation
                 const entries = await getAllFileEntries([handle.entry]);
                 for (const entry of entries) {
                     const file = await new Promise<File>((resolve, reject) => {
