@@ -4,8 +4,7 @@ import { documentOutline, musicalNotesOutline } from "ionicons/icons";
 import { settingsContext } from "@components/settings/context";
 
 import DirectoryItem, { ContainerProps } from "./DirectoryItem";
-import { Job } from "./JobEntry";
-import { uiFeedbackContext } from "./context";
+import { explorerContext } from "./context";
 
 describe("<DirectoryItem />", () => {
     function renderComponent(
@@ -38,18 +37,10 @@ describe("<DirectoryItem />", () => {
                         save: () => Promise.resolve(),
                     }}
                 >
-                    <uiFeedbackContext.Provider
+                    <explorerContext.Provider
                         value={{
-                            jobsManager: {
-                                addJob: (_id: string, _job: Job) => {},
-                                getJob: (_id: string) => {
-                                    return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
-                                },
-                                updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
-                                updateProgress: (_id: string, _newProgress: number | null) => {},
-                                cancelJob: (_id: string) => {},
-                                deleteJob: (_id: string) => {},
-                            },
+                            pathRef: { current: "/" },
+                            onMove: () => Promise.resolve(),
                             onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
@@ -58,7 +49,7 @@ describe("<DirectoryItem />", () => {
                         }}
                     >
                         <DirectoryItem id="directory-item" {...defaultProps} />
-                    </uiFeedbackContext.Provider>
+                    </explorerContext.Provider>
                 </settingsContext.Provider>
             </IonApp>,
         );

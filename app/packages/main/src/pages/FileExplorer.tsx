@@ -48,7 +48,7 @@ import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
 import JobsList from "@components/explorer/JobsList";
-import { uiFeedbackContext } from "@components/explorer/context";
+import { explorerContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 type UploadFile = PickedFile & { directory?: string };
@@ -95,9 +95,8 @@ const FileExplorer: React.FC = () => {
 
     // Hooks
     const { jobs, jobsManager } = useJobsManager();
-    const { directoryContents: _directoryContents, refreshContents } = useDirectory(
-        requestedPathRef,
-        (options: ToastOptions) => presentSnackbar(options.message as string, options.color),
+    const { refreshContents } = useDirectory(requestedPathRef, (options: ToastOptions) =>
+        presentSnackbar(options.message as string, options.color),
     );
     useTokenManager();
 
@@ -754,10 +753,10 @@ const FileExplorer: React.FC = () => {
                         </IonFabList>
                     </IonFab>
 
-                    {/* Files list */}
-                    <uiFeedbackContext.Provider
+                    {/* Files */}
+                    <explorerContext.Provider
                         value={{
-                            jobsManager: jobsManager,
+                            pathRef: requestedPathRef,
                             onRename: onRenameItem,
                             onMove: onMoveItem,
                             onDelete: onDeleteItem,
@@ -767,8 +766,8 @@ const FileExplorer: React.FC = () => {
                                 presentSnackbar(`${options.message}`, options.color),
                         }}
                     >
-                        <FilesArea requestedPathRef={requestedPathRef}></FilesArea>
-                    </uiFeedbackContext.Provider>
+                        <FilesArea />
+                    </explorerContext.Provider>
 
                     {/* Changed vault key notice */}
                     {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (

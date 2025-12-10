@@ -1,4 +1,4 @@
-import { DragEvent, RefObject, useEffect, useState } from "react";
+import { DragEvent, useEffect, useState } from "react";
 
 import { IonIcon, IonText } from "@ionic/react";
 import { cloudUploadOutline } from "ionicons/icons";
@@ -6,21 +6,17 @@ import { cloudUploadOutline } from "ionicons/icons";
 import { useDirectory } from "@lib/hooks";
 
 import DirectoryList from "@components/explorer/DirectoryList";
-import { useUIFeedback } from "@components/explorer/context";
+import { useExplorerContext } from "@components/explorer/context";
 
-interface ContainerProps {
-    requestedPathRef: RefObject<string>;
-}
-
-const FilesArea: React.FC<ContainerProps> = (props) => {
+const FilesArea: React.FC = () => {
     // States
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
 
     // Contexts
-    const uiFeedback = useUIFeedback();
+    const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents } = useDirectory(props.requestedPathRef, uiFeedback.presentToast);
+    const { directoryContents, refreshContents } = useDirectory(explorerContext.pathRef, explorerContext.presentToast);
 
     // Effects
     useEffect(() => {
@@ -57,7 +53,7 @@ const FilesArea: React.FC<ContainerProps> = (props) => {
 
             {/* Files list */}
             {directoryContents && (
-                <DirectoryList {...directoryContents!} showParentButton={props.requestedPathRef.current !== "."} />
+                <DirectoryList {...directoryContents!} showParentButton={explorerContext.pathRef.current !== "."} />
             )}
         </div>
     );

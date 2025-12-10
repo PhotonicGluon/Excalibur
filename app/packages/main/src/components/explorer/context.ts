@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { RefObject, createContext, useContext } from "react";
 
 import { AlertOptions, ToastOptions } from "@ionic/core";
 
@@ -17,10 +17,11 @@ export interface JobsManager {
 }
 
 /**
- * Methods for UI feedback, specifically for file explorer components.
+ * Explorer context to be shared among explorer components that require it.
  */
-export interface UIFeedbackMethods {
-    jobsManager: JobsManager;
+export interface ExplorerContext {
+    /** Reference to the current path */
+    pathRef: RefObject<string>;
     /** Function to call when renaming is requested */
     onRename: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when moving is requested */
@@ -35,13 +36,13 @@ export interface UIFeedbackMethods {
     presentToast: (options: ToastOptions) => void;
 }
 
-export const uiFeedbackContext = createContext<UIFeedbackMethods>(null!);
+export const explorerContext = createContext<ExplorerContext>(null!);
 
 /**
  * Hook to get the UI feedback methods.
  *
  * @returns The UI feedback methods.
  */
-export function useUIFeedback(): UIFeedbackMethods {
-    return useContext(uiFeedbackContext);
+export function useExplorerContext(): ExplorerContext {
+    return useContext(explorerContext);
 }

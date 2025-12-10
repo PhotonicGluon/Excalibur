@@ -25,6 +25,7 @@ import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ioni
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
+import { useJobsManager } from "@lib/hooks";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { randID } from "@lib/security/util";
 import { bytesToHumanReadable } from "@lib/util";
@@ -32,7 +33,7 @@ import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
-import { useUIFeedback } from "@components/explorer/context";
+import { useExplorerContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
 
 type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
@@ -53,7 +54,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const auth = useAuth();
     const settings = useSettings();
     const router = useIonRouter();
-    const uiFeedback = useUIFeedback();
+    const explorerContext = useExplorerContext();
+
+    // Hooks
+    const { jobsManager } = useJobsManager();
 
     // Functions
     /**
@@ -77,7 +81,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const controller = new AbortController();
             const signal = controller.signal;
 
-            uiFeedback.jobsManager.addJob(jobID, {
+            jobsManager.addJob(jobID, {
                 direction: "download",
                 filename: fileName,
                 description: "Downloading...",
@@ -86,7 +90,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
 
             if (Capacitor.getPlatform() === "web") {
-                uiFeedback.presentToast({
+                explorerContext.presentToast({
                     message: "Downloading...",
                     duration: 2000,
                     color: "primary",
@@ -98,7 +102,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 // Send request for file
                 const response = await downloadFile(auth, props.fullpath, signal);
                 if (!response.success) {
-                    uiFeedback.presentToast({
+                    explorerContext.presentToast({
                         message: `Failed to get file: ${response.error}`,
                         duration: 2000,
                         color: "danger",
@@ -114,7 +118,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 const worker = new DecryptionProcessorWorker();
                 const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
-                uiFeedback.jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
+                jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
 
                 let fileDataBlob: Blob;
                 try {
@@ -128,7 +132,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {
-                                uiFeedback.jobsManager.updateProgress(jobID, progress);
+                                jobsManager.updateProgress(jobID, progress);
                             }
                         }),
                     );
@@ -137,13 +141,13 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
                     const err = e as Error;
                     if (err.message.includes("header MAC")) {
-                        uiFeedback.presentToast({
+                        explorerContext.presentToast({
                             message: `Failed to decrypt file: vault key may be incorrect`,
                             duration: 2000,
                             color: "danger",
                         });
                     } else {
-                        uiFeedback.presentToast({
+                        explorerContext.presentToast({
                             message: `Failed to decrypt file: ${err.message}`,
                             duration: 2000,
                             color: "danger",
@@ -158,7 +162,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 if (signal.aborted) throw new Error("Cancelled");
 
                 // Save file
-                uiFeedback.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
+                jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
                 console.debug(`Saving file ${fileName}...`);
                 try {
                     if (Capacitor.getPlatform() === "web") {
@@ -173,7 +177,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 0);
-                        uiFeedback.presentToast({
+                        explorerContext.presentToast({
                             message: "File downloaded",
                             duration: 2000,
                             color: "success",
@@ -189,14 +193,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                 console.error(error);
                             },
                         });
-                        uiFeedback.presentToast({
+                        explorerContext.presentToast({
                             message: "File saved to the documents folder",
                             duration: 2000,
                             color: "success",
                         });
                     }
                 } catch (e) {
-                    uiFeedback.presentToast({
+                    explorerContext.presentToast({
                         message: `Failed to save file: ${(e as Error).message}`,
                         duration: 2000,
                         color: "danger",
@@ -209,7 +213,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     return;
                 }
             } finally {
-                uiFeedback.jobsManager.deleteJob(jobID);
+                jobsManager.deleteJob(jobID);
             }
         }
 
@@ -222,7 +226,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 });
 
                 // If no error was thrown, that means that the file already exists on device
-                uiFeedback.presentAlert({
+                explorerContext.presentAlert({
                     header: "File already exists",
                     message: "Do you want to override the existing file?",
                     buttons: [
@@ -230,7 +234,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             text: "No",
                             role: "cancel",
                             handler: () => {
-                                uiFeedback.presentToast({
+                                explorerContext.presentToast({
                                     message: "Download cancelled",
                                     duration: 2000,
                                     color: "warning",
@@ -242,7 +246,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             role: "confirm",
                             handler: () => {
                                 _handleDownload();
-                                uiFeedback.dismissAlert();
+                                explorerContext.dismissAlert();
                             },
                         },
                     ],
@@ -260,7 +264,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
-        await uiFeedback.onRename(props.fullpath, !isFile);
+        await explorerContext.onRename(props.fullpath, !isFile);
         dismissPopover();
     }
 
@@ -268,7 +272,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the move button on an item.
      */
     async function onClickMove() {
-        await uiFeedback.onMove(props.fullpath);
+        await explorerContext.onMove(props.fullpath);
         dismissPopover();
     }
 
@@ -276,7 +280,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the delete button on an item.
      */
     async function onClickDelete() {
-        await uiFeedback.onDelete(props.fullpath, !isFile);
+        await explorerContext.onDelete(props.fullpath, !isFile);
         dismissPopover();
     }
 

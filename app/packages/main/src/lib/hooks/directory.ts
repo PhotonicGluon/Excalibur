@@ -19,11 +19,11 @@ export function useDirectory(
     requestedPathRef: RefObject<string>,
     presentToast: (options: ToastOptions) => void,
 ): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
-    // Contexts
-    const auth = useAuth();
-
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+
+    // Contexts
+    const auth = useAuth();
 
     // Functions
     /**
