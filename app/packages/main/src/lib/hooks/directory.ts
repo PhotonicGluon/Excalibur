@@ -1,6 +1,6 @@
 import { RefObject, useCallback, useState } from "react";
 
-import { Color } from "@ionic/core/components";
+import { ToastOptions } from "@ionic/core/components";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
@@ -12,12 +12,12 @@ import { useAuth } from "@components/auth/context";
  * React hook that provides access to directory listing functionality.
  *
  * @param requestedPathRef Current directory path
- * @param presentSnackbar Function that presents a snackbar message
+ * @param presentToast Function that presents a toast message
  * @returns Object containing directory contents and a function to refresh them
  */
 export function useDirectory(
     requestedPathRef: RefObject<string>,
-    presentSnackbar: (message: string, color: Color) => void,
+    presentToast: (options: ToastOptions) => void,
 ): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
     // Contexts
     const auth = useAuth();
@@ -47,12 +47,15 @@ export function useDirectory(
 
             const response = await listdir(auth, currentPath);
             if (!response.success) {
-                presentSnackbar(response.error!, "danger");
+                presentToast({
+                    message: response.error!,
+                    color: "danger",
+                });
                 return;
             }
             setDirectoryContents(response.directory!);
         },
-        [auth, presentSnackbar, requestedPathRef],
+        [auth, presentToast, requestedPathRef],
     );
 
     // Effects

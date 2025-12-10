@@ -30,7 +30,7 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { add, cloudUploadOutline, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
+import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, checkSize, deleteItem, mkdir, moveItem, renameItem, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
@@ -46,7 +46,7 @@ import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
-import DirectoryList from "@components/explorer/DirectoryList";
+import FilesArea from "@components/explorer/FilesArea";
 import JobsList from "@components/explorer/JobsList";
 import { uiFeedbackContext } from "@components/explorer/context";
 import { useSettings } from "@components/settings/context";
@@ -72,7 +72,6 @@ const FileExplorer: React.FC = () => {
     const [showJobsPopover, setShowJobsPopover] = useState(false);
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
-    const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
 
     // Helper functions
     /**
@@ -96,7 +95,10 @@ const FileExplorer: React.FC = () => {
 
     // Hooks
     const { jobs, jobsManager } = useJobsManager();
-    const { directoryContents, refreshContents } = useDirectory(requestedPathRef, presentSnackbar);
+    const { directoryContents: _directoryContents, refreshContents } = useDirectory(
+        requestedPathRef,
+        (options: ToastOptions) => presentSnackbar(options.message as string, options.color),
+    );
     useTokenManager();
 
     // Functions
@@ -372,7 +374,8 @@ const FileExplorer: React.FC = () => {
      *
      * @param e Drag and drop event
      */
-    async function onDropFileItem(e: DragEvent<HTMLIonContentElement>) {
+    // TODO: Move
+    async function _onDropFileItem(e: DragEvent<HTMLIonContentElement>) {
         // Gather items
         const items = [...e.dataTransfer.items]
             .filter((item) => item.kind === "file") // Drag data item is a file _or_ directory
@@ -611,10 +614,8 @@ const FileExplorer: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Update path
         requestedPathRef.current = requestedPath;
-        refreshContents();
-    }, [requestedPath, refreshContents]);
+    }, [requestedPath]);
 
     // Render
     return (
@@ -656,23 +657,7 @@ const FileExplorer: React.FC = () => {
             </IonPopover>
 
             {/* Main content */}
-            <IonPage
-                id="main-content"
-                onDragOver={(e) => {
-                    e.preventDefault();
-                    setShowFileUploadOverlay(true);
-                }}
-                onDragLeave={(e) => {
-                    e.preventDefault();
-                    setShowFileUploadOverlay(false);
-                }}
-                onDrop={async (e: DragEvent<HTMLIonContentElement>) => {
-                    e.preventDefault();
-                    setShowFileUploadOverlay(false);
-
-                    onDropFileItem(e);
-                }}
-            >
+            <IonPage id="main-content">
                 {/* Header content */}
                 <IonHeader>
                     <IonToolbar className="[&::part(container)]:min-h-16">
@@ -735,14 +720,6 @@ const FileExplorer: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
-                    {/* File upload overlay */}
-                    {showFileUploadOverlay && (
-                        <div className="fixed top-0 right-0 bottom-0 left-0 z-50 flex flex-col items-center justify-center bg-black/50">
-                            <IonIcon icon={cloudUploadOutline} className="size-20" />
-                            <IonText>Drop files here to upload</IonText>
-                        </div>
-                    )}
-
                     {/* Vault key info dialog */}
                     <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
 
@@ -778,22 +755,20 @@ const FileExplorer: React.FC = () => {
                     </IonFab>
 
                     {/* Files list */}
-                    {directoryContents && (
-                        <uiFeedbackContext.Provider
-                            value={{
-                                jobsManager: jobsManager,
-                                onRename: onRenameItem,
-                                onMove: onMoveItem,
-                                onDelete: onDeleteItem,
-                                presentAlert: presentAlert,
-                                dismissAlert: dismissAlert,
-                                presentToast: (options: ToastOptions) =>
-                                    presentSnackbar(`${options.message}`, options.color),
-                            }}
-                        >
-                            <DirectoryList {...directoryContents!} showParentButton={requestedPath !== "."} />
-                        </uiFeedbackContext.Provider>
-                    )}
+                    <uiFeedbackContext.Provider
+                        value={{
+                            jobsManager: jobsManager,
+                            onRename: onRenameItem,
+                            onMove: onMoveItem,
+                            onDelete: onDeleteItem,
+                            presentAlert: presentAlert,
+                            dismissAlert: dismissAlert,
+                            presentToast: (options: ToastOptions) =>
+                                presentSnackbar(`${options.message}`, options.color),
+                        }}
+                    >
+                        <FilesArea requestedPathRef={requestedPathRef}></FilesArea>
+                    </uiFeedbackContext.Provider>
 
                     {/* Changed vault key notice */}
                     {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (
