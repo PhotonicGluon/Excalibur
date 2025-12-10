@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { ToastOptions } from "@ionic/core/components";
+import { Color } from "@ionic/core/components";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
@@ -11,13 +11,13 @@ import { useAuth } from "@components/auth/context";
 /**
  * React hook that provides access to directory listing functionality.
  *
- * @param path Current directory path
- * @param presentToast Function that presents a toast message
+ * @param currentFolder Current directory path
+ * @param presentSnackbar Function that presents a snackbar message
  * @returns Object containing directory contents and a function to refresh them
  */
 export function useDirectory(
-    path: string,
-    presentToast: (options: ToastOptions) => void,
+    currentFolder: string,
+    presentSnackbar: (message: string, colour?: Color) => void,
 ): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
@@ -38,23 +38,21 @@ export function useDirectory(
      */
     const refreshContents = useCallback(
         async (sourceFolder?: string) => {
-            if (sourceFolder && sourceFolder !== path) {
-                console.debug("Not refreshing contents because we are in a different folder");
+            // FIXME: `currentFolder` here is still caching the old path even though it shouldn't
+            if (sourceFolder && sourceFolder !== currentFolder) {
+                console.debug(`Not refreshing contents (changed '${sourceFolder}' is not current '${currentFolder}')`);
                 // We are in a different folder than the one we want to refresh, so no need to refresh
                 return;
             }
 
-            const response = await listdir(auth, path);
+            const response = await listdir(auth, currentFolder);
             if (!response.success) {
-                presentToast({
-                    message: response.error!,
-                    color: "danger",
-                });
+                presentSnackbar(response.error!, "danger");
                 return;
             }
             setDirectoryContents(response.directory!);
         },
-        [auth, presentToast, path],
+        [auth, presentSnackbar, currentFolder],
     );
 
     // Effects

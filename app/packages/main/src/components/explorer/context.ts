@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
-import { AlertOptions, ToastOptions } from "@ionic/core";
+import { AlertOptions, Color } from "@ionic/core";
+import { HookOverlayOptions } from "@ionic/react/dist/types/hooks/HookOverlayOptions";
 
 import { Job } from "./JobEntry";
 
@@ -29,11 +30,11 @@ export interface ExplorerContext {
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
-    presentAlert: (options: AlertOptions) => void;
+    presentAlert: (options: AlertOptions & HookOverlayOptions) => void;
     /** Dismiss a presented alert */
     dismissAlert: () => void;
-    /** Present a toast */
-    presentToast: (options: ToastOptions) => void;
+    /** Present a snackbar */
+    presentSnackbar: (message: string, colour?: Color) => void;
 }
 
 export const explorerContext = createContext<ExplorerContext>(null!);

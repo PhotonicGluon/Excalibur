@@ -1,12 +1,15 @@
+import { PickedFile } from "@capawesome/capacitor-file-picker";
 import { DragEvent, useEffect, useState } from "react";
 
 import { IonIcon, IonText } from "@ionic/react";
 import { cloudUploadOutline } from "ionicons/icons";
 
-import { useDirectory } from "@lib/hooks";
+import { useDirectory, useUploadFile } from "@lib/hooks";
 
 import DirectoryList from "@components/explorer/DirectoryList";
 import { useExplorerContext } from "@components/explorer/context";
+
+export type UploadFile = PickedFile & { directory?: string };
 
 const FilesArea: React.FC = () => {
     // States
@@ -16,7 +19,8 @@ const FilesArea: React.FC = () => {
     const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentToast);
+    const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentSnackbar);
+    const { onDropFileItem } = useUploadFile();
 
     // Effects
     useEffect(() => {
@@ -34,13 +38,11 @@ const FilesArea: React.FC = () => {
                 e.preventDefault();
                 setShowFileUploadOverlay(false);
             }}
-            onDrop={async (e: DragEvent<HTMLDivElement>) => {
+            onDrop={async (e: DragEvent) => {
                 e.preventDefault();
                 setShowFileUploadOverlay(false);
 
-                console.log(e);
-
-                // onDropFileItem(e);
+                onDropFileItem(e);
             }}
         >
             {/* File upload overlay */}

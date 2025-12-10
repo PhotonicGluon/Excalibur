@@ -45,7 +45,7 @@ describe("<DirectoryItem />", () => {
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
                             dismissAlert: () => Promise.resolve(),
-                            presentToast: () => Promise.resolve(),
+                            presentSnackbar: () => Promise.resolve(),
                         }}
                     >
                         <DirectoryItem id="directory-item" {...defaultProps} />
