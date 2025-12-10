@@ -16,12 +16,12 @@ const FilesArea: React.FC = () => {
     const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents } = useDirectory(explorerContext.pathRef, explorerContext.presentToast);
+    const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentToast);
 
     // Effects
     useEffect(() => {
         refreshContents();
-    });
+    }, [explorerContext.path, refreshContents]);
 
     // Render
     return (
@@ -53,7 +53,7 @@ const FilesArea: React.FC = () => {
 
             {/* Files list */}
             {directoryContents && (
-                <DirectoryList {...directoryContents!} showParentButton={explorerContext.pathRef.current !== "."} />
+                <DirectoryList {...directoryContents!} showParentButton={explorerContext.path !== "."} />
             )}
         </div>
     );

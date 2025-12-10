@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { DragEvent, useCallback, useRef, useState } from "react";
 import { useParams } from "react-router";
 
 import { Color, ToastOptions, menuController } from "@ionic/core/components";
@@ -57,7 +57,6 @@ const FileExplorer: React.FC = () => {
     // Get file path parameter
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
-    const requestedPathRef = useRef(requestedPath); // We use a ref to get the latest value of `requestedPath`
 
     // Get contexts
     const auth = useAuth();
@@ -95,7 +94,7 @@ const FileExplorer: React.FC = () => {
 
     // Hooks
     const { jobs, jobsManager } = useJobsManager();
-    const { refreshContents } = useDirectory(requestedPathRef, (options: ToastOptions) =>
+    const { refreshContents } = useDirectory(requestedPath, (options: ToastOptions) =>
         presentSnackbar(options.message as string, options.color),
     );
     useTokenManager();
@@ -611,11 +610,6 @@ const FileExplorer: React.FC = () => {
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
-    // Effects
-    useEffect(() => {
-        requestedPathRef.current = requestedPath;
-    }, [requestedPath]);
-
     // Render
     return (
         <>
@@ -756,7 +750,7 @@ const FileExplorer: React.FC = () => {
                     {/* Files */}
                     <explorerContext.Provider
                         value={{
-                            pathRef: requestedPathRef,
+                            path: requestedPath,
                             onRename: onRenameItem,
                             onMove: onMoveItem,
                             onDelete: onDeleteItem,

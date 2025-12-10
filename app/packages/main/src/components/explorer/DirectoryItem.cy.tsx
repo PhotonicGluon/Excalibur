@@ -39,7 +39,7 @@ describe("<DirectoryItem />", () => {
                 >
                     <explorerContext.Provider
                         value={{
-                            pathRef: { current: "/" },
+                            path: "/",
                             onMove: () => Promise.resolve(),
                             onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),

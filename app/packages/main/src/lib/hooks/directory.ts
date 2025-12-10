@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { ToastOptions } from "@ionic/core/components";
 
@@ -11,12 +11,12 @@ import { useAuth } from "@components/auth/context";
 /**
  * React hook that provides access to directory listing functionality.
  *
- * @param requestedPathRef Current directory path
+ * @param path Current directory path
  * @param presentToast Function that presents a toast message
  * @returns Object containing directory contents and a function to refresh them
  */
 export function useDirectory(
-    requestedPathRef: RefObject<string>,
+    path: string,
     presentToast: (options: ToastOptions) => void,
 ): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
     // States
@@ -38,14 +38,13 @@ export function useDirectory(
      */
     const refreshContents = useCallback(
         async (sourceFolder?: string) => {
-            const currentPath = requestedPathRef.current;
-            if (sourceFolder && sourceFolder !== currentPath) {
+            if (sourceFolder && sourceFolder !== path) {
                 console.debug("Not refreshing contents because we are in a different folder");
                 // We are in a different folder than the one we want to refresh, so no need to refresh
                 return;
             }
 
-            const response = await listdir(auth, currentPath);
+            const response = await listdir(auth, path);
             if (!response.success) {
                 presentToast({
                     message: response.error!,
@@ -55,7 +54,7 @@ export function useDirectory(
             }
             setDirectoryContents(response.directory!);
         },
-        [auth, presentToast, requestedPathRef],
+        [auth, presentToast, path],
     );
 
     // Effects
