@@ -25,7 +25,6 @@ import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ioni
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
-import { useJobsManager } from "@lib/hooks";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { randID } from "@lib/security/util";
 import { bytesToHumanReadable } from "@lib/util";
@@ -56,9 +55,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const router = useIonRouter();
     const explorerContext = useExplorerContext();
 
-    // Hooks
-    const { jobsManager } = useJobsManager();
-
     // Functions
     /**
      * Handles the user clicking on an item.
@@ -81,7 +77,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             const controller = new AbortController();
             const signal = controller.signal;
 
-            jobsManager.addJob(jobID, {
+            explorerContext.jobsManager.addJob(jobID, {
                 direction: "download",
                 filename: fileName,
                 description: "Downloading...",
@@ -110,7 +106,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 const worker = new DecryptionProcessorWorker();
                 const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
-                jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
+                explorerContext.jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
 
                 let fileDataBlob: Blob;
                 try {
@@ -124,7 +120,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {
-                                jobsManager.updateProgress(jobID, progress);
+                                explorerContext.jobsManager.updateProgress(jobID, progress);
                             }
                         }),
                     );
@@ -146,7 +142,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 if (signal.aborted) throw new Error("Cancelled");
 
                 // Save file
-                jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
+                explorerContext.jobsManager.updateJob(jobID, "Saving...", null); // Must specify null to reset progress
                 console.debug(`Saving file ${fileName}...`);
                 try {
                     if (Capacitor.getPlatform() === "web") {
@@ -185,7 +181,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     return;
                 }
             } finally {
-                jobsManager.deleteJob(jobID);
+                explorerContext.jobsManager.deleteJob(jobID);
             }
         }
 

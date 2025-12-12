@@ -82,9 +82,9 @@ const FileExplorer: React.FC = () => {
     );
 
     // Hooks
-    const { jobs, jobsManager } = useJobsManager();
+    const jobsManager = useJobsManager();
     const { refreshContents } = useDirectory(requestedPath, presentSnackbar);
-    const { onUploadFile } = useUploadFile(requestedPath, presentAlert, presentSnackbar);
+    const { onUploadFile } = useUploadFile(requestedPath, jobsManager, presentAlert, presentSnackbar);
     useTokenManager();
 
     // Functions
@@ -359,9 +359,9 @@ const FileExplorer: React.FC = () => {
                                     setShowJobsPopover(true);
                                 }}
                             >
-                                {jobs.size > 0 ? (
+                                {jobsManager.jobs.size > 0 ? (
                                     <span>
-                                        {jobs.size} Job{jobs.size === 1 ? "" : "s"}
+                                        {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
                                     </span>
                                 ) : (
                                     <span>No Jobs</span>
@@ -381,7 +381,7 @@ const FileExplorer: React.FC = () => {
                             >
                                 <IonContent className="ion-padding rounded-lg">
                                     <JobsList
-                                        jobs={jobs}
+                                        jobs={jobsManager.jobs}
                                         onCancelJob={(jobID: string) => {
                                             jobsManager.cancelJob(jobID);
                                         }}
@@ -440,6 +440,7 @@ const FileExplorer: React.FC = () => {
                     <explorerContext.Provider
                         value={{
                             path: requestedPath,
+                            jobsManager: jobsManager,
                             onRename: onRenameItem,
                             onMove: onMoveItem,
                             onDelete: onDeleteItem,
