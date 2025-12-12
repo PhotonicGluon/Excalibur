@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Color } from "@ionic/core/components";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
-import { useEffectOnce } from "@lib/hooks/generic";
+import { useMount } from "@lib/hooks/generic";
 
 import { useAuth } from "@components/auth/context";
 
@@ -21,6 +21,7 @@ export function useDirectory(
 ): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+    const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);
 
     // Contexts
     const auth = useAuth();
@@ -38,7 +39,6 @@ export function useDirectory(
      */
     const refreshContents = useCallback(
         async (sourceFolder?: string) => {
-            // FIXME: `currentFolder` here is still caching the old path even though it shouldn't
             if (sourceFolder && sourceFolder !== currentFolder) {
                 console.debug(`Not refreshing contents (changed '${sourceFolder}' is not current '${currentFolder}')`);
                 // We are in a different folder than the one we want to refresh, so no need to refresh
@@ -56,10 +56,12 @@ export function useDirectory(
     );
 
     // Effects
-    useEffectOnce(() => {
-        directoryChangesListener(auth, (path) => {
-            refreshContents(path);
-        });
+    useEffect(() => {
+        refreshContentsRef.current = refreshContents;
+    }, [refreshContents]);
+
+    useMount(() => {
+        directoryChangesListener(auth, refreshContentsRef);
     });
 
     return { directoryContents, refreshContents };

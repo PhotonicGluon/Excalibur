@@ -20,7 +20,11 @@ const FilesArea: React.FC = () => {
 
     // Hooks
     const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentSnackbar);
-    const { onDropFileItem } = useUploadFile();
+    const { onDropFileItem } = useUploadFile(
+        explorerContext.path,
+        explorerContext.presentAlert,
+        explorerContext.presentSnackbar,
+    );
 
     // Effects
     useEffect(() => {

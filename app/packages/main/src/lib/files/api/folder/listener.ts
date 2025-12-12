@@ -1,3 +1,5 @@
+import { RefObject } from "react";
+
 import ExEF from "@lib/exef";
 import { generatePoPHeader } from "@lib/security/pop";
 import { getURLEncodedPath, quotePlus } from "@lib/url";
@@ -26,9 +28,13 @@ function getWS(auth: AuthProvider): WebSocket {
  * Sets up a WebSocket connection to listen for directory changes.
  *
  * @param auth The current authentication provider
- * @param onPathUpdate The callback function to be called when a directory change is detected
+ * @param onPathUpdateRef Reference to a callback function to be called when a directory change is
+ *      detected
  */
-export function directoryChangesListener(auth: AuthProvider, onPathUpdate: (path: string) => void) {
+export function directoryChangesListener(
+    auth: AuthProvider,
+    onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
+) {
     const ws = getWS(auth);
 
     ws.addEventListener("open", () => {
@@ -46,7 +52,7 @@ export function directoryChangesListener(auth: AuthProvider, onPathUpdate: (path
         const pathEncrypted = Buffer.from(await data.arrayBuffer());
         const path = ExEF.decrypt(auth.authInfo!.key, pathEncrypted).toString("utf-8");
         console.debug(`Noticed '${path}' folder content change`);
-        onPathUpdate(path);
+        await onPathUpdateRef.current(path);
     });
 
     ws.addEventListener("close", () => {
