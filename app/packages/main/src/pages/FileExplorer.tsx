@@ -18,11 +18,8 @@ import {
     IonMenuButton,
     IonPage,
     IonPopover,
-    IonRefresher,
-    IonRefresherContent,
     IonText,
     IonToolbar,
-    RefresherEventDetail,
     useIonAlert,
     useIonRouter,
     useIonToast,
@@ -30,7 +27,7 @@ import {
 import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, moveItem, renameItem } from "@lib/files/api";
-import { useDirectory, useJobsManager, useTokenManager, useUploadFile } from "@lib/hooks";
+import { useJobsManager, useTokenManager, useUploadFile } from "@lib/hooks";
 import { getParent } from "@lib/util";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
@@ -83,7 +80,6 @@ const FileExplorer: React.FC = () => {
 
     // Hooks
     const jobsManager = useJobsManager();
-    const { refreshContents } = useDirectory(requestedPath, presentSnackbar);
     const { onUploadFile } = useUploadFile(requestedPath, jobsManager, presentAlert, presentSnackbar);
     useTokenManager();
 
@@ -404,19 +400,6 @@ const FileExplorer: React.FC = () => {
                 <IonContent fullscreen>
                     {/* Vault key info dialog */}
                     <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
-
-                    {/* Refresh indicator */}
-                    <IonRefresher
-                        slot="fixed"
-                        onIonRefresh={async (event: CustomEvent<RefresherEventDetail>) => {
-                            setTimeout(async () => {
-                                await refreshContents();
-                                event.detail.complete();
-                            }, 500);
-                        }}
-                    >
-                        <IonRefresherContent />
-                    </IonRefresher>
 
                     {/* Breadcrumb */}
                     <DirectoryBreadcrumbs className="ml-1 pt-1" path={requestedPath} />

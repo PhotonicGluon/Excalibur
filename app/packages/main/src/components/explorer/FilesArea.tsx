@@ -1,7 +1,7 @@
 import { PickedFile } from "@capawesome/capacitor-file-picker";
 import { DragEvent, useEffect, useState } from "react";
 
-import { IonIcon, IonText } from "@ionic/react";
+import { IonIcon, IonRefresher, IonRefresherContent, IonText, RefresherCustomEvent } from "@ionic/react";
 import { cloudUploadOutline } from "ionicons/icons";
 
 import { useDirectory, useUploadFile } from "@lib/hooks";
@@ -50,6 +50,18 @@ const FilesArea: React.FC = () => {
                 onDropFileItem(e);
             }}
         >
+            {/* Refresh indicator */}
+            <IonRefresher
+                slot="fixed"
+                onIonRefresh={(event: RefresherCustomEvent) => {
+                    refreshContents().then(() => {
+                        event.detail.complete();
+                    });
+                }}
+            >
+                <IonRefresherContent />
+            </IonRefresher>
+
             {/* File upload overlay */}
             {showFileUploadOverlay && (
                 <div className="fixed top-0 right-0 bottom-0 left-0 z-50 flex flex-col items-center justify-center bg-black/50">
