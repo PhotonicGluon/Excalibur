@@ -26,6 +26,13 @@ export interface SettingsPreferenceValues {
     // Operations
     /** Chunk size, in bytes, to use when encrypting/decrypting files */
     cryptoChunkSize: CryptoChunkSize;
+
+    // Check for updates
+    /** Whether to automatically check for updates */
+    checkUpdate: boolean;
+    /** Interval between update checks, in hours */
+    checkUpdateInterval: number;
+    // TODO: Add update reference URL?
 }
 
 export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
@@ -34,4 +41,6 @@ export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     rowAlternatingColours: "off",
     cryptoChunkSize: 262144, // 256 KiB
     fileSizeUnits: "si",
+    checkUpdate: true,
+    checkUpdateInterval: 24,
 };

@@ -1,12 +1,13 @@
 import { Preferences as PreferencesHandler } from "@capacitor/preferences";
 
 import { LoginPreferenceValues } from "./login";
+import { MiscPreferenceValues } from "./misc";
 import { SettingsPreferenceValues } from "./settings";
 
 /**
  * Values stored in preferences.
  */
-interface PreferenceValues extends LoginPreferenceValues, SettingsPreferenceValues {}
+interface PreferenceValues extends LoginPreferenceValues, SettingsPreferenceValues, MiscPreferenceValues {}
 
 /**
  * Preferences manager for storing and retrieving preferences.
@@ -33,7 +34,7 @@ export default class Preferences {
      * Gets a preference value.
      *
      * @param key The key of the preference to get
-     * @returns The value of the preference. Will **always** be a string or null
+     * @returns The value of the preference. Will **always be a string**, or null if not found
      */
     static async get(key: keyof PreferenceValues): Promise<string | null> {
         const { value } = await PreferencesHandler.get({ key });

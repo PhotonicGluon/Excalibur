@@ -32,6 +32,8 @@ function useProvideSettings(): SettingsProvider {
     );
     const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(DEFAULT_SETTINGS_VALUES.fileSizeUnits);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
+    const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
+    const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
 
     function changeFunc(settings: SettingsPreferenceValues) {
         setTheme(settings.theme);
@@ -39,6 +41,8 @@ function useProvideSettings(): SettingsProvider {
         setRowAlternatingColours(settings.rowAlternatingColours);
         setFileSizeUnits(settings.fileSizeUnits);
         setCryptoChunkSize(settings.cryptoChunkSize);
+        setCheckUpdate(settings.checkUpdate);
+        setCheckUpdateInterval(settings.checkUpdateInterval);
     }
 
     async function saveFunc(settings: SettingsPreferenceValues) {
@@ -73,6 +77,18 @@ function useProvideSettings(): SettingsProvider {
                 setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
             }
         });
+        Preferences.get("checkUpdate").then((value) => {
+            if (value) {
+                console.debug(`Check update: ${value}`);
+                setCheckUpdate(value === "true");
+            }
+        });
+        Preferences.get("checkUpdateInterval").then((value) => {
+            if (value) {
+                console.debug(`Check update interval: ${value}`);
+                setCheckUpdateInterval(parseInt(value));
+            }
+        });
     }, []);
 
     return {
@@ -81,6 +97,8 @@ function useProvideSettings(): SettingsProvider {
         rowAlternatingColours,
         fileSizeUnits,
         cryptoChunkSize,
+        checkUpdate,
+        checkUpdateInterval,
         change: changeFunc,
         save: saveFunc,
     };
