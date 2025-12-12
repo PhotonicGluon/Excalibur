@@ -102,6 +102,9 @@ directory = "logs"
 # A list of API endpoints to exclude from access logs
 no_log_endpoints = ["/api/well-known/heartbeat"]
 
+# How long log files are kept before being deleted, in hours
+max_log_age = 720 # 30 days
+
 [logging.format]
 # The default log format for console output
 default = "[%(asctime)s] %(levelprefix)s %(message)s"

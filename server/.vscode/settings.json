@@ -29,6 +29,7 @@
         "sqlmodel",
         "trustless",
         "typer",
+        "updaters",
         "vite"
     ],
     "[python]": {

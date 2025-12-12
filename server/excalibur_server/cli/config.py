@@ -21,17 +21,35 @@ def update_config():
     Update Excalibur config to latest version.
     """
 
-    import tomlkit
+    from tomlkit import TOMLDocument, dump, load, loads
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
 
     # Updaters
-    def v1_to_v2(config: dict) -> dict:
+    def v1_to_v2(config: TOMLDocument) -> TOMLDocument:
         from Crypto.Random import get_random_bytes
 
         config["version"] = 2
+
+        # First add the new account creation key
         config["security"]["account_creation_key"] = get_random_bytes(32).hex()
+
+        # Now recreate the logging table, but with the new `max_log_age` field
+        new_logging = config["logging"].copy()
+        new_logging.add("max_log_age", 720)
+        new_logging["max_log_age"].comment("30 days")
+        new_logging_str = new_logging.as_string()
+
+        max_log_idx = new_logging_str.find("max_log_age")
+        new_logging_str = (
+            "[logging]\n"
+            + new_logging_str[:max_log_idx]
+            + "\n# How long log files are kept before being deleted, in hours\n"  # To add the comment
+            + new_logging_str[max_log_idx:]
+        )
+        config["logging"] = loads(new_logging_str)["logging"]
+
         return config
 
     SETTINGS_VERSION = 2
@@ -42,7 +60,7 @@ def update_config():
     # Read the config
     try:
         with open(CONFIG_FILE, "r") as f:
-            config = tomlkit.load(f)
+            config = load(f)
     except FileNotFoundError:
         typer.secho("Config file not found!", fg="red")
         raise typer.Exit(1)
@@ -65,6 +83,6 @@ def update_config():
 
     # Write the config
     with open(CONFIG_FILE, "w") as f:
-        tomlkit.dump(config, f)
+        dump(config, f)
 
     typer.secho("Config updated!", fg="green")

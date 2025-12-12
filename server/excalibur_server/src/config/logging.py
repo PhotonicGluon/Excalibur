@@ -13,8 +13,15 @@ class Logging(BaseModel):
 
     directory: Path
     no_log_endpoints: list[str]
+    max_log_age: int
     format: Format
 
     @field_validator("directory", mode="after")
     def edit_directory(cls, value: Path) -> Path:
         return ROOT_FOLDER / value
+
+    @field_validator("max_log_age")
+    def validate_positive(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("must be greater than 0")
+        return value
