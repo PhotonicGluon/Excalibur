@@ -40,9 +40,9 @@ export interface ExplorerContext {
 export const explorerContext = createContext<ExplorerContext>(null!);
 
 /**
- * Hook to get the UI feedback methods.
+ * Hook to get the explorer context.
  *
- * @returns The UI feedback methods.
+ * @returns The explorer context
  */
 export function useExplorerContext(): ExplorerContext {
     return useContext(explorerContext);

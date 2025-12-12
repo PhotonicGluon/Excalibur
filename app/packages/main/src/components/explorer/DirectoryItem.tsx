@@ -90,11 +90,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
 
             if (Capacitor.getPlatform() === "web") {
-                explorerContext.presentToast({
-                    message: "Downloading...",
-                    duration: 2000,
-                    color: "primary",
-                });
+                explorerContext.presentSnackbar("Downloading...");
             }
             console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
@@ -102,11 +98,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 // Send request for file
                 const response = await downloadFile(auth, props.fullpath, signal);
                 if (!response.success) {
-                    explorerContext.presentToast({
-                        message: `Failed to get file: ${response.error}`,
-                        duration: 2000,
-                        color: "danger",
-                    });
+                    explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
                     throw new Error(response.error); // Propagate error to outer try-catch
                 }
 
@@ -141,17 +133,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
                     const err = e as Error;
                     if (err.message.includes("header MAC")) {
-                        explorerContext.presentToast({
-                            message: `Failed to decrypt file: vault key may be incorrect`,
-                            duration: 2000,
-                            color: "danger",
-                        });
+                        explorerContext.presentSnackbar(`Failed to decrypt file: vault key may be incorrect`, "danger");
                     } else {
-                        explorerContext.presentToast({
-                            message: `Failed to decrypt file: ${err.message}`,
-                            duration: 2000,
-                            color: "danger",
-                        });
+                        explorerContext.presentSnackbar(`Failed to decrypt file: ${err.message}`, "danger");
                     }
                     throw e; // Propagate error to outer try-catch
                 } finally {
@@ -177,11 +161,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 0);
-                        explorerContext.presentToast({
-                            message: "File downloaded",
-                            duration: 2000,
-                            color: "success",
-                        });
+                        explorerContext.presentSnackbar("File downloaded", "success");
                     } else {
                         // Write file to documents folder
                         await writeBlob({
@@ -193,18 +173,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                 console.error(error);
                             },
                         });
-                        explorerContext.presentToast({
-                            message: "File saved to the documents folder",
-                            duration: 2000,
-                            color: "success",
-                        });
+                        explorerContext.presentSnackbar("File saved to the documents folder", "success");
                     }
                 } catch (e) {
-                    explorerContext.presentToast({
-                        message: `Failed to save file: ${(e as Error).message}`,
-                        duration: 2000,
-                        color: "danger",
-                    });
+                    explorerContext.presentSnackbar(`Failed to save file: ${(e as Error).message}`, "danger");
                 }
             } catch (e) {
                 const err = e as Error;
@@ -234,11 +206,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             text: "No",
                             role: "cancel",
                             handler: () => {
-                                explorerContext.presentToast({
-                                    message: "Download cancelled",
-                                    duration: 2000,
-                                    color: "warning",
-                                });
+                                explorerContext.presentSnackbar("Download cancelled", "warning");
                             },
                         },
                         {
