@@ -55,10 +55,12 @@ def get_alembic_config() -> Config:
 # Add other typer apps
 from .config import config_app
 from .db import db_app
+from .logging import logging_app
 from .user import user_app
 
 app.add_typer(config_app, name="config")
 app.add_typer(db_app, name="db")
+app.add_typer(logging_app, name="logs")
 app.add_typer(user_app, name="user")
 
 # Expose other commands

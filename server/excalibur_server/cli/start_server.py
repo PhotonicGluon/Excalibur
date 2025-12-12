@@ -54,6 +54,15 @@ def start_server(
             help="Whether to enable logging to file.",
         ),
     ] = True,
+    cleanup_logs: Annotated[
+        bool,
+        typer.Option(
+            "--cleanup-logs/--no-cleanup-logs",
+            "--clean-up-logs/--no-clean-up-logs",
+            "--clean-up/--no-clean-up",
+            help="Whether to clean up old log files.",
+        ),
+    ] = True,
 ):
     """
     Start API server.
@@ -79,6 +88,12 @@ def start_server(
     os.makedirs(ROOT_FOLDER, exist_ok=True)
     os.makedirs(CONFIG.logging.directory, exist_ok=True)
     os.makedirs(CONFIG.storage.vault_folder, exist_ok=True)
+
+    # Clean up logs
+    if cleanup_logs:
+        from excalibur_server.cli.logging import _cleanup_logs
+
+        _cleanup_logs()
 
     # Configure log format
     log_config = LOGGING_CONFIG
