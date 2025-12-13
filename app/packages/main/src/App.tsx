@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
 import { isPlatform } from "@ionic/core";
-import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact, useIonAlert } from "@ionic/react";
 import { IonReactHashRouter, IonReactRouter } from "@ionic/react-router";
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
@@ -20,7 +20,9 @@ import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import packageInfo from "@root/package.json";
 
-import { useEffectOnce } from "@lib/hooks";
+import { checkForUpdate } from "@lib/check-update";
+import { useEffectOnce, useMount } from "@lib/hooks";
+import Preferences from "@lib/preferences";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
@@ -61,8 +63,11 @@ const TheRouter =
 
 // App component
 const App: React.FC = () => {
-    // States
+    // Contexts
     const settings = useSettings();
+
+    // States
+    const [presentAlert] = useIonAlert();
 
     // Effects
     useEffectOnce(() => {
@@ -72,6 +77,48 @@ const App: React.FC = () => {
                 console.warn(error);
             });
         }
+    });
+
+    useMount(() => {
+        Preferences.get("lastUpdateCheck").then(async (lastUpdateCheckRaw) => {
+            // Check if we need to actually check for update
+            const lastUpdateCheck = lastUpdateCheckRaw ? parseInt(lastUpdateCheckRaw) : 0;
+            const nextCheck = new Date(lastUpdateCheck + settings.checkUpdateInterval * 60 * 60 * 1000);
+            if (nextCheck >= new Date()) {
+                console.debug(`Update check not due yet (due ${nextCheck})`);
+                return;
+            }
+
+            Preferences.set({ lastUpdateCheck: Date.now() });
+
+            // Perform update check
+            const updateCheckResponse = await checkForUpdate();
+            if (!updateCheckResponse.updateAvailable) {
+                return;
+            }
+
+            // Show alert that a new update is available
+            presentAlert({
+                header: `Update Available (v${updateCheckResponse.latestVersion})`,
+                message: "Do you want to see the release notes?",
+                buttons: [
+                    {
+                        text: "No",
+                        role: "cancel",
+                        handler: () => {
+                            // TODO: Add to ignored list of updates
+                        },
+                    },
+                    {
+                        text: "Yes",
+                        role: "confirm",
+                        handler: () => {
+                            window.open(updateCheckResponse.latestReleaseURL, "_blank");
+                        },
+                    },
+                ],
+            });
+        });
     });
 
     useEffect(() => {

@@ -1,10 +1,9 @@
 import React from "react";
 import { Redirect } from "react-router";
 
-import { IonContent, IonPage } from "@ionic/react";
+import { IonButton, IonContent, IonPage } from "@ionic/react";
 
-import { Job } from "@components/explorer/JobEntry";
-import JobsList from "@components/explorer/JobsList";
+import { checkForUpdate } from "@lib/check-update";
 
 const TestPage: React.FC = () => {
     if (process.env.NODE_ENV !== "development") {
@@ -14,40 +13,8 @@ const TestPage: React.FC = () => {
     return (
         <IonPage>
             <IonContent className="ion-padding">
-                <div className="h-full w-100">
-                    <JobsList
-                        jobs={(() => {
-                            const jobs = new Map<string, Job>();
-                            jobs.set("test", {
-                                filename: "test.txt",
-                                description: "Reading the file...",
-                                progress: 0.123,
-                                direction: "download",
-                            });
-                            jobs.set("test2", {
-                                filename: "test2.txt",
-                                description: "Encrypting...",
-                                progress: 0.456,
-                                direction: "upload",
-                            });
-                            jobs.set("test3", {
-                                filename: "test3.txt",
-                                description: "Uploading...",
-                                progress: 0.789,
-                                direction: "upload",
-                            });
-                            jobs.set("long", {
-                                filename: "a-super-long-name-a-super-long-name-a-super-long-name-a-super-long-name.txt",
-                                description: "Uploading...",
-                                progress: 0.789,
-                                direction: "upload",
-                            });
-
-                            return jobs;
-                        })()}
-                        onCancelJob={(jobId) => console.log("Cancelling job", jobId)}
-                    ></JobsList>
-                </div>
+                <h1>Test Page</h1>
+                <IonButton onClick={async () => console.log(await checkForUpdate())}>Check Update</IonButton>
             </IonContent>
         </IonPage>
     );
