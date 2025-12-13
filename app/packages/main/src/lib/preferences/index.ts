@@ -1,13 +1,13 @@
 import { Preferences as PreferencesHandler } from "@capacitor/preferences";
 
+import { CheckUpdatePreferenceValues } from "./check-updates";
 import { LoginPreferenceValues } from "./login";
-import { MiscPreferenceValues } from "./misc";
 import { SettingsPreferenceValues } from "./settings";
 
 /**
  * Values stored in preferences.
  */
-interface PreferenceValues extends LoginPreferenceValues, SettingsPreferenceValues, MiscPreferenceValues {}
+interface PreferenceValues extends LoginPreferenceValues, SettingsPreferenceValues, CheckUpdatePreferenceValues {}
 
 /**
  * Preferences manager for storing and retrieving preferences.

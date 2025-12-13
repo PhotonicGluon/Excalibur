@@ -89,11 +89,21 @@ const App: React.FC = () => {
                 return;
             }
 
-            Preferences.set({ lastUpdateCheck: Date.now() });
+            await Preferences.set({ lastUpdateCheck: Date.now() });
+
+            // Retrieve list of ignored updates
+            const ignoredUpdateVersionsRaw = (await Preferences.get("ignoredUpdateVersions")) ?? "";
+            const ignoredUpdateVersions = ignoredUpdateVersionsRaw === "" ? [] : ignoredUpdateVersionsRaw.split(",");
 
             // Perform update check
             const updateCheckResponse = await checkForUpdate();
             if (!updateCheckResponse.updateAvailable) {
+                return;
+            }
+
+            // Check if this is an ignored version
+            if (ignoredUpdateVersions.includes(updateCheckResponse.latestVersion!)) {
+                console.debug(`Update ignored (version ${updateCheckResponse.latestVersion})`);
                 return;
             }
 
@@ -103,11 +113,19 @@ const App: React.FC = () => {
                 message: "Do you want to see the release notes?",
                 buttons: [
                     {
-                        text: "No",
+                        text: "Ignore This Update",
                         role: "cancel",
                         handler: () => {
-                            // TODO: Add to ignored list of updates
+                            const newIgnored = ignoredUpdateVersions;
+                            newIgnored.push(updateCheckResponse.latestVersion!);
+                            Preferences.set({
+                                ignoredUpdateVersions: newIgnored,
+                            });
                         },
+                    },
+                    {
+                        text: "No",
+                        role: "cancel",
                     },
                     {
                         text: "Yes",
