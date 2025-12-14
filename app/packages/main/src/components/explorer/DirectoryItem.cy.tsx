@@ -4,6 +4,7 @@ import { documentOutline, musicalNotesOutline } from "ionicons/icons";
 import { settingsContext } from "@components/settings/context";
 
 import DirectoryItem, { ContainerProps } from "./DirectoryItem";
+import { Job } from "./JobEntry";
 import { explorerContext } from "./context";
 
 describe("<DirectoryItem />", () => {
@@ -40,6 +41,17 @@ describe("<DirectoryItem />", () => {
                     <explorerContext.Provider
                         value={{
                             path: "/",
+                            jobsManager: {
+                                jobs: new Map(),
+                                addJob: (_id: string, _job: Job) => {},
+                                getJob: (_id: string) => {
+                                    return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
+                                },
+                                updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
+                                updateProgress: (_id: string, _newProgress: number | null) => {},
+                                cancelJob: (_id: string) => {},
+                                deleteJob: (_id: string) => {},
+                            },
                             onMove: () => Promise.resolve(),
                             onRename: (_path, _isDir) => props.renameHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
@@ -100,7 +112,7 @@ describe("<DirectoryItem />", () => {
         const deleteHook = cy.stub().resolves();
         renderComponent({ deleteHook });
         cy.get("#directory-item .button").click();
-        cy.get(".item > .sc-ion-label-md-h").eq(1).click();
+        cy.get(".item > .sc-ion-label-md-h").eq(2).click();
         cy.wrap(deleteHook).should("have.been.called");
     });
 });
