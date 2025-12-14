@@ -12,9 +12,14 @@ describe("<DirectoryItem />", () => {
         props: Partial<
             ContainerProps & {
                 renameHook: () => Promise<void>;
+                moveHook: () => Promise<void>;
                 deleteHook: () => Promise<void>;
             }
-        > = { renameHook: () => Promise.resolve(), deleteHook: () => Promise.resolve() },
+        > = {
+            renameHook: () => Promise.resolve(),
+            moveHook: () => Promise.resolve(),
+            deleteHook: () => Promise.resolve(),
+        },
     ) {
         const defaultProps: ContainerProps = {
             oddRow: true,
@@ -52,8 +57,8 @@ describe("<DirectoryItem />", () => {
                                 cancelJob: (_id: string) => {},
                                 deleteJob: (_id: string) => {},
                             },
-                            onMove: () => Promise.resolve(),
                             onRename: (_path, _isDir) => props.renameHook!(),
+                            onMove: (_path) => props.moveHook!(),
                             onDelete: (_path, _isDir) => props.deleteHook!(),
                             presentAlert: () => Promise.resolve(),
                             dismissAlert: () => Promise.resolve(),
@@ -104,15 +109,23 @@ describe("<DirectoryItem />", () => {
         const renameHook = cy.stub().resolves();
         renderComponent({ renameHook });
         cy.get("#directory-item .button").click();
-        cy.get(".item > .sc-ion-label-md-h").eq(0).click();
+        cy.get(".item").contains("Rename").click();
         cy.wrap(renameHook).should("have.been.called");
+    });
+
+    it("calls move hook when move button is clicked", () => {
+        const moveHook = cy.stub().resolves();
+        renderComponent({ moveHook });
+        cy.get("#directory-item .button").click();
+        cy.get(".item").contains("Move").click();
+        cy.wrap(moveHook).should("have.been.called");
     });
 
     it("calls delete hook when delete button is clicked", () => {
         const deleteHook = cy.stub().resolves();
         renderComponent({ deleteHook });
         cy.get("#directory-item .button").click();
-        cy.get(".item > .sc-ion-label-md-h").eq(2).click();
+        cy.get(".item").contains("Delete").click();
         cy.wrap(deleteHook).should("have.been.called");
     });
 });
