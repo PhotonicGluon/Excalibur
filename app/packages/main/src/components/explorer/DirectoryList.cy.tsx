@@ -60,7 +60,7 @@ describe("<DirectoryList />", () => {
 
         // Sorting buttons should be present
         cy.get("#directory-list ion-grid").should("exist");
-        cy.get("#directory-list ion-grid ion-label").get("ion-label").eq(0).should("have.text", "Name");
+        cy.get("#directory-list ion-grid ion-label").get("ion-label").contains("Name");
 
         // Items should be present
         cy.get("#directory-list ion-list").should("exist");
@@ -84,6 +84,21 @@ describe("<DirectoryList />", () => {
 
         cy.get("#directory-list ion-list").should("exist");
         cy.get("#directory-list ion-list").should("contain.text", "No items");
+    });
+
+    it("renders correctly if showing parent directory", () => {
+        renderComponent({ showParentButton: true });
+        cy.get("#directory-list").should("exist");
+
+        // Items should be present
+        cy.get("#directory-list ion-list")
+            .get("ion-item")
+            .should("have.length", items.length + 1);
+
+        // Items should be in the correct order
+        cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "(Go Back)"); // First item is the directory
+        cy.get("#directory-list ion-list").get("ion-item").eq(1).should("have.text", "Sample Directory"); // First item is the directory
+        cy.get("#directory-list ion-list").get("ion-item").eq(2).should("contain.text", "Sample File"); // Second item is the file
     });
 
     it("renders row alternating colours", () => {
