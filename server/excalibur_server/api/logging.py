@@ -5,7 +5,7 @@ import time
 from excalibur_server.src.config import CONFIG
 
 
-# Create endpoint filter
+# Create filters
 class EndpointFilter(logging.Filter):
     """
     Filter out log records containing specific endpoints.
@@ -39,17 +39,50 @@ class EndpointFilter(logging.Filter):
         return True
 
 
+class WebSocketLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        """
+        Filter out log records containing specific endpoints.
+
+        :param record: Log record to filter
+        :return: True if the log record should be included, False otherwise
+        """
+
+        log_message = record.getMessage()
+        if "WebSocket" in log_message or log_message in {"connection open", "connection closed"}:
+            return False
+
+        if record.levelno == logging.DEBUG and log_message[0] in {"<", "=", ">", "x", "%"}:
+            return False
+
+        return True
+
+
 # Add endpoint filter to access logger
 uvicorn_access_logger = logging.getLogger("uvicorn.access")
 uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.logging.no_log_endpoints))
 
-# Define main logger
-logger = logging.getLogger("uvicorn.error")
+# Configure logging to console
+if os.getenv("EXCALIBUR_SERVER_LOG_TO_CONSOLE") == "0":
+    handlers = uvicorn_access_logger.handlers
+    for handler in handlers:
+        if not isinstance(handler, logging.StreamHandler):
+            continue
+
+        uvicorn_access_logger.removeHandler(handler)
+
+# Configure main logger
+uvicorn_main_logger = logging.getLogger("uvicorn.error")
+uvicorn_main_logger.addFilter(WebSocketLogFilter())
 
 # Configure logging to file
-if os.getenv("EXCALIBUR_SERVER_LOGGING") == "1":
+if os.getenv("EXCALIBUR_SERVER_LOG_TO_FILE") == "1":
     file_handler = logging.FileHandler(CONFIG.logging.directory / f"{int(time.time())}.log", mode="a", encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(CONFIG.logging.format.file))
 
-    logger.addHandler(file_handler)
+    uvicorn_main_logger.addHandler(file_handler)
     uvicorn_access_logger.addHandler(file_handler)
+
+# Set our main logger
+logger = uvicorn_main_logger

@@ -82,7 +82,8 @@ def start_server(
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
     os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = f"{delay[0]},{delay[1]}"
-    os.environ["EXCALIBUR_SERVER_LOGGING"] = "1" if log_to_file else "0"
+    os.environ["EXCALIBUR_SERVER_LOG_TO_CONSOLE"] = "1" if log_to_console else "0"
+    os.environ["EXCALIBUR_SERVER_LOG_TO_FILE"] = "1" if log_to_file else "0"
 
     # Make the folders
     os.makedirs(ROOT_FOLDER, exist_ok=True)
@@ -107,7 +108,6 @@ def start_server(
         host=host,
         port=port,
         log_config=log_config,
-        access_log=log_to_console,
         reload=debug,
         reload_dirs=[Path(__file__).parent.parent],
         reload_excludes=["test_*.py"],
