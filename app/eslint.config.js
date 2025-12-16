@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import chaiFriendly from "eslint-plugin-chai-friendly";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
@@ -16,6 +17,7 @@ export default tseslint.config(
         plugins: {
             "react-hooks": reactHooks,
             "react-refresh": reactRefresh,
+            "chai-friendly": chaiFriendly,
         },
         rules: {
             ...reactHooks.configs.recommended.rules,
@@ -36,6 +38,8 @@ export default tseslint.config(
                     ignoreRestSiblings: true,
                 },
             ],
+            "@typescript-eslint/no-unused-expressions": "off",
+            "chai-friendly/no-unused-expressions": "error",
         },
     },
 );

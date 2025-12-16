@@ -33,6 +33,9 @@ importers:
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
+      eslint-plugin-chai-friendly:
+        specifier: ^1.1.0
+        version: 1.1.0(eslint@9.39.1(jiti@2.6.1))
       eslint-plugin-cypress:
         specifier: ^5.2.0
         version: 5.2.0(eslint@9.39.1(jiti@2.6.1))
@@ -2860,6 +2863,12 @@ packages:
   escape-string-regexp@4.0.0:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
+
+  eslint-plugin-chai-friendly@1.1.0:
+    resolution: {integrity: sha512-+T1rClpDdXkgBAhC16vRQMI5umiWojVqkj9oUTdpma50+uByCZM/oBfxitZiOkjMRlm725mwFfz/RVgyDRvCKA==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      eslint: '>=3.0.0'
 
   eslint-plugin-cypress@5.2.0:
     resolution: {integrity: sha512-vuCUBQloUSILxtJrUWV39vNIQPlbg0L7cTunEAzvaUzv9LFZZym+KFLH18n9j2cZuFPdlxOqTubCvg5se0DyGw==}
@@ -9008,6 +9017,10 @@ snapshots:
   escape-string-regexp@1.0.5: {}
 
   escape-string-regexp@4.0.0: {}
+
+  eslint-plugin-chai-friendly@1.1.0(eslint@9.39.1(jiti@2.6.1)):
+    dependencies:
+      eslint: 9.39.1(jiti@2.6.1)
 
   eslint-plugin-cypress@5.2.0(eslint@9.39.1(jiti@2.6.1)):
     dependencies:

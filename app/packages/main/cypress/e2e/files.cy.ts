@@ -79,7 +79,7 @@ describe("Check Page Operations", () => {
             fileContents.push(fileContent);
             selectFileList.push({ contents: fileContent, fileName: fileName });
         }
-        cy.get("#main-content").selectFile(selectFileList, { action: "drag-drop" });
+        cy.get("#files-area").selectFile(selectFileList, { action: "drag-drop" });
 
         if (dropOnly) {
             return fileNames;

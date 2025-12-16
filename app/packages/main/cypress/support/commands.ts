@@ -12,6 +12,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
             cy.get("#confirm-button").click();
 
             cy.url().should("include", "/login");
+            cy.then(() => expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null);
         },
         {
             validate: () => {
@@ -23,7 +24,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
                 cy.visit("/files/");
                 cy.url()
                     .should("include", "/login")
-                    .then(() => expect(window.localStorage.getItem("hasSeenWelcome"), "stored value").to.equal("true"));
+                    .then(() => expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null);
             },
             cacheAcrossSpecs: true,
         },
@@ -32,7 +33,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
 
 Cypress.Commands.add("login", (serverURL: string, username: string, password: string) => {
     cy.session(
-        `${serverURL}|${username}`,
+        [serverURL, username],
         () => {
             cy.onboard(serverURL);
             cy.visit("/login");
@@ -43,6 +44,11 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
             cy.get("#login-button").click();
 
             cy.url().should("include", "/files");
+
+            cy.then(() => {
+                expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null;
+                expect(window.localStorage.getItem("authInfo"), "stored value").to.not.be.null;
+            });
         },
         {
             validate: () => {
@@ -51,9 +57,8 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
                 cy.url()
                     .should("include", "/files")
                     .then(() => {
-                        const ls = window.localStorage;
-                        expect(ls.getItem("hasSeenWelcome"), "stored value").to.equal("true");
-                        expect(ls.getItem("CapacitorStorage.username"), "stored value").to.equal(username);
+                        expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null;
+                        expect(window.localStorage.getItem("authInfo"), "stored value").to.not.be.null;
                     });
             },
             cacheAcrossSpecs: true,

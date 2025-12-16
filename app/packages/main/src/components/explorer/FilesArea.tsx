@@ -49,6 +49,7 @@ const FilesArea: React.FC = () => {
 
                 onDropFileItem(e);
             }}
+            id="files-area"
         >
             {/* Refresh indicator */}
             <IonRefresher
