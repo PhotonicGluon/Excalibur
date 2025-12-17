@@ -114,10 +114,6 @@ describe("Check Page Operations", () => {
 
     // Tests
     it("should handle folder creation", () => {
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
-
         _createFolder();
     });
 
@@ -233,10 +229,6 @@ describe("Check Page Operations", () => {
 
     describe("breadcrumbs", () => {
         it("should handle single-nested folder", () => {
-            cy.login("http://127.0.0.1:8989", "test-user", "Password");
-            cy.visit("/files/");
-            cy.url().should("include", "/files");
-
             // Create super folder
             const superFolderName = _createFolder();
             const superFolder = cy.get(`div[data-name='${superFolderName}']`);

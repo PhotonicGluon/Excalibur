@@ -1,22 +1,18 @@
 describe("Check Login Page Contents", () => {
     beforeEach(() => {
-        cy.onboard("http://127.0.0.1:8989");
+        cy.onboard(Cypress.env("serverURL"));
         cy.visit("/login");
     });
 
-    it("should have basic navigation", () => {
+    it("should have basic navigation and form", () => {
         cy.get("#menu-button").should("exist");
-    });
-
-    it("should have login form", () => {
         cy.get("#username-input").should("exist");
         cy.get("#password-input").should("exist");
         cy.get("#save-password-checkbox").should("exist");
         cy.get("#login-button").should("exist");
     });
 
-    it("should have working new user link", () => {
-        cy.get("#new-user-link").should("exist");
+    it("should navigate to new user page", () => {
         cy.get("#new-user-link").click();
         cy.url().should("include", "/new-user");
     });
@@ -24,7 +20,7 @@ describe("Check Login Page Contents", () => {
 
 describe("Handle Auth Process", () => {
     it("should handle login gracefully", () => {
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.login(Cypress.env("serverURL"), "test-user", "Password");
         cy.visit("/files/");
         cy.url().should("not.include", "/login");
     });
@@ -32,16 +28,30 @@ describe("Handle Auth Process", () => {
 
 describe("Check All Inputs Filled", () => {
     beforeEach(() => {
-        cy.onboard("http://127.0.0.1:8989");
+        cy.onboard(Cypress.env("serverURL"));
         cy.visit("/login");
     });
 
-    ["username-input", "password-input"].forEach((input) => {
-        it(`should check if ${input} is filled`, () => {
-            cy.get(`#${input}`).type("some-text");
+    const inputs = [
+        { field: "#username-input", name: "username" },
+        { field: "#password-input", name: "password" },
+    ];
+
+    inputs.forEach((input) => {
+        it(`should show error if ${input.name} is missing`, () => {
+            // Fill the *other* inputs, but leave current one empty
+            inputs
+                .filter((i) => i.field !== input.field)
+                .forEach((other) => {
+                    cy.get(other.field).type("some-value");
+                });
+
             cy.get("#login-button").click();
-            cy.get(".alert-head").should("exist");
-            cy.get(".alert-head").should("have.text", "Invalid Values");
+
+            cy.get("ion-alert .alert-head").should("be.visible").and("contain.text", "Invalid Values");
+
+            // Close alert
+            cy.get(".alert-button").click();
         });
     });
 });

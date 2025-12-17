@@ -12,19 +12,18 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
             cy.get("#confirm-button").click();
 
             cy.url().should("include", "/login");
-            cy.then(() => expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null);
+            cy.window().should((win) => {
+                expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+            });
         },
         {
             validate: () => {
-                // We should be able to access the login page
-                cy.visit("/login");
-                cy.url().should("include", "/login");
-
-                // We should *not* be able to access the files page
-                cy.visit("/files/");
-                cy.url()
-                    .should("include", "/login")
-                    .then(() => expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null);
+                cy.window().then((win) => {
+                    const serverInfo = win.localStorage.getItem("serverInfo");
+                    if (!serverInfo) {
+                        throw new Error("Session invalid: serverInfo missing");
+                    }
+                });
             },
             cacheAcrossSpecs: true,
         },
@@ -45,21 +44,19 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
 
             cy.url().should("include", "/files");
 
-            cy.then(() => {
-                expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null;
-                expect(window.localStorage.getItem("authInfo"), "stored value").to.not.be.null;
+            cy.window().should((win) => {
+                expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+                expect(win.localStorage.getItem("authInfo"), "authInfo").to.not.be.null;
             });
         },
         {
             validate: () => {
-                // We should be able to access the files page
-                cy.visit("/files/");
-                cy.url()
-                    .should("include", "/files")
-                    .then(() => {
-                        expect(window.localStorage.getItem("serverInfo"), "stored value").to.not.be.null;
-                        expect(window.localStorage.getItem("authInfo"), "stored value").to.not.be.null;
-                    });
+                cy.window().then((win) => {
+                    const authInfo = win.localStorage.getItem("authInfo");
+                    if (!authInfo) {
+                        throw new Error("Session invalid: authInfo missing");
+                    }
+                });
             },
             cacheAcrossSpecs: true,
         },

@@ -1,32 +1,28 @@
 let ack: string[];
-before(() => {
-    // Retrieve Account Creation Key (ACK) from server running on debug mode
-    cy.request({
-        url: "http://127.0.0.1:8989/api/auth/ack",
-        method: "GET",
-    }).then((response) => {
-        const mnemonic = response.body;
-        assert(mnemonic.length === 24);
-        ack = mnemonic;
-    });
-});
-
-beforeEach(() => {
-    cy.onboard("http://127.0.0.1:8989");
-    cy.visit("/new-user");
-});
-
 describe("New User Page", () => {
-    it("should have basic navigation", () => {
-        cy.get(".buttons-first-slot > .button").should("exist"); // Back button
+    const SERVER_URL = Cypress.env("serverURL");
+
+    before(() => {
+        // Fetch ACK once before tests start and wrap it as an alias
+        cy.request({
+            url: `${SERVER_URL}/api/auth/ack`,
+            method: "GET",
+        }).then((response) => {
+            expect(response.body).to.have.length(24);
+            ack = response.body;
+        });
     });
 
-    it("should have signup form", () => {
+    beforeEach(() => {
+        cy.onboard(SERVER_URL);
+        cy.visit("/new-user");
+    });
+
+    it("should have basic elements", () => {
+        cy.get(".buttons-first-slot > .button").should("exist"); // Back button
         cy.get("#new-username-input").should("exist");
         cy.get("#new-password-input").should("exist");
-        for (let i = 0; i < 24; i++) {
-            cy.get(`input[placeholder="Word ${i + 1}"]`).should("exist");
-        }
+        cy.get("#ack-input input").should("have.length", 24);
     });
 
     it("should handle initial signup gracefully", () => {
@@ -39,15 +35,15 @@ describe("New User Page", () => {
         cy.get("#new-password-input").find("input").type("Password123");
 
         // Fill in Account Creation Key (ACK)
-        const ackInput = cy.get("#ack-input");
-        ackInput.find("input").each(($el, index) => {
-            const el = cy.wrap($el);
-            el.type(ack[index]);
-            el.blur();
-        });
+        cy.get("#ack-input")
+            .find("input")
+            .each(($el, index) => {
+                const el = cy.wrap($el);
+                el.type(ack[index]);
+                el.blur();
+            });
 
-        // Confirm
-        cy.get("div > div > ion-button").click();
+        cy.contains("ion-button", "Confirm").click();
 
         // Assert that the vault key dialog shows up
         cy.get("#vault-key-modal").should("be.visible");
@@ -60,6 +56,8 @@ describe("New User Page", () => {
         cy.get("#username-input").find("input").type(username);
         cy.get("#password-input").find("input").type("Password123");
         cy.get("#login-button").click();
+
+        // Ensure login successful
         cy.url().should("include", "/files");
     });
 });
