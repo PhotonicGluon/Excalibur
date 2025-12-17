@@ -8,7 +8,6 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
-from excalibur_server.api.logging import logger
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.srp import SRP
@@ -71,7 +70,6 @@ async def comms_endpoint(websocket: WebSocket):
         # Verify client's M1
         srp_salt = user.srp_salt
         m1_server = srp_handler.generate_m1(user.username, srp_salt, a_pub, b_pub, master_server)
-        logger.debug(f"M1 server: {b64encode(m1_server).decode('utf-8')}")
         m1_response = await ws_manager.receive()
         if m1_response.status != "OK":
             await ws_manager.close()

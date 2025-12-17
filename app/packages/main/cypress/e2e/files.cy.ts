@@ -50,8 +50,8 @@ describe("Check Page Operations", () => {
         cy.get(".alert-input-wrapper").click().wait(100); // For the focus to appear
         cy.get(".alert-input-wrapper").type(folderName);
 
-        // Click confirm
-        cy.get(".alert-button-group > :nth-child(2) > .alert-button-inner").click();
+        // Click create
+        cy.get(".alert-button-group").contains("Create").click();
         cy.get(".alert-head").should("not.exist");
 
         // Folder should have been created
@@ -141,6 +141,24 @@ describe("Check Page Operations", () => {
         });
     });
 
+    it("should move items", () => {
+        // Create test file and folder
+        const fileName = _createFile(SMALL_SIZE, true)[0];
+        const folderName = _createFolder();
+
+        // Move file to folder
+        cy.get(`div[data-name='${fileName}']`).rightclick();
+        cy.get(".item").contains("Move").click().wait(200); // Wait for the alert to appear
+        cy.get(".alert-input-wrapper").type(`{backspace}./${folderName}`);
+        cy.get(".alert-button-group").contains("Move").click();
+        cy.get(".alert-head").should("not.exist");
+
+        // Check that file was moved
+        cy.get(`div[data-name='${fileName}']`).should("not.exist");
+        cy.get(`div[data-name='${folderName}']`).click();
+        cy.get(`div[data-name='${fileName}']`).should("exist");
+    });
+
     describe("nested operations", () => {
         beforeEach(() => {
             // Create super folder
@@ -152,6 +170,11 @@ describe("Check Page Operations", () => {
             // Go in
             superFolder.click();
             cy.url().should("include", `/files/${encodeURIComponent(superFolderName)}`);
+        });
+
+        it("should have a working back to parent folder button", () => {
+            cy.get("#files-area").contains("(Go Back)").click();
+            cy.url().should("equal", `${Cypress.config().baseUrl}/files/`);
         });
 
         it("should create nested folder", () => {
