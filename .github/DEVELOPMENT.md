@@ -224,7 +224,10 @@ See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorep
 We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions locally.
 
 > [!WARNING] First Time Setup
+>
 > For the first time running an `act` command, you'll need to edit the `.actrc` file, removing the `--action-offline-mode` flag.
+>
+> It is also recommended to pull the `catthehacker/ubuntu:full-latest` image before running `act` for the first time by running `docker pull catthehacker/ubuntu:full-latest`.
 
 > [!IMPORTANT]
 >
@@ -243,6 +246,7 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 >        - Command Prompt: `set ACT_CACHE_AUTH_KEY="foo"`
 >      - Unix: `export ACT_CACHE_AUTH_KEY="foo"`
 >   3. While in `github-act-cache-server`, run `docker compose up --build -d`.
+> - If you are encountering `EACCES: permission denied` errors, try [removing the `act-toolcache` volume](https://github.com/nektos/act/issues/2374#issuecomment-2859056727).
 
 #### Running `test.yml`
 
