@@ -3,11 +3,13 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
+    IonCheckbox,
     IonCol,
     IonContent,
     IonGrid,
     IonHeader,
     IonIcon,
+    IonInput,
     IonLabel,
     IonPage,
     IonRow,
@@ -23,6 +25,7 @@ import { arrowBack } from "ionicons/icons";
 
 import {
     CryptoChunkSize,
+    DEFAULT_SETTINGS_VALUES,
     FileSizeUnits,
     IconStyle,
     RowAlternatingColours,
@@ -46,6 +49,9 @@ const Settings: React.FC = () => {
     const [initialSettings] = useState<SettingsPreferenceValues>(settings);
 
     // Functions
+    /**
+     * Handles the action upon back button click.
+     */
     function onBackButton() {
         if (hasUnsavedChanges) {
             presentAlert({
@@ -86,18 +92,30 @@ const Settings: React.FC = () => {
         const iconStyle = (document.getElementById("icon-style")! as HTMLIonSelectElement).value as IconStyle;
         const rowAlternatingColours = (document.getElementById("row-alternating-colours")! as HTMLIonSelectElement)
             .value as RowAlternatingColours;
+        const fileSizeUnits = (document.getElementById("file-size-units")! as HTMLIonSelectElement)
+            .value as FileSizeUnits;
         const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
-        const fileSizeUnits = (document.getElementById("file-size-units")! as HTMLIonSelectElement)
-            .value as FileSizeUnits;
+        const checkUpdate = (document.getElementById("check-update")! as HTMLIonCheckboxElement).checked;
+        let checkUpdateInterval = parseInt(
+            (document.getElementById("check-update-interval")! as HTMLInputElement).value,
+        ) as number;
 
+        // Validation
+        if (isNaN(checkUpdateInterval)) {
+            checkUpdateInterval = DEFAULT_SETTINGS_VALUES.checkUpdateInterval;
+        }
+
+        // Form new settings
         const newSettings: SettingsPreferenceValues = {
             theme,
             iconStyle,
             rowAlternatingColours,
             fileSizeUnits,
             cryptoChunkSize,
+            checkUpdate,
+            checkUpdateInterval,
         };
         console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
         settings.save(newSettings);
@@ -162,7 +180,7 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="dark">Dark</IonSelectOption>
                             </IonSelect>
                         }
-                    />
+                    ></SettingsItem>
                     <SettingsItem
                         label={<IonLabel>Icon Style</IonLabel>}
                         input={
@@ -186,7 +204,7 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="solid">All Solid</IonSelectOption>
                             </IonSelect>
                         }
-                    />
+                    ></SettingsItem>
                     <SettingsItem
                         label={<IonLabel>Row Highlight</IonLabel>}
                         input={
@@ -231,7 +249,7 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
                             </IonSelect>
                         }
-                    />
+                    ></SettingsItem>
 
                     {/* Operations */}
                     <IonRow>
@@ -268,7 +286,53 @@ const Settings: React.FC = () => {
                                 <IonSelectOption value="4194304">4 MiB</IonSelectOption>
                             </IonSelect>
                         }
-                    />
+                    ></SettingsItem>
+
+                    {/* Check for updates */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2>Check for Updates</h2>
+                                <p>Settings affecting the update functionality of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
+                    <SettingsItem
+                        label={<IonLabel>Check for Updates?</IonLabel>}
+                        input={
+                            <IonCheckbox
+                                id="check-update"
+                                checked={settings.checkUpdate}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        checkUpdate: e.detail.checked,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            ></IonCheckbox>
+                        }
+                    ></SettingsItem>
+                    <SettingsItem
+                        label={<IonLabel>Update Check Interval</IonLabel>}
+                        input={
+                            <IonInput
+                                id="check-update-interval"
+                                type="number"
+                                helperText="In hours"
+                                value={settings.checkUpdateInterval}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        checkUpdateInterval: parseInt(
+                                            e.detail.value ?? DEFAULT_SETTINGS_VALUES.checkUpdateInterval.toString(),
+                                        ),
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            ></IonInput>
+                        }
+                    ></SettingsItem>
                 </IonGrid>
 
                 {/* Save button */}

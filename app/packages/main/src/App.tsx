@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { Redirect, Route } from "react-router-dom";
 
 import { isPlatform } from "@ionic/core";
-import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact, useIonAlert } from "@ionic/react";
 import { IonReactHashRouter, IonReactRouter } from "@ionic/react-router";
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/display.css";
@@ -20,7 +20,9 @@ import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import packageInfo from "@root/package.json";
 
-import { useEffectOnce } from "@lib/hooks";
+import { checkForUpdate } from "@lib/check-update";
+import { useEffectOnce, useMount } from "@lib/hooks";
+import Preferences from "@lib/preferences";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
@@ -61,8 +63,11 @@ const TheRouter =
 
 // App component
 const App: React.FC = () => {
-    // States
+    // Contexts
     const settings = useSettings();
+
+    // States
+    const [presentAlert] = useIonAlert();
 
     // Effects
     useEffectOnce(() => {
@@ -72,6 +77,66 @@ const App: React.FC = () => {
                 console.warn(error);
             });
         }
+    });
+
+    useMount(() => {
+        Preferences.get("lastUpdateCheck").then(async (lastUpdateCheckRaw) => {
+            // Check if we need to actually check for update
+            const lastUpdateCheck = lastUpdateCheckRaw ? parseInt(lastUpdateCheckRaw) : 0;
+            const nextCheck = new Date(lastUpdateCheck + settings.checkUpdateInterval * 60 * 60 * 1000);
+            if (nextCheck >= new Date()) {
+                console.debug(`Update check not due yet (due ${nextCheck})`);
+                return;
+            }
+
+            await Preferences.set({ lastUpdateCheck: Date.now() });
+
+            // Retrieve list of ignored updates
+            const ignoredUpdateVersionsRaw = (await Preferences.get("ignoredUpdateVersions")) ?? "";
+            const ignoredUpdateVersions = ignoredUpdateVersionsRaw === "" ? [] : ignoredUpdateVersionsRaw.split(",");
+
+            // Perform update check
+            const updateCheckResponse = await checkForUpdate();
+            if (!updateCheckResponse.updateAvailable) {
+                return;
+            }
+
+            // Check if this is an ignored version
+            if (ignoredUpdateVersions.includes(updateCheckResponse.latestVersion!)) {
+                console.debug(`Update ignored (version ${updateCheckResponse.latestVersion})`);
+                return;
+            }
+
+            // Show alert that a new update is available
+            presentAlert({
+                header: `Update Available (v${updateCheckResponse.latestVersion})`,
+                message: "Do you want to see the release notes?",
+                buttons: [
+                    {
+                        text: "Ignore This Update",
+                        role: "cancel",
+                        handler: () => {
+                            const newIgnored = ignoredUpdateVersions;
+                            newIgnored.push(updateCheckResponse.latestVersion!);
+                            Preferences.set({
+                                ignoredUpdateVersions: newIgnored,
+                            });
+                        },
+                    },
+                    {
+                        text: "No",
+                        role: "cancel",
+                    },
+                    {
+                        text: "Yes",
+                        role: "confirm",
+                        handler: () => {
+                            window.open(updateCheckResponse.latestReleaseURL, "_blank");
+                        },
+                    },
+                ],
+            });
+        });
     });
 
     useEffect(() => {
