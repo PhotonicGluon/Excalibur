@@ -7,6 +7,7 @@
   - [Running](#running)
     - [PWA](#pwa)
     - [Android](#android)
+      - [Android Studio](#android-studio)
   - [Building](#building)
     - [PWA](#pwa-1)
     - [Android](#android-1)
@@ -98,6 +99,34 @@ pnpx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=810
 > You can use split terminals to run both the web server and the android app at the same time.
 
 Once the app starts on the device, assuming that the server is using the default port `54219`, you can access it at `http://[HOST_IP]:54219` (or `http://10.0.2.2:54219` if running on an android emulator on the same machine).
+
+##### Android Studio
+
+> [!IMPORTANT]
+> This is for developers who want to develop in Android Studio. We require Android Studio Otter | 2025.2.1 or newer.
+
+We first need the Vite project to be built. While in the `app/packages/main` directory, run
+
+```bash
+pnpm run build
+```
+
+Then we sync the changes to Capacitor by running
+
+```bash
+pnpm run sync
+```
+
+We can now open the project in Android Studio by running
+
+```bash
+pnpm run android:open
+```
+
+while in the `app/packages/main` directory.
+
+> ![NOTE]
+> You might need to sync the Gradle project within Android Studio.
 
 ### Building
 
