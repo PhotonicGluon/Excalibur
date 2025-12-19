@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.3.0-alpha.16",
+    "version": "0.3.0-alpha.17",
     "description": "A trustless, secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {
@@ -19,7 +19,7 @@
     },
     "scripts": {
         "lint": "eslint --max-warnings 0 --fix --no-warn-ignored",
-        "update": "pnpx npm-check-updates --peer -u -w"
+        "update": "cd .. && pnpm run update"
     },
     "dependencies": {},
     "devDependencies": {
