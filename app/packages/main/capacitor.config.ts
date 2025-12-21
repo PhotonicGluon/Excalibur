@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
     webDir: "dist",
     android: {
         path: "../android",
-        adjustMarginsForEdgeToEdge: "auto", // See also: https://developer.android.com/reference/android/R.attr#windowOptOutEdgeToEdgeEnforcement
     },
     server: {
         androidScheme: "http",
@@ -14,6 +13,9 @@ const config: CapacitorConfig = {
     plugins: {
         Keyboard: {
             resizeOnFullScreen: true,
+        },
+        SystemBars: {
+            insetsHandling: "css",
         },
     },
 };
