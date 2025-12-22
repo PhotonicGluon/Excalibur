@@ -115,10 +115,10 @@ const Download: React.FC = () => {
                 <WaveBackground />
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
-                    <h1 className="block !text-4xl font-bold text-gray-800 dark:text-white">
+                    <h1 className="block text-4xl! font-bold text-gray-800 dark:text-white">
                         Downloading<span id="human-download-type" className="font-bold"></span>...
                     </h1>
-                    <p className="!text-center text-lg">
+                    <p className="text-center! text-lg">
                         Your download should start automatically.{" "}
                         {downloadTriggered && (
                             <span>

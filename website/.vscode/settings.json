@@ -7,5 +7,9 @@
         "**/Thumbs.db": true,
         "node_modules": true,
         ".docusaurus": true
-    }
+    },
+    "cSpell.words": [
+        "katex",
+        "trivago"
+    ]
 }

@@ -88,13 +88,13 @@ const Home: React.FC = () => {
                 <div className="relative z-10 container px-4 text-center">
                     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
                         <motion.h1
-                            className="mb-6 !text-5xl font-bold text-gray-800 md:!text-7xl dark:text-white"
+                            className="mb-6 text-5xl! font-bold text-gray-800 md:text-7xl! dark:text-white"
                             variants={fadeInUp}
                         >
                             {siteConfig.title}
                         </motion.h1>
                         <motion.p
-                            className="mb-10 !text-center !text-xl text-gray-700 md:!text-2xl dark:text-gray-200"
+                            className="mb-10 text-center! text-xl! text-gray-700 md:text-2xl! dark:text-gray-200"
                             variants={fadeInUp}
                         >
                             A trustless secure file management solution using military-grade encryption.
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
                             {/* Downloads for mobile */}
                             <a
                                 href="/download?type=app-android"
-                                className="block w-full rounded-lg bg-blue-600 px-8 py-4 text-center text-lg font-bold !text-white !no-underline hover:bg-blue-700 md:w-fit lg:hidden"
+                                className="block w-full rounded-lg bg-blue-600 px-8 py-4 text-center text-lg font-bold text-white! no-underline! hover:bg-blue-700 md:w-fit lg:hidden"
                                 target="_blank"
                             >
                                 Download App (Android)
@@ -116,7 +116,7 @@ const Home: React.FC = () => {
                                 </button>
                                 <div className="ring-opacity-5 invisible absolute left-0 z-50 mt-2 w-72 rounded-md bg-white opacity-0 shadow-lg ring-1 ring-black transition-all duration-150 group-hover:visible group-hover:opacity-100 dark:bg-gray-800">
                                     <div
-                                        className="py-1 *:text-base *:!text-gray-700 *:!no-underline *:dark:!text-gray-400"
+                                        className="py-1 *:text-base *:text-gray-700! *:no-underline! *:dark:text-gray-400!"
                                         role="menu"
                                         aria-orientation="vertical"
                                     >
@@ -164,7 +164,7 @@ const Home: React.FC = () => {
                                             </svg>
                                             <span>Download App (PWA)</span>
                                         </a>
-                                        <hr className="!my-1" />
+                                        <hr className="my-1!" />
                                         <a
                                             href="/download?type=server"
                                             className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
@@ -249,12 +249,12 @@ const Home: React.FC = () => {
                                 >
                                     <div className="flex items-center gap-y-4 lg:block lg:gap-0">
                                         <div className="text-4xl md:text-5xl lg:mb-4">{feature.icon}</div>
-                                        <h3 className="!mb-0 text-3xl font-bold text-gray-900 dark:text-white">
+                                        <h3 className="mb-0! text-3xl font-bold text-gray-900 dark:text-white">
                                             {feature.title}
                                         </h3>
                                     </div>
 
-                                    <p className="!my-4 text-lg text-gray-600 dark:text-gray-400">
+                                    <p className="my-4! text-lg text-gray-600 dark:text-gray-400">
                                         {feature.description}
                                     </p>
                                 </motion.div>
@@ -277,7 +277,7 @@ const Home: React.FC = () => {
                             <h2 className="mb-6 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
                                 Powerful Features
                             </h2>
-                            <p className="!text-center text-xl text-gray-600 dark:text-gray-400">
+                            <p className="text-center! text-xl text-gray-600 dark:text-gray-400">
                                 Everything you need to securely manage and share your files
                             </p>
                         </motion.div>
