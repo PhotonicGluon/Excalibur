@@ -33,7 +33,7 @@ export const features: FeatureCardProps[] = [
     },
     {
         title: "Attestations",
-        description: "Everything has a publicly traceable provenance.",
+        description: "Everything has a publicly traceable provenance for maximum transparency.",
         icon: "🗺️",
     },
     {
