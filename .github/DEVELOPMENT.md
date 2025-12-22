@@ -8,10 +8,11 @@
     - [PWA](#pwa)
     - [Android](#android)
       - [Android Studio](#android-studio)
+    - [Electron](#electron)
   - [Building](#building)
     - [PWA](#pwa-1)
     - [Android](#android-1)
-    - [Electron](#electron)
+    - [Electron](#electron-1)
       - [Windows](#windows)
 - [Server](#server)
   - [Setup](#setup-1)
@@ -127,6 +128,23 @@ while in the `app/packages/main` directory.
 
 > ![NOTE]
 > You might need to sync the Gradle project within Android Studio.
+
+#### Electron
+
+> [!NOTE]
+> These commands should be run in the `app/packages/electron` directory.
+
+To run the Electron app in development mode (i.e., with a Vite server), run:
+
+```bash
+pnpm run dev
+```
+
+To preview the Electron app in production mode, run
+
+```bash
+pnpm run preview
+```
 
 ### Building
 
