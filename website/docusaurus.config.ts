@@ -104,14 +104,14 @@ const config: Config = {
                 {
                     type: "doc",
                     position: "left",
-                    docId: "docs/welcome",
-                    label: "Docs",
+                    docId: "guide/welcome",
+                    label: "Guide",
                 },
                 {
                     type: "docSidebar",
                     position: "left",
-                    sidebarId: "dev",
-                    label: "Development",
+                    sidebarId: "reference",
+                    label: "Reference",
                 },
                 {
                     href: "https://github.com/PhotonicGluon/Excalibur",
