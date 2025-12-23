@@ -15,27 +15,34 @@ const DownloadPage: React.FC = () => {
         {
             platform: "Windows",
             icon: <Laptop className="size-5" />,
-            links: [{ label: "Installer (.exe)", href: "#" }],
+            links: [{ label: "Installer (.exe)", assetID: "app-win-installer" }],
         },
         {
             platform: "macOS",
             icon: <Apple className="size-5" />,
-            links: [{ label: "Universal Disk Image (.dmg)", href: "#" }],
+            links: [
+                { label: "Universal Disk Image (.dmg)", assetID: "app-mac-dmg" },
+                { label: "Zipped Application (.zip)", assetID: "app-mac-app" },
+            ],
         },
         {
-            platform: "Linux",
+            platform: "Ubuntu",
             icon: <Terminal className="size-5" />,
-            links: [{ label: "AppImage / .deb", href: "#" }],
+            links: [
+                { label: "Debian Package (.deb)", assetID: "app-linux-deb" },
+                { label: "Snap File (.snap)", assetID: "app-linux-snap" },
+                { label: "AppImage (.AppImage)", assetID: "app-linux-appimage" },
+            ],
         },
         {
             platform: "Android",
             icon: <Smartphone className="size-5" />,
-            links: [{ label: "APK Package", href: "#" }],
+            links: [{ label: "Android Package Kit (.apk)", assetID: "app-android-apk" }],
         },
         {
             platform: "Progressive Web App (PWA)",
             icon: <Globe className="size-5" />,
-            links: [{ label: "Web Assets (.zip)", href: "#" }],
+            links: [{ label: "Web Assets (.zip)", assetID: "app-pwa" }],
         },
     ];
 
@@ -44,8 +51,8 @@ const DownloadPage: React.FC = () => {
             platform: "Python Package",
             icon: <Server className="size-5" />,
             links: [
-                { label: "Wheel (.whl)", href: "#" },
-                { label: "Source (.tar.gz)", href: "#" },
+                { label: "Wheel (.whl)", assetID: "server-whl" },
+                { label: "Source (.tar.gz)", assetID: "server-src" },
             ],
         },
     ];

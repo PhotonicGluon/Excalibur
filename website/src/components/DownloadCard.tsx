@@ -1,9 +1,11 @@
 import { Download } from "lucide-react";
 import React from "react";
 
+import Link from "@docusaurus/Link";
+
 interface DownloadLink {
     label: string;
-    href: string;
+    assetID: string;
 }
 
 export interface DownloadInfo {
@@ -23,16 +25,17 @@ const DownloadCard: React.FC<{ item: DownloadInfo }> = ({ item }) => {
 
             <h3 className="mb-1 text-lg font-bold text-black dark:text-white">{item.platform}</h3>
 
-            <div className="mt-auto flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
                 {item.links.map((link) => (
                     <div className="flex">
-                        <a
-                            href={link.href}
+                        <Link
+                            to={"/download-asset?id=" + link.assetID}
+                            target="_blank"
                             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-600 dark:bg-slate-600"
                         >
                             <Download className="size-4" />
                             {link.label}
-                        </a>
+                        </Link>
                     </div>
                 ))}
             </div>

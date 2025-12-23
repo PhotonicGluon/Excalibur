@@ -6,7 +6,24 @@ import Layout from "@theme/Layout";
 
 import WaveBackground from "@site/src/components/WaveBackground";
 
-const DOWNLOAD_TYPES = ["app-android", "app-pwa", "server", "server-pwa"];
+const ASSET_ID_TO_FILE: Record<string, string> = {
+    // Windows
+    "app-win-installer": "excalibur-electron-[VERSION]-setup.exe",
+    // macOS
+    "app-mac-dmg": "excalibur-electron-[VERSION].dmg",
+    "app-mac-app": "Excalibur-[VERSION]-arm64-mac.zip",
+    // Ubuntu
+    "app-linux-deb": "excalibur-electron_[VERSION]_amd64.deb",
+    "app-linux-snap": "excalibur-electron_[VERSION]_amd64.snap",
+    "app-linux-appimage": "excalibur-electron-[VERSION].AppImage",
+    // Android
+    "app-android-apk": "app-v[VERSION]-release.apk",
+    // PWA
+    "app-pwa": "app-v[VERSION]-pwa.zip",
+    // Server
+    "server-whl": "excalibur_server-[VERSION]-py3-none-any.whl",
+    "server-src": "excalibur_server-[VERSION].tar.gz",
+};
 
 // Main component
 const DownloadAsset: React.FC = () => {
@@ -35,52 +52,20 @@ const DownloadAsset: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Get download type
+        // Get asset download ID
         const params = new URLSearchParams(window.location.search);
-        const type = params.get("type");
-        if (!DOWNLOAD_TYPES.includes(type)) {
+        const assetID = params.get("id");
+        if (!ASSET_ID_TO_FILE[assetID]) {
             window.location.href = "/";
         }
-
-        // Update download info
-        let downloadTypeHuman: string;
-        switch (type) {
-            case "app-android":
-                downloadTypeHuman = "Android App";
-                break;
-            case "app-pwa":
-                downloadTypeHuman = "PWA App";
-                break;
-            case "server":
-                downloadTypeHuman = "Server";
-                break;
-            case "server-pwa":
-                downloadTypeHuman = "PWA Server";
-                break;
-        }
-        document.getElementById("human-download-type")!.textContent = " " + downloadTypeHuman;
 
         // Generate download URL components
         const organizationName = siteConfig.organizationName;
         const projectName = siteConfig.projectName;
-        const latestVersion = siteConfig.customFields.latestVersion;
+        const latestVersion = siteConfig.customFields.latestVersion as string;
 
         let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${latestVersion}/`;
-        let downloadFile: string;
-        switch (type) {
-            case "app-pwa":
-                downloadFile = `app-v${latestVersion}-pwa.zip`;
-                break;
-            case "app-android":
-                downloadFile = `app-v${latestVersion}-release.apk`;
-                break;
-            case "server":
-                downloadFile = `excalibur_server-${latestVersion}-py3-none-any.whl`;
-                break;
-            case "server-pwa":
-                downloadFile = `excalibur_server-${latestVersion}-py3-none-any_pwa.whl`;
-                break;
-        }
+        let downloadFile = ASSET_ID_TO_FILE[assetID].replace("[VERSION]", latestVersion);
 
         setDownloadURL(downloadURLBase + downloadFile);
     });
@@ -103,19 +88,14 @@ const DownloadAsset: React.FC = () => {
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
                     <h1 className="block text-4xl! font-bold text-gray-800 dark:text-white">
-                        Downloading<span id="human-download-type" className="font-bold"></span>...
+                        Thanks for downloading Excalibur!
                     </h1>
                     <p className="text-center! text-lg">
-                        Your download should start automatically.{" "}
-                        {downloadTriggered && (
-                            <span>
-                                If it didn't start, try this{" "}
-                                <a href={downloadURL} className="underline">
-                                    direct download link
-                                </a>
-                                .
-                            </span>
-                        )}
+                        Your download should start automatically. If it doesn't start soon, try this{" "}
+                        <a href={downloadURL} className="underline">
+                            direct download link
+                        </a>
+                        .
                     </p>
                 </div>
             </div>
