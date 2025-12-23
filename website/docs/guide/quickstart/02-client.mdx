@@ -1,0 +1,112 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# Client Quickstart
+
+Set up a client to connect to an Excalibur server.
+
+:::important
+
+This quickstart assumes that a [server](01-server.mdx) is already set up.
+
+:::
+
+## Installation
+
+<Tabs groupId="platform">
+    <TabItem value="windows" label="Windows">
+
+    TODO: ADD
+
+    </TabItem>
+
+    <TabItem value="macos" label="macOS">
+
+    TODO: ADD
+
+    </TabItem>
+
+    <TabItem value="ubuntu" label="Ubuntu">
+
+    TODO: ADD
+
+    </TabItem>
+
+    <TabItem value="android" label="Android">
+    The Android client is an Android app in the form of an `.apk` file.
+
+    1. Download the Android app from <a href="/download?type=app-android" target="_blank">here</a>; you should now have an `.apk` file.
+    2. Copy the `.apk` file to your Android device.
+    3. Install the app on your Android device.
+        - Do note that you may need to enable installation from unknown sources on your Android device in order to install the `.apk` file.
+
+    :::warning
+
+    It is recommended to *disable* the installation of unknown sources on your Android device after installing the app.
+    
+    :::
+
+    </TabItem>
+
+    <TabItem value="pwa" label="Progressive Web App (PWA)">
+    
+    The PWA distributable is simply a zip file containing all the web assets to run a PWA.
+
+    1. Download the PWA distributable from <a href="/download?type=app-pwa" target="_blank">here</a>.
+    2. Extract the contents of the zip file to a folder of your choice. It should contain a `dist` folder. This is the PWA.
+
+    By running a HTTP server and serving the files in `dist`, you can access the PWA. For example, using Python, you can run
+
+    ```bash
+    python -m http.server 8080
+    ```
+
+    within the `dist` folder to serve the files. Navigating to [`http://localhost:8080`](http://localhost:8080) should bring you to the PWA.
+
+    :::warning
+
+    The above Python command is not safe for production use. It is only for trying out Excalibur via a PWA.
+
+    :::
+
+    </TabItem>
+</Tabs>
+
+## Creating a User
+
+Upon opening the app, you will be greeted with the following screen:
+    
+![Welcome Screen](img/welcome.png)
+
+Click on "Continue".
+
+{/* FIXME: The following section technically depends on whether the server is running on localhost and port is `52419` or something else... */}
+You should see a screen that allows you to enter a server URL:
+
+![Server URL Screen](img/server-choice.png)
+
+Assuming you have set up the server as per the [Server Quickstart](01-server.mdx), enter `http://localhost:8888` and click "Continue".
+
+{/* END FIXME */}
+
+You should now see a login screen:
+
+![Login Screen](img/login.png)
+
+Enter your desired username and password into the fields, then click "Log In". You should see the following pop up:
+
+![User Not Found](img/user-not-found.png)
+
+To create your user on the server, you will need to produce the Account Creation Key (ACK) for the server. This can be found in the server's configuration file, `config.toml`, under the `server.account_creation_key` field. Once you have entered the ACK into the "Account Creation Key" field, click "Continue".
+
+If the ACK was entered correctly, you should see a new pop up titled "Vault Key":
+
+![Initial Vault Key](img/vault-key-initial.png)
+
+This key is the actual key used to encrypt your data. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location. Once you have saved this key, click the "X" button to close the pop up.
+
+Now, simply click on "Log In" to log in to your account:
+
+![Login Screen](img/login.png)
+
+Congratulations! You have successfully set up a client to connect to an Excalibur server. Move on to learn what the [interface](../interface.md) looks like.
