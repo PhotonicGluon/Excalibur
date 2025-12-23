@@ -60,41 +60,29 @@ const Download: React.FC = () => {
         }
         document.getElementById("human-download-type")!.textContent = " " + downloadTypeHuman;
 
-        // Get latest download info
+        // Generate download URL components
         const organizationName = siteConfig.organizationName;
         const projectName = siteConfig.projectName;
-        const releasesURL = `https://api.github.com/repos/${organizationName}/${projectName}/releases`;
-        fetch(releasesURL)
-            .then((res) => res.json())
-            .then((data) => data[0].assets_url)
-            .then((assetsURL) => {
-                if (!assetsURL) {
-                    return;
-                }
-                const p = fetch(assetsURL).then((res) => res.json());
-                p.then((data: { name: string; browser_download_url: string }[]) => {
-                    for (let i = 0; i < data.length; i++) {
-                        const name: string = data[i].name;
-                        const url = data[i].browser_download_url;
-                        if (type === "app-android" && /-release\.apk/i.test(name)) {
-                            setDownloadURL(url);
-                            break;
-                        }
-                        if (type === "app-pwa" && /-pwa\.zip/i.test(name)) {
-                            setDownloadURL(url);
-                            break;
-                        }
-                        if (type === "server" && /-any\.whl/i.test(name)) {
-                            setDownloadURL(url);
-                            break;
-                        }
-                        if (type === "server-pwa" && /-any_pwa\.whl/i.test(name)) {
-                            setDownloadURL(url);
-                            break;
-                        }
-                    }
-                });
-            });
+        const latestVersion = siteConfig.customFields.latestVersion;
+
+        let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${latestVersion}/`;
+        let downloadFile: string;
+        switch (type) {
+            case "app-pwa":
+                downloadFile = `app-v${latestVersion}-pwa.zip`;
+                break;
+            case "app-android":
+                downloadFile = `app-v${latestVersion}-release.apk`;
+                break;
+            case "server":
+                downloadFile = `excalibur_server-${latestVersion}-py3-none-any.whl`;
+                break;
+            case "server-pwa":
+                downloadFile = `excalibur_server-${latestVersion}-py3-none-any_pwa.whl`;
+                break;
+        }
+
+        setDownloadURL(downloadURLBase + downloadFile);
     });
 
     useEffect(() => {
@@ -108,7 +96,6 @@ const Download: React.FC = () => {
     }, [downloadURL]);
 
     // Render
-
     return (
         <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
             <div className="flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center">

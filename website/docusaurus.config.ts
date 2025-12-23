@@ -126,6 +126,9 @@ const config: Config = {
             darkTheme: prismThemes.dracula,
         },
     } satisfies Preset.ThemeConfig,
+    customFields: {
+        latestVersion: "0.2.2"
+    }
 };
 
 export default config;
