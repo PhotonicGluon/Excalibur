@@ -1,5 +1,7 @@
 import { motion } from "motion/react";
+import { isAndroid, isMacOs, isWindows } from "react-device-detect";
 
+import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import Layout from "@theme/Layout";
@@ -72,6 +74,33 @@ const Home: React.FC = () => {
     // States
     const { siteConfig } = useDocusaurusContext();
 
+    // Decide link for download
+    let downloadAsset: { href: string; text: string; newTab?: boolean } = {
+        href: "/downloads",
+        text: "Download",
+    };
+    if (isWindows) {
+        downloadAsset = {
+            href: "/download?id=app-win-installer",
+            text: "Download for Windows",
+            newTab: true,
+        };
+    }
+    if (isMacOs) {
+        downloadAsset = {
+            href: "/download?id=app-mac-dmg",
+            text: "Download for macOS",
+            newTab: true,
+        };
+    }
+    if (isAndroid) {
+        downloadAsset = {
+            href: "/download?id=app-android-apk",
+            text: "Download for Android",
+            newTab: true,
+        };
+    }
+
     // Render
     const featureRows: FeatureCardProps[][] = [];
     const itemsPerRow = 3;
@@ -101,13 +130,13 @@ const Home: React.FC = () => {
                         </motion.p>
                         <motion.div className="flex flex-col justify-center gap-4 sm:flex-row" variants={fadeInUp}>
                             <div className="group relative">
-                                {/* TODO: Make this a platform-specific download? */}
-                                <a
-                                    href="/downloads"
+                                <Link
+                                    to={downloadAsset.href}
                                     className="block w-full rounded-lg bg-blue-600 px-8 py-4 text-center text-lg font-bold text-white! no-underline! hover:bg-blue-700 md:w-fit"
+                                    target={downloadAsset.newTab ? "_blank" : undefined}
                                 >
-                                    Download
-                                </a>
+                                    {downloadAsset.text}
+                                </Link>
                             </div>
 
                             {/* Documentation button */}

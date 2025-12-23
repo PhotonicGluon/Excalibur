@@ -29,7 +29,7 @@ const DownloadCard: React.FC<{ item: DownloadInfo }> = ({ item }) => {
                 {item.links.map((link) => (
                     <div className="flex">
                         <Link
-                            to={"/download-asset?id=" + link.assetID}
+                            to={"/download?id=" + link.assetID}
                             target="_blank"
                             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-600 dark:bg-slate-600"
                         >
