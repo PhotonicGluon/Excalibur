@@ -13,23 +13,7 @@ We also recommend using [`pipx`](https://pipx.pypa.io/stable/) to install the se
 
 ## Installation
 
-There are two types of server distributable:
-- <a href="/download?type=server" target="_blank"><b>API Only</b></a>: This is the main Excalibur API server.
-    - It does not have a user interface; it just provides the API for clients to connect to.
-- <a href="/download?type=server-pwa" target="_blank"><b>With PWA</b></a>: This is the Excalibur API server with a Progressive Web Application (PWA).
-    - This can be thought of as including both the server and client, where you can interact with the API using the provided PWA.
-
-:::tip Which to Choose?
-
-The choice of which distributable to use depends on your use case.
-- The PWA distributable is most suited for trying out Excalibur.
-    - Note that you are only able to connect to the local API server if you use the server with PWA included.
-- The API-only distributable is most suited for production environments.
-    - The client would need to be installed separately, but you will have the freedom to choose any API server.
-
-:::
-
-Click on any the above links to download the server distributable, which is a `.whl` file. Once done, we can install the server.
+First, download the <a href="/download?id=server-whl" target="_blank">Excalibur server</a>, which is a `.whl` file. Once done, we can install the server.
 
 If you are using `pipx`, you can run
 
@@ -53,30 +37,42 @@ Now we need to initialize the server by running
 excalibur init
 ```
 
-This will create a new folder `excalibur-files` in the current working directory. You should also notice a message like `Account Creation Key: kspB$T3Uh3007^bey9G1T+*Ezw8n9fax`; this 32-character string is your Account Creation Key (ACK), which is needed to create an account from the client.
+This will create a new folder `excalibur-files` in the current working directory. You should also notice a message like `Account Creation Key Mnemonic` followed by 24 words; these words are your Account Creation Key (ACK) mnemonic, which is needed to create an account from the client.
+
+:::note
+
+The ACK is actually a 256-bit (32-byte) random number, but it is represented as a mnemonic for ease of use.
+
+:::
+
+:::tip Getting the ACK Mnemonic
+
+If you want to see the ACK mnemonic again, use the command
+
+```bash
+excalibur user ack
+```
+
+This will print the ACK mnemonic to the console.
+
+:::
 
 ### Configuration
 
 The configuration file is a TOML file named `config.toml` in the `excalibur-files` folder. There are a few key values that you might want to edit:
 - **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `20` and `1` respectively.
-
-    :::warning For PWA Users
-
-    If you obtained a server distributable that includes the PWA, it is advised to **increase** the `server.rate_limit.capacity` value to a higher number such as `250`. This is because requests to the PWA files are also counted in the rate limiting calculation.
-
-    :::
 - **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
 - **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`. 
 
 ## Starting the Server
 
-Run the following command in a terminal.
+To start the Excalibur server, run
 
 ```bash
 excalibur start
 ```
 
-You can check if the server is running by going to [`http://localhost:8888/api/well-known/version`](http://localhost:8888/api/well-known/version). You should see a response like the following:
+You can check if the server is running by going to [`http://localhost:52419/api/well-known/version`](http://localhost:52419/api/well-known/version). You should see a response like the following:
 
 ```json
 {
@@ -91,6 +87,16 @@ You might want to change the host and port that the server runs on. You can do t
 
 ```bash
 excalibur start --host 0.0.0.0 --port 8080
+```
+
+:::
+
+:::note
+
+To see all options that you can use when starting the Excalibur server, run
+
+```bash
+excalibur start --help
 ```
 
 :::
