@@ -75,7 +75,25 @@ const config: Config = {
         },
     ],
 
-    plugins: ["./src/plugins/tailwind-config.js"],
+    plugins: [
+        "./src/plugins/tailwind-config.js",
+        [
+            // Changelog 'blog'
+            "@docusaurus/plugin-content-blog",
+            {
+                id: "changelog",
+                routeBasePath: "changelog",
+                path: "./changelog",
+                blogTitle: "Excalibur Changelog",
+                blogDescription: "A history of changes and version updates for Excalibur.",
+                blogSidebarTitle: "Changelog",
+                blogSidebarCount: "ALL",
+                postsPerPage: 5,
+                showReadingTime: false,
+                onUntruncatedBlogPosts: "ignore",
+            },
+        ],
+    ],
 
     themeConfig: {
         // Project's social card
@@ -113,6 +131,7 @@ const config: Config = {
                     sidebarId: "reference",
                     label: "Reference",
                 },
+                { position: "left", to: "/changelog", label: "Changelog" },
                 {
                     href: "https://github.com/PhotonicGluon/Excalibur",
                     label: "GitHub",
