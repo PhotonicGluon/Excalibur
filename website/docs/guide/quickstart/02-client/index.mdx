@@ -65,7 +65,7 @@ This quickstart assumes that a [server](../01-server.mdx) is already set up.
 
 We recommend using the on-app method for initial signup as all the security information is produced on the client and securely sent to the server.
 
-Setting up the user on the server is vulnerable to leaking of the vault key. This is because, if you are strictly following the [security model](/docs/dev/02-security-model.md) of Excalibur, this method would involve entering the vault key ***in the clear*** on the server, which is assumed to read and modify anything on it.
+Setting up the user on the server is vulnerable to leaking of the vault key. This is because, if you are strictly following the [security model](/docs/reference/02-security-model.md) of Excalibur, this method would involve entering the vault key ***in the clear*** on the server, which is assumed to read and modify anything on it.
 
 On the other hand, setting up the user via the app means that the vault key will only be in the clear on the client; when it is sent to the server it will be encrypted using the Account Unlock Key, and all the security details would then be further encrypted in transit using the Account Creation Key. 
 
