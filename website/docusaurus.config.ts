@@ -118,6 +118,18 @@ const config: Config = {
                     label: "GitHub",
                     position: "right",
                 },
+                {
+                    type: "html",
+                    position: "right",
+                    value: `
+                        <a
+                            href="/downloads"
+                            class="block w-fit rounded-lg bg-blue-600 px-4 py-2 text-center text-white no-underline hover:bg-blue-700"
+                        >
+                            Download
+                        </a>
+                    `,
+                },
             ],
         },
         prism: {
@@ -127,8 +139,8 @@ const config: Config = {
         },
     } satisfies Preset.ThemeConfig,
     customFields: {
-        latestVersion: "0.2.2"
-    }
+        latestVersion: "0.2.2",
+    },
 };
 
 export default config;

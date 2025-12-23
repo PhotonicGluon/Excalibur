@@ -1,61 +1,52 @@
-import { Apple, Code, Globe, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
+import { Apple, Globe, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
 import React from "react";
 
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import Layout from "@theme/Layout";
 
-import DownloadCard, { DownloadLink } from "@site/src/components/DownloadCard";
+import DownloadCard, { DownloadInfo } from "@site/src/components/DownloadCard";
 
 const DownloadPage: React.FC = () => {
     // States
     const { siteConfig } = useDocusaurusContext();
 
-    const appDownloads: DownloadLink[] = [
+    const appDownloads: DownloadInfo[] = [
         {
             platform: "Windows",
-            label: "Installer (.exe)",
-            href: "#",
             icon: <Laptop className="size-5" />,
+            links: [{ label: "Installer (.exe)", href: "#" }],
         },
         {
             platform: "macOS",
-            label: "Universal Disk Image (.dmg)",
-            href: "#",
             icon: <Apple className="size-5" />,
+            links: [{ label: "Universal Disk Image (.dmg)", href: "#" }],
         },
         {
             platform: "Linux",
-            label: "AppImage / .deb",
-            href: "#",
             icon: <Terminal className="size-5" />,
+            links: [{ label: "AppImage / .deb", href: "#" }],
         },
         {
             platform: "Android",
-            label: "APK Package",
-            href: "#",
             icon: <Smartphone className="size-5" />,
+            links: [{ label: "APK Package", href: "#" }],
         },
         {
-            platform: "PWA",
-            label: "Web Assets (.zip)",
-            href: "#",
+            platform: "Progressive Web App (PWA)",
             icon: <Globe className="size-5" />,
+            links: [{ label: "Web Assets (.zip)", href: "#" }],
         },
     ];
 
-    const serverDownloads: DownloadLink[] = [
+    const serverDownloads: DownloadInfo[] = [
         {
-            platform: "Server",
-            label: "Wheel (.whl)",
-            href: "#",
+            platform: "Python Package",
             icon: <Server className="size-5" />,
-        },
-        {
-            platform: "Server",
-            label: "Source (.tar.gz)",
-            href: "#",
-            icon: <Code className="size-5" />,
+            links: [
+                { label: "Wheel (.whl)", href: "#" },
+                { label: "Source (.tar.gz)", href: "#" },
+            ],
         },
     ];
 
