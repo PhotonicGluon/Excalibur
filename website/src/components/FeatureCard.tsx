@@ -12,7 +12,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) =
     return (
         <motion.div
             variants={fadeInUp}
-            className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800/50"
+            className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-2xl dark:border-gray-700 dark:bg-slate-800/50"
         >
             <div className="flex items-center gap-y-4 lg:block lg:gap-0">
                 <div className="text-primary-500 mb-4 text-4xl">{icon}</div>

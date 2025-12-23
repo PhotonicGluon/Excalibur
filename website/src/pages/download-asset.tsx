@@ -9,7 +9,7 @@ import WaveBackground from "@site/src/components/WaveBackground";
 const DOWNLOAD_TYPES = ["app-android", "app-pwa", "server", "server-pwa"];
 
 // Main component
-const Download: React.FC = () => {
+const DownloadAsset: React.FC = () => {
     // States
     const { siteConfig } = useDocusaurusContext();
 
@@ -123,4 +123,4 @@ const Download: React.FC = () => {
     );
 };
 
-export default Download;
+export default DownloadAsset;

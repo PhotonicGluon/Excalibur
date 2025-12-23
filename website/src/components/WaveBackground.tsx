@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 
 import { useColorMode } from "@docusaurus/theme-common";
 
-const WaveBackground: React.FC = () => {
+interface ContainerProps {
+    className?: string;
+}
+
+const WaveBackground: React.FC<ContainerProps> = (props) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { colorMode } = useColorMode();
 
@@ -74,7 +78,12 @@ const WaveBackground: React.FC = () => {
         };
     }, [colorMode]);
 
-    return <canvas ref={canvasRef} className="absolute inset-0 -z-10 bg-gray-50 dark:bg-gray-900" />;
+    return (
+        <canvas
+            ref={canvasRef}
+            className={"absolute inset-0 -z-10 bg-slate-50 dark:bg-slate-900 " + (props.className ?? "")}
+        />
+    );
 };
 
 export default WaveBackground;
