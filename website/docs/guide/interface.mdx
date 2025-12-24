@@ -2,17 +2,21 @@
 sidebar_label: Interface
 ---
 
+import Image from "@theme/IdealImage";
+
 # Understanding the Interface
 
 When you log in for the first time, the file explorer of the app should look something like this:
 
-![File Explorer Empty](./img/explorer-empty.png)
+<Image img={require("./img/explorer-empty.png")} alt="File Explorer Empty" />
 
 ## Adding Items
 
 The blue "+" button at the bottom of the screen allows you to add stuff. Tapping/clicking on it will expand it:
 
-![Add Button Options](./img/add-options.png)
+<div className="max-w-16">
+<Image img={require("./img/add-options.png")} alt="Add Button Options" />
+</div>
 
 - The top option allows you to upload a file.
     - The file will be encrypted _before_ it is sent over the network, where it will be encrypted _again_. Thus, **the server only stores encrypted files**.
@@ -24,7 +28,7 @@ Close the menu by clicking on the blue button again (which now displays "&times;
 
 After adding some items, your file explorer should look something like this:
 
-![File Explorer](./img/explorer.png)
+<Image img={require("./img/explorer.png")} alt="File Explorer" />
 
 - Tap on a _file_ to download and decrypt the file.
     - The file will be encrypted during transit.

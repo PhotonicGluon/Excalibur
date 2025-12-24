@@ -78,6 +78,15 @@ const config: Config = {
     plugins: [
         "./src/plugins/tailwind-config.js",
         [
+            "@docusaurus/plugin-ideal-image",
+            {
+                quality: 85,
+                max: 1080,
+                min: 480,
+                steps: 4,
+            },
+        ],
+        [
             // Changelog 'blog'
             "@docusaurus/plugin-content-blog",
             {

@@ -1,3 +1,4 @@
+import Image from "@theme/IdealImage";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
@@ -38,13 +39,13 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
     Due to Apple's security policy, you might see a notification that "Apple could not verify "Excalibur" is free of malware".
     
     <div class="w-64">
-    !["Excalibur" Not Opened Alert](img/macos/not-opened.png)
+    <Image img={require("./img/macos/not-opened.png")} alt="Excalibur Not Opened Alert" />
     </div>
 
     You will need to manually allow the app to open. On recent macOS versions, this can be done by following these steps:
 
     1. Open System Preferences > Privacy & Security.
-    2. Scroll down until you see a message like "Excalibur was blocked to protect your Mac." ![Blocked to Protect](img/macos/blocked-to-protect.png)
+    2. Scroll down until you see a message like "Excalibur was blocked to protect your Mac." <Image img={require("./img/macos/blocked-to-protect.png")} alt="Blocked to Protect" />
     3. Click "Open Anyway". You might need to enter an administrator's password.
     4. Excalibur should open.
 
@@ -103,15 +104,15 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
 ## Creating a User
 
 Upon opening the app, you will be greeted with the following screen:
-    
-![Welcome Screen](img/welcome.png)
+
+<Image img={require("./img/welcome.png")} alt="Welcome Screen" />
 
 Click on "Continue".
 
 {/* FIXME: The following section technically depends on whether the server is running on localhost and port is `52419` or something else... */}
 You should see a screen that allows you to enter a server URL:
 
-![Server URL Screen](img/server-choice.png)
+<Image img={require("./img/server-choice.png")} alt="Server URL Screen" />
 
 Assuming you have set up the server as per the [Server Quickstart](01-server.mdx), enter `http://localhost:8888` and click "Continue".
 
@@ -119,22 +120,24 @@ Assuming you have set up the server as per the [Server Quickstart](01-server.mdx
 
 You should now see a login screen:
 
-![Login Screen](img/login.png)
+<Image img={require("./img/login.png")} alt="Login Screen" />
 
 Enter your desired username and password into the fields, then click "Log In". You should see the following pop up:
 
-![User Not Found](img/user-not-found.png)
+<Image img={require("./img/user-not-found.png")} alt="User Not Found" />
 
 To create your user on the server, you will need to produce the Account Creation Key (ACK) for the server. This can be found in the server's configuration file, `config.toml`, under the `server.account_creation_key` field. Once you have entered the ACK into the "Account Creation Key" field, click "Continue".
 
 If the ACK was entered correctly, you should see a new pop up titled "Vault Key":
 
-![Initial Vault Key](img/vault-key-initial.png)
+<div className="max-w-100">
+<Image img={require("./img/vault-key-initial.png")} alt="Initial Vault Key" />
+</div>
 
 This key is the actual key used to encrypt your data. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location. Once you have saved this key, click the "X" button to close the pop up.
 
 Now, simply click on "Log In" to log in to your account:
 
-![Login Screen](img/login.png)
+<Image img={require("./img/login.png")} alt="Login Screen" />
 
-Congratulations! You have successfully set up a client to connect to an Excalibur server. Move on to learn what the [interface](../interface.md) looks like.
+Congratulations! You have successfully set up a client to connect to an Excalibur server. Move on to learn what the [interface](../interface.mdx) looks like.

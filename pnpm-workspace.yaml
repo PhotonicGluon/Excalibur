@@ -1,10 +1,11 @@
 packages:
-- website
+  - website
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - core-js
   - core-js-pure
+  - sharp
 
 sideEffectsCache: false
 virtualStoreDirMaxLength: 60 # Make this a common setting between different operating systems
