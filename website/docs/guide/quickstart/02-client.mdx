@@ -38,8 +38,10 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
 
     Due to Apple's security policy, you might see a notification that "Apple could not verify "Excalibur" is free of malware".
     
-    <div class="w-64">
+    <div className="w-full">
+    <div className="mx-auto max-w-64">
     <Image img={require("./img/macos/not-opened.png")} alt="Excalibur Not Opened Alert" />
+    </div>
     </div>
 
     You will need to manually allow the app to open. On recent macOS versions, this can be done by following these steps:
@@ -141,8 +143,10 @@ You can just copy and paste the 24-word mnemonic into the text box. This is espe
 
 Once you have entered the mnemonic, click "Confirm". If the ACK was entered correctly, you should see a new pop up titled "Vault Key":
 
-<div className="max-w-100">
+<div className="w-full">
+<div className="mx-auto max-w-100">
 <Image img={require("./img/vault-key-initial.png")} alt="Vault Key Screen" />
+</div>
 </div>
 
 This key is the actual key used to encrypt your data. Actually, what is shown is the vault key mnemonic, similar to that of the ACK mnemonic that you entered. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location.

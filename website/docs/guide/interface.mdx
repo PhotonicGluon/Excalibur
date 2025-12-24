@@ -12,10 +12,15 @@ When you log in for the first time, the file explorer of the app should look som
 
 ## Adding Items
 
+There are two main ways to add items to your vault.
+
+### Floating Action Button (FAB)
 The blue "+" button at the bottom of the screen allows you to add stuff. Tapping/clicking on it will expand it:
 
-<div className="max-w-16">
+<div className="w-full">
+<div className="mx-auto max-w-16">
 <Image img={require("./img/add-options.png")} alt="Add Button Options" />
+</div>
 </div>
 
 - The top option allows you to upload a file.
@@ -23,6 +28,21 @@ The blue "+" button at the bottom of the screen allows you to add stuff. Tapping
 - The second option allows you to create a new folder.
 
 Close the menu by clicking on the blue button again (which now displays "&times;").
+
+### Drag-and-Drop
+
+:::note
+
+This is only supported on desktop/PWA.
+
+:::
+
+You can also drag and drop files and folders onto the screen.
+
+<Image img={require("./img/drag-and-drop.png")} alt="Drag and Drop Interface" />
+
+- Dragging and dropping file(s) will upload them to the current folder.
+- Dragging and dropping a folder (which could contain files/folders) will create a new folder with the same name in the current location, and also upload all the files/folders inside it.
 
 ## Navigation
 
@@ -36,18 +56,24 @@ After adding some items, your file explorer should look something like this:
 - Tap on a _folder_ to navigate into it.
 - Tap on the ellipsis on the side of an item to bring up a popup:
     - "Rename" allows you to rename the item.
+    - "Move" allows you to specify a new folder to move the item to.
     - "Delete" allows you to delete the item.
 
 The top-right ellipsis menu has two options:
 
 - "View Vault Key"
-- "Open Excalibur Folder", which is only available on mobile platforms (for PWA, the files are downloaded to your device's Downloads folder)
+- "Open Excalibur Folder", which is only available on mobile platforms (for desktop/PWA, the files are downloaded to your device's Downloads folder)
 
 You can sort the items in the file explorer by tapping on the up arrow on the side of "Name".
 
-The countdown timer at the top of the screen shows how long your session lasts.
+## Jobs
 
-:::warning Countdown Expiry
+When you upload or download a file, a new job is created. The list of active jobs can be accessed by tapping/clicking on the "jobs" text at the top of the screen.
 
-Any upload that is performed _near_ or _after_ the countdown expires **may be partially or fully uploaded**. Avoid uploading files when the countdown is about to expire.
-:::
+<div className="w-full">
+<div className="mx-auto max-w-100">
+<Image img={require("./img/jobs.png")} alt="Jobs" />
+</div>
+</div>
+
+An active job can be cancelled by hovering over the circular progress bar and then tapping/clicking on the "x".
