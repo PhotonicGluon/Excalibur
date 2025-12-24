@@ -101,7 +101,7 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
     </TabItem>
 </Tabs>
 
-## Creating a User
+## Onboarding
 
 Upon opening the app, you will be greeted with the following screen:
 
@@ -109,32 +109,53 @@ Upon opening the app, you will be greeted with the following screen:
 
 Click on "Continue".
 
-{/* FIXME: The following section technically depends on whether the server is running on localhost and port is `52419` or something else... */}
-You should see a screen that allows you to enter a server URL:
+At this stage, one of two things might happen. If you started the server on `localhost`/`127.0.0.1` with the default port (i.e., `52419`), you should be automatically redirected to the login page. What happened is that the app autodetected a running Excalibur server instance on the host and thus set the server URL automatically. In this case, you can go straight to [creating a new user](#creating-a-user).
+
+Otherwise, you should see a screen that allows you to enter a server URL:
 
 <Image img={require("./img/server-choice.png")} alt="Server URL Screen" />
 
-Assuming you have set up the server as per the [Server Quickstart](01-server.mdx), enter `http://localhost:8888` and click "Continue".
+Enter the server URL in the provided text field. For example, if you are running the server on your local machine with port `8888`, enter `http://localhost:8888` and click "Continue".
 
-{/* END FIXME */}
+## Creating a User
 
-You should now see a login screen:
+You should now see a login screen.
 
 <Image img={require("./img/login.png")} alt="Login Screen" />
 
-Enter your desired username and password into the fields, then click "Log In". You should see the following pop up:
+Click on the "Sign Up" hyperlink. You should now see this page.
 
-<Image img={require("./img/user-not-found.png")} alt="User Not Found" />
+<Image img={require("./img/sign-up.png")} alt="Sign Up Screen" />
 
-To create your user on the server, you will need to produce the Account Creation Key (ACK) for the server. This can be found in the server's configuration file, `config.toml`, under the `server.account_creation_key` field. Once you have entered the ACK into the "Account Creation Key" field, click "Continue".
+Enter your desired username and password into the fields. To create your user on the server, you will also need to provide the Account Creation Key (ACK) Mnemonic of the server. The mnemonic can be retrieved by running the command
+```bash
+excalibur user ack
+```
+on the server.
 
-If the ACK was entered correctly, you should see a new pop up titled "Vault Key":
+:::tip
+
+You can just copy and paste the 24-word mnemonic into the text box. This is especially convenient if you are running the server on the same machine as the client.
+
+:::
+
+Once you have entered the mnemonic, click "Confirm". If the ACK was entered correctly, you should see a new pop up titled "Vault Key":
 
 <div className="max-w-100">
-<Image img={require("./img/vault-key-initial.png")} alt="Initial Vault Key" />
+<Image img={require("./img/vault-key-initial.png")} alt="Vault Key Screen" />
 </div>
 
-This key is the actual key used to encrypt your data. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location. Once you have saved this key, click the "X" button to close the pop up.
+This key is the actual key used to encrypt your data. Actually, what is shown is the vault key mnemonic, similar to that of the ACK mnemonic that you entered. It is ***extremely unlikely*** that you will need to use this key, but it is recommended to keep it in a secure location.
+
+:::important
+
+Please ***scroll down*** on the pop-up to see the full vault key mnemonic.
+
+:::
+
+Once you have saved this key, click the "X" button to close the pop up. You should be redirected back to the login screen.
+
+## Logging In
 
 Now, simply click on "Log In" to log in to your account:
 
