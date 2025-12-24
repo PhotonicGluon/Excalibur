@@ -22,7 +22,35 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
 
     <TabItem value="macos" label="macOS">
 
-    TODO: ADD
+    The macOS client can be obtained as either a `.dmg` file or a zipped `.app` file.
+    - **Disk Image (`.dmg`)**:
+        1. Download the `.dmg` file from <a href="/download?id=app-mac-dmg" target="_blank">here</a>.
+        2. Double-click the `.dmg` file to open it.
+        3. Drag the Excalibur application into the Applications folder.
+    - **Zipped Application (`.zip`)**:
+        1. Download the zipped `.app` file from <a href="/download?id=app-mac-app" target="_blank">here</a>.
+        2. Extract the downloaded `.zip` file to obtain the Excalibur application.
+
+    Double-click the Excalibur application to launch it.
+
+    :::note "Excalibur Not Opened"
+
+    Due to Apple's security policy, you might see a notification that "Apple could not verify "Excalibur" is free of malware".
+    
+    <div class="w-64">
+    !["Excalibur" Not Opened Alert](img/macos/not-opened.png)
+    </div>
+
+    You will need to manually allow the app to open. On recent macOS versions, this can be done by following these steps:
+
+    1. Open System Preferences > Privacy & Security.
+    2. Scroll down until you see a message like "Excalibur was blocked to protect your Mac." ![Blocked to Protect](img/macos/blocked-to-protect.png)
+    3. Click "Open Anyway". You might need to enter an administrator's password.
+    4. Excalibur should open.
+
+    Subsequent launches should not need to repeat this process.
+
+    :::
 
     </TabItem>
 
@@ -35,7 +63,7 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
     <TabItem value="android" label="Android">
     The Android client is an Android app in the form of an `.apk` file.
 
-    1. Download the Android app from <a href="/download?type=app-android" target="_blank">here</a>; you should now have an `.apk` file.
+    1. Download the Android app from <a href="/download?id=app-android-apk" target="_blank">here</a>; you should now have an `.apk` file.
     2. Copy the `.apk` file to your Android device.
     3. Install the app on your Android device.
         - Do note that you may need to enable installation from unknown sources on your Android device in order to install the `.apk` file.
@@ -52,7 +80,7 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
     
     The PWA distributable is simply a zip file containing all the web assets to run a PWA.
 
-    1. Download the PWA distributable from <a href="/download?type=app-pwa" target="_blank">here</a>.
+    1. Download the PWA distributable from <a href="/download?id=app-pwa" target="_blank">here</a>.
     2. Extract the contents of the zip file to a folder of your choice. It should contain a `dist` folder. This is the PWA.
 
     By running a HTTP server and serving the files in `dist`, you can access the PWA. For example, using Python, you can run
