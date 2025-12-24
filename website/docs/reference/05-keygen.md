@@ -4,6 +4,8 @@ This document describes the network key generation process used in Excalibur, wh
 
 The key generation process can be concisely summarized in the following flowchart.
 
+<div className="text-center">
+
 ```mermaid
 flowchart TD
     P[/Password/]
@@ -26,6 +28,8 @@ flowchart TD
     HKDF-->XOR
     XOR-->OK[Output Key]
 ```
+
+</div>
 
 Let's examine each step in detail.
 

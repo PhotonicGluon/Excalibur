@@ -8,6 +8,8 @@ Although some of the endpoints of the server is available without authentication
 
 The initial authentication process uses a [WebSocket](https://en.wikipedia.org/wiki/WebSocket) connection to the `/api/auth` endpoint. The rough process is as follows:
 
+<div className="text-center">
+
 ```mermaid
 sequenceDiagram
     participant C as Client
@@ -32,6 +34,8 @@ sequenceDiagram
     activate S
     S->>-C: Authentication token
 ```
+
+</div>
 
 Let us examine the process in more detail.
 

@@ -18,6 +18,7 @@ An ExEF file composes three main parts: a fixed-size header, the variable-length
 
 The following is a diagram of the ExEF header. The numbers represent 0-indexed byte positions.
 
+<div className="text-center">
 ```mermaid
 ---
 config:
@@ -33,6 +34,7 @@ packet
   18-31: "Header MAC"
   32-39: "Ciphertext Size"
 ```
+</div>
 
 The table below describes the fields present in the header. All multi-byte integers are stored in **Big-Endian** format (network byte order).
 
@@ -93,7 +95,7 @@ The header MAC field in the header uses HMAC-SHA256 with the key $k_m$. The proc
 
 :::important
 
-The header MAC is not used for authentication. It is only used as a quick check on the provided vault key $K$.
+The header MAC is not used for authentication. It is only used as a quick verification on the provided vault key $K$.
 
 :::
 

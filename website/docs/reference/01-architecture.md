@@ -10,6 +10,8 @@ The client application is primarily built using modern web technologies while al
 
 The diagram below summarizes the different layers of the client application.
 
+<div className="text-center">
+
 ```mermaid
 block
     columns 3
@@ -24,6 +26,8 @@ block
         native_plugins["Native Plugins"]:1
     end
 ```
+
+</div>
 
 - The top layer is the user interface. This is the primary way users interact with the application.
 - The layer below the user interface is the PWA layer. This layer is responsible for handling the interface operations and design.
@@ -51,6 +55,8 @@ This is why we use Capacitor to handle the native layer, as it provides a consis
 
 The structure of the API server is significantly simpler than the client application. It is built using Python and FastAPI and provides the backend services for the Excalibur platform.
 
+<div className="text-center">
+
 ```mermaid
 block
     columns 2
@@ -58,6 +64,8 @@ block
     fastapi["FastAPI"]
     duckdb["DuckDB"]
 ```
+
+</div>
 
 - Like the user layer for the client application, this layer is what is exposed to client applications. All (user-facing) functionality implemented by Excalibur is available at this layer.
 
