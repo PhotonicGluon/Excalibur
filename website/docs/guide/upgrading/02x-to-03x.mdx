@@ -1,0 +1,79 @@
+---
+sidebar_label: Updating to 0.3
+---
+
+# Upgrading from Excalibur 0.2 to Excalibur 0.3
+
+In this guide, you'll find steps to update your Excalibur app and server instances to version 0.3.
+
+:::important
+
+Please read this guide carefully and follow all steps.
+
+:::
+
+This guide will assume that the `0.3.x` version of the Excalibur server is installed. If you are using version `0.2.x`, please upgrade to `0.3.x` before proceeding.
+
+## Configuration File v2
+
+Excalibur 0.3 modifies the configuration file from version `1` to version `2`, with the following changes.
+
+- `security.account_creation_key` was changed from a 32-character printable ASCII string to a 64-character hexadecimal string. This is to increase the key space size to $2^{256}$.
+- A new field `logging.max_log_age` was added. This field specifies the maximum age of logs to keep.
+
+Existing configuration files can be upgraded by running
+
+```bash
+excalibur config update
+```
+
+on the server. Verify that the updated configuration is valid by running the command
+
+```bash
+excalibur config validate
+```
+
+You should see `Config is valid!` appear in the terminal.
+
+## ExEF v3
+
+Excalibur 0.3 also introduces [version 3 of the Excalibur Encryption Format (ExEF)](../../reference/06-exef.md). Among the changes made to the ExEF is the method of encrypting the data to be stored in the file. This means that ***ExEF v3 is <span className="underline">not</span> compatible with ExEF v2***, which is what was being used in Excalibur 0.2.
+
+The ExEF is used in many parts of the application and server. The most relevant two uses are:
+- Files stored in users' vaults
+- Vault keys stored in the Excalibur database
+
+Unfortunately, due to the incompatibility of ExEF v3 with ExEF v2, it is necessary to ***reset the vault and database*** of the Excalibur server. **Please make sure to back up your vault before proceeding.**
+
+### Resetting the Vault
+
+We first need to reset the vault on the Excalibur server.
+
+On the server,
+
+1. Navigate to the `excalibur-files` directory.
+2. Make sure that the server is *not* running.
+3. Delete the `vault` directory (or whatever folder is specified as `storage.vault_folder` in `config.toml`).
+
+### Resetting the Database
+
+We now need to reset the database. Again, on the server,
+
+1. Navigate to the `excalibur-files` directory.
+2. Make sure that the server is *not* running.
+3. Delete `excalibur.duckdb` (or whatever database file is specified as `storage.database.file` in `config.toml`).
+4. Run
+   ```bash
+   excalibur init
+   ```
+   to initialize the database.
+
+You should see a new `excalibur.duckdb` file in the `excalibur-files` directory.
+
+### Recreating Users
+
+After these steps are done, you will need to recreate your users on the server. Follow [these steps](../quickstart/02-client.mdx#creating-a-user) to create new users.
+
+## Conclusion
+
+These are the steps to upgrade your Excalibur app and server instances to version 0.3. After following these steps, your Excalibur instance should be running on version 0.3.
