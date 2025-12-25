@@ -1,12 +1,8 @@
----
-sidebar_label: Custom Client
----
+# Authentication
 
-# Making a Custom Client
+Before allowing any user access to the files of a user on the server, they have to be authenticated.
 
-Any Excalibur server exposes a common API for clients to connect to. The documentation for this API is available at the `/api/docs` endpoint for any Excalibur server.
-
-## Authentication Process
+## Process
 
 To communicate with an Excalibur server, the following steps should be performed.
 
@@ -16,14 +12,14 @@ To communicate with an Excalibur server, the following steps should be performed
     1. If not, get the SRP group size.
     2. Then add the user on the server.
 3. Authenticate.
-    - The description of the authentication protocol can be found [here](/docs/reference/04-authentication.md).
+    - The description of the authentication protocol can be found [here](../03-authentication.md).
     - The result of this should be a JSON Web Token (JWT) containing a **communication UUID**.
 4. Get user's encrypted vault key.
     - This request _needs to be authenticated_ with the JWT and a Proof-of-Possession (PoP). Again, more details on the authentication protocol can be found at the link above.
 
-Once this is complete, your client is free to request any other data from the server, _provided that authentication is performed_. Do note that all encrypted data will be stored in / sent as [the Excalibur Encryption Format (ExEF)](/docs/reference/06-exef.md).
+Once this is complete, your client is free to request any other data from the server, _provided that authentication is performed_. Do note that all encrypted data will be stored in / sent as [the Excalibur Encryption Format (ExEF)](../06-exef.md).
 
-### Example
+## Official Implementation
 
 Here's how the official Excalibur client performs the above steps:
 
@@ -37,4 +33,4 @@ Here's how the official Excalibur client performs the above steps:
 
 ## Key Management
 
-The process above requires us to (a) authenticate and (b) decrypt the user's vault key. **_It is not advisable to use the same key to do both these things_**. Use one key to authenticate (the "SRP key") and another key to unlock the vault (the "Account Unlock Key (AUK)"). Read more in the [key generation](/docs/reference/05-keygen.md) process.
+The process described above requires us to (a) authenticate and (b) decrypt the user's vault key. **_It is not advisable to use the same key for both operations_**. Use one key to authenticate (the "SRP key") and another key to unlock the vault (the "Account Unlock Key (AUK)"). Read more in the [key generation](../04-keygen.md) process.

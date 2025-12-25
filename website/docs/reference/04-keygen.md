@@ -55,7 +55,7 @@ Let's examine each step in detail.
 Note that this key generation step is repeated **_twice_**. Why? Well, we need two keys for different purposes:
 
 - A key for unlocking the vault[^vault-key], called the **Account Unlock Key** (AUK)
-- A key for [SRP authentication](/docs/reference/04-authentication.md), called the **SRP Key**
+- A key for [SRP authentication](./03-authentication.md), called the **SRP Key**
 
 [^vault-key]: More accurately, the key is actually used to decrypt the file that contains the vault key.
 
