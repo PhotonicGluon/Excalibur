@@ -100,6 +100,7 @@ function useProvideAuth(): AuthProvider {
                 alert("Heartbeat failed, sending back to login screen");
                 console.debug("Heartbeat failed, sending back to login screen");
                 window.location.href = "/login";
+                logoutFunc();
                 return;
             }
         }, HEARTBEAT_INTERVAL * 1000);
