@@ -25,7 +25,7 @@ export const features: FeatureCardProps[] = [
     },
     {
         title: "Multi-Platform",
-        description: "Available as an Android app and a Progressive Web App (PWA).",
+        description: "Available as a desktop app, an Android app, and a Progressive Web App (PWA).",
         icon: "📱",
     },
     {
