@@ -16,7 +16,7 @@
 - 🕵️ **Zero-Trust By Default**: Designed with zero-trust principles in mind. Trust no one but yourself.
 - 🔒 **End-to-End Encryption**: Data in transit are always encrypted using AES-GCM.
 - 🗝️ **Zero-Knowledge Authentication**: Your password never leaves your device.
-- 📱 **Multi-Platform**: Available as an Android app and a Progressive Web App (PWA).
+- 📱 **Multi-Platform**: Available as a desktop app, an Android app, and a Progressive Web App (PWA).
 - 📦 **Open Source**: Fully transparent and auditable codebase for maximum trust.
 - 🗺️ **Attestations**: Everything has a publicly traceable provenance.
 - 🖥️ **Self-Hostable**: Deploy your own instance for complete control over your data.
