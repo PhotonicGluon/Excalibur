@@ -236,7 +236,7 @@ const Login: React.FC = () => {
                 mainContentID="main-content"
                 menuController={menuController}
                 preventExit={auth.serverInfo?.isFixed}
-                exitButtonText="Logout"
+                exitButtonText="Change Server"
                 onExit={() => {
                     auth.logout(true); // Also remove saved API URL
                     router.push("/server-choice", "forward", "replace");
@@ -316,19 +316,18 @@ const Login: React.FC = () => {
                             </form>
 
                             <hr className="mt-4 mb-2 h-px w-full bg-neutral-200 dark:bg-neutral-700"></hr>
-                            <IonText className="text-center">
+                            <IonText className="mt-2 text-center">
                                 No account?{" "}
-                                <a
+                                <span
                                     id="new-user-link"
-                                    className="text-primary"
-                                    href="#"
+                                    className="text-blue-400 underline transition-all duration-100 hover:cursor-pointer hover:text-blue-500"
                                     onClick={(event) => {
                                         event.preventDefault();
                                         router.push("/new-user", "forward", "push");
                                     }}
                                 >
                                     Sign Up
-                                </a>
+                                </span>
                             </IonText>
                         </div>
                     </div>

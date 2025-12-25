@@ -349,7 +349,7 @@ const FileExplorer: React.FC = () => {
                             {/* Jobs' summary */}
                             <div
                                 id="jobs-summary"
-                                className="hover:cursor-pointer"
+                                className="p-2 hover:cursor-pointer"
                                 onClick={(e) => {
                                     jobsPopover.current!.event = e;
                                     setShowJobsPopover(true);

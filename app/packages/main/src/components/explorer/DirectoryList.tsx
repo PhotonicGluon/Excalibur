@@ -90,7 +90,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                         />
                     ))}
                 {!(props.items && props.items.length > 0) && (
-                    <div className="flex justify-center">
+                    <div className="mt-4 flex justify-center">
                         <div className="flex flex-col items-center">
                             <IonIcon icon={sadOutline} className="size-16 pb-1"></IonIcon>
                             <IonLabel className="text-lg">No items</IonLabel>
