@@ -67,6 +67,9 @@ Here are two examples of messages:
 
 ### Specification
 
+<details>
+<summary>Authentication Process Specification</summary>
+
 Let
 
 - $N$ denote the SRP prime according to [RFC5054, Appendix A](https://datatracker.ietf.org/doc/html/rfc5054#appendix-A);
@@ -122,6 +125,8 @@ The initial authentication process is as follows:
 The full code that implements the server-side checking can be found in the [`comms.py` file](https://github.com/PhotonicGluon/Excalibur/blob/main/server/excalibur_server/api/routes/auth/comms.py).
 
 :::
+
+</details>
 
 ## Authenticating Subsequent Requests
 
