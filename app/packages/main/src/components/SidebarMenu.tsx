@@ -12,7 +12,7 @@ import {
     IonToolbar,
     useIonRouter,
 } from "@ionic/react";
-import { informationCircleOutline, logOutOutline, settingsOutline } from "ionicons/icons";
+import { logOutOutline, settingsOutline } from "ionicons/icons";
 
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
@@ -74,18 +74,6 @@ const SidebarMenu: React.FC<ContainerProps> = ({
                         <IonLabel>
                             <IonIcon icon={settingsOutline} size="large" />
                             <IonText className="pl-2">Settings</IonText>
-                        </IonLabel>
-                    </IonItem>
-                    <IonItem
-                        button={true}
-                        onClick={() => {
-                            router.push("/credits", "forward", "push");
-                            menuController.close();
-                        }}
-                    >
-                        <IonLabel>
-                            <IonIcon icon={informationCircleOutline} size="large" />
-                            <IonText className="pl-2">Credits</IonText>
                         </IonLabel>
                     </IonItem>
                     {!preventExit && (

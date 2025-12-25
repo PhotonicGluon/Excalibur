@@ -29,7 +29,6 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
-import Credits from "@pages/Credits";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
@@ -181,7 +180,6 @@ const App: React.FC = () => {
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
                     <Route path="/settings" component={Settings} />
-                    <Route path="/credits" component={Credits} />
 
                     {/* Testing */}
                     <Route path="/test" component={TestPage} />
