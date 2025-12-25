@@ -71,7 +71,7 @@ export const signatureFeatures: SignatureFeatureProps[] = [
 
 // Main component
 const Home: React.FC = () => {
-    // States
+    // Contexts
     const { siteConfig } = useDocusaurusContext();
 
     // Decide link for download

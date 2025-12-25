@@ -1,16 +1,11 @@
 import { Apple, Globe, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
 import React from "react";
 
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-
 import Layout from "@theme/Layout";
 
 import DownloadCard, { DownloadInfo } from "@site/src/components/DownloadCard";
 
 const DownloadPage: React.FC = () => {
-    // States
-    const { siteConfig } = useDocusaurusContext();
-
     const appDownloads: DownloadInfo[] = [
         {
             platform: "Windows",
@@ -58,7 +53,7 @@ const DownloadPage: React.FC = () => {
     ];
 
     return (
-        <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
+        <Layout title="Downloads" description="Download Excalibur for your preferred platform">
             <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-900 dark:bg-slate-900">
                 {/* Hero Section */}
                 <header className="relative mb-12 border-b border-slate-200 bg-white pt-16 pb-12 dark:border-slate-800 dark:bg-slate-950">

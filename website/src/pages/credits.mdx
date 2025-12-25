@@ -1,0 +1,66 @@
+---
+title: Credits
+description: Credits for Excalibur
+hide_table_of_contents: false
+---
+
+import CREDITS from "@site/src/credits";
+import CreditsCard from "@site/src/components/CreditsCard";
+
+# Credits
+
+Excalibur was made possible by these open-source frameworks and libraries.
+
+## App
+
+### Frameworks and Libraries
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.app.libraries.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+### Electron
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.app.electron.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+### Fonts
+<div className="grid grid-cols-2 gap-2 mb-4">
+{CREDITS.app.fonts.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+### Others
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.app.others.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+## Server
+
+### Libraries
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.server.libraries.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+
+### Database
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.server.database.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>
+
+### Others
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+{CREDITS.server.others.map((item) => (
+  <CreditsCard key={item.name} item={item} />
+))}
+</div>

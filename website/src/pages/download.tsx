@@ -27,11 +27,11 @@ const ASSET_ID_TO_FILE: Record<string, string> = {
 
 // Main component
 const DownloadAsset: React.FC = () => {
-    // States
+    // Contexts
     const { siteConfig } = useDocusaurusContext();
 
+    // States
     const [downloadURL, setDownloadURL] = useState<string>("");
-    const [downloadTriggered, setDownloadTriggered] = useState<boolean>(false);
 
     // Functions
     /**
@@ -75,14 +75,13 @@ const DownloadAsset: React.FC = () => {
             if (downloadURL) {
                 console.log(`Downloading ${downloadURL}...`);
                 handleDownload(downloadURL);
-                setDownloadTriggered(true);
             }
         }, 1000);
     }, [downloadURL]);
 
     // Render
     return (
-        <Layout title={`${siteConfig?.title}`} description={siteConfig?.tagline}>
+        <Layout title="Thanks For Downloading Excalibur" description="Thank you for downloading Excalibur">
             <div className="flex min-h-[calc(100vh-var(--spacing)*16)] items-center justify-center">
                 <WaveBackground />
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
