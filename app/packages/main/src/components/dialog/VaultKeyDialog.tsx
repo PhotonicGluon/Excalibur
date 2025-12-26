@@ -11,7 +11,7 @@ import {
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
-import { close } from "ionicons/icons";
+import { close, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/security/bip39";
 
@@ -52,6 +52,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     }
 
     // Render
+    const localVaultKeyMnemonic = localVaultKey ? toMnemonic(localVaultKey) : undefined;
     return (
         <IonModal
             className="min-h-172"
@@ -84,14 +85,28 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                         <summary className="ion-text-wrap" style={{ cursor: "pointer", userSelect: "none" }}>
                             Reveal vault key
                         </summary>
-                        <p className="ion-padding-start ion-padding-end mt-1 mb-0 text-justify text-sm leading-none text-yellow-600 md:text-base">
-                            Consider taking a screenshot and printing out a copy of the vault key, storing it in a
-                            secure location.
-                        </p>
+                        <div className="ion-padding-start ion-padding-end mt-1 flex gap-1 *:leading-none">
+                            <p className="m-0 text-justify text-sm text-yellow-600 md:text-base">
+                                Consider saving a copy of the vault key, storing it in a secure location.
+                            </p>
+                            <IonButton
+                                className="m-0 size-12"
+                                style={{ "--color": "none" }}
+                                fill="clear"
+                                onClick={() =>
+                                    navigator.clipboard.writeText(
+                                        localVaultKeyMnemonic ? localVaultKeyMnemonic.join(" ") : "",
+                                    )
+                                }
+                            >
+                                <IonIcon slot="icon-only" icon={copyOutline} />
+                            </IonButton>
+                        </div>
+
                         <div className="flex flex-col items-center">
                             <BIP39MnemonicInput
                                 numWords={24}
-                                initialWords={localVaultKey ? toMnemonic(localVaultKey) : undefined}
+                                initialWords={localVaultKeyMnemonic}
                                 maxSuggestions={5}
                                 onEntropy={(entropy) => {
                                     auth.setVaultKey(entropy);
