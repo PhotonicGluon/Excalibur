@@ -1,1 +1,1 @@
-Updated `vitest` from `3.2.4` to `4.0.13`
+Updated `vitest` from `3.2.4` to `4.0.16`

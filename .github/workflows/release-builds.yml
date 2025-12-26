@@ -20,7 +20,7 @@ jobs:
             attestations: write
 
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
 
             - name: Install pnpm
               uses: pnpm/action-setup@v4
@@ -28,7 +28,7 @@ jobs:
                   version: 10
 
             - name: Set up Node.js
-              uses: actions/setup-node@v5
+              uses: actions/setup-node@v6
               with:
                   node-version: "22"
                   cache: "pnpm"
@@ -63,7 +63,7 @@ jobs:
                   subject-path: "app/packages/electron/dist"
 
             - name: Upload Electron Artifacts
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               with:
                   name: app-electron-${{ matrix.os }}
                   path: |
@@ -85,7 +85,7 @@ jobs:
             contents: read
             attestations: write
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
 
             - name: Install pnpm
               uses: pnpm/action-setup@v4
@@ -93,7 +93,7 @@ jobs:
                   version: 10
 
             - name: Set up Node.js
-              uses: actions/setup-node@v5
+              uses: actions/setup-node@v6
               with:
                   node-version: "22"
                   cache: "pnpm"
@@ -126,7 +126,7 @@ jobs:
                   subject-path: "app/packages/main/app-${{ github.ref_name }}-pwa.zip"
 
             - name: Upload PWA Artifact
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               with:
                   name: app-pwa
                   path: app/packages/main/app-${{ github.ref_name }}-pwa.zip
@@ -172,7 +172,7 @@ jobs:
                   subject-path: "app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
 
             - name: Upload Release APK
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               with:
                   name: app-android
                   path: app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
@@ -186,18 +186,18 @@ jobs:
             contents: read
             attestations: write
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version-file: "./server/pyproject.toml"
 
             - name: Install uv
-              uses: astral-sh/setup-uv@v7.1.0
+              uses: astral-sh/setup-uv@v7.1.6
               with:
                   enable-cache: true
-                  version: "0.9.3"
+                  version: "0.9.18"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Build Server
@@ -211,7 +211,7 @@ jobs:
                   subject-path: "server/dist"
 
             - name: Upload Server Artifacts
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               with:
                   name: server
                   path: server/dist
@@ -225,7 +225,7 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
 
             - uses: actions/download-artifact@v5
               with:
