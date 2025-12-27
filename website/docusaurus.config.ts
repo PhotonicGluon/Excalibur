@@ -98,7 +98,7 @@ const config: Config = {
                 blogSidebarTitle: "Changelog",
                 blogSidebarCount: "ALL",
                 postsPerPage: 5,
-                showReadingTime: false,
+                showReadingTime: true,
                 onUntruncatedBlogPosts: "ignore",
             },
         ],
@@ -167,7 +167,7 @@ const config: Config = {
         },
     } satisfies Preset.ThemeConfig,
     customFields: {
-        latestVersion: "0.2.2",
+        latestVersion: "0.3.0",
     },
 };
 
