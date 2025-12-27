@@ -62,7 +62,59 @@ This quickstart assumes that a [server](01-server.mdx) is already set up.
 
     <TabItem value="ubuntu" label="Ubuntu">
 
-    TODO: ADD
+    The Ubuntu client can be obtained as either a `.deb` file, a `.snap` file, or an `.AppImage` file.
+
+    <Tabs groupId="ubuntu-file">
+        <TabItem value="deb" label=".deb">
+            1. Download the `.deb` package from <a href="/download?id=app-linux-deb" target="_blank">here</a>.
+            2. In the same directory as the downloaded file, run
+               ```bash
+               sudo apt install ./<file>.deb
+               ```
+               where `<file>` is the name of the downloaded file.
+            3. Start Excalibur by running the command
+               ```bash
+               excalibur-electron
+               ```
+               in a terminal.
+        </TabItem>
+
+        <TabItem value="snap" label=".snap">
+            We assume that [`snap`](https://snapcraft.io/docs/installing-snap-on-ubuntu) is installed on your machine.
+            1. Download the `.snap` package from <a href="/download?id=app-linux-snap" target="_blank">here</a>.
+            2. In the same directory as the downloaded file, run
+               ```bash
+               snap install ./<file>.snap --dangerous
+               ```
+               where `<file>` is the name of the downloaded file.
+
+               :::note What is `--dangerous`?
+               
+               The `--dangerous` flags installs the given snap file even if there are no pre-acknowledged signatures for it, which is the case for Excalibur.
+               :::
+
+            3. Start Excalibur by running the command
+               ```bash
+               excalibur-electron
+               ```
+               in a terminal.
+        </TabItem>
+
+        <TabItem value="appimage" label=".AppImage">
+            An [AppImage](https://appimage.org/) allows you to run Excalibur without installation or the need for root rights.
+
+            1. Download the `.appimage` package from <a href="/download?id=app-linux-appimage" target="_blank">here</a>.
+            2. Make the AppImage executable by running
+               ```bash
+               chmod a+x ./<file>.AppImage
+               ```
+               where `<file>` is the name of the downloaded file.
+            3. Start Excalibur by running
+               ```bash
+               ./<file>.AppImage
+               ```
+        </TabItem>
+    </Tabs>
 
     </TabItem>
 
