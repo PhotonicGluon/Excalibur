@@ -25,7 +25,6 @@ const DownloadPage: React.FC = () => {
             icon: <Terminal className="size-5" />,
             links: [
                 { label: "Debian Package (.deb)", assetID: "app-linux-deb" },
-                { label: "Snap File (.snap)", assetID: "app-linux-snap" },
                 { label: "AppImage (.AppImage)", assetID: "app-linux-appimage" },
             ],
         },

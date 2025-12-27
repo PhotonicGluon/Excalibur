@@ -14,7 +14,6 @@ const ASSET_ID_TO_FILE: Record<string, string> = {
     "app-mac-app": "Excalibur-[VERSION]-arm64-mac.zip",
     // Ubuntu
     "app-linux-deb": "excalibur-electron_[VERSION]_amd64.deb",
-    "app-linux-snap": "excalibur-electron_[VERSION]_amd64.snap",
     "app-linux-appimage": "excalibur-electron-[VERSION].AppImage",
     // Android
     "app-android-apk": "app-v[VERSION]-release.apk",
