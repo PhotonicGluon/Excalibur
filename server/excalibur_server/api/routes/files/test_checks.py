@@ -38,20 +38,6 @@ class TestCheckPath:
         assert response.status_code == 406
 
 
-class TestCheckFileSize:
-    def test_no_auth(self):
-        response = TestClient(app).head("/api/files/check/size?size=401401")
-        assert response.status_code == 401
-
-    def test_size_ok(self, auth_client: TestClient):
-        response = auth_client.head("/api/files/check/size?size=1")
-        assert response.status_code == 200
-
-    def test_size_too_large(self, auth_client: TestClient):
-        response = auth_client.head("/api/files/check/size?size=" + "1" * 100)
-        assert response.status_code == 416
-
-
 class TestCheckDir:
     def test_no_auth(self):
         response = TestClient(app).head("/api/files/check/dir/.")

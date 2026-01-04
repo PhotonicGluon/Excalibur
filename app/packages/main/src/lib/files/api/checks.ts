@@ -41,38 +41,6 @@ export async function checkPath(
 }
 
 /**
- * Checks if a file is too large to be uploaded.
- *
- * @param auth The current authentication provider.
- * @param size The size of the file to check.
- * @returns A promise which resolves to an object with a success boolean and optionally an error
- *      message or a boolean indicating whether the file is too large.
- */
-export async function checkSize(
-    auth: AuthProvider,
-    size: number,
-): Promise<{ success: boolean; error?: string; isTooLarge?: boolean }> {
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/size?size=${size}`, auth.authInfo!.key!, {
-        method: "HEAD",
-        headers: { Authorization: `Bearer ${auth.getToken()}` },
-    });
-    switch (response.status) {
-        case 200:
-            // Continue with normal flow
-            break;
-        case 401:
-            return { success: false, error: "Unauthorized" };
-        case 416:
-            // Continue with normal flow
-            break;
-        default:
-            return { success: false, error: "Unknown error" };
-    }
-
-    return { success: true, isTooLarge: response.status === 416 };
-}
-
-/**
  * Checks the existence of a directory, and whether it is empty.
  *
  * @param auth The current authentication provider.

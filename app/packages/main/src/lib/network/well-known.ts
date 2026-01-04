@@ -61,9 +61,11 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
  *
  * @param apiURL The API URL
  * @returns A promise which resolves to an object with a success boolean and optionally the server
- *      version and time
+ *      information
  */
-export async function getServerInfo(apiURL: string): Promise<{ success: boolean; version?: string; time?: Date }> {
+export async function getServerInfo(
+    apiURL: string,
+): Promise<{ success: boolean; version?: string; maxUploadSize?: number; time?: Date }> {
     const response = await timedFetch(`${apiURL}/well-known/info`);
     switch (response.status) {
         case 200:
@@ -74,5 +76,10 @@ export async function getServerInfo(apiURL: string): Promise<{ success: boolean;
     }
 
     const data = await response.json();
-    return { success: true, version: data.version, time: new Date(data.time) };
+    return {
+        success: true,
+        version: data.version,
+        maxUploadSize: data.max_upload_size,
+        time: new Date(data.time),
+    };
 }

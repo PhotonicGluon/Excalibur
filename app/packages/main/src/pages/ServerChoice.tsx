@@ -130,6 +130,7 @@ const Welcome: React.FC = () => {
         }
 
         const serverVersion = response.version!;
+        const maxUploadSize = response.maxUploadSize!;
         const serverTime = response.time!;
         const deltaTime = serverTime.getTime() - new Date().getTime();
 
@@ -139,7 +140,13 @@ const Welcome: React.FC = () => {
         });
 
         // Set server info
-        auth.setServerInfo({ apiURL: outcome.url, isFixed, version: serverVersion, deltaTime });
+        auth.setServerInfo({
+            apiURL: outcome.url,
+            isFixed,
+            version: serverVersion,
+            maxUploadSize,
+            deltaTime,
+        });
 
         // Continue with login
         router.push("/login", "forward", "replace");

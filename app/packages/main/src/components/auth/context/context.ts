@@ -14,6 +14,8 @@ export interface ServerInfo {
     isFixed?: boolean;
     /** Server version */
     version: string;
+    /** Maximum file size that can be uploaded, in bytes */
+    maxUploadSize: number;
     /** Delta of time between server and client */
     deltaTime: number;
 }

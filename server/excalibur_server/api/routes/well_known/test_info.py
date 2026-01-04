@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.meta import VERSION
+from excalibur_server.src.config import CONFIG
 
 client = TestClient(app)
 
@@ -17,7 +18,8 @@ def test_info():
 
     # Check main data
     assert data["version"] == VERSION
+    assert data["max_upload_size"] == CONFIG.storage.max_upload_size
 
     # Check time
     response_time = datetime.fromisoformat(data["time"])
-    assert response_time - datetime.now().astimezone() < timedelta(seconds=1)
+    assert datetime.now().astimezone() - response_time < timedelta(seconds=1)

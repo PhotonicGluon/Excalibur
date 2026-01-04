@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { useEffectOnce, useMount } from "@lib/hooks";
-import { heartbeat as _heartbeat, checkAPIUrl } from "@lib/network";
+import { heartbeat as _heartbeat, checkAPIUrl, getServerInfo } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
@@ -147,7 +147,18 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
 
-            setServerInfo({ ...serverInfo, version: result.version! }); // Runs once, so no worry of a loop
+            // Get latest server info
+            getServerInfo(serverInfo.apiURL!).then((info) => {
+                if (info) {
+                    const newServerInfo = {
+                        ...serverInfo,
+                        version: info.version!,
+                        maxUploadSize: info.maxUploadSize!,
+                        deltaTime: info.time!.getTime() - new Date().getTime(),
+                    };
+                    setServerInfoFunc(newServerInfo);
+                }
+            });
         });
     });
 

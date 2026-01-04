@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Query, Response, status
+from fastapi import Depends, HTTPException, Path, Response, status
 
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
@@ -48,28 +48,6 @@ async def check_path_endpoint(
         return
 
     response.status_code = status.HTTP_202_ACCEPTED
-
-
-@encrypted_router.head(
-    "/check/size",
-    name="Check File Size",
-    responses={
-        status.HTTP_200_OK: {"description": "File size acceptable", "content": None},
-        status.HTTP_416_RANGE_NOT_SATISFIABLE: {"description": "File size too large"},
-    },
-)
-async def check_file_size_endpoint(
-    size: Annotated[int, Query(description="The size of the file to check", ge=0)],
-    response: Response,
-):
-    """
-    Checks whether the given file size is acceptable.
-    """
-
-    if size > CONFIG.storage.max_upload_size:
-        raise HTTPException(status_code=status.HTTP_416_RANGE_NOT_SATISFIABLE, detail="File size too large")
-
-    response.status_code = status.HTTP_200_OK
 
 
 @encrypted_router.head(

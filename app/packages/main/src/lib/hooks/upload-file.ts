@@ -6,7 +6,7 @@ import { DragEvent } from "react";
 import { AlertOptions, Color } from "@ionic/core";
 import { HookOverlayOptions } from "@ionic/react/dist/types/hooks/HookOverlayOptions";
 
-import { checkPath, checkSize, mkdir, uploadFile } from "@lib/files/api";
+import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
 import { JobsManager } from "@lib/hooks/jobs-manager";
 import { randID } from "@lib/security/util";
@@ -183,15 +183,11 @@ export function useUploadFile(
         // Upload all files
         presentSnackbar("Uploading...");
         for (const file of files) {
-            // Check if file size acceptable by server
-            const checkSizeResponse = await checkSize(auth, file.size);
-            if (!checkSizeResponse.success) {
-                presentSnackbar(`Failed to check file size: ${checkSizeResponse.error}`, "danger");
-                return;
-            }
-            if (checkSizeResponse.isTooLarge) {
+            // Check if file size acceptable
+            if (file.size > auth.serverInfo!.maxUploadSize) {
                 // We use an alert to make it more visible
-                alert(`File ${file.name} is too large`);
+                console.warn(`File '${file.name}' is too large (${file.size} > ${auth.serverInfo!.maxUploadSize})`);
+                alert(`File '${file.name}' is too large (max ${auth.serverInfo!.maxUploadSize} bytes)`);
                 continue;
             }
 
