@@ -3,7 +3,7 @@ packages:
   - app/packages/**
 
 onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
+  - '@tailwindcss/oxide'
   - core-js
   - cypress
   - electron
@@ -12,8 +12,9 @@ onlyBuiltDependencies:
   - sharp
 
 overrides:
-  "glob": "^11.1.0"
-  "js-yaml": "^4.1.1"
+  glob: ^11.1.0
+  qs@<6.14.1: ^6.14.1
 
 sideEffectsCache: false
-virtualStoreDirMaxLength: 60 # Make this a common setting between different operating systems
+
+virtualStoreDirMaxLength: 60
