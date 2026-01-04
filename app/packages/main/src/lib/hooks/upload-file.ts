@@ -197,8 +197,9 @@ export function useUploadFile(
 
             // Check if containing directories exist
             if (file.directory) {
-                let dirs = getParents(file.directory + "/redundant"); // So that the target directory is included
+                let dirs = getParents(path + "/" + file.directory + "/redundant"); // So that the target directory is included
                 dirs = dirs.toReversed().slice(1);
+                console.log("Directories to create:", dirs);
 
                 for (const dir of dirs) {
                     const checkDirResponse = await checkPath(auth, dir);
@@ -296,33 +297,35 @@ export function useUploadFile(
             .filter((item) => item !== null);
 
         // Get the file objects to be uploaded
-        const files: File[] = [];
+        const files: { file: File; path: string }[] = [];
         for await (const handle of items) {
             if (handle.entry.isDirectory) {
                 console.log(`Dropped directory: ${handle.entry.name}`);
 
                 const entries = await getAllFileEntries([handle.entry]);
                 for (const entry of entries) {
-                    const file = await new Promise<File>((resolve, reject) => {
-                        entry.file(resolve, reject);
+                    const file = await new Promise<{ file: File; path: string }>((resolve, reject) => {
+                        entry.file((fileObj) => {
+                            resolve({ file: fileObj, path: entry.fullPath });
+                        }, reject);
                     });
                     files.push(file);
                 }
             } else {
                 console.debug(`Dropped file: ${handle.entry.name}`);
-                files.push(handle.file);
+                files.push({ file: handle.file, path: handle.entry.fullPath });
             }
         }
 
         // Call upload file method
         onUploadFile(
-            files.map((file) => {
+            files.map((item) => {
                 return {
-                    name: file.name,
-                    size: file.size,
-                    mimeType: file.type,
-                    blob: file,
-                    directory: getParent(file.webkitRelativePath),
+                    name: item.file.name,
+                    size: item.file.size,
+                    mimeType: item.file.type,
+                    blob: item.file,
+                    directory: item.path ? getParent(item.path.replace(/^\//, "")) : undefined,
                 } as UploadFile;
             }),
         );
