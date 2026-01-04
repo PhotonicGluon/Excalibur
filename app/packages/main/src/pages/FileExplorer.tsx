@@ -18,6 +18,8 @@ import {
     IonMenuButton,
     IonPage,
     IonPopover,
+    IonRefresher,
+    IonRefresherContent,
     IonText,
     IonToolbar,
     useIonAlert,
@@ -57,6 +59,8 @@ const FileExplorer: React.FC = () => {
     const [showJobsPopover, setShowJobsPopover] = useState(false);
 
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
+
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Helper functions
     /**
@@ -398,6 +402,17 @@ const FileExplorer: React.FC = () => {
 
                 {/* Body content */}
                 <IonContent fullscreen>
+                    {/* Refresh indicator */}
+                    <IonRefresher
+                        slot="fixed"
+                        onIonRefresh={(event) => {
+                            setRefreshTrigger((prev) => prev + 1);
+                            event.detail.complete();
+                        }}
+                    >
+                        <IonRefresherContent />
+                    </IonRefresher>
+
                     {/* Vault key info dialog */}
                     <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
 
@@ -432,7 +447,7 @@ const FileExplorer: React.FC = () => {
                             presentSnackbar: presentSnackbar,
                         }}
                     >
-                        <FilesArea />
+                        <FilesArea refreshTrigger={refreshTrigger} />
                     </explorerContext.Provider>
 
                     {/* Changed vault key notice */}
