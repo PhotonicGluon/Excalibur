@@ -57,14 +57,14 @@ export async function getServerVersion(apiURL: string): Promise<{ success: boole
 }
 
 /**
- * Gets the server time.
+ * Gets the server information.
  *
  * @param apiURL The API URL
  * @returns A promise which resolves to an object with a success boolean and optionally the server
- *      time as a Date object
+ *      version and time
  */
-export async function getServerTime(apiURL: string): Promise<{ success: boolean; time?: Date }> {
-    const response = await timedFetch(`${apiURL}/well-known/clock`);
+export async function getServerInfo(apiURL: string): Promise<{ success: boolean; version?: string; time?: Date }> {
+    const response = await timedFetch(`${apiURL}/well-known/info`);
     switch (response.status) {
         case 200:
             // Continue with normal flow
@@ -73,6 +73,6 @@ export async function getServerTime(apiURL: string): Promise<{ success: boolean;
             return { success: false };
     }
 
-    const isoTime = await response.text();
-    return { success: true, time: new Date(isoTime) };
+    const data = await response.json();
+    return { success: true, version: data.version, time: new Date(data.time) };
 }

@@ -11,7 +11,7 @@ class VersionResponse(BaseModel):
 
 @router.get(
     "/version",
-    summary="Get server version",
+    summary="Get Server Version",
 )
 async def version_endpoint() -> VersionResponse:
     """

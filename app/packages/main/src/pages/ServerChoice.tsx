@@ -15,7 +15,7 @@ import {
 import { settings } from "ionicons/icons";
 
 import { useEffectOnce } from "@lib/hooks";
-import { APICheckResult, checkAPIUrl, getServerTime, getServerVersion, timedFetch } from "@lib/network";
+import { APICheckResult, checkAPIUrl, getServerInfo, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 
@@ -118,20 +118,19 @@ const Welcome: React.FC = () => {
         }
 
         // Get server info
-        const versionResponse = await getServerVersion(outcome.url);
-        const timeResponse = await getServerTime(outcome.url);
-        if (!versionResponse.success || !timeResponse.success) {
+        const response = await getServerInfo(outcome.url);
+        if (!response.success) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
-                message: "Failed to retrieve info from the server.",
+                message: "Failed to retrieve server information.",
                 buttons: ["OK"],
             });
             return;
         }
 
-        const serverVersion = versionResponse.version!;
-        const serverTime = timeResponse.time!;
+        const serverVersion = response.version!;
+        const serverTime = response.time!;
         const deltaTime = serverTime.getTime() - new Date().getTime();
 
         // Update preferences
