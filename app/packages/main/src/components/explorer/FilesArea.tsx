@@ -19,12 +19,8 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = (refreshTrigger) => {
     const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentSnackbar);
-    const { onDropFileItem } = useUploadFile(
-        explorerContext.path,
-        explorerContext.presentAlert,
-        explorerContext.presentSnackbar,
-    );
+    const { directoryContents, refreshContents } = useDirectory();
+    const { onDropFileItem } = useUploadFile();
 
     // Effects
     useEffect(() => {

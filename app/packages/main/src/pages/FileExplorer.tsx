@@ -39,17 +39,15 @@ import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
-import { explorerContext, useExplorerContext } from "@components/explorer/context";
+import { explorerContext } from "@components/explorer/context";
 import JobsList from "@components/explorer/jobs/JobsList";
 import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
 
 const FabButton: React.FC<{ onCreateFolder: () => void }> = (props) => {
-    const explorerContext = useExplorerContext();
-    const { onUploadFile } = useUploadFile(
-        explorerContext.path,
-        explorerContext.presentAlert,
-        explorerContext.presentSnackbar,
-    );
+    // Hooks
+    const { onUploadFile } = useUploadFile();
+
+    // Render
     return (
         <IonFab id="fab-button" slot="fixed" vertical="bottom" horizontal="end">
             <IonFabButton>
@@ -70,8 +68,10 @@ const FabButton: React.FC<{ onCreateFolder: () => void }> = (props) => {
 const JobsSummary: React.FC<{
     onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }> = (props) => {
+    // Contexts
     const jobsManager = useJobsManager();
 
+    // Render
     return (
         <div id="jobs-summary" className="p-2 hover:cursor-pointer" onClick={props.onClick}>
             {jobsManager.jobs.size > 0 ? (
@@ -126,8 +126,6 @@ const FileExplorer: React.FC = () => {
     );
 
     // Hooks
-    // const jobsManager = useJobsManager();
-    // const { onUploadFile } = useUploadFile(requestedPath, jobsManager, presentAlert, presentSnackbar);
     useTokenManager();
 
     // Functions
