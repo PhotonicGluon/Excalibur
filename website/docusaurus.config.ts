@@ -161,13 +161,13 @@ const config: Config = {
             ],
         },
         prism: {
-            additionalLanguages: ["bash"],
+            additionalLanguages: ["bash", "diff"],
             theme: prismThemes.github,
             darkTheme: prismThemes.dracula,
         },
     } satisfies Preset.ThemeConfig,
     customFields: {
-        latestVersion: "0.3.0",
+        latestVersion: "0.3.1",
     },
 };
 

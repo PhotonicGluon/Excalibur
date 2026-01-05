@@ -18,6 +18,7 @@ This guide will assume that the `0.3.x` version of the Excalibur server is insta
 
 Excalibur 0.3 modifies the configuration file from version `1` to version `2`, with the following changes.
 
+- (***Since 0.3.1***) `server.rate_limit` defaults were changed. In particular, the default `capacity` was changed from `20` to `250` and the default `refill_rate` was changed from `1` to `20`.
 - `security.account_creation_key` was changed from a 32-character printable ASCII string to a 64-character hexadecimal string. This is to increase the key space size to $2^{256}$.
 - A new field `logging.max_log_age` was added. This field specifies the maximum age of logs to keep.
 
