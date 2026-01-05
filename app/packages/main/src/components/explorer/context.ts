@@ -3,16 +3,12 @@ import { createContext, useContext } from "react";
 import { AlertOptions, Color } from "@ionic/core";
 import { HookOverlayOptions } from "@ionic/react/dist/types/hooks/HookOverlayOptions";
 
-import { JobsManager } from "@lib/hooks/jobs-manager";
-
 /**
  * Explorer context to be shared among explorer components that require it.
  */
 export interface ExplorerContext {
     /** Current path */
     path: string;
-    /** Jobs manager */
-    jobsManager: JobsManager;
     /** Function to call when renaming is requested */
     onRename: (path: string, isDir: boolean) => Promise<void>;
     /** Function to call when moving is requested */

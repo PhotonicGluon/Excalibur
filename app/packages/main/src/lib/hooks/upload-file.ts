@@ -8,26 +8,26 @@ import { HookOverlayOptions } from "@ionic/react/dist/types/hooks/HookOverlayOpt
 
 import { checkPath, checkSize, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
-import { JobsManager } from "@lib/hooks/jobs-manager";
 import { randID } from "@lib/security/util";
 import { getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
+import { useJobsManager } from "@components/explorer/jobs/context";
 import { useSettings } from "@components/settings/context";
 
 type UploadFile = PickedFile & { directory?: string };
 
 export function useUploadFile(
     path: string,
-    jobsManager: JobsManager,
     presentAlert: (options: AlertOptions & HookOverlayOptions) => void,
     presentSnackbar: (message: string, colour?: Color) => void,
 ) {
     // Contexts
     const auth = useAuth();
     const settings = useSettings();
+    const jobsManager = useJobsManager();
 
     // Functions
     /**

@@ -4,8 +4,9 @@ import { documentOutline, musicalNotesOutline } from "ionicons/icons";
 import { settingsContext } from "@components/settings/context";
 
 import DirectoryItem, { ContainerProps } from "./DirectoryItem";
-import { Job } from "./JobEntry";
 import { explorerContext } from "./context";
+import { Job } from "./jobs";
+import { jobsContext } from "./jobs/context";
 
 describe("<DirectoryItem />", () => {
     function renderComponent(
@@ -41,32 +42,37 @@ describe("<DirectoryItem />", () => {
                         cryptoChunkSize: 262144,
                         change: () => {},
                         save: () => Promise.resolve(),
+                        checkUpdate: false,
+                        checkUpdateInterval: 0,
                     }}
                 >
-                    <explorerContext.Provider
+                    <jobsContext.Provider
                         value={{
-                            path: "/",
-                            jobsManager: {
-                                jobs: new Map(),
-                                addJob: (_id: string, _job: Job) => {},
-                                getJob: (_id: string) => {
-                                    return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
-                                },
-                                updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
-                                updateProgress: (_id: string, _newProgress: number | null) => {},
-                                cancelJob: (_id: string) => {},
-                                deleteJob: (_id: string) => {},
+                            jobs: new Map(),
+                            addJob: (_id: string, _job: Job) => {},
+                            getJob: (_id: string) => {
+                                return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
                             },
-                            onRename: (_path, _isDir) => props.renameHook!(),
-                            onMove: (_path) => props.moveHook!(),
-                            onDelete: (_path, _isDir) => props.deleteHook!(),
-                            presentAlert: () => Promise.resolve(),
-                            dismissAlert: () => Promise.resolve(),
-                            presentSnackbar: () => Promise.resolve(),
+                            updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
+                            updateProgress: (_id: string, _newProgress: number | null) => {},
+                            cancelJob: (_id: string) => {},
+                            deleteJob: (_id: string) => {},
                         }}
                     >
-                        <DirectoryItem id="directory-item" {...defaultProps} />
-                    </explorerContext.Provider>
+                        <explorerContext.Provider
+                            value={{
+                                path: "/",
+                                onRename: (_path, _isDir) => props.renameHook!(),
+                                onMove: (_path) => props.moveHook!(),
+                                onDelete: (_path, _isDir) => props.deleteHook!(),
+                                presentAlert: () => Promise.resolve(),
+                                dismissAlert: () => Promise.resolve(),
+                                presentSnackbar: () => Promise.resolve(),
+                            }}
+                        >
+                            <DirectoryItem id="directory-item" {...defaultProps} />
+                        </explorerContext.Provider>
+                    </jobsContext.Provider>
                 </settingsContext.Provider>
             </IonApp>,
         );
