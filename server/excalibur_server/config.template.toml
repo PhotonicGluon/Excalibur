@@ -29,10 +29,10 @@ allow_origins = [
 
 [server.rate_limit]
 # The capacity of the rate limiter (e.g., number of allowed bursts)
-capacity = 20
+capacity = 250
 
 # The refill rate of the rate limiter, in tokens per second
-refill_rate = 1
+refill_rate = 25
 
 # -----------------------------------------------------------------------------
 # Storage Configuration

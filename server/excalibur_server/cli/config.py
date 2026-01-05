@@ -32,10 +32,16 @@ def update_config():
 
         config["version"] = 2
 
-        # First add the new account creation key
+        # Add the new account creation key
         config["security"]["account_creation_key"] = get_random_bytes(32).hex()
 
-        # Now recreate the logging table, but with the new `max_log_age` field
+        # Update rate limit if current values are below new defaults
+        if config["server"]["rate_limit"]["capacity"] < 250:
+            config["server"]["rate_limit"]["capacity"] = 250
+        if config["server"]["rate_limit"]["refill_rate"] < 25:
+            config["server"]["rate_limit"]["refill_rate"] = 25
+
+        # Recreate the logging table, but with the new `max_log_age` field
         new_logging = config["logging"].copy()
         new_logging.add("max_log_age", 720)
         new_logging["max_log_age"].comment("30 days")

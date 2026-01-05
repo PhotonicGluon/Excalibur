@@ -1,6 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 from starlette.types import ASGIApp
 
 from excalibur_server.src.token_bucket import TokenBucket
@@ -24,7 +25,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_id = request.client.host  # Use IP address as the client identifier
 
         if not self._bucket.consume(client_id):
-            return JSONResponse(status_code=429, content={"message": "Too Many Requests"})
+            return JSONResponse(status_code=HTTP_429_TOO_MANY_REQUESTS, content={"message": "Too Many Requests"})
 
         response = await call_next(request)
         return response
