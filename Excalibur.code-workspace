@@ -5,6 +5,10 @@
             "path": "app"
         },
         {
+            "name": "App (Main)",
+            "path": "app/packages/main"
+        },
+        {
             "name": "Server",
             "path": "server"
         },
