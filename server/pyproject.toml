@@ -11,8 +11,8 @@ dependencies = [
     "cachetools>=6.2.4",
     "duckdb~=1.3.2",
     "duckdb-engine>=0.17.0",
-    "fastapi>=0.127.0",
-    "gitpython>=3.1.45",
+    "fastapi>=0.128.0",
+    "gitpython>=3.1.46",
     "packaging>=25.0",
     "pycryptodome>=3.23.0",
     "pydantic>=2.12.5",
@@ -20,10 +20,10 @@ dependencies = [
     "pyjwt>=2.10.1",
     "semver>=3.0.4",
     "sqlalchemy>=2.0.45",
-    "sqlmodel>=0.0.29",
+    "sqlmodel>=0.0.31",
     "toml>=0.10.2",
     "tomlkit>=0.13.3",
-    "typer>=0.20.1",
+    "typer>=0.21.0",
     "uvicorn[standard]>=0.40.0",
     "websockets>=15.0.1",
 ]
@@ -43,7 +43,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.8.0", "ruff>=0.14.10"]
+dev = ["ipython>=9.9.0", "ruff>=0.14.10"]
 test = ["httpx>=0.28.1", "pytest>=9.0.2"]
 
 [tool.uv]

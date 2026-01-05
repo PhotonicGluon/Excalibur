@@ -1,27 +1,20 @@
 import { useCallback } from "react";
 import { useImmer } from "use-immer";
 
-import { Job } from "@components/explorer/JobEntry";
+import { Job } from "../JobEntry";
+import { JobsManager, jobsContext } from "./context";
 
-/**
- * Manages jobs and their states.
- */
-export interface JobsManager {
-    jobs: Map<string, Job>;
-    addJob(id: string, job: Job): void;
-    getJob(id: string): Job;
-    updateJob(id: string, newStatus: string, newProgress?: number | null, newWorker?: Worker): void;
-    updateProgress(id: string, newProgress: number | null): void;
-    cancelJob(id: string): void;
-    deleteJob(id: string): void;
-}
+export const ProvideJobs: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const jobsManager = useProvideJobsManager();
+    return <jobsContext.Provider value={jobsManager}>{children}</jobsContext.Provider>;
+};
 
 /**
  * React hook that provides access to job management functionality.
  *
  * @returns Jobs manager
  */
-export function useJobsManager(): JobsManager {
+function useProvideJobsManager(): JobsManager {
     const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
 
     const getJob = useCallback(

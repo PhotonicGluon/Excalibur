@@ -3,31 +3,26 @@ import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
 import { DragEvent } from "react";
 
-import { AlertOptions, Color } from "@ionic/core";
-import { HookOverlayOptions } from "@ionic/react/dist/types/hooks/HookOverlayOptions";
-
 import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
-import { JobsManager } from "@lib/hooks/jobs-manager";
 import { randID } from "@lib/security/util";
 import { getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
+import { useExplorerContext } from "@components/explorer/context";
+import { useJobsManager } from "@components/explorer/jobs/context";
 import { useSettings } from "@components/settings/context";
 
 type UploadFile = PickedFile & { directory?: string };
 
-export function useUploadFile(
-    path: string,
-    jobsManager: JobsManager,
-    presentAlert: (options: AlertOptions & HookOverlayOptions) => void,
-    presentSnackbar: (message: string, colour?: Color) => void,
-) {
+export function useUploadFile() {
     // Contexts
     const auth = useAuth();
     const settings = useSettings();
+    const jobsManager = useJobsManager();
+    const explorerContext = useExplorerContext();
 
     // Functions
     /**
@@ -79,7 +74,7 @@ export function useUploadFile(
                                 },
                                 (chunk, err) => {
                                     if (err) {
-                                        presentSnackbar("Failed to read file chunk", "danger");
+                                        explorerContext.presentSnackbar("Failed to read file chunk", "danger");
                                         jobsManager.deleteJob(jobID);
                                         controller.error(err);
                                         return;
@@ -128,7 +123,7 @@ export function useUploadFile(
                     );
                 } catch (e) {
                     if (signal.aborted) throw new Error("Cancelled");
-                    presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                    explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
                     throw e;
                 } finally {
                     // Free up resources
@@ -144,13 +139,13 @@ export function useUploadFile(
                 const file = new File([blob], rawFile.name + ".exef");
                 const uploadResponse = await uploadFile(
                     auth,
-                    path + (rawFile.directory ? "/" + rawFile.directory : ""),
+                    explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
                     file,
                     true,
                     signal,
                 ); // Always force upload
                 if (!uploadResponse.success) {
-                    presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
+                    explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                     throw new Error(uploadResponse.error);
                 }
             } catch (e) {
@@ -175,13 +170,13 @@ export function useUploadFile(
                     console.debug("Cancelled upload of file");
                     return;
                 }
-                presentSnackbar(`Failed to pick file: ${message}`, "danger");
+                explorerContext.presentSnackbar(`Failed to pick file: ${message}`, "danger");
                 return;
             }
         }
 
         // Upload all files
-        presentSnackbar("Uploading...");
+        explorerContext.presentSnackbar("Uploading...");
         for (const file of files) {
             // Check if file size acceptable
             if (file.size > auth.serverInfo!.maxUploadSize) {
@@ -193,7 +188,7 @@ export function useUploadFile(
 
             // Check if containing directories exist
             if (file.directory) {
-                let dirs = getParents(path + "/" + file.directory + "/redundant"); // So that the target directory is included
+                let dirs = getParents(explorerContext.path + "/" + file.directory + "/redundant"); // So that the target directory is included
                 dirs = dirs.toReversed().slice(1);
                 console.log("Directories to create:", dirs);
 
@@ -205,14 +200,17 @@ export function useUploadFile(
                         // Make directory
                         const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir));
                         if (!createDirResponse.success) {
-                            presentSnackbar(
+                            explorerContext.presentSnackbar(
                                 `Failed to create containing directory: ${createDirResponse.error}`,
                                 "danger",
                             );
                             return;
                         }
                     } else {
-                        presentSnackbar(`Failed to check containing directory: ${checkDirResponse.error}`, "danger");
+                        explorerContext.presentSnackbar(
+                            `Failed to check containing directory: ${checkDirResponse.error}`,
+                            "danger",
+                        );
                         return;
                     }
                 }
@@ -220,7 +218,7 @@ export function useUploadFile(
 
             // Check if file exists
             const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
-            const eventualPath = `${path}/${filePath}` + ".exef"; // The uploaded file has this extension
+            const eventualPath = `${explorerContext.path}/${filePath}` + ".exef"; // The uploaded file has this extension
             const checkResponse = await checkPath(auth, eventualPath);
             if (!checkResponse.success) {
                 switch (checkResponse.error) {
@@ -228,13 +226,13 @@ export function useUploadFile(
                         // This is good -- the file doesn't exist, so we can just carry on
                         break;
                     case "Illegal or invalid path":
-                        presentSnackbar("Illegal or invalid file name", "danger");
+                        explorerContext.presentSnackbar("Illegal or invalid file name", "danger");
                         return;
                     case "Path too long":
-                        presentSnackbar("File path too long", "danger");
+                        explorerContext.presentSnackbar("File path too long", "danger");
                         return;
                     default:
-                        presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
+                        explorerContext.presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
                         return;
                 }
             }
@@ -244,7 +242,7 @@ export function useUploadFile(
 
                 let haltUploads = false;
                 await new Promise<void>((resolve) => {
-                    presentAlert({
+                    explorerContext.presentAlert({
                         header: `${file.name} already exists`,
                         message: "Do you want to override the existing file?",
                         onDidDismiss: () => {
@@ -255,7 +253,7 @@ export function useUploadFile(
                                 text: "No",
                                 role: "cancel",
                                 handler: () => {
-                                    presentSnackbar("File upload cancelled", "warning");
+                                    explorerContext.presentSnackbar("File upload cancelled", "warning");
                                     haltUploads = true;
                                 },
                             },

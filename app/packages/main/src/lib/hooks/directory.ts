@@ -1,30 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Color } from "@ionic/core/components";
-
 import { directoryChangesListener, listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 import { useMount } from "@lib/hooks/generic";
 
 import { useAuth } from "@components/auth/context";
+import { useExplorerContext } from "@components/explorer/context";
 
 /**
  * React hook that provides access to directory listing functionality.
  *
- * @param currentFolder Current directory path
- * @param presentSnackbar Function that presents a snackbar message
  * @returns Object containing directory contents and a function to refresh them
  */
-export function useDirectory(
-    currentFolder: string,
-    presentSnackbar: (message: string, colour?: Color) => void,
-): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
+export function useDirectory(): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
     const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);
 
     // Contexts
     const auth = useAuth();
+    const explorerContext = useExplorerContext();
 
     // Functions
     /**
@@ -39,20 +34,22 @@ export function useDirectory(
      */
     const refreshContents = useCallback(
         async (sourceFolder?: string) => {
-            if (sourceFolder && sourceFolder !== currentFolder) {
-                console.debug(`Not refreshing contents (changed '${sourceFolder}' is not current '${currentFolder}')`);
+            if (sourceFolder && sourceFolder !== explorerContext.path) {
+                console.debug(
+                    `Not refreshing contents (changed '${sourceFolder}' is not current '${explorerContext.path}')`,
+                );
                 // We are in a different folder than the one we want to refresh, so no need to refresh
                 return;
             }
 
-            const response = await listdir(auth, currentFolder);
+            const response = await listdir(auth, explorerContext.path);
             if (!response.success) {
-                presentSnackbar(response.error!, "danger");
+                explorerContext.presentSnackbar(response.error!, "danger");
                 return;
             }
             setDirectoryContents(response.directory!);
         },
-        [auth, presentSnackbar, currentFolder],
+        [auth, explorerContext],
     );
 
     // Effects

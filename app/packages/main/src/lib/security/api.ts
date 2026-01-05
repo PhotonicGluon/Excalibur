@@ -13,10 +13,9 @@ import { AuthProvider } from "@components/auth/context";
  */
 export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; error?: string }> {
     try {
-        return timedFetch(`${apiURL}/auth/group-size`).then(async (res) => {
-            const groupSize = parseInt(await res.text());
-            return { group: getSRPGroup(groupSize) };
-        });
+        const response = await timedFetch(`${apiURL}/auth/group-size`);
+        const groupSize = parseInt(await response.text());
+        return { group: getSRPGroup(groupSize) };
     } catch (e) {
         return { error: (e as Error).message };
     }

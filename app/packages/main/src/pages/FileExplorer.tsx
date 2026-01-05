@@ -29,7 +29,7 @@ import {
 import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, moveItem, renameItem } from "@lib/files/api";
-import { useJobsManager, useTokenManager, useUploadFile } from "@lib/hooks";
+import { useTokenManager, useUploadFile } from "@lib/hooks";
 import { getParent } from "@lib/util";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
@@ -39,8 +39,51 @@ import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
-import JobsList from "@components/explorer/JobsList";
 import { explorerContext } from "@components/explorer/context";
+import JobsList from "@components/explorer/jobs/JobsList";
+import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
+
+const FabButton: React.FC<{ onCreateFolder: () => void }> = (props) => {
+    // Hooks
+    const { onUploadFile } = useUploadFile();
+
+    // Render
+    return (
+        <IonFab id="fab-button" slot="fixed" vertical="bottom" horizontal="end">
+            <IonFabButton>
+                <IonIcon icon={add} />
+            </IonFabButton>
+            <IonFabList side="top">
+                <IonFabButton aria-label="Create Folder" onClick={() => props.onCreateFolder()}>
+                    <IonIcon icon={folderOutline} />
+                </IonFabButton>
+                <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
+                    <IonIcon icon={documentOutline} />
+                </IonFabButton>
+            </IonFabList>
+        </IonFab>
+    );
+};
+
+const JobsSummary: React.FC<{
+    onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+}> = (props) => {
+    // Contexts
+    const jobsManager = useJobsManager();
+
+    // Render
+    return (
+        <div id="jobs-summary" className="p-2 hover:cursor-pointer" onClick={props.onClick}>
+            {jobsManager.jobs.size > 0 ? (
+                <span>
+                    {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
+                </span>
+            ) : (
+                <span>No Jobs</span>
+            )}
+        </div>
+    );
+};
 
 const FileExplorer: React.FC = () => {
     // Get file path parameter
@@ -83,8 +126,6 @@ const FileExplorer: React.FC = () => {
     );
 
     // Hooks
-    const jobsManager = useJobsManager();
-    const { onUploadFile } = useUploadFile(requestedPath, jobsManager, presentAlert, presentSnackbar);
     useTokenManager();
 
     // Functions
@@ -340,131 +381,108 @@ const FileExplorer: React.FC = () => {
 
             {/* Main content */}
             <IonPage id="main-content">
-                {/* Header content */}
-                <IonHeader>
-                    <IonToolbar className="[&::part(container)]:min-h-16">
-                        {/* Left-side buttons */}
-                        <IonButtons className="w-24" slot="start">
-                            <IonMenuButton onClick={() => menuController.open()} />
-                        </IonButtons>
+                <ProvideJobs>
+                    {/* Header content */}
+                    <IonHeader>
+                        <IonToolbar className="[&::part(container)]:min-h-16">
+                            {/* Left-side buttons */}
+                            <IonButtons className="w-24" slot="start">
+                                <IonMenuButton onClick={() => menuController.open()} />
+                            </IonButtons>
 
-                        {/* Jobs display and popover */}
-                        <div className="flex w-full justify-center">
-                            {/* Jobs' summary */}
-                            <div
-                                id="jobs-summary"
-                                className="p-2 hover:cursor-pointer"
-                                onClick={(e) => {
-                                    jobsPopover.current!.event = e;
-                                    setShowJobsPopover(true);
-                                }}
-                            >
-                                {jobsManager.jobs.size > 0 ? (
-                                    <span>
-                                        {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
-                                    </span>
-                                ) : (
-                                    <span>No Jobs</span>
-                                )}
+                            {/* Jobs display and popover */}
+                            <div className="flex w-full justify-center">
+                                {/* Jobs' summary */}
+                                <JobsSummary
+                                    onClick={(e) => {
+                                        jobsPopover.current!.event = e;
+                                        setShowJobsPopover(true);
+                                    }}
+                                ></JobsSummary>
+
+                                {/* Jobs' details */}
+                                <IonPopover
+                                    ref={jobsPopover}
+                                    id="jobs-popover"
+                                    className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
+                                    side="bottom"
+                                    alignment="center"
+                                    style={{ "--offset-y": "calc(var(--spacing)*2)" }}
+                                    isOpen={showJobsPopover}
+                                    onDidDismiss={() => setShowJobsPopover(false)}
+                                >
+                                    <IonContent className="ion-padding rounded-lg">
+                                        <JobsList />
+                                    </IonContent>
+                                </IonPopover>
                             </div>
 
-                            {/* Jobs' details */}
-                            <IonPopover
-                                ref={jobsPopover}
-                                id="jobs-popover"
-                                className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
-                                side="bottom"
-                                alignment="center"
-                                style={{ "--offset-y": "calc(var(--spacing)*2)" }}
-                                isOpen={showJobsPopover}
-                                onDidDismiss={() => setShowJobsPopover(false)}
+                            {/* Right-side buttons */}
+                            <IonButtons className="w-24 justify-end" slot="end">
+                                {/* Ellipsis menu trigger button */}
+                                <IonButton id="ellipsis-button">
+                                    <IonIcon slot="icon-only" icon={ellipsisVertical} />
+                                </IonButton>
+                            </IonButtons>
+                        </IonToolbar>
+                    </IonHeader>
+
+                    {/* Body content */}
+                    <IonContent fullscreen>
+                        <explorerContext.Provider
+                            value={{
+                                path: requestedPath,
+                                onRename: onRenameItem,
+                                onMove: onMoveItem,
+                                onDelete: onDeleteItem,
+                                presentAlert: presentAlert,
+                                dismissAlert: dismissAlert,
+                                presentSnackbar: presentSnackbar,
+                            }}
+                        >
+                            {/* Refresh indicator */}
+                            <IonRefresher
+                                slot="fixed"
+                                onIonRefresh={(event) => {
+                                    setRefreshTrigger((prev) => prev + 1);
+                                    event.detail.complete();
+                                }}
                             >
-                                <IonContent className="ion-padding rounded-lg">
-                                    <JobsList
-                                        jobs={jobsManager.jobs}
-                                        onCancelJob={(jobID: string) => {
-                                            jobsManager.cancelJob(jobID);
-                                        }}
-                                    />
-                                </IonContent>
-                            </IonPopover>
-                        </div>
+                                <IonRefresherContent />
+                            </IonRefresher>
 
-                        {/* Right-side buttons */}
-                        <IonButtons className="w-24 justify-end" slot="end">
-                            {/* Ellipsis menu trigger button */}
-                            <IonButton id="ellipsis-button">
-                                <IonIcon slot="icon-only" icon={ellipsisVertical} />
-                            </IonButton>
-                        </IonButtons>
-                    </IonToolbar>
-                </IonHeader>
+                            {/* Vault key info dialog */}
+                            <VaultKeyDialog
+                                isOpen={showVaultKeyDialog}
+                                onDidDismiss={() => setShowVaultKeyDialog(false)}
+                            />
 
-                {/* Body content */}
-                <IonContent fullscreen>
-                    {/* Refresh indicator */}
-                    <IonRefresher
-                        slot="fixed"
-                        onIonRefresh={(event) => {
-                            setRefreshTrigger((prev) => prev + 1);
-                            event.detail.complete();
-                        }}
-                    >
-                        <IonRefresherContent />
-                    </IonRefresher>
+                            {/* Breadcrumb */}
+                            <DirectoryBreadcrumbs className="ml-1 pt-1" path={requestedPath} />
 
-                    {/* Vault key info dialog */}
-                    <VaultKeyDialog isOpen={showVaultKeyDialog} onDidDismiss={() => setShowVaultKeyDialog(false)} />
+                            {/* Fab button */}
+                            <FabButton onCreateFolder={onCreateFolder} />
 
-                    {/* Breadcrumb */}
-                    <DirectoryBreadcrumbs className="ml-1 pt-1" path={requestedPath} />
+                            {/* Files */}
+                            <FilesArea refreshTrigger={refreshTrigger} />
 
-                    {/* Fab button */}
-                    <IonFab id="fab-button" slot="fixed" vertical="bottom" horizontal="end">
-                        <IonFabButton>
-                            <IonIcon icon={add} />
-                        </IonFabButton>
-                        <IonFabList side="top">
-                            <IonFabButton aria-label="Create Folder" onClick={() => onCreateFolder()}>
-                                <IonIcon icon={folderOutline} />
-                            </IonFabButton>
-                            <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
-                                <IonIcon icon={documentOutline} />
-                            </IonFabButton>
-                        </IonFabList>
-                    </IonFab>
-
-                    {/* Files */}
-                    <explorerContext.Provider
-                        value={{
-                            path: requestedPath,
-                            jobsManager: jobsManager,
-                            onRename: onRenameItem,
-                            onMove: onMoveItem,
-                            onDelete: onDeleteItem,
-                            presentAlert: presentAlert,
-                            dismissAlert: dismissAlert,
-                            presentSnackbar: presentSnackbar,
-                        }}
-                    >
-                        <FilesArea refreshTrigger={refreshTrigger} />
-                    </explorerContext.Provider>
-
-                    {/* Changed vault key notice */}
-                    {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (
-                        <div className="fixed bottom-6 w-full">
-                            <IonText color="warning" className="block w-full text-center text-sm">
-                                Vault key was changed
-                                {/* <br></br>
-                                {auth.origVaultKey}
-                                <br></br>
-                                {auth.vaultKey}
-                                <br></br>
-                                {auth.origVaultKey !== auth.vaultKey ? "Changed" : "Not Changed"} */}
-                            </IonText>
-                        </div>
-                    )}
-                </IonContent>
+                            {/* Changed vault key notice */}
+                            {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (
+                                <div className="fixed bottom-6 w-full">
+                                    <IonText color="warning" className="block w-full text-center text-sm">
+                                        Vault key was changed
+                                        {/* <br></br>
+                                        {auth.origVaultKey}
+                                        <br></br>
+                                        {auth.vaultKey}
+                                        <br></br>
+                                        {auth.origVaultKey !== auth.vaultKey ? "Changed" : "Not Changed"} */}
+                                    </IonText>
+                                </div>
+                            )}
+                        </explorerContext.Provider>
+                    </IonContent>
+                </ProvideJobs>
             </IonPage>
         </>
     );

@@ -19,13 +19,8 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = (refreshTrigger) => {
     const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents } = useDirectory(explorerContext.path, explorerContext.presentSnackbar);
-    const { onDropFileItem } = useUploadFile(
-        explorerContext.path,
-        explorerContext.jobsManager,
-        explorerContext.presentAlert,
-        explorerContext.presentSnackbar,
-    );
+    const { directoryContents, refreshContents } = useDirectory();
+    const { onDropFileItem } = useUploadFile();
 
     // Effects
     useEffect(() => {
@@ -53,7 +48,7 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = (refreshTrigger) => {
         >
             {/* File upload overlay */}
             {showFileUploadOverlay && (
-                <div className="fixed top-0 right-0 bottom-0 left-0 z-50 flex flex-col items-center justify-center bg-black/50">
+                <div className="pointer-events-none fixed top-0 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center backdrop-blur-xs">
                     <IonIcon icon={cloudUploadOutline} className="size-20" />
                     <IonText>Drop files here to upload</IonText>
                 </div>

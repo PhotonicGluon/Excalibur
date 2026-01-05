@@ -4,12 +4,27 @@ import { IonApp } from "@ionic/react";
 
 import { Job } from "./JobEntry";
 import JobsList from "./JobsList";
+import { jobsContext } from "./context";
 
 describe("<JobsList />", () => {
     function mountComponent(props: { jobs: Map<string, Job> }, onCancelJob?: () => void) {
         mount(
             <IonApp>
-                <JobsList {...props} onCancelJob={onCancelJob ?? (() => {})} />
+                <jobsContext.Provider
+                    value={{
+                        jobs: props.jobs ?? new Map(),
+                        addJob: (_id: string, _job: Job) => {},
+                        getJob: (_id: string) => {
+                            return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
+                        },
+                        updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
+                        updateProgress: (_id: string, _newProgress: number | null) => {},
+                        cancelJob: onCancelJob ?? (() => {}),
+                        deleteJob: (_id: string) => {},
+                    }}
+                >
+                    <JobsList />
+                </jobsContext.Provider>
             </IonApp>,
         );
     }
