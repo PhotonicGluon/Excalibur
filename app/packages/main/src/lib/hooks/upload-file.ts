@@ -176,7 +176,7 @@ export function useUploadFile() {
         }
 
         // Upload all files
-        explorerContext.presentSnackbar("Uploading...");
+        explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
         for (const file of files) {
             // Check if file size acceptable
             if (file.size > auth.serverInfo!.maxUploadSize) {
