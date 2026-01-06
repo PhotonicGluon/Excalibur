@@ -19,7 +19,7 @@ class Security(BaseModel):
 
         @field_validator("comm_cache_size")
         def validate_positive(cls, value: int) -> int:
-            if value < 0:
+            if value <= 0:
                 raise ValueError("must be greater than 0")
             return value
 
@@ -29,7 +29,7 @@ class Security(BaseModel):
 
         @field_validator("nonce_cache_size", "timestamp_validity")
         def validate_positive(cls, value: int) -> int:
-            if value < 0:
+            if value <= 0:
                 raise ValueError("must be greater than 0")
             return value
 
@@ -41,7 +41,7 @@ class Security(BaseModel):
 
     @field_validator("session_duration")
     def validate_positive(cls, value: int) -> int:
-        if value < 0:
+        if value <= 0:
             raise ValueError("must be greater than 0")
         return value
 

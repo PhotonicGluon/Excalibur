@@ -8,7 +8,7 @@ class Server(BaseModel):
 
         @field_validator("capacity", "refill_rate")
         def validate_positive(cls, value: int) -> int:
-            if value < 0:
+            if value <= 0:
                 raise ValueError("must be greater than 0")
             return value
 

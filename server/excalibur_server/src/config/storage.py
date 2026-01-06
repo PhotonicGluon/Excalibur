@@ -22,6 +22,6 @@ class Storage(BaseModel):
 
     @field_validator("max_upload_size", "max_spool_size", "write_chunk_size", "send_chunk_size")
     def validate_positive(cls, value: int) -> int:
-        if value < 0:
+        if value <= 0:
             raise ValueError("must be greater than 0")
         return value

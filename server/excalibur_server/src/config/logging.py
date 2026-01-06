@@ -22,6 +22,6 @@ class Logging(BaseModel):
 
     @field_validator("max_log_age")
     def validate_positive(cls, value: int) -> int:
-        if value < 0:
+        if value <= 0:
             raise ValueError("must be greater than 0")
         return value
