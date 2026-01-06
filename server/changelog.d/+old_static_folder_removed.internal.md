@@ -1,0 +1,1 @@
+Removed old `static` folder
