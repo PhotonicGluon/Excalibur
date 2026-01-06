@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from pydantic import BaseModel, field_validator
 
+from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.srp.group import SRPGroup
 
 
@@ -16,12 +19,17 @@ class Security(BaseModel):
 
     class E2EE(BaseModel):
         comm_cache_size: int
+        comm_cache_file: Path
 
         @field_validator("comm_cache_size")
         def validate_positive(cls, value: int) -> int:
             if value <= 0:
                 raise ValueError("must be greater than 0")
             return value
+
+        @field_validator("comm_cache_file", mode="after")
+        def edit_file(cls, value: Path) -> Path:
+            return ROOT_FOLDER / value
 
     class PoP(BaseModel):
         nonce_cache_size: int

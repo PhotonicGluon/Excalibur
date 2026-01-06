@@ -86,6 +86,20 @@ def update_config():
             top_comment="The delay between consecutive file update transmissions, in milliseconds",
         )
 
+        # Add new cache file fields
+        config["security"]["e2ee"] = _add_new_field(
+            config["security"]["e2ee"],
+            "comm_cache_file",
+            "e2ee_sessions.cache",
+            top_comment="File storing end-to-end encryption communication sessions",
+        )
+        config["security"]["pop"] = _add_new_field(
+            config["security"]["pop"],
+            "nonce_cache_file",
+            "pop_nonces.cache",
+            top_comment="File storing PoP nonces",
+        )
+
         return config
 
     SETTINGS_VERSION = 3

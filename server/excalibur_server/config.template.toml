@@ -86,6 +86,9 @@ group = "small"
 # The maximum number of end-to-end encryption communication sessions to cache
 comm_cache_size = 1024
 
+# File storing end-to-end encryption communication sessions
+comm_cache_file = "e2ee_sessions.cache"
+
 [security.pop]
 # The maximum number of Proof-of-Possession (PoP) nonces to cache
 nonce_cache_size = 8192
