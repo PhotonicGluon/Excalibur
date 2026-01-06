@@ -11,7 +11,7 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 2
+version = 3
 
 # -----------------------------------------------------------------------------
 # Server & Network Configuration
@@ -26,6 +26,9 @@ allow_origins = [
     "http://localhost:5173", # Vite development server
     "http://localhost:8100", # Local development server for Ionic
 ]
+
+# The delay between consecutive file update transmissions, in milliseconds
+consecutive_transmission_delay = 100
 
 [server.rate_limit]
 # The capacity of the rate limiter (e.g., number of allowed bursts)

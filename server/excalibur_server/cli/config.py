@@ -58,9 +58,29 @@ def update_config():
 
         return config
 
-    SETTINGS_VERSION = 2
+    def v2_to_v3(config: TOMLDocument) -> TOMLDocument:
+        config["version"] = 3
+
+        # Recreate the server table, but with the new `consecutive_transmission_delay` field
+        new_server = config["server"].copy()
+        new_server.add("consecutive_transmission_delay", 100)
+        new_server_str = new_server.as_string()
+
+        max_log_idx = new_server_str.find("consecutive_transmission_delay")
+        new_server_str = (
+            "[server]\n"
+            + new_server_str[:max_log_idx]
+            + "\n# The delay between consecutive file update transmissions, in milliseconds\n"  # To add the comment
+            + new_server_str[max_log_idx:]
+        )
+        config["server"] = loads(new_server_str)["server"]
+
+        return config
+
+    SETTINGS_VERSION = 3
     UPDATERS = {
         1: v1_to_v2,
+        2: v2_to_v3,
     }
 
     # Read the config

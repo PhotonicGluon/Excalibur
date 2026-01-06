@@ -8,9 +8,8 @@ from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict
 
 from excalibur_server.api.logging import logger
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.exef import ExEF
-
-CONSECUTIVE_TRANSMISSION_DELAY = 0.1  # In seconds
 
 
 class Socket(BaseModel):
@@ -104,13 +103,13 @@ class FileUpdateManager:
             return
 
         key = (username, path)
-        if time.time() - self._transmissions[key].last_time > CONSECUTIVE_TRANSMISSION_DELAY:
+        if time.time() - self._transmissions[key].last_time > CONFIG.server.consecutive_transmission_delay * 1e-3:
             await self._send_update(username, path, e2ee_key)
             return
 
         if not self._transmissions[key].lock.locked():
             await self._transmissions[key].lock.acquire()
-            await sleep(CONSECUTIVE_TRANSMISSION_DELAY)
+            await sleep(CONFIG.server.consecutive_transmission_delay * 1e-3)
             await self._send_update(username, path, e2ee_key)
 
 
