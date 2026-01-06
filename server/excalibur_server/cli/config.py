@@ -15,16 +15,39 @@ def validate_config():
     typer.secho("Config is valid!", fg="green")
 
 
+# ruff: noqa: C901
 @config_app.command(name="update")
 def update_config():
     """
     Update Excalibur config to latest version.
     """
 
+    from typing import Any
+
     from tomlkit import TOMLDocument, dump, load, loads
     from tomlkit.exceptions import ParseError
+    from tomlkit.items import Table
 
     from excalibur_server.consts import CONFIG_FILE
+
+    # Helpers
+    def _add_new_field(table: Table, key: str, value: Any, top_comment: str = "", side_comment: str = "") -> Table:
+        """
+        Helper method that adds a new field to a TOML table.
+        """
+
+        new_table = table.copy()
+        new_table.add(key, value)
+        if side_comment:
+            new_table[key].comment(side_comment)
+
+        new_table_str = new_table.as_string()
+        if top_comment:
+            idx = new_table_str.find(key)
+            new_table_str = f"[{table.name}]\n" + new_table_str[:idx] + f"\n# {top_comment}\n" + new_table_str[idx:]
+
+        table = loads(new_table_str)[table.name]
+        return table
 
     # Updaters
     def v1_to_v2(config: TOMLDocument) -> TOMLDocument:
@@ -41,39 +64,27 @@ def update_config():
         if config["server"]["rate_limit"]["refill_rate"] < 25:
             config["server"]["rate_limit"]["refill_rate"] = 25
 
-        # Recreate the logging table, but with the new `max_log_age` field
-        new_logging = config["logging"].copy()
-        new_logging.add("max_log_age", 720)
-        new_logging["max_log_age"].comment("30 days")
-        new_logging_str = new_logging.as_string()
-
-        max_log_idx = new_logging_str.find("max_log_age")
-        new_logging_str = (
-            "[logging]\n"
-            + new_logging_str[:max_log_idx]
-            + "\n# How long log files are kept before being deleted, in hours\n"  # To add the comment
-            + new_logging_str[max_log_idx:]
+        # Add new `max_log_age` field
+        config["logging"] = _add_new_field(
+            config["logging"],
+            "max_log_age",
+            720,
+            top_comment="How long log files are kept before being deleted, in hours",
+            side_comment="30 days",
         )
-        config["logging"] = loads(new_logging_str)["logging"]
 
         return config
 
     def v2_to_v3(config: TOMLDocument) -> TOMLDocument:
         config["version"] = 3
 
-        # Recreate the server table, but with the new `consecutive_transmission_delay` field
-        new_server = config["server"].copy()
-        new_server.add("consecutive_transmission_delay", 100)
-        new_server_str = new_server.as_string()
-
-        max_log_idx = new_server_str.find("consecutive_transmission_delay")
-        new_server_str = (
-            "[server]\n"
-            + new_server_str[:max_log_idx]
-            + "\n# The delay between consecutive file update transmissions, in milliseconds\n"  # To add the comment
-            + new_server_str[max_log_idx:]
+        # Add new `consecutive_transmission_delay` field
+        config["server"] = _add_new_field(
+            config["server"],
+            "consecutive_transmission_delay",
+            100,
+            top_comment="The delay between consecutive file update transmissions, in milliseconds",
         )
-        config["server"] = loads(new_server_str)["server"]
 
         return config
 
