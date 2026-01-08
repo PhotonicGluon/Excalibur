@@ -93,12 +93,6 @@ def update_config():
             "e2ee_sessions.cache",
             top_comment="File storing end-to-end encryption communication sessions",
         )
-        config["security"]["pop"] = _add_new_field(
-            config["security"]["pop"],
-            "nonce_cache_file",
-            "pop_nonces.cache",
-            top_comment="File storing PoP nonces",
-        )
 
         return config
 
