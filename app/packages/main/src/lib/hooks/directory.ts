@@ -7,6 +7,8 @@ import { useMount } from "@lib/hooks/generic";
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
 
+const LISTDIR_RETRY_COUNT = 3;
+
 /**
  * React hook that provides access to directory listing functionality.
  *
@@ -45,12 +47,26 @@ export function useDirectory(): {
                 return;
             }
 
-            const response = await listdir(auth, explorerContext.path);
-            if (!response.success) {
-                explorerContext.presentSnackbar(response.error!, "danger");
+            let directory: Directory | undefined;
+
+            for (let i = 0; i < LISTDIR_RETRY_COUNT; i++) {
+                const response = await listdir(auth, explorerContext.path);
+                if (response.success) {
+                    directory = response.directory;
+                    break;
+                } else {
+                    console.warn(
+                        `Failed to refresh contents (attempt ${i + 1} of ${LISTDIR_RETRY_COUNT}): ${response.error}`,
+                    );
+                }
+            }
+
+            if (!directory) {
+                explorerContext.presentSnackbar("Failed to refresh contents", "danger");
                 return;
             }
-            setDirectoryContents(response.directory!);
+
+            setDirectoryContents(directory);
         },
         [auth, explorerContext],
     );

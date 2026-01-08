@@ -16,26 +16,30 @@ export async function listdir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, auth.authInfo!.key!, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${auth.getToken()}` },
-    });
-    switch (response.status) {
-        case 200:
-            // Continue with normal flow
-            break;
-        case 401:
-            return { success: false, error: "Unauthorized" };
-        case 404:
-            return { success: false, error: "Path not found or is not a directory" };
-        case 406:
-            return { success: false, error: "Illegal or invalid path" };
-        case 422:
-            return { success: false, error: "Validation error" };
-        default:
-            return { success: false, error: "Unknown error" };
-    }
+    try {
+        const response = await popFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, auth.authInfo!.key!, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${auth.getToken()}` },
+        });
+        switch (response.status) {
+            case 200:
+                // Continue with normal flow
+                break;
+            case 401:
+                return { success: false, error: "Unauthorized" };
+            case 404:
+                return { success: false, error: "Path not found or is not a directory" };
+            case 406:
+                return { success: false, error: "Illegal or invalid path" };
+            case 422:
+                return { success: false, error: "Validation error" };
+            default:
+                return { success: false, error: "Unknown error" };
+        }
 
-    const directory = await ExEF.decryptResponse<Directory>(auth.authInfo!.key, response);
-    return { success: true, directory };
+        const directory = await ExEF.decryptResponse<Directory>(auth.authInfo!.key, response);
+        return { success: true, directory };
+    } catch (_error) {
+        return { success: false, error: "Unknown error occurred" };
+    }
 }
