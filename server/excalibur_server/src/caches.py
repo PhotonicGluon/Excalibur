@@ -26,6 +26,7 @@ class TTLCache(Mapping[_KT, _VT]):
         self._timer = timer
         self._cache: OrderedDict[_KT, tuple[_VT, float]] = OrderedDict()
 
+    # Magic methods
     def __iter__(self) -> Iterator[_KT]:
         return iter(self._cache)
 
@@ -67,12 +68,13 @@ class TTLCache(Mapping[_KT, _VT]):
         self._cache[key] = (value, expires_at)
 
         # Enforce size limit
-        self._prune()
+        self.__prune()
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: _KT):
         del self._cache[key]
 
-    def _prune(self):
+    # Private methods
+    def __prune(self):
         """
         Removes expired items first. If still over maxsize, removes the Least Recently Used (oldest)
         item.
@@ -89,9 +91,18 @@ class TTLCache(Mapping[_KT, _VT]):
         while len(self._cache) > self.maxsize:
             self._cache.popitem(last=False)  # Remove first item (i.e., least recently used item)
 
+    # Public methods
     def keys(self):
-        self._prune()
+        # We can prune here since `keys()` is already ~O(N)
+        self.__prune()
         return self._cache.keys()
+
+    def pop(self, key: _KT, default: _VT | None = None) -> _VT | None:
+        # We do not prune here to maintain the ~O(1) time complexity
+        (value, expiry) = self._cache.pop(key, (None, 0))
+        if value is None or self._timer() > expiry:
+            return default
+        return value
 
     def clear(self):
         self._cache.clear()
@@ -115,9 +126,26 @@ class PersistentTTLCache(TTLCache[_KT, _VT]):
         super().__init__(maxsize, ttl, timer)
 
         self.filename = filename
-        self._load_from_disk()
+        self.__load_from_disk()
 
-    def _load_from_disk(self):
+    # Magic methods
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+
+        stored_entry = self._cache[key]
+        with shelve.open(self.filename) as db:
+            db[str(key)] = stored_entry
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+
+        with shelve.open(self.filename) as db:
+            k_str = str(key)
+            if k_str in db:
+                del db[k_str]
+
+    # Private methods
+    def __load_from_disk(self):
         """
         Load cache from file, removing any expired items and maintaining the expiry time of other
         items.
@@ -151,21 +179,7 @@ class PersistentTTLCache(TTLCache[_KT, _VT]):
         for k, v, t in loaded_items:
             self._cache[k] = (v, t)  # Direct insert to keep expiration time
 
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-
-        stored_entry = self._cache[key]
-        with shelve.open(self.filename) as db:
-            db[str(key)] = stored_entry
-
-    def __delitem__(self, key):
-        super().__delitem__(key)
-
-        with shelve.open(self.filename) as db:
-            k_str = str(key)
-            if k_str in db:
-                del db[k_str]
-
+    # Public methods
     def clear(self):
         super().clear()
         with shelve.open(self.filename) as db:

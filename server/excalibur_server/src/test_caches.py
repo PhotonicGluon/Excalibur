@@ -105,6 +105,26 @@ class TestTTLCache:
         assert "a" not in cache
         assert len(cache) == 0
 
+    def test_pop(self, timer: MockTimer):
+        cache = TTLCache(maxsize=2, ttl=10, timer=timer)
+
+        # Item in cache but being popped
+        cache["a"] = 1
+        assert cache.pop("a") == 1
+        assert "a" not in cache
+        assert len(cache) == 0
+
+        # Item not in cache
+        assert cache.pop("b1") is None
+        assert cache.pop("b2", default=1234) == 1234
+
+        # Item in cache but expired
+        cache["c1"] = 3
+        cache["c2"] = 3
+        timer.advance(11)
+        assert cache.pop("c1") is None
+        assert cache.pop("c2", default=1234) == 1234
+
     def test_clear(self, timer: MockTimer):
         cache = TTLCache(maxsize=2, ttl=10, timer=timer)
         cache["a"] = 1
