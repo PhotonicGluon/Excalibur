@@ -83,10 +83,12 @@ const Welcome: React.FC = () => {
                         if (!result.reachable) {
                             console.debug(`Could not reach ${url}: ${result.error}`);
                             reject({ url, result });
+                            return;
                         }
                         if (!result.valid) {
                             console.debug(`Invalid API URL: ${url}`);
                             reject({ url, result });
+                            return;
                         }
                         console.debug(`Found valid API URL: ${url}`);
                         resolve({ url, result });

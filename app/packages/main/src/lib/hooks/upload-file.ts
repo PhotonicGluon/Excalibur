@@ -190,7 +190,6 @@ export function useUploadFile() {
             if (file.directory) {
                 let dirs = getParents(explorerContext.path + "/" + file.directory + "/redundant"); // So that the target directory is included
                 dirs = dirs.toReversed().slice(1);
-                console.log("Directories to create:", dirs);
 
                 for (const dir of dirs) {
                     const checkDirResponse = await checkPath(auth, dir);
