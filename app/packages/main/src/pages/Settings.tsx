@@ -337,7 +337,23 @@ const Settings: React.FC = () => {
                     <SettingsItem
                         label={<></>}
                         input={
-                            <IonButton onClick={() => performUpdateCheck(presentAlert, true)}>
+                            <IonButton
+                                onClick={async () => {
+                                    const updateAvailable = await performUpdateCheck(presentAlert, true);
+                                    if (!updateAvailable) {
+                                        presentAlert({
+                                            header: "No Update Available",
+                                            message: "You are on the latest version of Excalibur.",
+                                            buttons: [
+                                                {
+                                                    text: "OK",
+                                                    role: "cancel",
+                                                },
+                                            ],
+                                        });
+                                    }
+                                }}
+                            >
                                 Check for Update Now
                             </IonButton>
                         }
