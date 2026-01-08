@@ -12,7 +12,10 @@ import { useExplorerContext } from "@components/explorer/context";
  *
  * @returns Object containing directory contents and a function to refresh them
  */
-export function useDirectory(): { directoryContents: Directory | null; refreshContents: () => Promise<void> } {
+export function useDirectory(): {
+    directoryContents: Directory | null;
+    refreshContents: (sourceFolder?: string) => Promise<void>;
+} {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
     const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);

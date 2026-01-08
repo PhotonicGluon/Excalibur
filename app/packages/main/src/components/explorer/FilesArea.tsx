@@ -11,8 +11,9 @@ import { useExplorerContext } from "@components/explorer/context";
 
 export type UploadFile = PickedFile & { directory?: string };
 
-const FilesArea: React.FC<{ refreshTrigger: number }> = (refreshTrigger) => {
+const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => {
     // States
+    const [displayedPath, setDisplayedPath] = useState(""); // Empty string because first path will be '.'
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
 
     // Contexts
@@ -24,8 +25,11 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = (refreshTrigger) => {
 
     // Effects
     useEffect(() => {
-        refreshContents();
-    }, [explorerContext.path, refreshTrigger, refreshContents]);
+        if (displayedPath === explorerContext.path) {
+            return;
+        }
+        refreshContents(explorerContext.path).then(() => setDisplayedPath(explorerContext.path));
+    }, [displayedPath, explorerContext.path, refreshTrigger, refreshContents]);
 
     // Render
     return (
