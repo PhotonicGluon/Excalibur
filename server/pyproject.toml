@@ -8,7 +8,6 @@ version = "0.4.0a3"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.17.2",
-    "cachetools>=6.2.4",
     "duckdb~=1.3.2",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.128.0",
