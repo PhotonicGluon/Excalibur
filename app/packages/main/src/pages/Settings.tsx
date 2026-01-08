@@ -23,6 +23,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { performUpdateCheck } from "@lib/check-update";
 import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
@@ -298,7 +299,7 @@ const Settings: React.FC = () => {
                         </IonCol>
                     </IonRow>
                     <SettingsItem
-                        label={<IonLabel>Check for Updates?</IonLabel>}
+                        label={<IonLabel>Automatically Check for Updates?</IonLabel>}
                         input={
                             <IonCheckbox
                                 id="check-update"
@@ -331,6 +332,14 @@ const Settings: React.FC = () => {
                                     setHasUnsavedChanges(true);
                                 }}
                             ></IonInput>
+                        }
+                    ></SettingsItem>
+                    <SettingsItem
+                        label={<></>}
+                        input={
+                            <IonButton onClick={() => performUpdateCheck(presentAlert, true)}>
+                                Check for Update Now
+                            </IonButton>
                         }
                     ></SettingsItem>
                 </IonGrid>

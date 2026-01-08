@@ -1,9 +1,7 @@
 import React from "react";
 import { Redirect } from "react-router";
 
-import { IonButton, IonContent, IonPage } from "@ionic/react";
-
-import { checkForUpdate } from "@lib/check-update";
+import { IonContent, IonPage } from "@ionic/react";
 
 const TestPage: React.FC = () => {
     if (process.env.NODE_ENV !== "development") {
@@ -14,7 +12,6 @@ const TestPage: React.FC = () => {
         <IonPage>
             <IonContent className="ion-padding">
                 <h1>Test Page</h1>
-                <IonButton onClick={async () => console.log(await checkForUpdate())}>Check Update</IonButton>
             </IonContent>
         </IonPage>
     );
