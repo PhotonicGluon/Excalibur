@@ -59,9 +59,7 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => 
             )}
 
             {/* Files list */}
-            {directoryContents && (
-                <DirectoryList {...directoryContents!} showParentButton={explorerContext.path !== "."} />
-            )}
+            <DirectoryList directory={directoryContents} />
         </div>
     );
 };

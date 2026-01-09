@@ -47,8 +47,9 @@ export function useDirectory(): {
                 return;
             }
 
-            let directory: Directory | undefined;
+            setDirectoryContents(null);
 
+            let directory: Directory | undefined;
             for (let i = 0; i < LISTDIR_RETRY_COUNT; i++) {
                 const response = await listdir(auth, explorerContext.path);
                 if (response.success) {
@@ -66,6 +67,7 @@ export function useDirectory(): {
                 return;
             }
 
+            // TODO: Only set directory contents if this is the LATEST request
             setDirectoryContents(directory);
         },
         [auth, explorerContext],
