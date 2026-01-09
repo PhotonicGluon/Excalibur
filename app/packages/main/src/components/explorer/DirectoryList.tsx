@@ -116,7 +116,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             <IonList lines="none" className="h-[calc(80vh-2rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
                 {hasParent && (
                     <DirectoryItem
-                        oddRow={false}
+                        oddRow={true}
                         name="(Go Back)"
                         fullpath={getParent(path)}
                         type="parent"
