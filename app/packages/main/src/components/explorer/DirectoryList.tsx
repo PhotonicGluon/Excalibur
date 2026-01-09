@@ -63,8 +63,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Render
     const path = explorerContext.path;
-    const parentPath = getParent(path !== "." ? "./" + path : path);
-    const hasParent = parentPath !== "";
+    const hasParent = path !== ".";
 
     let MainBody: React.ReactNode;
     if (props.directory === null) {
@@ -110,7 +109,12 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             {/* Items List */}
             <IonList lines="none" className="h-[calc(80vh-2rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
                 {hasParent && (
-                    <DirectoryItem oddRow={false} name="(Go Back)" fullpath={parentPath} type="parent"></DirectoryItem>
+                    <DirectoryItem
+                        oddRow={false}
+                        name="(Go Back)"
+                        fullpath={getParent(path)}
+                        type="parent"
+                    ></DirectoryItem>
                 )}
                 {MainBody}
             </IonList>
