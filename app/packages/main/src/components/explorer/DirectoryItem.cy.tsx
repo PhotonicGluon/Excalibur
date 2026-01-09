@@ -95,6 +95,13 @@ describe("<DirectoryItem />", () => {
         cy.get("#directory-item ion-note").should("have.text", "123.46 kB");
     });
 
+    it("renders skeleton when pending", () => {
+        renderComponent({ name: undefined, fullpath: undefined, type: undefined });
+
+        cy.get("#directory-item").should("exist");
+        cy.get("ion-skeleton-text").should("exist");
+    });
+
     it("keeps the .exef extension if specified", () => {
         renderComponent({ keepExEF: true });
         cy.get("#directory-item ion-label").should("exist");

@@ -10,6 +10,8 @@ import DirectoryItem from "@components/explorer/DirectoryItem";
 
 import { useExplorerContext } from "./context";
 
+export const NUM_PENDING_ITEMS = 5; // Number of "skeleton" items to show when directory is null
+
 interface ContainerProps {
     /** The ID of the directory list */
     id?: string;
@@ -67,8 +69,12 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     let MainBody: React.ReactNode;
     if (props.directory === null) {
-        // TODO: Handle case where directory is `null` (i.e., pending content)
-        MainBody = <div>Loading...</div>;
+        MainBody = Array.from({ length: NUM_PENDING_ITEMS }).map((_, idx) => (
+            <DirectoryItem
+                key={idx}
+                oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
+            ></DirectoryItem>
+        ));
     } else if (props.directory.items && props.directory.items.length > 0) {
         MainBody = sortItems().map((item, idx) => (
             <DirectoryItem

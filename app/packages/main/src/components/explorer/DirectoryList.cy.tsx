@@ -5,7 +5,8 @@ import { RowAlternatingColours } from "@lib/preferences/settings";
 
 import { settingsContext } from "@components/settings/context";
 
-import DirectoryList from "./DirectoryList";
+import DirectoryList, { NUM_PENDING_ITEMS } from "./DirectoryList";
+import { explorerContext } from "./context";
 
 const files: File[] = [];
 for (let i = 0; i < 10; i++) {
@@ -26,10 +27,14 @@ const directory: Directory = {
 const items = [...files, directory];
 
 describe("<DirectoryList />", () => {
-    function renderComponent(props = {}, rowAlternatingColours: RowAlternatingColours = "off") {
+    function renderComponent(
+        props = {},
+        rowAlternatingColours: RowAlternatingColours = "off",
+        pretendPending: boolean = false,
+    ) {
         const defaultProps: Directory = {
             items,
-            fullpath: "/some/path",
+            fullpath: ".",
             name: "A Directory",
             type: "directory",
             ...props,
@@ -37,19 +42,33 @@ describe("<DirectoryList />", () => {
 
         return cy.mount(
             <IonApp>
-                <settingsContext.Provider
+                <explorerContext.Provider
                     value={{
-                        theme: "dark",
-                        iconStyle: "default",
-                        rowAlternatingColours,
-                        fileSizeUnits: "si",
-                        cryptoChunkSize: 262144,
-                        change: () => {},
-                        save: () => Promise.resolve(),
+                        path: defaultProps.fullpath,
+                        onRename: () => Promise.resolve(),
+                        onMove: () => Promise.resolve(),
+                        onDelete: () => Promise.resolve(),
+                        presentAlert: () => Promise.resolve(),
+                        dismissAlert: () => Promise.resolve(),
+                        presentSnackbar: () => Promise.resolve(),
                     }}
                 >
-                    <DirectoryList id="directory-list" {...defaultProps} />
-                </settingsContext.Provider>
+                    <settingsContext.Provider
+                        value={{
+                            theme: "dark",
+                            iconStyle: "default",
+                            rowAlternatingColours,
+                            fileSizeUnits: "si",
+                            cryptoChunkSize: 262144,
+                            change: () => {},
+                            save: () => Promise.resolve(),
+                            checkUpdate: false,
+                            checkUpdateInterval: 0,
+                        }}
+                    >
+                        <DirectoryList id="directory-list" directory={pretendPending ? null : defaultProps} />
+                    </settingsContext.Provider>
+                </explorerContext.Provider>
             </IonApp>,
         );
     }
@@ -86,8 +105,8 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").should("contain.text", "No items");
     });
 
-    it("renders correctly if showing parent directory", () => {
-        renderComponent({ showParentButton: true });
+    it("renders correctly if has parent directory", () => {
+        renderComponent({ fullpath: "/some/path" });
         cy.get("#directory-list").should("exist");
 
         // Items should be present
@@ -99,6 +118,15 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "(Go Back)"); // First item is the directory
         cy.get("#directory-list ion-list").get("ion-item").eq(1).should("have.text", "Sample Directory"); // First item is the directory
         cy.get("#directory-list ion-list").get("ion-item").eq(2).should("contain.text", "Sample File"); // Second item is the file
+    });
+
+    it("renders correctly if pending", () => {
+        renderComponent({}, "off", true);
+        cy.get("#directory-list").should("exist");
+
+        cy.get("#directory-list ion-list").should("exist");
+        cy.get("#directory-list ion-list").get("ion-item").should("have.length", NUM_PENDING_ITEMS);
+        cy.get("#directory-list ion-skeleton-text").should("exist");
     });
 
     it("renders row alternating colours", () => {

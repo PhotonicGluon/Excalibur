@@ -16,7 +16,9 @@ import {
     IonList,
     IonNote,
     IonRow,
+    IonSkeletonText,
     IonText,
+    IonThumbnail,
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
@@ -37,7 +39,7 @@ import { useSettings } from "@components/settings/context";
 
 import { useJobsManager } from "./jobs/context";
 
-type FileLikePartial = FileLike & Partial<Omit<File, "type">>;
+type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
     /** The ID of the directory item */
     id?: string;
@@ -48,8 +50,9 @@ export interface ContainerProps extends FileLikePartial {
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
+    const isLoading = props.type === undefined;
     const isFile = props.type === "file";
-    const nameNoExEF = props.name.replace(/\.exef$/, "");
+    const nameNoExEF = props.name?.replace(/\.exef$/, "");
 
     // Contexts
     const auth = useAuth();
@@ -69,7 +72,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        const fileName = nameNoExEF;
+        const fileName = nameNoExEF!;
 
         /**
          * Handles the file download process.
@@ -95,7 +98,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             try {
                 // Send request for file
-                const response = await downloadFile(auth, props.fullpath, signal);
+                const response = await downloadFile(auth, props.fullpath!, signal);
                 if (!response.success) {
                     explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
                     throw new Error(response.error); // Propagate error to outer try-catch
@@ -231,7 +234,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
-        await explorerContext.onRename(props.fullpath, !isFile);
+        await explorerContext.onRename(props.fullpath!, !isFile);
         dismissPopover();
     }
 
@@ -239,7 +242,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the move button on an item.
      */
     async function onClickMove() {
-        await explorerContext.onMove(props.fullpath);
+        await explorerContext.onMove(props.fullpath!);
         dismissPopover();
     }
 
@@ -247,7 +250,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the delete button on an item.
      */
     async function onClickDelete() {
-        await explorerContext.onDelete(props.fullpath, !isFile);
+        await explorerContext.onDelete(props.fullpath!, !isFile);
         dismissPopover();
     }
 
@@ -307,28 +310,35 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
     return (
-        <IonItem id={props.id} className={rowColourClass} button={true}>
+        <IonItem id={props.id} className={rowColourClass} button={!isLoading}>
             {/* Main item content */}
             <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
                 <IonGrid
                     className="w-full"
-                    onClick={() => onClickItem()}
+                    onClick={!isLoading ? onClickItem : undefined}
                     onContextMenu={(e) => {
-                        if (props.type === "parent") return;
+                        if (isLoading || props.type === "parent") return;
                         e.preventDefault();
                         showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
                     }}
                 >
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
-                            <IonIcon className="size-6" icon={icon} />
+                            <IonThumbnail className="size-6 *:size-full">
+                                {!isLoading && <IonIcon icon={icon} />}
+                                {isLoading && <IonSkeletonText animated={true} />}
+                            </IonThumbnail>
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
                                 <IonLabel className="max-w-100 truncate">
-                                    {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
+                                    {!isLoading &&
+                                        (props.type === "directory" || props.keepExEF ? props.name : nameNoExEF)}
+                                    {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                                 </IonLabel>
-                                {props.size !== undefined && (
+                                {!isLoading && props.size !== undefined && (
                                     <IonNote>{bytesToHumanReadable(props.size, settings.fileSizeUnits)}</IonNote>
                                 )}
+                                {!isLoading && props.size === undefined}
+                                {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                             </div>
                         </IonCol>
                     </IonRow>
@@ -337,7 +347,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             <IonButtons className="m-0 size-12 justify-end" slot="end">
                 {/* Ellipsis menu button */}
-                {props.type !== "parent" && (
+                {!isLoading && props.type !== "parent" && (
                     <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                         <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
                     </IonButton>
