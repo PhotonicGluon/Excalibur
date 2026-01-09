@@ -20,7 +20,9 @@ export function useDirectory(): {
 } {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+
     const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);
+    const latestRequestRef = useRef<number>(0);
 
     // Contexts
     const auth = useAuth();
@@ -47,8 +49,12 @@ export function useDirectory(): {
                 return;
             }
 
+            // Mark down what request number this is
+            const requestNum = latestRequestRef.current + 1;
             setDirectoryContents(null);
+            latestRequestRef.current = requestNum;
 
+            // Try to get the directory contents
             let directory: Directory | undefined;
             for (let i = 0; i < LISTDIR_RETRY_COUNT; i++) {
                 const response = await listdir(auth, explorerContext.path);
@@ -67,7 +73,12 @@ export function useDirectory(): {
                 return;
             }
 
-            // TODO: Only set directory contents if this is the LATEST request
+            // If this request is not the latest, ignore it
+            if (requestNum < latestRequestRef.current) {
+                console.debug(`Not setting directory contents (${requestNum} < latest ${latestRequestRef.current})`);
+                return;
+            }
+
             setDirectoryContents(directory);
         },
         [auth, explorerContext],
