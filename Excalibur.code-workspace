@@ -1,12 +1,20 @@
 {
     "folders": [
         {
-            "name": "App",
+            "name": "App (Root)",
             "path": "app"
         },
         {
             "name": "App (Main)",
             "path": "app/packages/main"
+        },
+        {
+            "name": "App (Android)",
+            "path": "app/packages/android"
+        },
+        {
+            "name": "App (Electron)",
+            "path": "app/packages/electron"
         },
         {
             "name": "Server",
@@ -33,7 +41,7 @@
             "**/CVS": true,
             "**/.DS_Store": true,
             "**/Thumbs.db": true,
-            "node_modules": true,
+            "**/node_modules": true,
             "app": true,
             "website": true,
             "server": true

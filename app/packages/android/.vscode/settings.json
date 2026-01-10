@@ -1,0 +1,10 @@
+{
+    "files.exclude": {
+        ".gradle": true,
+        ".idea": true,
+        ".kotlin": true,
+        "app": false,
+        "capacitor-*": true,
+        "gradle": true
+    }
+}

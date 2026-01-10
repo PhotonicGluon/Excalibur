@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        ".husky/_": true,
+        ".pytest_cache": true
+    }
+}
