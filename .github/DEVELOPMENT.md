@@ -64,7 +64,7 @@ pnpm run dev
 To expose the server to other devices on the local network, you can run
 
 ```bash
-pnpx vite --no-open --host=0.0.0.0 --port=8100
+pnpm run dev --no-open --host=0.0.0.0 --port=8100
 ```
 
 You can change the `host` IP to restrict access.
@@ -72,11 +72,11 @@ You can change the `host` IP to restrict access.
 #### Android
 
 > [!IMPORTANT]
-> Make sure to set the `JAVA_HOME` environment variable, especially if you use Android Studio only and did _not_ install Java manually.
+> Make sure to set the `ANDROID_HOME` and `JAVA_HOME` environment variables, especially if you use Android Studio only and did _not_ install Java manually.
 >
 > - Windows:
->   - Powershell: `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
->   - Command Prompt: `set JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
+>   - Powershell: `$env:ANDROID_HOME="C:\Users\[USERNAME]\AppData\Local\Android\Sdk"` and `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
+>   - Command Prompt: `set ANDROID_HOME="C:\Users\[USERNAME]\AppData\Local\Android\Sdk"` and `set JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 
 First, [start the app's PWA server](#pwa).
 
@@ -85,7 +85,7 @@ Next, start the [Excalibur Server](../server/README.md) _with CORS disabled_.
 Now find your android device using
 
 ```bash
-pnpx cap run android --list
+pnpm exec cap run android --list
 ```
 
 Note the target ID of the device you want to run the app on.
@@ -93,7 +93,7 @@ Note the target ID of the device you want to run the app on.
 Finally, without closing the web server, we can run
 
 ```bash
-pnpx cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
+pnpm exec cap run android --target=[DEVICE_TARGET] --live-reload --no-sync --port=8100 --host=[HOST_IP]
 ```
 
 > [!TIP]
@@ -124,9 +124,9 @@ We can now open the project in Android Studio by running
 pnpm run android:open
 ```
 
-while in the `app/packages/main` directory.
+while still in the `app/packages/main` directory.
 
-> ![NOTE]
+> [!NOTE]
 > You might need to sync the Gradle project within Android Studio.
 
 #### Electron

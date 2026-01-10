@@ -44,20 +44,21 @@ const SidebarMenu: React.FC<ContainerProps> = ({
     // Render
     return (
         <IonMenu type="overlay" contentId={mainContentID}>
-            {auth.authInfo && (
-                <IonHeader>
-                    <IonToolbar className="ion-padding-top min-h-16">
-                        <IonTitle>
-                            <div className="flex items-center gap-4">
-                                <IonText className="flex-none font-bold [font-variant:small-caps]">Excalibur</IonText>
+            <IonHeader>
+                <IonToolbar className="ion-padding-top min-h-16">
+                    <IonTitle>
+                        <div className="flex items-center gap-4">
+                            <IonText className="flex-none font-bold [font-variant:small-caps]">Excalibur</IonText>
+                            {auth.authInfo && (
                                 <IonText className="grow truncate text-right font-mono text-sm font-bold">
                                     {auth.authInfo?.username}
                                 </IonText>
-                            </div>
-                        </IonTitle>
-                    </IonToolbar>
-                </IonHeader>
-            )}
+                            )}
+                        </div>
+                    </IonTitle>
+                </IonToolbar>
+            </IonHeader>
+
             <IonContent>
                 {/* Actions */}
                 <IonList

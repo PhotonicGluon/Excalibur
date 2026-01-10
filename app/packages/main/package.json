@@ -15,6 +15,7 @@
     },
     "type": "module",
     "dependencies": {
+        "@capacitor-community/safe-area": "^8.0.1",
         "@capacitor/android": "8.0.0",
         "@capacitor/app": "8.0.0",
         "@capacitor/core": "8.0.0",

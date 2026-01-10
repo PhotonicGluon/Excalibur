@@ -113,7 +113,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             </IonGrid>
 
             {/* Items List */}
-            <IonList lines="none" className="h-[calc(80vh-2rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
+            <IonList lines="none" className="h-[calc(80vh-4rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
                 {hasParent && (
                     <DirectoryItem
                         oddRow={true}

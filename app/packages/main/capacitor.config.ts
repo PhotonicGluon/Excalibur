@@ -12,10 +12,10 @@ const config: CapacitorConfig = {
     },
     plugins: {
         Keyboard: {
-            resizeOnFullScreen: true,
+            resizeOnFullScreen: false,
         },
         SystemBars: {
-            insetsHandling: "css",
+            insetsHandling: "disable",
         },
     },
 };

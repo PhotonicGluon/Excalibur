@@ -384,7 +384,7 @@ const FileExplorer: React.FC = () => {
                 <ProvideJobs>
                     {/* Header content */}
                     <IonHeader>
-                        <IonToolbar className="[&::part(container)]:min-h-16">
+                        <IonToolbar className={"min-h-16" + (!Capacitor.isNativePlatform() ? " pt-1" : "")}>
                             {/* Left-side buttons */}
                             <IonButtons className="w-24" slot="start">
                                 <IonMenuButton onClick={() => menuController.open()} />
