@@ -29,7 +29,11 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => 
             return;
         }
         refreshContents(explorerContext.path).then(() => setDisplayedPath(explorerContext.path));
-    }, [displayedPath, explorerContext.path, refreshTrigger, refreshContents]);
+    }, [displayedPath, explorerContext.path, refreshContents]);
+
+    useEffect(() => {
+        refreshContents(explorerContext.path);
+    }, [refreshTrigger, explorerContext.path, refreshContents]);
 
     // Render
     return (
