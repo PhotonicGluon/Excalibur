@@ -99,6 +99,7 @@ const config: Config = {
                 blogSidebarCount: "ALL",
                 postsPerPage: 5,
                 showReadingTime: true,
+                readingTime: ({ content }) => content.length,
                 onUntruncatedBlogPosts: "ignore",
             },
         ],
