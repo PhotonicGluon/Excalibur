@@ -1,6 +1,16 @@
 import { expect } from "vitest";
 
-import { getURLEncodedPath, quotePlus } from "./url";
+import { getURLEncodedPath, quotePlus, validateURL } from "./url";
+
+describe("validateURL", () => {
+    it("valid URL", () => {
+        expect(validateURL("http://example.com")).toBe(true);
+    });
+
+    it("invalid URL", () => {
+        expect(validateURL("not a url")).toBe(false);
+    });
+});
 
 describe("getURLEncodedPath", () => {
     it("no path", () => {
