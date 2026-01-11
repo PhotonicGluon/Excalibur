@@ -51,8 +51,17 @@ const DownloadAsset: React.FC = () => {
 
     // Effects
     useEffect(() => {
-        // Get asset download ID
         const params = new URLSearchParams(window.location.search);
+
+        // Check requested version, if provided
+        const requestedVersion = params.get("version");
+        if (requestedVersion && requestedVersion < "0.3.0") {
+            // Redirect to main download page
+            window.location.href = "/downloads";
+            return;
+        }
+
+        // Get asset download ID
         const assetID = params.get("id");
         if (!ASSET_ID_TO_FILE[assetID]) {
             window.location.href = "/";
@@ -61,10 +70,10 @@ const DownloadAsset: React.FC = () => {
         // Generate download URL components
         const organizationName = siteConfig.organizationName;
         const projectName = siteConfig.projectName;
-        const latestVersion = siteConfig.customFields.latestVersion as string;
+        const version = requestedVersion || (siteConfig.customFields.latestVersion as string);
 
-        let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${latestVersion}/`;
-        let downloadFile = ASSET_ID_TO_FILE[assetID].replace("[VERSION]", latestVersion);
+        let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${version}/`;
+        let downloadFile = ASSET_ID_TO_FILE[assetID].replace("[VERSION]", version);
 
         setDownloadURL(downloadURLBase + downloadFile);
     });

@@ -1,5 +1,5 @@
 import { Apple, Globe, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
 import Layout from "@theme/Layout";
 
@@ -51,6 +51,30 @@ const DownloadPage: React.FC = () => {
         },
     ];
 
+    // Effects
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const version = params.get("version");
+        if (!version) {
+            return;
+        }
+
+        if (version < "0.3.0") {
+            // Redirect to main download page
+            window.location.href = "/downloads";
+            return;
+        }
+
+        // Append the version to each download link
+        document.querySelectorAll(".download-link").forEach((link) => {
+            const href = link.getAttribute("href");
+            if (href) {
+                link.setAttribute("href", href + "&version=" + version);
+            }
+        });
+    }, []);
+
+    // Render
     return (
         <Layout title="Downloads" description="Download Excalibur for your preferred platform">
             <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-900 dark:bg-slate-900">
