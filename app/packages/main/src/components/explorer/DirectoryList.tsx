@@ -3,10 +3,10 @@ import { useState } from "react";
 import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
+import DirectoryItem from "@components/explorer/DirectoryItem";
 import { Directory, FileLike } from "@lib/files/structures";
 import { getParent } from "@lib/util";
-
-import DirectoryItem from "@components/explorer/DirectoryItem";
+import naturalCompare from "natural-compare-lite";
 
 import { useExplorerContext } from "./context";
 
@@ -55,8 +55,8 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                 return 1;
             }
 
-            // Otherwise, since they are of the same type, sort by name
-            const sortVal = a.name.localeCompare(b.name);
+            // Otherwise, since they are of the same type, sort by name using 'natural' ordering
+            const sortVal = naturalCompare(a.name, b.name);
             return sortAsc ? sortVal : -sortVal;
         }
 
