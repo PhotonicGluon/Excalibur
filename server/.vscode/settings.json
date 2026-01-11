@@ -33,7 +33,8 @@
         "vite"
     ],
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "black-formatter.args": ["--line-length=120"]
+    "ruff.lineLength": 120,
+    "ruff.configurationPreference": "filesystemFirst"
 }

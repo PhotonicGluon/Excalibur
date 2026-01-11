@@ -52,18 +52,19 @@
         },
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
-        }
+        },
+        "errorLens.enabledDiagnosticLevels": ["error", "warning"]
     },
     "extensions": {
         "recommendations": [
             "esbenp.prettier-vscode",
+            "charliermarsh.ruff",
             "streetsidesoftware.code-spell-checker",
             "yzhang.markdown-all-in-one",
             "github.vscode-github-actions",
-            "Ionic.ionic",
             "bradlc.vscode-tailwindcss",
-            "ms-python.black-formatter",
-            "tamasfe.even-better-toml"
+            "tamasfe.even-better-toml",
+            "usernamehw.errorlens"
         ]
     }
 }
