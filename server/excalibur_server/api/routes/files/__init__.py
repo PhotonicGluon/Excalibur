@@ -4,7 +4,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, status
 
-from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.misc import is_debug
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.files.update_manager import file_update_manager
@@ -22,7 +21,7 @@ def add_folder_change(credentials: Credentials, path: Path):
     if path == "":
         path = "."
 
-    asyncio.run(file_update_manager.add_update(credentials.username, path, MASTER_KEYS_CACHE[credentials.comm_uuid]))
+    asyncio.run(file_update_manager.add_update(credentials, path))
 
 
 # Add endpoints
