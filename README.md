@@ -4,17 +4,19 @@
     <em>A trustless, secure file management solution using military-grade encryption.</em>
 </p>
 
-[![License](https://img.shields.io/github/license/PhotonicGluon/Excalibur)](LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/PhotonicGluon/Excalibur)](https://github.com/PhotonicGluon/Excalibur/releases)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22%2B-green)](https://nodejs.org/)
+<div align="center">
+    <a href="./LICENSE"><img src="https://img.shields.io/github/license/PhotonicGluon/Excalibur" alt="License"></a>
+    <a href="https://github.com/PhotonicGluon/Excalibur/releases"><img src="https://img.shields.io/github/v/release/PhotonicGluon/Excalibur" alt="GitHub Release"></a>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python"></a>
+    <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-green" alt="Node.js"></a>
+</div>
 
 ## Features
 
 - ✨ **User-Friendly**: Simple, intuitive interface that makes secure file storage effortless.
 - 🛡️ **Military-Grade Security**: State-of-the-art encryption algorithms protect your files at rest and in transit.
 - 🕵️ **Zero-Trust By Default**: Designed with zero-trust principles in mind. Trust no one but yourself.
-- 🔒 **End-to-End Encryption**: Data in transit are always encrypted using AES-GCM.
+- 🔒 **End-to-End Encryption**: Data in transit is always encrypted using AES-GCM.
 - 🗝️ **Zero-Knowledge Authentication**: Your password never leaves your device.
 - 📱 **Multi-Platform**: Available as a desktop app, an Android app, and a Progressive Web App (PWA).
 - 📦 **Open Source**: Fully transparent and auditable codebase for maximum trust.
@@ -40,3 +42,11 @@ Contributions are welcome! Please read our [Contributing Guidelines](./.github/C
 ## Security
 
 See [SECURITY.md](./.github/SECURITY.md).
+
+## License
+
+See [LICENSE](./LICENSE).
+
+## Credits
+
+Read the [credits page](https://excalibur.photonic.dev/credits/) for more information.

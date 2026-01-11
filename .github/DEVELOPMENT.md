@@ -270,7 +270,7 @@ See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorep
 
 We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions locally.
 
-> [!WARNING] First Time Setup
+> [!WARNING]
 >
 > For the first time running an `act` command, you'll need to edit the `.actrc` file, removing the `--action-offline-mode` flag.
 >
@@ -281,7 +281,7 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 > - Specify `-P ubuntu-latest=catthehacker/ubuntu:full-latest` to use the full version of Ubuntu.
 > - Specify `--container-architecture linux/amd64` on non-AMD64 machines (e.g., Apple Silicon Macs).
 
-> [!TIP] Tips
+> [!TIP]
 >
 > - To specify the workflow(s) to run, use the `--workflows` flag (e.g., `--workflows ./.github/workflows/test.yml`)
 > - If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--action-offline-mode` flag.
