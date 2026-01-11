@@ -32,7 +32,7 @@ def run_tests(
 
     init_server(reset=False, with_db=False)
 
-    args = ["--maxfail", "0", "-rs"]
+    args = ["--maxfail", "0", "-rs", "--timeout", "5", "--session-timeout", "300"]
     if verbose > 0:
         args += ["-" + "v" * verbose]
     if files:

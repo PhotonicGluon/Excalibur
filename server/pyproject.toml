@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.4.0a3"
+version = "0.4.0a5"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.17.2",
@@ -42,7 +42,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.9.0", "ruff>=0.14.10"]
+dev = ["ipython>=9.9.0", "pytest-timeout>=2.4.0", "ruff>=0.14.10"]
 test = ["httpx>=0.28.1", "pytest>=9.0.2"]
 
 [tool.uv]
