@@ -12,7 +12,7 @@ const ASSET_ID_TO_FILE: Record<string, string> = {
     // macOS
     "app-mac-dmg": "excalibur-electron-[VERSION].dmg",
     "app-mac-app": "Excalibur-[VERSION]-arm64-mac.zip",
-    // Ubuntu
+    // Linux
     "app-linux-deb": "excalibur-electron_[VERSION]_amd64.deb",
     "app-linux-appimage": "excalibur-electron-[VERSION].AppImage",
     // Android

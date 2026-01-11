@@ -21,7 +21,7 @@ const DownloadPage: React.FC = () => {
             ],
         },
         {
-            platform: "Ubuntu",
+            platform: "Linux",
             icon: <Terminal className="size-5" />,
             links: [
                 { label: "Debian Package (.deb)", assetID: "app-linux-deb" },
