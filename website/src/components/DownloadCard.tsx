@@ -14,7 +14,7 @@ export interface DownloadInfo {
     links: DownloadLink[];
 }
 
-const DownloadCard: React.FC<{ item: DownloadInfo }> = ({ item }) => {
+const DownloadCard: React.FC<{ item: DownloadInfo; version?: string }> = ({ item, version }) => {
     return (
         <div className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-md transition-all hover:border-blue-200 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:shadow-slate-700 dark:hover:border-blue-800">
             <div className="mb-4 flex items-start justify-between">
@@ -27,9 +27,9 @@ const DownloadCard: React.FC<{ item: DownloadInfo }> = ({ item }) => {
 
             <div className="flex flex-col gap-1">
                 {item.links.map((link) => (
-                    <div className="flex">
+                    <div key={link.assetID} className="flex">
                         <Link
-                            to={"/download?id=" + link.assetID}
+                            to={"/download?id=" + link.assetID + (version ? `&version=${version}` : "")}
                             target="_blank"
                             className="download-link inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-600 dark:bg-slate-600"
                         >
