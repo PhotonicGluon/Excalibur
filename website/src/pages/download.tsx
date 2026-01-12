@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 import Layout from "@theme/Layout";
@@ -27,36 +29,8 @@ const DownloadAsset: React.FC = () => {
     // Contexts
     const { siteConfig } = useDocusaurusContext();
 
-    // Check requested version, if provided
-    const params = new URLSearchParams(window.location.search);
-    const requestedVersion = params.get("version");
-    if (requestedVersion && requestedVersion < "0.3.0") {
-        // Redirect to main download page
-        window.location.href = "/downloads";
-        return;
-    }
-
-    // Get asset download ID
-    const assetID = params.get("id");
-    if (!ASSET_ID_TO_FILE[assetID]) {
-        window.location.href = "/";
-    }
-
-    // Generate download URL components
-    const organizationName = siteConfig.organizationName;
-    const projectName = siteConfig.projectName;
-    const version = requestedVersion || (siteConfig.customFields.latestVersion as string);
-
-    let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${version}/`;
-    let downloadFile = ASSET_ID_TO_FILE[assetID].replace("[VERSION]", version);
-
-    const downloadURL = downloadURLBase + downloadFile;
-
-    // Start download after 1 second
-    setTimeout(() => {
-        console.log(`Downloading ${downloadURL}...`);
-        handleDownload(downloadURL);
-    }, 1000);
+    // States
+    const [downloadURL, setDownloadURL] = useState<string>("");
 
     // Functions
     /**
@@ -75,6 +49,44 @@ const DownloadAsset: React.FC = () => {
         }, 0);
     }
 
+    // Effects
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+
+        // Check requested version, if provided
+        const requestedVersion = params.get("version");
+        if (requestedVersion && requestedVersion < "0.3.0") {
+            // Redirect to main download page
+            window.location.href = "/downloads";
+            return;
+        }
+
+        // Get asset download ID
+        const assetID = params.get("id");
+        if (!ASSET_ID_TO_FILE[assetID]) {
+            window.location.href = "/";
+        }
+
+        // Generate download URL components
+        const organizationName = siteConfig.organizationName;
+        const projectName = siteConfig.projectName;
+        const version = requestedVersion || (siteConfig.customFields.latestVersion as string);
+
+        let downloadURLBase = `https://github.com/${organizationName}/${projectName}/releases/download/v${version}/`;
+        let downloadFile = ASSET_ID_TO_FILE[assetID].replace("[VERSION]", version);
+
+        setDownloadURL(downloadURLBase + downloadFile);
+    });
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (downloadURL) {
+                console.log(`Downloading ${downloadURL}...`);
+                handleDownload(downloadURL);
+            }
+        }, 1000);
+    }, [downloadURL]);
+
     // Render
     return (
         <Layout title="Thanks For Downloading Excalibur" description="Thank you for downloading Excalibur">
@@ -83,7 +95,7 @@ const DownloadAsset: React.FC = () => {
                 <div className="absolute inset-0 bg-white/70 dark:bg-black/60" />
                 <div className="relative z-10 container px-4 text-center">
                     <h1 className="block text-4xl! font-bold text-gray-800 dark:text-white">
-                        Thanks for downloading Excalibur {version}!
+                        Thanks for downloading Excalibur!
                     </h1>
                     <p className="text-center! text-lg">
                         Your download should start automatically. If it doesn't start soon, try this{" "}
