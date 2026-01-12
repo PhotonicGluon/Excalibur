@@ -242,7 +242,7 @@ jobs:
                   RELEASE_HEADER=$(echo "$APP_CHANGELOG" | head -n 1 | sed 's/^##/#/')
 
                   # Get the description of the current release tag
-                  git fetch origin refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}
+                  git fetch --force origin refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}
                   TAG_MESSAGE=$(git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' ${{ github.ref_name }})
 
                   # Extract the content of the app changelog (from line 3 onwards to skip the header and blank line)
