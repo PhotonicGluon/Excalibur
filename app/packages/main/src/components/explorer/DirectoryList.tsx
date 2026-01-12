@@ -1,12 +1,13 @@
+import naturalCompare from "natural-compare";
 import { useState } from "react";
 
 import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
-import DirectoryItem from "@components/explorer/DirectoryItem";
 import { Directory, FileLike } from "@lib/files/structures";
 import { getParent } from "@lib/util";
-import naturalCompare from "natural-compare-lite";
+
+import DirectoryItem from "@components/explorer/DirectoryItem";
 
 import { useExplorerContext } from "./context";
 
