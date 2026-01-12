@@ -1,0 +1,1 @@
+Updated `@trivago/prettier-plugin-sort-imports` from `6.0.1` to `6.0.2`
