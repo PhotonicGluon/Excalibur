@@ -1,0 +1,41 @@
+---
+sidebar_label: Updating to 0.4
+description: Guide explaining the upgrade process from Excalibur 0.3 to 0.4.
+---
+
+# Upgrading from Excalibur 0.3 to Excalibur 0.4
+
+In this guide, you'll find steps to update your Excalibur app and server instances to version 0.4.
+
+:::important
+
+Please read this guide carefully and follow all steps.
+
+:::
+
+This guide will assume that the `0.4.x` version of the Excalibur server is installed. If you are using version `0.3.x`, please upgrade to `0.4.x` before proceeding.
+
+## Configuration File v3
+
+Excalibur 0.4 modifies the configuration file from version `2` to version `3`, adding two new keys.
+
+- **`server.consecutive_transmission_delay`**: This field describes the delay between consecutive file update transmissions in milliseconds.
+- **`security.e2ee.comm_cache_file`**: This field gives the prefix of the files storing end-to-end encryption communication sessions.
+
+Existing configuration files can be upgraded by running
+
+```bash
+excalibur config update
+```
+
+on the server. Verify that the updated configuration is valid by running the command
+
+```bash
+excalibur config validate
+```
+
+You should see `Config is valid!` appear in the terminal.
+
+## Conclusion
+
+These are the steps to upgrade your Excalibur app and server instances to version 0.4. After following these steps, your Excalibur instance should be running on version 0.4.
