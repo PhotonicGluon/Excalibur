@@ -39,6 +39,12 @@ import { useSettings } from "@components/settings/context";
 
 import { useJobsManager } from "./jobs/context";
 
+/**
+ * Delay, in milliseconds, to allow the UI to update and show the "tap" animations when navigating
+ * into a directory.
+ */
+const NAVIGATION_DELAY = 75;
+
 type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
     /** The ID of the directory item */
@@ -68,7 +74,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     async function onClickItem() {
         if (!isFile) {
             // Navigate into the directory
-            router.push(`/files/${props.fullpath}`, props.type !== "parent" ? "forward" : "back", "push");
+            setTimeout(() => {
+                router.push(`/files/${props.fullpath}`, props.type !== "parent" ? "forward" : "back", "push");
+            }, NAVIGATION_DELAY);
             return;
         }
 
