@@ -2,7 +2,6 @@ import time
 from asyncio import Lock, sleep
 from collections import defaultdict
 from pathlib import Path
-from uuid import uuid4
 
 from fastapi import WebSocket
 from pydantic import BaseModel, ConfigDict
@@ -35,9 +34,9 @@ class FileUpdateManager:
 
     def __init__(self):
         self._active_sockets: dict[str, Socket] = {}
-        "Dictionary of connection ID to socket object mappings"
+        "Dictionary of communications UUID to socket object mappings"
         self._connections: dict[str, list[str]] = defaultdict(list)
-        "Dictionary of username to connection IDs"
+        "Dictionary of username to communications UUID"
         self._transmissions: dict[tuple[str, Path], Transmission] = defaultdict(Transmission)
         "Dictionary of username-path pairs to transmission info"
 
@@ -51,14 +50,13 @@ class FileUpdateManager:
         """
 
         username = credentials.username
-        e2ee_key = MASTER_KEYS_CACHE[credentials.comm_uuid]
-
         logger.debug(f"Sending notification for '{username}' folder content change: {path}")
 
         key = (username, path)
-        for connection_id in self._connections[username]:
-            active_socket = self._active_sockets[connection_id]
+        for comm_uuid in self._connections[username]:
+            active_socket = self._active_sockets[comm_uuid]
             if active_socket.encrypted:
+                e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
                 await active_socket.websocket.send_bytes(ExEF(e2ee_key).encrypt(str(path).encode("UTF-8")))
             else:
                 await active_socket.websocket.send_text(str(path))
@@ -68,31 +66,28 @@ class FileUpdateManager:
             self._transmissions[key].lock.release()
 
     # Public methods
-    async def connect(self, username: str, websocket: WebSocket, encrypted: bool = True) -> str:
+    async def connect(self, credentials: Credentials, websocket: WebSocket, encrypted: bool = True):
         """
         Connects a user to the update manager.
 
-        :param username: The username of the user to connect
+        :param credentials: The credentials of the user to connect
         :param websocket: The websocket to connect
         :param encrypted: Whether the connection should be encrypted
         """
 
-        connection_id = uuid4().hex
         await websocket.accept()
-        self._active_sockets[connection_id] = Socket(websocket=websocket, encrypted=encrypted)
-        self._connections[username].append(connection_id)
-        return connection_id
+        self._active_sockets[credentials.comm_uuid] = Socket(websocket=websocket, encrypted=encrypted)
+        self._connections[credentials.username].append(credentials.comm_uuid)
 
-    def disconnect(self, username: str, connection_id: str):
+    def disconnect(self, credentials: Credentials):
         """
         Disconnects a user from the update manager.
 
-        :param username: The username of the user to disconnect
-        :param connection_id: The connection ID of the user to disconnect
+        :param credentials: The credentials of the user to disconnect
         """
 
-        self._connections[username].remove(connection_id)
-        del self._active_sockets[connection_id]
+        self._connections[credentials.username].remove(credentials.comm_uuid)
+        self._active_sockets.pop(credentials.comm_uuid, None)
 
     async def add_update(self, credentials: Credentials, path: Path):
         """

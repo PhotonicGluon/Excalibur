@@ -7,16 +7,6 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials_w
 from excalibur_server.src.files.update_manager import file_update_manager
 
 
-async def _main_logic(username: str, websocket: WebSocket, encrypted: bool):
-    conn_id = await file_update_manager.connect(username, websocket, encrypted)
-    try:
-        # Keep the connection alive
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        file_update_manager.disconnect(username, conn_id)
-
-
 @router.websocket("/listen")
 async def directory_changes_listener_endpoint(
     websocket: WebSocket,
@@ -27,4 +17,10 @@ async def directory_changes_listener_endpoint(
     Listens for directory changes and sends updates to the client.
     """
 
-    await _main_logic(credentials.username, websocket, encrypted)
+    await file_update_manager.connect(credentials, websocket, encrypted)
+    try:
+        # Keep the connection alive
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        file_update_manager.disconnect(credentials)

@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -8,11 +9,21 @@ from Crypto.Random import get_random_bytes
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
 
+from excalibur_server.api.app import app
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.pop import generate_pop_header
 from excalibur_server.src.exef import ExEF
 
 
-def _make_websocket(auth_client: TestClient, path: str, encrypted: bool = True):
+def _make_websocket(path: str, encrypted: bool = True):
+    # Create a new authenticated client
+    uuid = uuid4().hex
+    MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
+    token = generate_auth_token("test-user", uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
+    auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
+
+    # Generate PoP header
     auth_token = auth_client.headers["Authorization"].removeprefix("Bearer ")
     pop_header = generate_pop_header(
         master_key=b"one demo 16B key",
@@ -22,6 +33,7 @@ def _make_websocket(auth_client: TestClient, path: str, encrypted: bool = True):
         nonce=get_random_bytes(16),
     )
 
+    # Connect
     with auth_client.websocket_connect(
         f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted={encrypted}"
     ) as ws:
@@ -30,12 +42,12 @@ def _make_websocket(auth_client: TestClient, path: str, encrypted: bool = True):
 
 class TestDirectoryChangesListener:
     @pytest.fixture
-    def ws_client(self, auth_client: TestClient):
-        yield from _make_websocket(auth_client, "/api/files/listen", encrypted=False)
+    def ws_client(self):
+        yield from _make_websocket("/api/files/listen", encrypted=False)
 
     @pytest.fixture()
-    def ws_client_encrypted(self, auth_client: TestClient):
-        yield from _make_websocket(auth_client, "/api/files/listen", encrypted=True)
+    def ws_client_encrypted(self):
+        yield from _make_websocket("/api/files/listen", encrypted=True)
 
     @pytest.fixture(scope="class")
     def example_file(self, tmp_path_factory: pytest.TempPathFactory) -> Path:
