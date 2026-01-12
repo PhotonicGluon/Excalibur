@@ -299,7 +299,7 @@ const Settings: React.FC = () => {
                         </IonCol>
                     </IonRow>
                     <SettingsItem
-                        label={<IonLabel>Automatically Check for Updates?</IonLabel>}
+                        label={<IonLabel>Check for Updates?</IonLabel>}
                         input={
                             <IonCheckbox
                                 id="check-update"
