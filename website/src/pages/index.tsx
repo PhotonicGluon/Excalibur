@@ -15,7 +15,7 @@ import { fadeInUp, staggerContainer } from "@site/src/variants";
 export const features: FeatureCardProps[] = [
     {
         title: "End-to-End Encryption",
-        description: "Data in transit are always encrypted using AES-GCM.",
+        description: "Data in transit is always encrypted using AES-GCM.",
         icon: "🔒",
     },
     {
@@ -258,6 +258,15 @@ const Home: React.FC = () => {
                     </div>
                 </section>
             </main>
+
+            <footer className="bg-slate-800">
+                <div className="container my-4 flex w-full flex-col items-center px-4">
+                    <span>&copy; Excalibur Contributors.</span>
+                    <span className="text-sm">
+                        A <a href="https://photonic.dev">Photonic</a> project.
+                    </span>
+                </div>
+            </footer>
         </Layout>
     );
 };
