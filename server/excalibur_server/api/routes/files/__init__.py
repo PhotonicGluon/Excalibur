@@ -4,7 +4,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, status
 
-from excalibur_server.api.misc import is_debug
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.files.update_manager import file_update_manager
 
@@ -34,9 +33,6 @@ from .folder import directory_changes_listener_endpoint as directory_changes_lis
 from .folder import listdir_endpoint as listdir_endpoint
 from .move import move_path_endpoint as move_path_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
-
-if is_debug():
-    from .folder import directory_changes_listener_debug_endpoint as directory_changes_listener_debug_endpoint
 
 # Add encrypted routes to overall router
 router.include_router(encrypted_router)
