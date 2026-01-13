@@ -43,14 +43,18 @@ def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentia
     """
     Gets a new authentication token for a logged-in user.
 
-    Note that this invalidates the old token.
+    Note that this invalidates the old token and disconnects the user from the update manager.
     """
 
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
+    from excalibur_server.src.files.update_manager import file_update_manager
 
     if credentials.comm_uuid not in MASTER_KEYS_CACHE:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Comm UUID not found in cache")
+
+    file_update_manager.disconnect(credentials)
     master_key = MASTER_KEYS_CACHE.pop(credentials.comm_uuid)
+
     return _gen_token(credentials.username, master_key, CONFIG.security.session_duration)
 
 

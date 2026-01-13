@@ -471,12 +471,6 @@ const FileExplorer: React.FC = () => {
                                 <div className="fixed bottom-6 w-full">
                                     <IonText color="warning" className="block w-full text-center text-sm">
                                         Vault key was changed
-                                        {/* <br></br>
-                                        {auth.origVaultKey}
-                                        <br></br>
-                                        {auth.vaultKey}
-                                        <br></br>
-                                        {auth.origVaultKey !== auth.vaultKey ? "Changed" : "Not Changed"} */}
                                     </IonText>
                                 </div>
                             )}

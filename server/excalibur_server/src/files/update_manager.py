@@ -54,6 +54,9 @@ class FileUpdateManager:
 
         key = (username, path)
         for comm_uuid in self._connections[username]:
+            if comm_uuid not in self._active_sockets:
+                continue
+
             active_socket = self._active_sockets[comm_uuid]
             if active_socket.encrypted:
                 e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
@@ -81,12 +84,13 @@ class FileUpdateManager:
 
     def disconnect(self, credentials: Credentials):
         """
-        Disconnects a user from the update manager.
+        Disconnects a user from the update manager if the user is connected.
 
         :param credentials: The credentials of the user to disconnect
         """
 
-        self._connections[credentials.username].remove(credentials.comm_uuid)
+        if credentials.comm_uuid in self._connections[credentials.username]:
+            self._connections[credentials.username].remove(credentials.comm_uuid)
         self._active_sockets.pop(credentials.comm_uuid, None)
 
     async def add_update(self, credentials: Credentials, path: Path):

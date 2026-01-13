@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
-import { useMount } from "@lib/hooks/generic";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -90,9 +89,9 @@ export function useDirectory(): {
         refreshContentsRef.current = refreshContents;
     }, [refreshContents]);
 
-    useMount(() => {
+    useEffect(() => {
         directoryChangesListener(auth, refreshContentsRef);
-    });
+    }, [auth]);
 
     return { directoryContents, refreshContents };
 }
