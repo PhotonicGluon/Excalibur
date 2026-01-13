@@ -26,7 +26,10 @@ export function useDirectory(): {
 
     // Contexts
     const auth = useAuth();
+
     const explorerContext = useExplorerContext();
+    const path = explorerContext.path;
+    const presentSnackbar = explorerContext.presentSnackbar;
 
     // Functions
     /**
@@ -41,10 +44,8 @@ export function useDirectory(): {
      */
     const refreshContents = useCallback(
         async (sourceFolder?: string) => {
-            if (sourceFolder && sourceFolder !== explorerContext.path) {
-                console.debug(
-                    `Not refreshing contents (changed '${sourceFolder}' is not current '${explorerContext.path}')`,
-                );
+            if (sourceFolder && sourceFolder !== path) {
+                console.debug(`Not refreshing contents (changed '${sourceFolder}' is not current '${path}')`);
                 // We are in a different folder than the one we want to refresh, so no need to refresh
                 return;
             }
@@ -57,7 +58,7 @@ export function useDirectory(): {
             // Try to get the directory contents
             let directory: Directory | undefined;
             for (let i = 0; i < LISTDIR_RETRY_COUNT; i++) {
-                const response = await listdir(auth, explorerContext.path);
+                const response = await listdir(auth, path);
                 if (response.success) {
                     directory = response.directory;
                     break;
@@ -69,7 +70,7 @@ export function useDirectory(): {
             }
 
             if (!directory) {
-                explorerContext.presentSnackbar("Failed to refresh contents", "danger");
+                presentSnackbar("Failed to refresh contents", "danger");
                 return;
             }
 
@@ -81,7 +82,7 @@ export function useDirectory(): {
 
             setDirectoryContents(directory);
         },
-        [auth, explorerContext],
+        [auth, path, presentSnackbar],
     );
 
     // Effects
