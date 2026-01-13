@@ -280,7 +280,7 @@ jobs:
                   echo "$COMBINED_BODY" >> $GITHUB_OUTPUT
                   echo "EOF" >> $GITHUB_OUTPUT
 
-            - name: Create Draft Release
+            - name: Create Release
               uses: softprops/action-gh-release@v2
               if: ${{ github.token }}
               with:

@@ -1,1 +1,0 @@
-Fixed minor issue with attempting to send messages to disconnected sockets causing the entire file listener to fail
