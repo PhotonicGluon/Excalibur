@@ -48,6 +48,8 @@ const Login: React.FC = () => {
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
+    const [capslockIndicator, setCapslockIndicator] = useState(false);
+
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
 
@@ -267,7 +269,7 @@ const Login: React.FC = () => {
                             {/* Form */}
                             <form>
                                 <div className="flex flex-col gap-3">
-                                    <div className="h-18">
+                                    <div className="h-20">
                                         <IonInput
                                             id="username-input"
                                             label="Username"
@@ -277,7 +279,7 @@ const Login: React.FC = () => {
                                             type="text"
                                         ></IonInput>
                                     </div>
-                                    <div className="h-18">
+                                    <div className="h-20">
                                         <IonInput
                                             id="password-input"
                                             label="Password"
@@ -285,6 +287,13 @@ const Login: React.FC = () => {
                                             fill="solid"
                                             placeholder="My secure password!"
                                             type="password"
+                                            onKeyUp={(event) => {
+                                                if (event.getModifierState("CapsLock")) {
+                                                    setCapslockIndicator(true);
+                                                } else {
+                                                    setCapslockIndicator(false);
+                                                }
+                                            }}
                                             onKeyDown={(event) => {
                                                 if (event.key === "Enter") {
                                                     event.preventDefault();
@@ -292,8 +301,13 @@ const Login: React.FC = () => {
                                                 }
                                             }}
                                         >
-                                            <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
+                                            <IonInputPasswordToggle slot="end" />
                                         </IonInput>
+                                        {capslockIndicator && (
+                                            <IonLabel color="danger" className="text-xs">
+                                                Caps Lock is on!
+                                            </IonLabel>
+                                        )}
                                     </div>
 
                                     <IonCheckbox id="save-password-checkbox" labelPlacement="end">
