@@ -274,11 +274,15 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 >
 > For the first time running an `act` command, you'll need to edit the `.actrc` file, removing the `--action-offline-mode` flag.
 >
-> It is also recommended to pull the `catthehacker/ubuntu:full-latest` image before running `act` for the first time by running `docker pull catthehacker/ubuntu:full-latest`.
+> It is also recommended to pull the `catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5` image before running `act` for the first time by running
+>
+> ```bash
+> docker pull catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5
+> ```
 
 > [!IMPORTANT]
 >
-> - Specify `-P ubuntu-latest=catthehacker/ubuntu:full-latest` to use the full version of Ubuntu.
+> - Specify `-P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5` to use the full version of Ubuntu.
 > - Specify `--container-architecture linux/amd64` on non-AMD64 machines (e.g., Apple Silicon Macs).
 
 > [!TIP]
@@ -300,7 +304,7 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 Run
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/test.yml
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --workflows ./.github/workflows/test.yml
 ```
 
 #### Running `test-e2e.yml`
@@ -308,7 +312,7 @@ act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workf
 We need to trigger a pull request action. Run
 
 ```bash
-act pull_request -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/test-e2e.yml
+act pull_request -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --workflows ./.github/workflows/test-e2e.yml
 ```
 
 #### Running `release-builds.yml`
