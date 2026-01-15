@@ -106,7 +106,7 @@ timestamp_validity = 60
 directory = "logs"
 
 # A list of API endpoints to exclude from access logs
-no_log_endpoints = ["/api/well-known/heartbeat"]
+no_log_endpoints = []
 
 # How long log files are kept before being deleted, in hours
 max_log_age = 720 # 30 days

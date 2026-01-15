@@ -1,40 +1,10 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { useEffectOnce, useMount } from "@lib/hooks";
-import { heartbeat as _heartbeat, checkAPIUrl, getServerInfo } from "@lib/network";
+import { checkAPIUrl, getServerInfo } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
-
-const HEARTBEAT_INTERVAL = 15; // Interval between successful heartbeats, in seconds
-const HEARTBEAT_RETRY_COUNT = 5; // Number of times to retry heartbeat on failure
-const HEARTBEAT_RETRY_INTERVAL = 1; // Interval between retries, in seconds
-
-/**
- * Heartbeat checking function.
- *
- * @param apiURL API URL
- * @param token Authentication token
- * @param masterKey The master key to use for authentication
- * @returns Whether the heartbeat was successful
- */
-async function heartbeat(apiURL: string, token: string, masterKey: Buffer): Promise<boolean> {
-    // Retry with intervals to make sure that the heartbeat is successful
-    for (let i = 0; i < HEARTBEAT_RETRY_COUNT; i++) {
-        const { success: connected, authValid: authenticated } = await _heartbeat(apiURL, token, masterKey);
-        if (authenticated === false) {
-            return false;
-        }
-        if (connected && authenticated) {
-            return true;
-        }
-        console.debug(`Heartbeat failed (${i + 1}/${HEARTBEAT_RETRY_COUNT})`);
-        if (i !== HEARTBEAT_RETRY_COUNT - 1) {
-            await new Promise((resolve) => setTimeout(resolve, HEARTBEAT_RETRY_INTERVAL * 1000));
-        }
-    }
-    return false;
-}
 
 export const ProvideAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const auth = useProvideAuth();
@@ -69,7 +39,6 @@ function useProvideAuth(): AuthProvider {
     });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
-    const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | null>(null);
 
     // Handlers
     function getToken(): string | null {
@@ -91,21 +60,7 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
-    async function loginFunc(apiURL: string, authInfo: AuthInfo) {
-        // Set up heartbeat interval
-        const interval = setInterval(async () => {
-            const connected = await heartbeat(apiURL!, getToken()!, authInfo.key);
-            if (!connected) {
-                // Heartbeat failed; kick back to login screen
-                alert("Heartbeat failed, sending back to login screen");
-                console.debug("Heartbeat failed, sending back to login screen");
-                window.location.href = "/login";
-                logoutFunc();
-                return;
-            }
-        }, HEARTBEAT_INTERVAL * 1000);
-        setHeartbeatInterval(interval);
-
+    async function loginFunc(authInfo: AuthInfo) {
         // Update state
         setAuthInfo(authInfo);
         setVaultKey(vaultKey);
@@ -115,23 +70,18 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
     }
 
-    const logoutFunc = useCallback(
-        async (full: boolean = false) => {
-            clearInterval(heartbeatInterval!);
+    async function logoutFunc(full: boolean = false) {
+        if (full) {
+            setServerInfo(null);
+            localStorage.removeItem("serverInfo");
+        }
 
-            if (full) {
-                setServerInfo(null);
-                localStorage.removeItem("serverInfo");
-            }
+        setAuthInfo(null);
+        localStorage.removeItem("authInfo");
 
-            setAuthInfo(null);
-            localStorage.removeItem("authInfo");
-
-            setVaultKey(null);
-            setOrigVaultKey(null);
-        },
-        [heartbeatInterval],
-    );
+        setVaultKey(null);
+        setOrigVaultKey(null);
+    }
 
     // Effects
     useEffectOnce(() => {

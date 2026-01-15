@@ -16,6 +16,7 @@ describe("<Versions />", () => {
                             apiURL: "",
                             version: "x.y.z", // Just need this for the test
                             deltaTime: 0,
+                            maxUploadSize: 0,
                         },
                         vaultKey: null,
                         origVaultKey: null,
@@ -23,7 +24,7 @@ describe("<Versions />", () => {
                         setAuthInfo: () => {},
                         setServerInfo: () => {},
                         setVaultKey: () => {},
-                        login: (_a, _b) => Promise.resolve(),
+                        login: (_authInfo) => Promise.resolve(),
                         logout: () => Promise.resolve(),
                     }}
                 >
