@@ -39,7 +39,7 @@ export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<API
             reachable: true,
             valid: true,
             compatible: false,
-            error: "This server is not compatible with this version of Excalibur.",
+            error: `The server is incompatible with your version of Excalibur (${packageInfo.version})`,
         };
     }
 
