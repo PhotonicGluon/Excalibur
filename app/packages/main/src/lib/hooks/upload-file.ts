@@ -141,8 +141,12 @@ export function useUploadFile() {
                     auth,
                     explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
                     file,
-                    true,
                     signal,
+                    (progress) => {
+                        if (!signal.aborted) {
+                            jobsManager.updateProgress(jobID, progress);
+                        }
+                    },
                 ); // Always force upload
                 if (!uploadResponse.success) {
                     explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");

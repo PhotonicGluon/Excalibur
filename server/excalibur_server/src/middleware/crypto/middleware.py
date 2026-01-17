@@ -182,7 +182,7 @@ class EncryptionHandler:
 
         self._scope["headers"] = headers.raw
 
-        logger.debug(f"< {len(decrypted_body)} decrypted bytes")
+        logger.debug(f"s<c {len(decrypted_body)} decrypted bytes")
         return message
 
     async def _encrypt_response(self, message: Message):
@@ -256,7 +256,7 @@ class EncryptionHandler:
             if not self._started_response:
                 self._started_response = True
             await self._send(message)
-            logger.debug(f"> {len(to_send)} encrypted bytes")
+            logger.debug(f"s>c {len(to_send)} encrypted bytes")
 
     def _receive_wrapper(self, scope: Scope) -> Callable[[], Awaitable[Message]]:
         """

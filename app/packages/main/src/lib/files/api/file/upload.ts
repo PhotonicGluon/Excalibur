@@ -1,17 +1,20 @@
-import { popFetch } from "@lib/network";
+import { popXHR } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
  * Uploads a file to the given path.
  *
+ * This function does **not** check if the file already exists. It will overwrite the file on the
+ * server if it already exists.
+ *
  * @param auth The current authentication provider
  * @param path The path to upload the file to
- * @param file The encrypted file object to upload. Note that this is a *doubly-encrypted* file:
- *      once using the vault key and once using the E2EE key
- * @param force If true, forces the file to be uploaded even if it already exists. If false, the
- *      request will fail if the file already exists
+ * @param file The file to upload
  * @param signal An abort signal to cancel the request
+ * @param onProgress A callback function to report progress (a value from 0 to 1)
+ * @throws {Error} If there is a network error during upload
+ * @throws {Error} If the upload is cancelled
  * @returns A promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
@@ -19,48 +22,94 @@ export async function uploadFile(
     auth: AuthProvider,
     path: string,
     file: File,
-    force?: boolean,
-    signal?: AbortSignal,
+    signal: AbortSignal,
+    onProgress: (progress: number) => void,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=${force ? "true" : "false"}`,
-        auth.authInfo!.key!,
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${auth.getToken()}`,
-                "Content-Type": "application/octet-stream",
-                "X-Encrypted": "true",
-                "X-Content-Type": "application/octet-stream",
-            },
-            body: file,
-            signal,
-        },
-        null, // No timeout; TODO: Determine a timeout for uploading file
-    );
-    switch (response.status) {
-        case 201:
-            // Continue with normal flow
-            break;
-        case 401:
-            return { success: false, error: "Unauthorized" };
-        case 404:
-            return { success: false, error: "Path not found or is not a directory" };
-        case 406:
-            return { success: false, error: "Illegal or invalid path" };
-        case 409:
-            return { success: false, error: "File already exists (and `force` is not set)" };
-        case 413:
-            return { success: false, error: "File too large" };
-        case 414:
-            return { success: false, error: "File path too long" };
-        case 417:
-            return { success: false, error: "Uploaded file needs to end with `.exef`" };
-        case 422:
-            return { success: false, error: "Validation error" };
-        default:
-            return { success: false, error: "Unknown error" };
-    }
+    return new Promise((resolve, reject) => {
+        // Set up an XHR with PoP
+        const xhr = popXHR(
+            `${auth.serverInfo!.apiURL}/files/upload/${path}?name=${encodeURIComponent(file.name)}&force=true`,
+            auth.getToken()!,
+            auth.authInfo!.key!,
+            "POST",
+            null, // No timeout; TODO: Determine a timeout for uploading file
+        );
 
-    return { success: true };
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        xhr.setRequestHeader("X-Encrypted", "true");
+        xhr.setRequestHeader("X-Content-Type", "application/octet-stream");
+
+        // Set up abort signal handling
+        const onSignalAbort = () => {
+            xhr.abort();
+        };
+        if (signal) {
+            signal.addEventListener("abort", onSignalAbort);
+        }
+
+        const cleanup = () => {
+            if (signal) {
+                signal.removeEventListener("abort", onSignalAbort);
+            }
+        };
+
+        // Set up progress monitoring
+        xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable && onProgress) {
+                const progress = event.loaded / event.total;
+                onProgress(progress);
+                console.debug(`Uploaded ${event.loaded} / ${event.total} (${(progress * 100).toFixed(2)}%)`);
+            }
+        });
+
+        xhr.addEventListener("error", () => {
+            cleanup();
+            reject(new Error("Network error during upload"));
+        });
+
+        xhr.addEventListener("abort", () => {
+            cleanup();
+            reject(new Error("Cancelled"));
+        });
+
+        xhr.addEventListener("load", () => {
+            cleanup();
+            switch (xhr.status) {
+                case 201:
+                    // Continue with normal flow
+                    resolve({ success: true });
+                    break;
+                case 401:
+                    resolve({ success: false, error: "Unauthorized" });
+                    break;
+                case 404:
+                    resolve({ success: false, error: "Path not found or is not a directory" });
+                    break;
+                case 406:
+                    resolve({ success: false, error: "Illegal or invalid path" });
+                    break;
+                case 409:
+                    resolve({ success: false, error: "File already exists (and `force` is not set)" });
+                    break;
+                case 413:
+                    resolve({ success: false, error: "File too large" });
+                    break;
+                case 414:
+                    resolve({ success: false, error: "File path too long" });
+                    break;
+                case 417:
+                    resolve({ success: false, error: "Uploaded file needs to end with `.exef`" });
+                    break;
+                case 422:
+                    resolve({ success: false, error: "Validation error" });
+                    break;
+                default:
+                    resolve({ success: false, error: "Unknown error" });
+                    break;
+            }
+        });
+
+        // Now we send the file
+        xhr.send(file);
+    });
 }

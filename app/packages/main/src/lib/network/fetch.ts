@@ -18,6 +18,21 @@ export async function timedFetch(url: string, options?: RequestInit, timeout: nu
 }
 
 /**
+ * Sets up an `XMLHttpRequest` for sending a request with a timeout.
+ *
+ * @param url The URL to fetch
+ * @param method HTTP method
+ * @param timeout The timeout, in seconds. If null or 0, no timeout is applied
+ * @returns XMLHttpRequest with the timeout
+ */
+export function timedXHR(url: string, method: string, timeout: number | null = 3): XMLHttpRequest {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.timeout = timeout ? timeout * 1000 : 0;
+    return xhr;
+}
+
+/**
  * Fetches a URL with a Proof of Possession (PoP) and timeout.
  *
  * @param url The URL to fetch
@@ -49,4 +64,34 @@ export async function popFetch(
     }
 
     return timedFetch(url, { ...options, headers }, timeout);
+}
+
+/**
+ * Sets up an `XMLHttpRequest` for sending a request with a Proof of Possession (PoP) and timeout.
+ *
+ * @param url The URL to fetch
+ * @param token The authentication token to use
+ * @param masterKey The master key to use for generating the PoP
+ * @param method HTTP method
+ * @param timeout The timeout, in seconds. If null or 0, no timeout is applied
+ * @returns XMLHttpRequest with the timeout and PoP
+ */
+export function popXHR(
+    url: string,
+    token: string,
+    masterKey: Buffer,
+    method: string,
+    timeout: number | null = 5,
+): XMLHttpRequest {
+    const xhr = timedXHR(url, method, timeout);
+
+    if (masterKey) {
+        const path = getURLEncodedPath(url);
+        const popHeader = generatePoPHeader(masterKey, method, path);
+
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("X-SRP-PoP", popHeader);
+    }
+
+    return xhr;
 }
