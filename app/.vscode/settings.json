@@ -2,6 +2,9 @@
     "files.exclude": {
         "packages": true
     },
+    "search.exclude": {
+        "changelog": true
+    },
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {

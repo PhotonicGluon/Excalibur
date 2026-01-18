@@ -1,4 +1,7 @@
 {
+    "search.exclude": {
+        "dist": true
+    },
     "cSpell.words": [
         "asar",
         "capawesome",
