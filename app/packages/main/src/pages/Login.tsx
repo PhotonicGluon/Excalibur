@@ -151,7 +151,7 @@ const Login: React.FC = () => {
         console.debug("Logging in...");
         const authInfo = { username: values.username, ...e2eeData };
         try {
-            await auth.login(auth.serverInfo!.apiURL!, authInfo);
+            await auth.login(authInfo);
         } catch (error) {
             console.error(`Could not log in: ${error}`);
             setIsLoading(false);
