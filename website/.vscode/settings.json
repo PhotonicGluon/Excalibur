@@ -8,12 +8,11 @@
         "node_modules": true,
         ".docusaurus": true
     },
-    "cSpell.words": [
-        "appimage",
-        "closeable",
-        "katex",
-        "trivago"
-    ],
+    "search.exclude": {
+        "build": true,
+        "changelog": true
+    },
+    "cSpell.words": ["appimage", "closeable", "katex", "trivago"],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
