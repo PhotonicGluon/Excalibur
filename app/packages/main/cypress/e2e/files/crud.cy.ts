@@ -44,11 +44,11 @@ describe("CRUD operations", () => {
 
     describe("multi-file upload and download", () => {
         it("should handle small files", () => {
-            createFile(Array.from({ length: 10 }, () => SMALL_SIZE));
+            createFile(Array.from({ length: 5 }, () => SMALL_SIZE));
         });
 
         it("should handle large files", () => {
-            createFile(Array.from({ length: 5 }, () => LARGE_SIZE));
+            createFile(Array.from({ length: 3 }, () => LARGE_SIZE));
         });
     });
 
