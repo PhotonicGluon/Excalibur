@@ -120,6 +120,7 @@ const FileExplorer: React.FC = () => {
                 position: "bottom",
                 positionAnchor: "fab-button",
                 color: colour,
+                cssClass: "[--max-width:min(var(--spacing)*128,calc(100%-var(--spacing)*32))]",
             });
         },
         [presentToast],
