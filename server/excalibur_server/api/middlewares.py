@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from excalibur_server.env import get_artificial_delay, has_cors, is_debug
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.middleware.delayer import DelayMiddleware
 from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
@@ -12,7 +13,7 @@ from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 def add_middleware(app: FastAPI, logger: logging.Logger):
     # Add CORS middleware
     allow_origins = CONFIG.server.allow_origins
-    if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
+    if not has_cors():
         allow_origins = ["*"]
 
     app.add_middleware(
@@ -23,8 +24,8 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
         allow_credentials=True,
     )
 
-    # Add rate limit middleware if not debugging
-    if os.getenv("EXCALIBUR_SERVER_DEBUG", "0") != "1":
+    # Add rate limit middleware
+    if not is_debug():
         app.add_middleware(
             RateLimitMiddleware,
             capacity=CONFIG.server.rate_limit.capacity,
@@ -32,11 +33,9 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
         )
 
     # Add artificial delay
-    delay_str = os.getenv("EXCALIBUR_SERVER_DELAY_RESPONSES", "0,0")
-    if delay_str != "0,0":
-        delays = tuple(map(int, delay_str.split(",")))
-        logger.warning(f"Artificial delay enabled (in {delays[0]} ms, out {delays[1]} ms).")
-        app.add_middleware(DelayMiddleware, delay_in=delays[0], delay_out=delays[1])
+    if get_artificial_delay() != (0, 0):
+        logger.warning(f"Artificial delay enabled (in {get_artificial_delay[0]} ms, out {get_artificial_delay[1]} ms).")
+        app.add_middleware(DelayMiddleware, delay_in=get_artificial_delay[0], delay_out=get_artificial_delay[1])
 
     # Encrypt responses for specific routes
     from excalibur_server.src.middleware.crypto.middleware import RouteEncryptionMiddleware

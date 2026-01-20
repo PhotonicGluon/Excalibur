@@ -8,7 +8,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from fastapi.websockets import WebSocketDisconnect
 
-from excalibur_server.api.misc import is_debug
+from excalibur_server.env import is_debug
 from excalibur_server.src.auth.pop import generate_pop_header
 
 if not is_debug():

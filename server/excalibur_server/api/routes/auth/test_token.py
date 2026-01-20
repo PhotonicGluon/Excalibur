@@ -5,7 +5,7 @@ from Crypto.Random import get_random_bytes
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
-from excalibur_server.api.misc import is_debug
+from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import check_auth_token
 
 

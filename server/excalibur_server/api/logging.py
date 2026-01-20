@@ -1,7 +1,7 @@
 import logging
-import os
 import time
 
+from excalibur_server.env import has_log_to_console, has_log_to_file
 from excalibur_server.src.config import CONFIG
 
 
@@ -63,7 +63,7 @@ uvicorn_access_logger = logging.getLogger("uvicorn.access")
 uvicorn_access_logger.addFilter(EndpointFilter(excluded_endpoints=CONFIG.logging.no_log_endpoints))
 
 # Configure logging to console
-if os.getenv("EXCALIBUR_SERVER_LOG_TO_CONSOLE") == "0":
+if not has_log_to_console():
     handlers = uvicorn_access_logger.handlers
     for handler in handlers:
         if not isinstance(handler, logging.StreamHandler):
@@ -76,7 +76,7 @@ uvicorn_main_logger = logging.getLogger("uvicorn.error")
 uvicorn_main_logger.addFilter(WebSocketLogFilter())
 
 # Configure logging to file
-if os.getenv("EXCALIBUR_SERVER_LOG_TO_FILE") == "1":
+if has_log_to_file():
     file_handler = logging.FileHandler(CONFIG.logging.directory / f"{int(time.time())}.log", mode="a", encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(CONFIG.logging.format.file))

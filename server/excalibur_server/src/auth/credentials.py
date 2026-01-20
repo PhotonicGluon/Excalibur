@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timezone
 from typing import Annotated, Callable
 
@@ -7,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
+from excalibur_server.env import has_pop_checking
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
 from excalibur_server.src.config import CONFIG
@@ -92,8 +92,8 @@ async def _verify_and_extract_credentials(
     if comm_uuid not in MASTER_KEYS_CACHE:
         raise raise_exception("Missing, invalid, or expired bearer token")
 
-    if os.getenv("EXCALIBUR_SERVER_ENABLE_POP", "1") != "1":
-        # No need to proceed to check header
+    if not has_pop_checking():
+        # No need to check header's PoP
         return Credentials(username=sub, comm_uuid=comm_uuid)
 
     # Check that the header is valid

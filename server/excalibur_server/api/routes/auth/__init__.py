@@ -1,7 +1,7 @@
 # ruff: noqa: E402
 from fastapi import APIRouter
 
-from excalibur_server.api.misc import is_debug
+from excalibur_server.env import is_debug
 
 router = APIRouter(tags=["auth"])
 

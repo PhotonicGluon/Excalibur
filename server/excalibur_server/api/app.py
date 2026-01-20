@@ -1,9 +1,9 @@
 import logging
-import os
 
 from fastapi import APIRouter, FastAPI
 
 from excalibur_server.api.middlewares import add_middleware
+from excalibur_server.env import has_cors, has_encryption, has_pop_checking, is_debug
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
 
 from .logging import logger
@@ -11,17 +11,17 @@ from .meta import TAGS
 from .routes import auth_router, files_router, users_router, well_known_router
 
 # Check for enabled flags
-if os.getenv("EXCALIBUR_SERVER_DEBUG") == "1":
+if is_debug():
     logger.warning("Debug mode is enabled.")
     logger.setLevel(logging.DEBUG)
 
-if os.getenv("EXCALIBUR_SERVER_ENCRYPT_RESPONSES") == "0":
+if not has_encryption():
     logger.warning("Encryption is disabled.")
 
-if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
+if not has_cors():
     logger.warning("CORS is disabled. This is not recommended for production.")
 
-if os.getenv("EXCALIBUR_SERVER_ENABLE_POP") == "0":
+if not has_pop_checking():
     logger.warning("Proof of Possession (PoP) checking is disabled. This is not recommended for production.")
 
 # Define app

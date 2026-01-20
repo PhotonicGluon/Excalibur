@@ -1,4 +1,4 @@
-from excalibur_server.api.misc import is_debug
+from excalibur_server.env import is_debug
 
 TAGS = [
     {"name": "auth", "description": "Authentication endpoints."},

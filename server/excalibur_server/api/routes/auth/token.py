@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.misc import is_debug
 from excalibur_server.api.routes.auth import router
+from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 
