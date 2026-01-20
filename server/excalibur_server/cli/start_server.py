@@ -7,14 +7,13 @@ from excalibur_server.cli import app
 
 @app.command(name="start")
 def start_server(
-    host: Annotated[str, typer.Option(help="Host for the server to listen on.")] = "localhost",
-    port: Annotated[int, typer.Option(help="Port for the server to listen on.")] = 52419,
+    host: Annotated[str, typer.Option("--host", "-h", help="Host for the server to listen on.")] = "localhost",
+    port: Annotated[int, typer.Option("--port", "-p", help="Port for the server to listen on.")] = 52419,
     debug: Annotated[bool, typer.Option(help="Whether to run the server in debug mode.")] = False,
     encrypt_responses: Annotated[
         bool,
         typer.Option(
             "--encrypt-responses/--no-encrypt-responses",
-            "-e/-E",
             help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
         ),
     ] = True,
@@ -22,7 +21,6 @@ def start_server(
         tuple[int, int],
         typer.Option(
             "--delay",
-            "-d",
             help=(
                 "HTTP responses' delays, in milliseconds.\n\n"
                 + "The first value is the incoming delay and the second value is the outgoing delay."
@@ -33,7 +31,6 @@ def start_server(
         bool,
         typer.Option(
             "--enable-cors/--disable-cors",
-            "-c/-C",
             help="Whether to enable CORS. It is recommended to only disable CORS for debugging purposes "
             "(e.g., when using an Android emulator).",
         ),
@@ -60,6 +57,7 @@ def start_server(
             "--cleanup-logs/--no-cleanup-logs",
             "--clean-up-logs/--no-clean-up-logs",
             "--clean-up/--no-clean-up",
+            "-c/-C",
             help="Whether to clean up old log files.",
         ),
     ] = True,
