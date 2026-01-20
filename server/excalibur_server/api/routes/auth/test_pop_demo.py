@@ -17,9 +17,9 @@ if not is_debug():
 
 @pytest.fixture(scope="module", autouse=True)
 def enable_proof():
-    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "true"
+    os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "1"
     yield
-    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "false"
+    os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "0"
 
 
 @pytest.fixture(scope="class")

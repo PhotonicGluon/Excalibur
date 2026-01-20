@@ -21,6 +21,9 @@ if os.getenv("EXCALIBUR_SERVER_ENCRYPT_RESPONSES") == "0":
 if os.getenv("EXCALIBUR_SERVER_ENABLE_CORS") == "0":
     logger.warning("CORS is disabled. This is not recommended for production.")
 
+if os.getenv("EXCALIBUR_SERVER_ENABLE_POP") == "0":
+    logger.warning("Proof of Possession (PoP) checking is disabled. This is not recommended for production.")
+
 # Define app
 app = FastAPI(
     title=TITLE,

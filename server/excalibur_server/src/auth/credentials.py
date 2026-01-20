@@ -92,7 +92,7 @@ async def _verify_and_extract_credentials(
     if comm_uuid not in MASTER_KEYS_CACHE:
         raise raise_exception("Missing, invalid, or expired bearer token")
 
-    if os.getenv("EXCALIBUR_SERVER_POP_ENABLED", "true") != "true":
+    if os.getenv("EXCALIBUR_SERVER_ENABLE_POP", "1") != "1":
         # No need to proceed to check header
         return Credentials(username=sub, comm_uuid=comm_uuid)
 

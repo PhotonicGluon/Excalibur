@@ -46,6 +46,9 @@
             "website": true,
             "server": true
         },
+        "search.exclude": {
+            "changelog": true
+        },
         "files.insertFinalNewline": true,
         "[json]": {
             "editor.defaultFormatter": "vscode.json-language-features"

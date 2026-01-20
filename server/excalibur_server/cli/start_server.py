@@ -17,6 +17,15 @@ def start_server(
             help="Whether to encrypt responses. It is recommended to only disable encryption for debugging purposes.",
         ),
     ] = True,
+    enable_proof_of_possession: Annotated[
+        bool,
+        typer.Option(
+            "--enable-proof-of-possession/--disable-proof-of-possession",
+            "--enable-pop/--disable-pop",
+            help="Whether to enable proof of possession (PoP) checking. "
+            "It is recommended to only disable PoP checking for debugging purposes.",
+        ),
+    ] = True,
     delay: Annotated[
         tuple[int, int],
         typer.Option(
@@ -79,6 +88,7 @@ def start_server(
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1" if debug else "0"
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
     os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
+    os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "1" if enable_proof_of_possession else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = f"{delay[0]},{delay[1]}"
     os.environ["EXCALIBUR_SERVER_LOG_TO_CONSOLE"] = "1" if log_to_console else "0"
     os.environ["EXCALIBUR_SERVER_LOG_TO_FILE"] = "1" if log_to_file else "0"

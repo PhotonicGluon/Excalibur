@@ -14,9 +14,9 @@ from excalibur_server.src.config import CONFIG
 
 @pytest.fixture(scope="session", autouse=True)
 def disable_proof_checks():
-    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "false"
+    os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "0"
     yield
-    os.environ["EXCALIBUR_SERVER_POP_ENABLED"] = "true"
+    os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "1"
 
 
 @pytest.fixture(scope="class")
