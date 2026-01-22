@@ -29,12 +29,12 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
+import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
 import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
-import TestPage from "@pages/TestPage";
 import Welcome from "@pages/Welcome";
 
 import "@theme/variables.css";
@@ -137,7 +137,7 @@ const App: React.FC = () => {
                     <Route path="/settings" component={Settings} />
 
                     {/* Testing */}
-                    <Route path="/test" component={TestPage} />
+                    <Route path="/dev/*" component={DevPages} />
                 </IonRouterOutlet>
             </TheRouter>
         </IonApp>
