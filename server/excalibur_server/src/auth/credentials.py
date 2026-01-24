@@ -61,6 +61,7 @@ class Credentials(BaseModel):
 
     username: str
     comm_uuid: str
+    encrypted: bool = False
 
 
 async def _verify_and_extract_credentials(
@@ -132,10 +133,13 @@ async def get_credentials(
         Header(
             alias="X-SRP-PoP",
             pattern=POP_HEADER_PATTERN,
-            description="HMAC for authentication.",
+            description="HMAC for authentication",
         ),
     ] = "",
     credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER),
+    encrypted: Annotated[
+        bool, Header(alias="X-Encrypted", description="Whether the request was encrypted; affects only path variables")
+    ] = False,
 ) -> Credentials:
     """
     HTTP-specific method that gets the authorization credentials.
@@ -143,6 +147,7 @@ async def get_credentials(
     :param request: the request
     :param hmac_validation: the SRP HMAC
     :param credentials: authorization credentials included as the "Bearer" header
+    :param encrypted: whether the request was encrypted (specified using the "X-Encrypted" header)
     :raises CREDENTIALS_EXCEPTION: if the token is missing or invalid
     :return: the credentials
     """
@@ -158,12 +163,14 @@ async def get_credentials(
             headers=headers if detail in ["Missing PoP", "Invalid timestamp", "Nonce reused"] else None,
         )
 
-    return await _verify_and_extract_credentials(
+    credentials = await _verify_and_extract_credentials(
         get_path_and_method=get_path_and_method,
         raise_exception=raise_http_exception,
         credentials=credentials,
         hmac_validation=hmac_validation,
     )
+    credentials.encrypted = encrypted
+    return credentials
 
 
 async def get_credentials_ws(

@@ -235,6 +235,48 @@ def test_get(auth_client: TestClient):
     assert response.json()["username"] == "test-user"
 
 
+def test_get_with_path(auth_client: TestClient):
+    import time
+
+    from excalibur_server.src.exef import ExEF
+
+    # Non-encrypted path parameter
+    response = auth_client.get(
+        "/api/auth/pop-demo-get/hello-world",
+        headers={
+            "X-SRP-PoP": generate_pop_header(
+                master_key=b"one demo 16B key",
+                method="GET",
+                path="/api/auth/pop-demo-get/hello-world",
+                timestamp=int(time.time()),
+                nonce=_gen_nonce(),
+            )
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["data"] == "hello-world"
+
+    # Encrypted path parameter
+    path_encrypted_data = ExEF(b"one demo 16B key").encrypt(b"foo bar")
+    path_b64 = b64encode(path_encrypted_data, altchars=b"-_").decode("utf-8")
+
+    response = auth_client.get(
+        f"/api/auth/pop-demo-get/{path_b64}",
+        headers={
+            "X-SRP-PoP": generate_pop_header(
+                master_key=b"one demo 16B key",
+                method="GET",
+                path=f"/api/auth/pop-demo-get/{path_b64}",
+                timestamp=int(time.time()),
+                nonce=_gen_nonce(),
+            ),
+            "X-Encrypted": "true",  # Need to specify
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["data"] == "foo bar"
+
+
 def test_post_no_encrypt(auth_client: TestClient):
     import time
 
