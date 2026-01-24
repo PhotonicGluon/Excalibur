@@ -9,19 +9,21 @@ import {
     IonCol,
     IonContent,
     IonGrid,
+    IonHeader,
     IonInput,
     IonItem,
     IonLabel,
     IonPage,
     IonRow,
     IonTextarea,
+    IonTitle,
 } from "@ionic/react";
 
 import ExEF from "@lib/exef";
 
 const ExEFPage: React.FC = () => {
     // States
-    const [symmetricKey, setSymmetricKey] = useState("one 16B demo key");
+    const [symmetricKey, setSymmetricKey] = useState("one demo 16B key");
     const [encryptionNonce, setEncryptionNonce] = useState("0123456789ab");
     const [plaintext, setPlaintext] = useState("");
     const [encryptedPayload, setEncryptedPayload] = useState("");
@@ -35,7 +37,7 @@ const ExEFPage: React.FC = () => {
         const exef = new ExEF(Buffer.from(symmetricKey, "utf-8"), Buffer.from(encryptionNonce, "utf-8"), "encrypt");
         const encrypted = exef.encrypt(Buffer.from(plaintext, "utf-8"));
         setEncryptedPayload(encrypted.toString("utf-8"));
-        setEncryptedBase64(encrypted.toString("base64"));
+        setEncryptedBase64(encrypted.toString("base64").replace("+", "-").replace("/", "_"));
         setEncryptedHex(encrypted.toString("hex"));
     }
 
@@ -43,7 +45,7 @@ const ExEFPage: React.FC = () => {
         try {
             const decrypted = ExEF.decrypt(
                 Buffer.from(symmetricKey, "utf-8"),
-                Buffer.from(decryptionPayload, "base64"),
+                Buffer.from(decryptionPayload.replace("-", "+").replace("_", "/"), "base64"),
             );
             setDecryptedPayload(decrypted.toString("utf-8"));
         } catch (error: unknown) {
@@ -56,7 +58,9 @@ const ExEFPage: React.FC = () => {
     return (
         <IonPage>
             <IonContent className="ion-padding">
-                <h1>ExEF Test Page</h1>
+                <IonHeader>
+                    <IonTitle className="text-center text-3xl font-bold">ExEF Test Page</IonTitle>
+                </IonHeader>
 
                 {/* Main symmetric key input */}
                 <IonCard>
@@ -121,12 +125,12 @@ const ExEFPage: React.FC = () => {
                                     </IonItem>
 
                                     <IonItem className="mt-4">
-                                        <IonLabel position="stacked">Encrypted Payload (Base64)</IonLabel>
+                                        <IonLabel position="stacked">Encrypted Payload (URL-Safe Base64)</IonLabel>
                                         <IonTextarea
                                             className="font-mono"
                                             value={encryptedBase64}
                                             readonly={true}
-                                            placeholder="Hex representation will appear here"
+                                            placeholder="URL-safe base64 representation will appear here"
                                             rows={4}
                                         />
                                     </IonItem>
@@ -163,12 +167,12 @@ const ExEFPage: React.FC = () => {
                                 {/* Left half - input */}
                                 <IonCol size="6">
                                     <IonItem>
-                                        <IonLabel position="stacked">Base64 Encrypted Payload</IonLabel>
+                                        <IonLabel position="stacked">URL-Safe Base64 Encrypted Payload</IonLabel>
                                         <IonTextarea
                                             className="font-mono"
                                             value={decryptionPayload}
                                             onIonInput={(e) => setDecryptionPayload(e.detail.value || "")}
-                                            placeholder="Enter base64 encrypted payload to decrypt"
+                                            placeholder="Enter URL-safe base64 encrypted payload to decrypt"
                                             rows={6}
                                         />
                                     </IonItem>
