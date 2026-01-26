@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import Annotated, Generator
 
@@ -61,8 +62,7 @@ async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempor
 async def upload_file_endpoint(
     background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    path: Annotated[str, Path(description="The path to upload the file to (use `.` to specify root directory)")],
-    name: Annotated[str, Query(description="The name of the file to upload. Should end with `.exef`")],
+    path: Annotated[str, Path(description="The path where the file will be placed (must end with `.exef`)")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
     file: tempfile.SpooledTemporaryFile = Depends(get_spooled_file),
 ):
@@ -72,6 +72,9 @@ async def upload_file_endpoint(
 
     username = credentials.username
     base_path = CONFIG.storage.vault_folder / username
+
+    # Split path into directory and file name
+    path, name = os.path.split(path)
 
     # Check file extension
     if not name.endswith(".exef"):

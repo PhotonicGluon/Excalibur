@@ -27,7 +27,7 @@ def test_no_auth(example_file: Path):
 def test_upload_no_transit_encryption(auth_client: TestClient, example_file: Path, test_user_vault_folder: Path):
     uuid = uuid4().hex
     with open(example_file, "rb") as f:
-        response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.txt.exef", content=f)
+        response = auth_client.post(f"/api/files/upload/./test-{uuid}.txt.exef", content=f)
 
     assert response.status_code == 201
     assert ExEF.validate(response.content), "Did not return an encrypted response"
@@ -47,7 +47,7 @@ def test_upload_transit_encryption(auth_client: TestClient, example_file: Path, 
     uuid = uuid4().hex
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(example_file.read_bytes())
     response = auth_client.post(
-        f"/api/files/upload/.?name=test-{uuid}.txt.exef", headers=headers, content=transit_encrypted_data
+        f"/api/files/upload/./test-{uuid}.txt.exef", headers=headers, content=transit_encrypted_data
     )
 
     assert response.status_code == 201
@@ -64,19 +64,19 @@ def test_file_already_exists(auth_client: TestClient, test_user_vault_folder: Pa
     uploaded_file = test_user_vault_folder / f"test-{uuid}.txt.exef"
 
     # Initial upload should be OK
-    response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.txt.exef", content=b"first")
+    response = auth_client.post(f"/api/files/upload/./test-{uuid}.txt.exef", content=b"first")
     assert response.status_code == 201
     assert uploaded_file.exists()
     assert uploaded_file.read_bytes() == b"first"
 
     # Trying again without `force` should fail
-    response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.txt.exef", content=b"second")
+    response = auth_client.post(f"/api/files/upload/./test-{uuid}.txt.exef", content=b"second")
     assert response.status_code == 409
     assert uploaded_file.exists()
     assert uploaded_file.read_bytes() == b"first"
 
     # Trying again with `force` should succeed
-    response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.txt.exef&force=true", content=b"third")
+    response = auth_client.post(f"/api/files/upload/./test-{uuid}.txt.exef?force=true", content=b"third")
     assert response.status_code == 201
     assert uploaded_file.exists()
     assert uploaded_file.read_bytes() == b"third"
@@ -85,30 +85,24 @@ def test_file_already_exists(auth_client: TestClient, test_user_vault_folder: Pa
 def test_invalid_file_name(auth_client: TestClient, example_file: Path):
     uuid = uuid4().hex
     with open(example_file, "rb") as f:
-        response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.wrong-extension", content=f)
+        response = auth_client.post(f"/api/files/upload/./test-{uuid}.wrong-extension", content=f)
     assert response.status_code == 417
 
 
 def test_path_not_found(auth_client: TestClient, example_file: Path):
     uuid = uuid4().hex
     with open(example_file, "rb") as f:
-        response = auth_client.post(f"/api/files/upload/fake/path?name=test-{uuid}.txt.exef", content=f)
+        response = auth_client.post(f"/api/files/upload/fake/path/test-{uuid}.txt.exef", content=f)
     assert response.status_code == 404
 
 
 def test_path_too_long(auth_client: TestClient, example_file: Path):
     with open(example_file, "rb") as f:
-        response = auth_client.post(f"/api/files/upload/.?name=test-{'a' * 1000}.txt.exef", content=f)
+        response = auth_client.post(f"/api/files/upload/./test-{'a' * 1000}.txt.exef", content=f)
     assert response.status_code == 414
 
 
 def test_path_traversal(auth_client: TestClient, example_file: Path):
-    # Path is invalid
     with open(example_file, "rb") as f:
-        response = auth_client.post("/api/files/upload/%2E%2E?name=test.txt.exef", content=f)
-    assert response.status_code == 406
-
-    # File name is invalid
-    with open(example_file, "rb") as f:
-        response = auth_client.post("/api/files/upload/.?name=../fake.txt.exef", content=f)
+        response = auth_client.post("/api/files/upload/%2E%2E/test.txt.exef", content=f)
     assert response.status_code == 406
