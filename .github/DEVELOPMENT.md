@@ -339,7 +339,7 @@ Now, create an `event.json` file in the `.github` folder with the following cont
 We can now run the workflow:
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
 ```
 
 ##### Running Electron Builds
@@ -370,5 +370,5 @@ act -P macos-latest=-self-hosted --matrix os:macos-latest --workflows ./.github/
 - Linux
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest --matrix os:ubuntu-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --matrix os:ubuntu-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
 ```
