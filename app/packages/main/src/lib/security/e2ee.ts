@@ -3,7 +3,7 @@ import { createDecipheriv } from "crypto";
 import generateKey from "@lib/security/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
 import { getSecurityDetails } from "@lib/users/api";
-import { bufferToNumber, numberToBuffer } from "@lib/util";
+import { b64decode, b64encode, bufferToNumber, numberToBuffer } from "@lib/util";
 
 const MAX_ITER_COUNT = 3;
 
@@ -60,7 +60,7 @@ function sendResponse(ws: WebSocket, data?: string | Buffer, status?: "OK" | "ER
     const response = {
         status: status ?? null,
         binary: data instanceof Buffer,
-        data: data instanceof Buffer ? data.toString("base64") : data,
+        data: data instanceof Buffer ? b64encode(data) : data,
     };
     ws.send(JSON.stringify(response));
 }
@@ -74,7 +74,7 @@ function sendResponse(ws: WebSocket, data?: string | Buffer, status?: "OK" | "ER
 function parseResponse(data: string): { status: "OK" | "ERR" | null; data?: string | Buffer } {
     const raw = JSON.parse(data);
     if (raw.binary) {
-        return { status: raw.status, data: Buffer.from(raw.data, "base64") };
+        return { status: raw.status, data: b64decode(raw.data) };
     }
     return { status: raw.status, data: raw.data };
 }
@@ -297,9 +297,9 @@ export async function e2ee(
 
                 if (state.stage === E2EEStage.GET_AUTH_TOKEN) {
                     const auth_token_data = JSON.parse(response.data! as string);
-                    const nonce = Buffer.from(auth_token_data.nonce, "base64");
-                    const token = Buffer.from(auth_token_data.token, "base64");
-                    const tag = Buffer.from(auth_token_data.tag, "base64");
+                    const nonce = b64decode(auth_token_data.nonce);
+                    const token = b64decode(auth_token_data.token);
+                    const tag = b64decode(auth_token_data.tag);
 
                     const cipher = createDecipheriv("aes-256-gcm", state.master!, nonce);
                     cipher.setAuthTag(tag);

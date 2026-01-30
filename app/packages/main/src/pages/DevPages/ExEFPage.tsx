@@ -20,6 +20,7 @@ import {
 } from "@ionic/react";
 
 import ExEF from "@lib/exef";
+import { b64decodeURLSafe, b64encodeURLSafe } from "@lib/util";
 
 const ExEFPage: React.FC = () => {
     // States
@@ -37,16 +38,13 @@ const ExEFPage: React.FC = () => {
         const exef = new ExEF(Buffer.from(symmetricKey, "utf-8"), Buffer.from(encryptionNonce, "utf-8"), "encrypt");
         const encrypted = exef.encrypt(Buffer.from(plaintext, "utf-8"));
         setEncryptedPayload(encrypted.toString("utf-8"));
-        setEncryptedBase64(encrypted.toString("base64").replace("+", "-").replace("/", "_"));
+        setEncryptedBase64(b64encodeURLSafe(encrypted));
         setEncryptedHex(encrypted.toString("hex"));
     }
 
     function handleDecrypt() {
         try {
-            const decrypted = ExEF.decrypt(
-                Buffer.from(symmetricKey, "utf-8"),
-                Buffer.from(decryptionPayload.replace("-", "+").replace("_", "/"), "base64"),
-            );
+            const decrypted = ExEF.decrypt(Buffer.from(symmetricKey, "utf-8"), b64decodeURLSafe(decryptionPayload));
             setDecryptedPayload(decrypted.toString("utf-8"));
         } catch (error: unknown) {
             console.error("Decryption failed:", error);

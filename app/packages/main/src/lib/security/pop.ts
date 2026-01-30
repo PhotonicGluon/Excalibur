@@ -1,5 +1,7 @@
 import { createHmac, randomBytes } from "crypto";
 
+import { b64encode } from "@lib/util";
+
 /**
  * Generates a Proof of Possession (PoP).
  *
@@ -35,5 +37,5 @@ export function generatePoPHeader(
     timestamp = timestamp ?? Math.floor(Date.now() / 1e3);
     nonce = nonce ?? randomBytes(16);
     const pop = generatePoP(masterKey, method, path, timestamp, nonce);
-    return `${timestamp} ${nonce.toString("base64")} ${pop.toString("base64")}`;
+    return `${timestamp} ${b64encode(nonce)} ${b64encode(pop)}`;
 }

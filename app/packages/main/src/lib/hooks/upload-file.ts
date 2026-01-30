@@ -6,7 +6,7 @@ import { DragEvent } from "react";
 import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
 import { randID } from "@lib/security/util";
-import { getBaseName, getParent, getParents } from "@lib/util";
+import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
@@ -86,7 +86,7 @@ export function useUploadFile() {
                                         return;
                                     }
 
-                                    controller.enqueue(Buffer.from(chunk.data as string, "base64"));
+                                    controller.enqueue(b64decode(chunk.data as string));
                                 },
                             );
                         },

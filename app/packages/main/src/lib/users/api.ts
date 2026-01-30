@@ -2,7 +2,7 @@ import { createCipheriv, randomBytes } from "crypto";
 
 import ExEF from "@lib/exef";
 import { popFetch, timedFetch } from "@lib/network";
-import { numberToBuffer } from "@lib/util";
+import { b64decode, b64encode, numberToBuffer } from "@lib/util";
 
 /**
  * Checks if the user exists on the server.
@@ -50,8 +50,8 @@ export async function getSecurityDetails(
     const data = await response.json();
     return {
         success: true,
-        aukSalt: Buffer.from(data["auk_salt"], "base64"),
-        srpSalt: Buffer.from(data["srp_salt"], "base64"),
+        aukSalt: b64decode(data["auk_salt"]),
+        srpSalt: b64decode(data["srp_salt"]),
     };
 }
 
@@ -117,10 +117,10 @@ export async function addUser(
 ): Promise<{ success: boolean; error?: string }> {
     // Generate encrypted payload
     const userData = JSON.stringify({
-        auk_salt: aukSalt.toString("base64"),
-        srp_salt: srpSalt.toString("base64"),
-        verifier: numberToBuffer(verifier).toString("base64"),
-        key_enc: encryptedVaultKey.toString("base64"),
+        auk_salt: b64encode(aukSalt),
+        srp_salt: b64encode(srpSalt),
+        verifier: b64encode(numberToBuffer(verifier)),
+        key_enc: b64encode(encryptedVaultKey),
     });
 
     const nonce = randomBytes(12);
@@ -133,9 +133,9 @@ export async function addUser(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            nonce: nonce.toString("base64"),
-            enc_data: ciphertext.toString("base64"),
-            tag: tag.toString("base64"),
+            nonce: b64encode(nonce),
+            enc_data: b64encode(ciphertext),
+            tag: b64encode(tag),
         }),
     });
 
