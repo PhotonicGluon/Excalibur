@@ -3,7 +3,7 @@ packages:
   - app/packages/**
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - core-js
   - cypress
   - electron
@@ -12,8 +12,12 @@ onlyBuiltDependencies:
   - sharp
 
 overrides:
+  diff@<5.2.2: ^5.2.2
   glob: ^11.1.0
+  lodash-es@<=4.17.22: ^4.17.23
+  lodash@<=4.17.22: ^4.17.23
   qs@<6.14.1: ^6.14.1
+  tar@<7.5.7: ^7.5.7
 
 sideEffectsCache: false
 
