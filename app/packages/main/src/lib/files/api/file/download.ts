@@ -1,5 +1,6 @@
 import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
+import { b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -26,12 +27,16 @@ export async function downloadFile(
     e2ee?: boolean;
     dataStream?: ReadableStream<Uint8Array>;
 }> {
+    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/download/${path}`,
+        `${auth.serverInfo!.apiURL}/files/download/${b64encodeURLSafe(encryptedPath)}`,
         auth.authInfo!.key!,
         {
             method: "GET",
-            headers: { Authorization: `Bearer ${auth.getToken()}` },
+            headers: {
+                Authorization: `Bearer ${auth.getToken()}`,
+                "X-Encrypted": "true",
+            },
             cache: "no-store",
             signal,
         },
@@ -51,7 +56,7 @@ export async function downloadFile(
         case 422:
             return { success: false, error: "Validation error" };
         default:
-            throw new Error("Unknown error");
+            return { success: false, error: "Unknown error" };
     }
 
     const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;

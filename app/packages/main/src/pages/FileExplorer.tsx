@@ -271,8 +271,8 @@ const FileExplorer: React.FC = () => {
             inputs: [
                 {
                     type: "text",
-                    name: "newPath",
-                    placeholder: "New Path",
+                    name: "destFolder",
+                    placeholder: "New Destination Folder",
                     value: origPath,
                 },
             ],
@@ -280,14 +280,14 @@ const FileExplorer: React.FC = () => {
                 "Cancel",
                 {
                     text: "Move",
-                    handler: async (data: { newPath: string }) => {
-                        const newPath = data.newPath;
-                        if (newPath === "") {
-                            presentSnackbar("New path cannot be empty", "danger");
+                    handler: async (data: { destFolder: string }) => {
+                        const destFolder = data.destFolder;
+                        if (destFolder === "") {
+                            presentSnackbar("Destination folder cannot be empty", "danger");
                             return;
                         }
 
-                        const moveResponse = await moveItem(auth, path, newPath);
+                        const moveResponse = await moveItem(auth, path, destFolder);
                         if (!moveResponse.success) {
                             presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
                             return;

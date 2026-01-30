@@ -1,4 +1,6 @@
+import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
+import { b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -16,11 +18,22 @@ export async function mkdir(
     path: string,
     name: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/mkdir/${path}`, auth.authInfo!.key!, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${auth.getToken()}` },
-        body: name,
-    });
+    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+    const response = await popFetch(
+        `${auth.serverInfo!.apiURL}/files/mkdir/${b64encodeURLSafe(encryptedPath)}`,
+        auth.authInfo!.key!,
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${auth.getToken()}`,
+                "Content-Type": "application/octet-stream",
+                "X-Encrypted": "true",
+                "X-Content-Type": "text/plain",
+            },
+            // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
+            body: new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(name, "utf-8")),
+        },
+    );
     switch (response.status) {
         case 201:
             // Continue with normal flow
