@@ -57,6 +57,7 @@
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-legacy": "^7.2.1",
         "@vitejs/plugin-react": "^5.1.2",
+        "baseline-browser-mapping": "^2.9.19",
         "cypress": "^15.9.0",
         "globals": "^17.0.0",
         "lint-staged": "^16.2.7",
