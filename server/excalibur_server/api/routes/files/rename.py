@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import BackgroundTasks, Body, Depends, Path, status
 from fastapi.responses import PlainTextResponse
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.api.routes.files.move import _move_helper
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
@@ -29,6 +30,7 @@ async def rename_path_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The item to rename")],
     new_name: Annotated[str, Body(description="The new name for the item at the leaf of the path")],
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Renames a file or directory.
@@ -36,5 +38,6 @@ async def rename_path_endpoint(
     Cannot rename root directory (`.`).
     """
 
+    path = processed_path
     _move_helper(background_tasks, credentials, "rename", path, None, new_name)
     return "Item renamed"

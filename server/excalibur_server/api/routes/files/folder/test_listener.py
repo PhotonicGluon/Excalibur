@@ -79,7 +79,7 @@ class TestDirectoryChangesListener:
         # Upload a file
         uuid = uuid4().hex
         with open(example_file, "rb") as f:
-            response = auth_client.post(f"/api/files/upload/.?name=test-{uuid}.txt.exef", content=f)
+            response = auth_client.post(f"/api/files/upload/test-{uuid}.txt.exef", content=f)
         assert response.status_code == 201
         uploaded_file = test_user_vault_folder / f"test-{uuid}.txt.exef"
         assert uploaded_file.exists()
@@ -120,7 +120,7 @@ class TestDirectoryChangesListener:
         # Upload a file
         uuid = uuid4().hex
         with open(example_file, "rb") as f:
-            response = auth_client.post(f"/api/files/upload/{subdir}?name=test-{uuid}.txt.exef", content=f)
+            response = auth_client.post(f"/api/files/upload/{subdir}/test-{uuid}.txt.exef", content=f)
         assert response.status_code == 201
         uploaded_file = test_user_vault_folder / f"{subdir}/test-{uuid}.txt.exef"
         assert uploaded_file.exists()
@@ -136,7 +136,7 @@ class TestDirectoryChangesListener:
         uuid = uuid4().hex
         file_name = f"test-{uuid}.txt.exef"
         with open(example_file, "rb") as f:
-            response = auth_client.post(f"/api/files/upload/.?name={file_name}", content=f)
+            response = auth_client.post(f"/api/files/upload/{file_name}", content=f)
         assert response.status_code == 201
         uploaded_file = test_user_vault_folder / file_name
         assert uploaded_file.exists()
@@ -161,7 +161,7 @@ class TestDirectoryChangesListener:
         uuid = uuid4().hex
         file_name = f"test-{uuid}.txt.exef"
         with open(example_file, "rb") as f:
-            response = auth_client.post(f"/api/files/upload/.?name={file_name}", content=f)
+            response = auth_client.post(f"/api/files/upload/{file_name}", content=f)
         assert response.status_code == 201
         uploaded_file = test_user_vault_folder / file_name
         assert uploaded_file.exists()

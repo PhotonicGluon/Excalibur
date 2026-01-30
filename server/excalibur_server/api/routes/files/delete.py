@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, status
 from fastapi.responses import Response
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -31,6 +32,7 @@ def delete_endpoint(
     path: Annotated[str, Path(description="The path to delete")],
     as_dir: Annotated[bool, Query(description="Delete directory instead of file")] = False,
     force: Annotated[bool, Query(description="Force delete (delete even if directory is not empty)")] = False,
+    processed_path: str = Depends(process_path_param("path")),
     response: Response = ...,
 ):
     """
@@ -40,6 +42,7 @@ def delete_endpoint(
     subdirectories will be deleted as well.
     """
 
+    path = processed_path
     username = credentials.username
     base_path = CONFIG.storage.vault_folder / username
 

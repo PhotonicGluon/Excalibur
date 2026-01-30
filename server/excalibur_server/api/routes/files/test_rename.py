@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
+from excalibur_server.src.exef import ExEF
 
 
 @pytest.fixture(scope="class")
@@ -37,6 +38,29 @@ def test_rename(auth_client: TestClient, rename_folder: Path):
 
     response = auth_client.post("/api/files/rename/does-not-exist", json="new-name")
     assert response.status_code == 404
+
+
+def test_rename_with_encrypted_path(auth_client: TestClient, rename_folder: Path):
+    from base64 import b64encode
+
+    (rename_folder / "r-file").touch()
+
+    headers = {
+        "Content-Type": "application/octet-stream",
+        "X-Encrypted": "true",
+        "X-Content-Type": "text/plain",
+    }
+    path_encrypted = ExEF(b"one demo 16B key").encrypt(b"rename-folder/r-file")
+    destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"new-name")
+    response = auth_client.post(
+        f"/api/files/rename/{b64encode(path_encrypted, altchars=b'-_').decode('utf-8')}",
+        headers=headers,
+        content=destination_encrypted,
+    )
+
+    assert response.status_code == 200
+    assert not (rename_folder / "r-file").exists()
+    assert (rename_folder / "new-name").exists()
 
 
 def test_path_traversal(auth_client: TestClient, rename_folder: Path):

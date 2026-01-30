@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -100,6 +101,7 @@ async def move_path_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The item to move")],
     new_location: Annotated[str, Body(description="The directory containing the item")],
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Moves a file or directory.
@@ -107,5 +109,6 @@ async def move_path_endpoint(
     Cannot move root directory (`.`).
     """
 
+    path = processed_path
     _move_helper(background_tasks, credentials, "move", path, PathlibPath(new_location), os.path.basename(path))
     return "Item moved"

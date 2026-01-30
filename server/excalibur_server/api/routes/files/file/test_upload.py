@@ -39,15 +39,21 @@ def test_upload_no_transit_encryption(auth_client: TestClient, example_file: Pat
 
 
 def test_upload_transit_encryption(auth_client: TestClient, example_file: Path, test_user_vault_folder: Path):
+    from base64 import b64encode
+
     headers = {
         "Content-Type": "application/octet-stream",
         "X-Encrypted": "true",
         "X-Content-Type": "text/plain",
     }
     uuid = uuid4().hex
+
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(example_file.read_bytes())
+    file_path_encrypted = ExEF(b"one demo 16B key").encrypt(f"./test-{uuid}.txt.exef".encode("utf-8"))
     response = auth_client.post(
-        f"/api/files/upload/./test-{uuid}.txt.exef", headers=headers, content=transit_encrypted_data
+        f"/api/files/upload/{b64encode(file_path_encrypted, altchars=b'-_').decode()}",
+        headers=headers,
+        content=transit_encrypted_data,
     )
 
     assert response.status_code == 201

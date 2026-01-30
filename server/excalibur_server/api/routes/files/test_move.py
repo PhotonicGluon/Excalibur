@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
+from excalibur_server.src.exef import ExEF
 
 
 @pytest.fixture(scope="class")
@@ -52,6 +53,29 @@ def test_move(auth_client: TestClient, test_user_vault_folder: Path, move_folder
 
     response = auth_client.post("/api/files/move/does-not-exist", json="move-folder/move-into")
     assert response.status_code == 404
+
+
+def test_move_with_encrypted_path(auth_client: TestClient, move_folder: Path):
+    from base64 import b64encode
+
+    (move_folder / "m-file").touch()
+
+    headers = {
+        "Content-Type": "application/octet-stream",
+        "X-Encrypted": "true",
+        "X-Content-Type": "text/plain",
+    }
+    path_encrypted = ExEF(b"one demo 16B key").encrypt(b"move-folder/m-file")
+    destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"move-folder/move-into")
+    response = auth_client.post(
+        f"/api/files/move/{b64encode(path_encrypted, altchars=b'-_').decode('utf-8')}",
+        headers=headers,
+        content=destination_encrypted,
+    )
+
+    assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
+    assert not (move_folder / "m-file").exists()
+    assert (move_folder / "move-into" / "m-file").exists()
 
 
 def test_path_traversal(auth_client: TestClient, move_folder: Path):

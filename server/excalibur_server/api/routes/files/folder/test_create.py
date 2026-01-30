@@ -23,14 +23,23 @@ def test_create_directory_no_transit_encryption(auth_client: TestClient, test_us
 
 
 def test_create_directory_transit_encryption(auth_client: TestClient, test_user_vault_folder: Path):
+    from base64 import b64encode
+
     headers = {
         "Content-Type": "application/octet-stream",
         "X-Encrypted": "true",
         "X-Content-Type": "text/plain",
     }
     uuid = uuid4().hex
+
+    path_encrypted_data = ExEF(b"one demo 16B key").encrypt(".".encode("UTF-8"))
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"test-dir-{uuid}".encode("UTF-8"))
-    response = auth_client.post(f"/api/files/mkdir/.?name=test-{uuid}", headers=headers, content=transit_encrypted_data)
+    response = auth_client.post(
+        f"/api/files/mkdir/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
+        headers=headers,
+        content=transit_encrypted_data,
+    )
+
     assert response.status_code == 201
     assert ExEF.validate(response.content), "Did not return an encrypted response"
     assert ExEF(b"one demo 16B key").decrypt(response.content) == b"Directory created"

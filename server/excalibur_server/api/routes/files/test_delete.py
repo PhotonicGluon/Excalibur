@@ -75,6 +75,16 @@ class TestDeletePath:
         assert response.status_code == 202
         assert not deletable_folder_with_items.exists()
 
+    def test_delete_with_encrypted_path(self, auth_client: TestClient, deletable_file: Path):
+        from base64 import b64encode
+
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(b"test-delete.txt.exef")
+        response = auth_client.delete(
+            f"/api/files/delete/{b64encode(path_encrypted).decode('UTF-8')}", headers={"X-Encrypted": "true"}
+        )
+        assert response.status_code == 200
+        assert not deletable_file.exists()
+
     def test_path_not_found(self, auth_client: TestClient):
         response = auth_client.delete("/api/files/delete/fake/path")
         assert response.status_code == 404

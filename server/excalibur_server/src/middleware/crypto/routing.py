@@ -25,8 +25,9 @@ AUTH_ROUTING_TREE = RoutingTree(
 FILES_ROUTING_TREE = RoutingTree(
     segment="files",
     subtrees={
-        "list": RoutingTree(
-            segment="list",
+        # Under "file"
+        "download": RoutingTree(
+            segment="download",
             has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
@@ -39,6 +40,7 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
+        # Under "folder"
         "mkdir": RoutingTree(
             segment="mkdir",
             has_path_param=True,
@@ -46,11 +48,26 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
-        "download": RoutingTree(
-            segment="download",
+        "list": RoutingTree(
+            segment="list",
             has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
+            },
+        ),
+        # In the root
+        "move": RoutingTree(
+            segment="move",
+            has_path_param=True,
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
+        "rename": RoutingTree(
+            segment="rename",
+            has_path_param=True,
+            encrypted_routes={
+                "POST": EncryptedRoute(),
             },
         ),
     },

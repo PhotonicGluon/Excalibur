@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -33,11 +34,13 @@ async def create_directory_endpoint(
         str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
     ],
     name: Annotated[str, Body(description="The name of the new directory")],
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Creates a new directory.
     """
 
+    path = processed_path
     username = credentials.username
     base_path = CONFIG.storage.vault_folder / username
 

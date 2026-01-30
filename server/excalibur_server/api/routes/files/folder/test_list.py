@@ -52,6 +52,26 @@ def test_listdir(auth_client: TestClient, dir_with_items: Path):
     assert items[1].mimetype == "text/plain"
 
 
+def test_listdir_encrypted_path(auth_client: TestClient, dir_with_items: Path):
+    from base64 import b64encode
+
+    path_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"{dir_with_items}".encode("UTF-8"))
+
+    response = auth_client.get(
+        f"/api/files/list/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
+        headers={"X-Encrypted": "true"},
+    )
+    assert response.status_code == 200
+    assert ExEF.validate(response.content), "Did not return an encrypted response"
+
+    response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content).decode())
+    directory = Directory(**response)
+    assert directory.name == "test-dir"
+    assert directory.fullpath == "test-dir"
+    assert directory.type == "directory"
+    assert len(directory.items) == 2
+
+
 def test_path_not_found(auth_client: TestClient):
     response = auth_client.get("/api/files/list/fake/path")
     assert response.status_code == 404

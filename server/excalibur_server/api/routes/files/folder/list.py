@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Query, status
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -25,6 +26,7 @@ def listdir_endpoint(
     with_exef_header: Annotated[
         bool, Query(description="Whether to include ExEF header size in the file sizes")
     ] = False,
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Lists the contents of a directory.
@@ -32,6 +34,7 @@ def listdir_endpoint(
     Any subdirectories in the main directory will *not* have their items listed (i.e. items will be sent as `null`).
     """
 
+    path = processed_path
     username = credentials.username
 
     # Check for any attempts at path traversal

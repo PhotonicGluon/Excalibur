@@ -6,6 +6,7 @@ import aiofiles
 from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -65,6 +66,7 @@ async def upload_file_endpoint(
     path: Annotated[str, Path(description="The path where the file will be placed (must end with `.exef`)")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
     file: tempfile.SpooledTemporaryFile = Depends(get_spooled_file),
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Uploads a file to a directory.
@@ -74,7 +76,7 @@ async def upload_file_endpoint(
     base_path = CONFIG.storage.vault_folder / username
 
     # Split path into directory and file name
-    path, name = os.path.split(path)
+    path, name = os.path.split(processed_path)
 
     # Check file extension
     if not name.endswith(".exef"):

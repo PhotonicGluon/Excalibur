@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path, Response, status
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -23,11 +24,13 @@ async def check_path_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Checks the existence of a file or directory.
     """
 
+    path = processed_path
     username = credentials.username
 
     # Check for any attempts at path traversal
@@ -64,11 +67,13 @@ async def check_dir_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to check (use `.` to specify root directory)")],
     response: Response,
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Checks the existence of a directory, and whether it is empty.
     """
 
+    path = processed_path
     username = credentials.username
 
     # Check for any attempts at path traversal

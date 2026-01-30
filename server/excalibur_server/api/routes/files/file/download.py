@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Path, status
 from fastapi.responses import FileResponse as FastAPIFileResponse
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
@@ -30,6 +31,7 @@ class FileResponse(FastAPIFileResponse):
 async def download_file_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The file to download")],
+    processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Downloads a file.
@@ -37,6 +39,7 @@ async def download_file_endpoint(
     MIME type of the downloaded file should be inferred by the client.
     """
 
+    path = processed_path
     username = credentials.username
 
     # Check for any attempts at path traversal
