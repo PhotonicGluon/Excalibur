@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Server",
+            "request": "launch",
+            "type": "node-terminal",
+            "command": "uv run excalibur start --debug --port 8888",
+            "cwd": "${workspaceFolder}/server"
+        },
+        {
+            "name": "Client",
+            "request": "launch",
+            "type": "node-terminal",
+            "command": "pnpm run dev",
+            "cwd": "${workspaceFolder}/app/packages/main"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": ["Server", "Client"],
+            "stopAll": true
+        }
+    ]
+}

@@ -1,7 +1,8 @@
-.secrets
 dist
 node_modules
 website
-**/.DS_Store
+**/.idea
 
+.secrets
+**/.DS_Store
 .github/event.json
