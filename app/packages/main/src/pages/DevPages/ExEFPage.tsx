@@ -21,13 +21,13 @@ import {
     IonTitle,
 } from "@ionic/react";
 
-import ExEF from "@lib/exef";
+import ExEF, { KeySize } from "@lib/exef";
 import { b64decodeURLSafe, b64encodeURLSafe } from "@lib/util";
 
 const ExEFPage: React.FC = () => {
     // States
     const [symmetricKey, setSymmetricKey] = useState("one demo 16B key");
-    const [keyStrength, setKeyStrength] = useState<128 | 192 | 256>(128);
+    const [keyStrength, setKeyStrength] = useState<KeySize>(128);
     const [encryptionNonce, setEncryptionNonce] = useState("303132333435363738396162");
     const [plaintext, setPlaintext] = useState("");
     const [encryptedPayload, setEncryptedPayload] = useState("");
@@ -100,6 +100,8 @@ const ExEFPage: React.FC = () => {
                                         <IonLabel position="stacked">Key Strength</IonLabel>
                                         <IonSelect
                                             value={keyStrength}
+                                            interface="popover"
+                                            placeholder="Select key strength"
                                             onIonChange={(e) => setKeyStrength(e.detail.value)}
                                         >
                                             <IonSelectOption value={128} defaultChecked={true}>

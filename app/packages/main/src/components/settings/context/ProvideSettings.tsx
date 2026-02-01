@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { KeySize } from "@lib/exef";
 import Preferences from "@lib/preferences";
 import {
     CryptoChunkSize,
@@ -31,6 +32,7 @@ function useProvideSettings(): SettingsProvider {
         DEFAULT_SETTINGS_VALUES.rowAlternatingColours,
     );
     const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(DEFAULT_SETTINGS_VALUES.fileSizeUnits);
+    const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeySize>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
     const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
     const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
@@ -40,6 +42,7 @@ function useProvideSettings(): SettingsProvider {
         setIconStyle(settings.iconStyle);
         setRowAlternatingColours(settings.rowAlternatingColours);
         setFileSizeUnits(settings.fileSizeUnits);
+        setCryptoKeyStrength(settings.cryptoKeyStrength);
         setCryptoChunkSize(settings.cryptoChunkSize);
         setCheckUpdate(settings.checkUpdate);
         setCheckUpdateInterval(settings.checkUpdateInterval);
@@ -71,6 +74,12 @@ function useProvideSettings(): SettingsProvider {
                 setFileSizeUnits(value as FileSizeUnits);
             }
         });
+        Preferences.get("cryptoKeyStrength").then((value) => {
+            if (value) {
+                console.debug(`Crypto key strength: ${value}`);
+                setCryptoKeyStrength(parseInt(value) as KeySize);
+            }
+        });
         Preferences.get("cryptoChunkSize").then((value) => {
             if (value) {
                 console.debug(`Crypto chunk size: ${value}`);
@@ -96,6 +105,7 @@ function useProvideSettings(): SettingsProvider {
         iconStyle,
         rowAlternatingColours,
         fileSizeUnits,
+        cryptoKeyStrength,
         cryptoChunkSize,
         checkUpdate,
         checkUpdateInterval,

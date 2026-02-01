@@ -24,6 +24,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { performUpdateCheck } from "@lib/check-update";
+import { KeySize } from "@lib/exef";
 import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
@@ -95,6 +96,9 @@ const Settings: React.FC = () => {
             .value as RowAlternatingColours;
         const fileSizeUnits = (document.getElementById("file-size-units")! as HTMLIonSelectElement)
             .value as FileSizeUnits;
+        const cryptoKeyStrength = parseInt(
+            (document.getElementById("crypto-key-strength")! as HTMLIonSelectElement).value,
+        ) as KeySize;
         const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
@@ -114,6 +118,7 @@ const Settings: React.FC = () => {
             iconStyle,
             rowAlternatingColours,
             fileSizeUnits,
+            cryptoKeyStrength,
             cryptoChunkSize,
             checkUpdate,
             checkUpdateInterval,
@@ -252,17 +257,40 @@ const Settings: React.FC = () => {
                         }
                     ></SettingsItem>
 
-                    {/* Operations */}
+                    {/* Crypto */}
                     <IonRow>
                         <IonCol>
                             <IonLabel>
-                                <h2>Operations</h2>
-                                <p>Affects the operations of Excalibur.</p>
+                                <h2>Crypto</h2>
+                                <p>Affects the cryptographic operations of Excalibur.</p>
                             </IonLabel>
                         </IonCol>
                     </IonRow>
                     <SettingsItem
-                        label={<IonLabel>Crypto Chunk Size</IonLabel>}
+                        label={<IonLabel>Key Strength</IonLabel>}
+                        input={
+                            <IonSelect
+                                id="crypto-key-strength"
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select key strength"
+                                value={settings.cryptoKeyStrength.toString()}
+                                onIonChange={(e) => {
+                                    settings.change({
+                                        ...settings,
+                                        cryptoKeyStrength: parseInt(e.detail.value) as KeySize,
+                                    });
+                                    setHasUnsavedChanges(true);
+                                }}
+                            >
+                                <IonSelectOption value="128">128 bits (Strong, Fastest)</IonSelectOption>
+                                <IonSelectOption value="192">192 bits (Stronger, Faster)</IonSelectOption>
+                                <IonSelectOption value="256">256 bits (Strongest, Fast)</IonSelectOption>
+                            </IonSelect>
+                        }
+                    ></SettingsItem>
+                    <SettingsItem
+                        label={<IonLabel>Chunk Size</IonLabel>}
                         input={
                             <IonSelect
                                 id="crypto-chunk-size"

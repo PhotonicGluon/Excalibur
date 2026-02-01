@@ -7,7 +7,7 @@ import hkdf from "./security/hkdf";
 const EXEF_VERSION = 3;
 
 type CipherID = 1 | 2 | 3;
-type KeySize = 128 | 192 | 256;
+export type KeySize = 128 | 192 | 256;
 type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
 
 /**

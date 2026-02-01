@@ -1,3 +1,5 @@
+import { KeySize } from "@lib/exef";
+
 // Types
 export type Theme = "light" | "dark" | "system";
 export type IconStyle = "default" | "reversed" | "outline" | "solid";
@@ -24,6 +26,8 @@ export interface SettingsPreferenceValues {
     fileSizeUnits: FileSizeUnits;
 
     // Operations
+    /** Key strength, in bits, to use when generating keys */
+    cryptoKeyStrength: KeySize;
     /** Chunk size, in bytes, to use when encrypting/decrypting files */
     cryptoChunkSize: CryptoChunkSize;
 
@@ -39,6 +43,7 @@ export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     theme: "system",
     iconStyle: "default",
     rowAlternatingColours: "off",
+    cryptoKeyStrength: 128,
     cryptoChunkSize: 262144, // 256 KiB
     fileSizeUnits: "si",
     checkUpdate: true,

@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import ExEF, { ExEFFooter, ExEFHeader } from "./exef";
+import ExEF, { ExEFFooter, ExEFHeader, KeySize } from "./exef";
 
 const KEY = Buffer.from("111111111111111111111111", "utf-8");
 const NONCE = Buffer.from("abababababababababababab", "hex");
@@ -66,7 +66,7 @@ describe("ExEF", () => {
         const expected = Object.values(EXEFS);
         for (let i = 0; i < 3; i++) {
             it(`strength of ${strengths[i]}`, () => {
-                const parsed = new ExEF(KEY, NONCE, "encrypt", strengths[i] as 128 | 192 | 256);
+                const parsed = new ExEF(KEY, NONCE, "encrypt", strengths[i] as KeySize);
                 expect(parsed.encrypt(Buffer.from("Hello World!", "utf-8")).toString("hex")).toBe(
                     expected[i].toString("hex"),
                 );
@@ -86,7 +86,7 @@ describe("ExEF", () => {
             for (const cryptoChunkSize of cryptoChunkSizes) {
                 for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
                     it(`stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}, strength ${strengths[strengthIdx]}`, async () => {
-                        const parsed = new ExEF(KEY, NONCE, "encrypt", strengths[strengthIdx] as 128 | 192 | 256);
+                        const parsed = new ExEF(KEY, NONCE, "encrypt", strengths[strengthIdx] as KeySize);
                         const iterable = new ReadableStream({
                             start(controller) {
                                 for (let i = 0; i < pt.length; i += streamChunkSize) {
