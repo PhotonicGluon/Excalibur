@@ -15,6 +15,8 @@ import {
     IonLabel,
     IonPage,
     IonRow,
+    IonSelect,
+    IonSelectOption,
     IonTextarea,
     IonTitle,
 } from "@ionic/react";
@@ -25,7 +27,8 @@ import { b64decodeURLSafe, b64encodeURLSafe } from "@lib/util";
 const ExEFPage: React.FC = () => {
     // States
     const [symmetricKey, setSymmetricKey] = useState("one demo 16B key");
-    const [encryptionNonce, setEncryptionNonce] = useState("0123456789ab");
+    const [keyStrength, setKeyStrength] = useState<128 | 192 | 256>(128);
+    const [encryptionNonce, setEncryptionNonce] = useState("303132333435363738396162");
     const [plaintext, setPlaintext] = useState("");
     const [encryptedPayload, setEncryptedPayload] = useState("");
     const [encryptedBase64, setEncryptedBase64] = useState("");
@@ -35,7 +38,12 @@ const ExEFPage: React.FC = () => {
 
     // Functions
     function handleEncrypt() {
-        const exef = new ExEF(Buffer.from(symmetricKey, "utf-8"), Buffer.from(encryptionNonce, "utf-8"), "encrypt");
+        const exef = new ExEF(
+            Buffer.from(symmetricKey, "utf-8"),
+            Buffer.from(encryptionNonce, "hex"),
+            "encrypt",
+            keyStrength,
+        );
         const encrypted = exef.encrypt(Buffer.from(plaintext, "utf-8"));
         setEncryptedPayload(encrypted.toString("utf-8"));
         setEncryptedBase64(b64encodeURLSafe(encrypted));
@@ -89,7 +97,21 @@ const ExEFPage: React.FC = () => {
                                 {/* Left half - inputs */}
                                 <IonCol size="6">
                                     <IonItem>
-                                        <IonLabel position="stacked">12-byte Nonce (ASCII)</IonLabel>
+                                        <IonLabel position="stacked">Key Strength</IonLabel>
+                                        <IonSelect
+                                            value={keyStrength}
+                                            onIonChange={(e) => setKeyStrength(e.detail.value)}
+                                        >
+                                            <IonSelectOption value={128} defaultChecked={true}>
+                                                128
+                                            </IonSelectOption>
+                                            <IonSelectOption value={192}>192</IonSelectOption>
+                                            <IonSelectOption value={256}>256</IonSelectOption>
+                                        </IonSelect>
+                                    </IonItem>
+
+                                    <IonItem>
+                                        <IonLabel position="stacked">12-byte Nonce (Hex)</IonLabel>
                                         <IonInput
                                             className="font-mono"
                                             value={encryptionNonce}
