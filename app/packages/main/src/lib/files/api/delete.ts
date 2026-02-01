@@ -1,7 +1,7 @@
 import ExEF from "@lib/exef";
 import { type ItemType } from "@lib/files/structures";
 import { popFetch } from "@lib/network";
-import { b64encodeURLSafe } from "@lib/util";
+import { IS_DEV, b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -23,13 +23,19 @@ export async function deleteItem(
     isDir?: boolean,
     force?: boolean,
 ): Promise<{ success: boolean; error?: string; deletedType?: ItemType }> {
-    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+    let additionalHeaders = {};
+    if (!IS_DEV) {
+        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+        path = b64encodeURLSafe(encryptedPath);
+        additionalHeaders = { "X-Encrypted": "true" };
+    }
+
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/delete/${b64encodeURLSafe(encryptedPath)}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
+        `${auth.serverInfo!.apiURL}/files/delete/${path}?as_dir=${isDir ? "true" : "false"}&force=${force ? "true" : "false"}`,
         auth.authInfo!.key!,
         {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${auth.getToken()}`, "X-Encrypted": "true" },
+            headers: { Authorization: `Bearer ${auth.getToken()}`, ...additionalHeaders },
         },
     );
     switch (response.status) {
