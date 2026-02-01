@@ -1,6 +1,6 @@
 import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
-import { b64encodeURLSafe } from "@lib/util";
+import { IS_DEV, b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -16,15 +16,17 @@ export async function checkPath(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
-    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
-    const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/check/path/${b64encodeURLSafe(encryptedPath)}`,
-        auth.authInfo!.key!,
-        {
-            method: "HEAD",
-            headers: { Authorization: `Bearer ${auth.getToken()}`, "X-Encrypted": "true" },
-        },
-    );
+    let additionalHeaders = {};
+    if (!IS_DEV) {
+        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+        path = b64encodeURLSafe(encryptedPath);
+        additionalHeaders = { "X-Encrypted": "true" };
+    }
+
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/path/${path}`, auth.authInfo!.key!, {
+        method: "HEAD",
+        headers: { Authorization: `Bearer ${auth.getToken()}`, ...additionalHeaders },
+    });
     switch (response.status) {
         case 200:
             // Continue with normal flow

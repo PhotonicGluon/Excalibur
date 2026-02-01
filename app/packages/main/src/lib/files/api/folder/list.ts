@@ -1,7 +1,7 @@
 import ExEF from "@lib/exef";
 import { Directory } from "@lib/files/structures";
 import { popFetch } from "@lib/network";
-import { b64encodeURLSafe } from "@lib/util";
+import { IS_DEV, b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -18,15 +18,20 @@ export async function listdir(
     path: string,
 ): Promise<{ success: boolean; directory?: Directory; error?: string }> {
     try {
-        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
-        const response = await popFetch(
-            `${auth.serverInfo!.apiURL}/files/list/${b64encodeURLSafe(encryptedPath)}`,
-            auth.authInfo!.key!,
-            {
-                method: "GET",
-                headers: { Authorization: `Bearer ${auth.getToken()}`, "X-Encrypted": "true" },
+        let additionalHeaders = {};
+        if (!IS_DEV) {
+            const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+            path = b64encodeURLSafe(encryptedPath);
+            additionalHeaders = { "X-Encrypted": "true" };
+        }
+
+        const response = await popFetch(`${auth.serverInfo!.apiURL}/files/list/${path}`, auth.authInfo!.key!, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${auth.getToken()}`,
+                ...additionalHeaders,
             },
-        );
+        });
         switch (response.status) {
             case 200:
                 // Continue with normal flow

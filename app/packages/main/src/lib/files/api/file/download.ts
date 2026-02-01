@@ -1,6 +1,6 @@
 import ExEF from "@lib/exef";
 import { popFetch } from "@lib/network";
-import { b64encodeURLSafe } from "@lib/util";
+import { IS_DEV, b64encodeURLSafe } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -27,15 +27,21 @@ export async function downloadFile(
     e2ee?: boolean;
     dataStream?: ReadableStream<Uint8Array>;
 }> {
-    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+    let additionalHeaders = {};
+    if (!IS_DEV) {
+        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+        path = b64encodeURLSafe(encryptedPath);
+        additionalHeaders = { "X-Encrypted": "true" };
+    }
+
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/download/${b64encodeURLSafe(encryptedPath)}`,
+        `${auth.serverInfo!.apiURL}/files/download/${path}`,
         auth.authInfo!.key!,
         {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${auth.getToken()}`,
-                "X-Encrypted": "true",
+                ...additionalHeaders,
             },
             cache: "no-store",
             signal,
