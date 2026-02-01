@@ -23,6 +23,7 @@ import packageInfo from "@root/package.json";
 import { performUpdateCheck } from "@lib/check-update";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
+import { IS_DEV } from "@lib/util";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
@@ -57,8 +58,7 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 
 // Change router for electron build
 // (https://github.com/ionic-team/ionic-framework/issues/19246#issuecomment-552858490)
-const TheRouter =
-    process.env.NODE_ENV !== "development" && isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
+const TheRouter = IS_DEV && isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
 
 // App component
 const App: React.FC = () => {
