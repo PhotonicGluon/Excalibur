@@ -3,6 +3,8 @@ import pytest
 from .exef import ExEF
 from .structures import Footer, Header
 
+# TODO: Test with varying key strengths
+
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
 HEADER_MAC = bytes.fromhex("3a5a8758e2c946869e38d6ae9d7f")

@@ -65,6 +65,14 @@ class Header(BaseModel):
             ct_len=ct_len,
         )
 
+    @property
+    def strength(self):
+        if self.cipher_id == 1:
+            return 128
+        if self.cipher_id == 2:
+            return 192
+        return 256
+
 
 class Footer(BaseModel):
     """

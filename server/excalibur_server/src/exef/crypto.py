@@ -1,10 +1,13 @@
 from queue import Empty, Queue
+from typing import Literal
 
 from Crypto.Cipher import AES, _mode_gcm
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Protocol.KDF import HKDF
 
 from .structures import Footer, Header
+
+KeyStrength = Literal[128, 192, 256]
 
 
 class Cryptor:
@@ -13,16 +16,16 @@ class Cryptor:
     """
 
     @staticmethod
-    def _gen_key(key: bytes, nonce: bytes, context: bytes):
-        return HKDF(key, len(key), nonce, SHA256, context=context)
+    def _gen_key(key: bytes, nonce: bytes, context: bytes, length: int):
+        return HKDF(key, length, nonce, SHA256, context=context)
 
     @staticmethod
-    def _gen_crypto_key(key: bytes, nonce: bytes):
-        return Cryptor._gen_key(key, nonce, b"ExEF Crypto Key")
+    def _gen_crypto_key(key: bytes, nonce: bytes, length: int):
+        return Cryptor._gen_key(key, nonce, b"ExEF Crypto Key", length)
 
     @staticmethod
-    def _gen_mac_key(key: bytes, nonce: bytes):
-        return Cryptor._gen_key(key, nonce, b"ExEF MAC Key")
+    def _gen_mac_key(key: bytes, nonce: bytes, length: int):
+        return Cryptor._gen_key(key, nonce, b"ExEF MAC Key", length)
 
 
 class Encryptor(Cryptor):
@@ -30,19 +33,24 @@ class Encryptor(Cryptor):
     Class that handles the encryption of ExEF messages.
     """
 
-    def __init__(self, key: bytes, nonce: bytes):
+    def __init__(self, key: bytes, nonce: bytes, strength: KeyStrength | None = None):
         """
         Initializes the Encryptor with a given key and nonce.
 
         :param key: The main key as bytes
         :param nonce: The nonce used for AES-GCM encryption
+        :parma strength: crypto/MAC key strength, defaults to the length of `key` in bits
         """
 
         self.key = key
         self._nonce = nonce
 
-        self._crypto_key = self._gen_crypto_key(key, nonce)
-        self._mac_key = self._gen_mac_key(key, nonce)
+        if strength is None:
+            strength = len(key) * 8
+        self._strength = strength
+
+        self._crypto_key = self._gen_crypto_key(key, nonce, strength // 8)
+        self._mac_key = self._gen_mac_key(key, nonce, strength // 8)
 
         self._ct_len: int = -1
         self._header: Header | None = None
@@ -96,15 +104,14 @@ class Encryptor(Cryptor):
         self._ct_len = length  # Ciphertext length is equal to plaintext length
 
         # Determine cipher ID
-        keysize = len(self.key) * 8
-        if keysize == 128:
+        if self._strength == 128:
             cipher_id = 1
-        elif keysize == 192:
+        elif self._strength == 192:
             cipher_id = 2
-        elif keysize == 256:
+        elif self._strength == 256:
             cipher_id = 3
         else:
-            raise ValueError("keysize must be 128, 192, or 256")
+            raise ValueError("strength must be 128, 192, or 256")
 
         # Generate header MAC
         header = Header(
@@ -182,7 +189,7 @@ class Decryptor(Cryptor):
         """
         Initializes the Decryptor with a given key.
 
-        :param key: The encryption key as bytes.
+        :param key: The main key as bytes
         """
 
         self.key = key
@@ -216,8 +223,8 @@ class Decryptor(Cryptor):
             if self._header is None:
                 raise ValueError("header must be set")
 
-            self._crypto_key = self._gen_crypto_key(self.key, self._header.nonce)
-            self._mac_key = self._gen_mac_key(self.key, self._header.nonce)
+            self._crypto_key = self._gen_crypto_key(self.key, self._header.nonce, self._header.strength // 8)
+            self._mac_key = self._gen_mac_key(self.key, self._header.nonce, self._header.strength // 8)
 
             # Verify header MAC
             header_copy = self._header.model_copy()
