@@ -1,4 +1,4 @@
-import { KeySize } from "@lib/exef";
+import { KeyStrength } from "@lib/exef";
 
 // Types
 export type Theme = "light" | "dark" | "system";
@@ -27,7 +27,7 @@ export interface SettingsPreferenceValues {
 
     // Operations
     /** Key strength, in bits, to use when generating keys */
-    cryptoKeyStrength: KeySize;
+    cryptoKeyStrength: KeyStrength;
     /** Chunk size, in bytes, to use when encrypting/decrypting files */
     cryptoChunkSize: CryptoChunkSize;
 

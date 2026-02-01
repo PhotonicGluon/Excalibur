@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { KeySize } from "@lib/exef";
+import { KeyStrength } from "@lib/exef";
 import Preferences from "@lib/preferences";
 import {
     CryptoChunkSize,
@@ -32,7 +32,7 @@ function useProvideSettings(): SettingsProvider {
         DEFAULT_SETTINGS_VALUES.rowAlternatingColours,
     );
     const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(DEFAULT_SETTINGS_VALUES.fileSizeUnits);
-    const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeySize>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
+    const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
     const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
     const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
@@ -77,7 +77,7 @@ function useProvideSettings(): SettingsProvider {
         Preferences.get("cryptoKeyStrength").then((value) => {
             if (value) {
                 console.debug(`Crypto key strength: ${value}`);
-                setCryptoKeyStrength(parseInt(value) as KeySize);
+                setCryptoKeyStrength(parseInt(value) as KeyStrength);
             }
         });
         Preferences.get("cryptoChunkSize").then((value) => {

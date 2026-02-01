@@ -24,7 +24,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { performUpdateCheck } from "@lib/check-update";
-import { KeySize } from "@lib/exef";
+import { KeyStrength } from "@lib/exef";
 import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
@@ -98,7 +98,7 @@ const Settings: React.FC = () => {
             .value as FileSizeUnits;
         const cryptoKeyStrength = parseInt(
             (document.getElementById("crypto-key-strength")! as HTMLIonSelectElement).value,
-        ) as KeySize;
+        ) as KeyStrength;
         const cryptoChunkSize = parseInt(
             (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
         ) as CryptoChunkSize;
@@ -278,7 +278,7 @@ const Settings: React.FC = () => {
                                 onIonChange={(e) => {
                                     settings.change({
                                         ...settings,
-                                        cryptoKeyStrength: parseInt(e.detail.value) as KeySize,
+                                        cryptoKeyStrength: parseInt(e.detail.value) as KeyStrength,
                                     });
                                     setHasUnsavedChanges(true);
                                 }}

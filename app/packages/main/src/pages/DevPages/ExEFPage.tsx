@@ -21,13 +21,13 @@ import {
     IonTitle,
 } from "@ionic/react";
 
-import ExEF, { KeySize } from "@lib/exef";
+import ExEF, { KeyStrength } from "@lib/exef";
 import { b64decodeURLSafe, b64encodeURLSafe } from "@lib/util";
 
 const ExEFPage: React.FC = () => {
     // States
     const [symmetricKey, setSymmetricKey] = useState("one demo 16B key");
-    const [keyStrength, setKeyStrength] = useState<KeySize>(128);
+    const [keyStrength, setKeyStrength] = useState<KeyStrength>(128);
     const [encryptionNonce, setEncryptionNonce] = useState("303132333435363738396162");
     const [plaintext, setPlaintext] = useState("");
     const [encryptedPayload, setEncryptedPayload] = useState("");
