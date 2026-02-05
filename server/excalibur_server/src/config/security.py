@@ -4,6 +4,7 @@ from pydantic import BaseModel, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.srp.group import SRPGroup
+from excalibur_server.src.exef.crypto import KeyStrength
 
 
 class Security(BaseModel):
@@ -43,6 +44,7 @@ class Security(BaseModel):
 
     session_duration: int
     account_creation_key: bytes
+    key_strength: KeyStrength
     srp: SRP
     e2ee: E2EE
     pop: PoP

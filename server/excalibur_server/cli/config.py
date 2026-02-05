@@ -96,10 +96,24 @@ def update_config():
 
         return config
 
-    SETTINGS_VERSION = 3
+    def v3_to_v4(config: TOMLDocument) -> TOMLDocument:
+        config["version"] = 4
+
+        # Add new key strength field
+        config["security"] = _add_new_field(
+            config["security"],
+            "key_strength",
+            128,
+            top_comment="The key strength, in bits, to use for cryptographic operations\n# Valid values: 128, 192, 256",
+        )
+
+        return config
+
+    SETTINGS_VERSION = 4
     UPDATERS = {
         1: v1_to_v2,
         2: v2_to_v3,
+        3: v3_to_v4,
     }
 
     # Read the config

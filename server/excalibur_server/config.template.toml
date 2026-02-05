@@ -11,7 +11,7 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 3
+version = 4
 
 # -----------------------------------------------------------------------------
 # Server & Network Configuration
@@ -76,6 +76,10 @@ session_duration = 3600 # 1 hour
 # SECURITY NOTE: This was generated using a cryptographically secure pseudo-random number generator.
 #                DO NOT CHANGE THIS VALUE UNLESS YOU KNOW WHAT YOU ARE DOING!
 account_creation_key = "Account Creation Key Goes Here!!"
+
+# The key strength, in bits, to use for cryptographic operations
+# Valid values: 128, 192, 256
+key_strength = 128
 
 [security.srp]
 # Secure Remote Password (SRP) group size for authentication

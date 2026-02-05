@@ -9,6 +9,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.credentials import decode_token
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
@@ -286,7 +287,7 @@ class EncryptionHandler:
                     return message
 
             if self._exef is None:
-                self._exef = ExEF(self._e2ee_key)
+                self._exef = ExEF(self._e2ee_key, nonce=None, strength=CONFIG.security.key_strength)
 
             return await self._decrypt_request(message)
 
@@ -330,7 +331,7 @@ class EncryptionHandler:
                     return await self._raise_credentials_exception()
 
             if self._exef is None and not self._started_response:
-                self._exef = ExEF(self._e2ee_key)
+                self._exef = ExEF(self._e2ee_key, nonce=None, strength=CONFIG.security.key_strength)
 
             await self._encrypt_response(message)
 
