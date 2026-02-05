@@ -1,44 +1,47 @@
 import pytest
 
+from excalibur_server.src.exef.crypto import KeyStrength
+
 from .exef import ExEF
 from .structures import Footer, Header
 
-# TODO: Test with varying key strengths
-
 KEY = b"1" * 24
 NONCE = b"\xab" * 12
-HEADER_MAC = bytes.fromhex("3a5a8758e2c946869e38d6ae9d7f")
 
-HEADER = (
-    b"ExEF"  # Magic
-    + b"\x03"  # Version
-    + b"\x02"  # Cipher ID, corresponding to AES-192-GCM
-    + NONCE
-    + HEADER_MAC  # Header MAC
-    + b"\x00\x00\x00\x00\x00\x00\x00\x0c"  # Ciphertext length
+SAMPLE_EXEF_128 = bytes.fromhex(
+    "457845460301abababababababababababab3ae89cecf3e7cb56042e43d824ec000000000000000cb52c1501910110d2afcb7b114b29d231367c43770ada41198c9a96a4",
 )
-FOOTER = bytes.fromhex("b50d70e450d7892345f7ce463da59d22")
-SAMPLE_EXEF = HEADER + bytes.fromhex("01a2d354eb2527742fa264b5") + FOOTER  # HELLO, encrypted
+SAMPLE_EXEF_192 = bytes.fromhex(
+    "457845460302abababababababababababab3a5a8758e2c946869e38d6ae9d7f000000000000000c01a2d354eb2527742fa264b5b50d70e450d7892345f7ce463da59d22",
+)
+SAMPLE_EXEF_256 = bytes.fromhex(
+    "457845460303abababababababababababab86250f2fdf59840a66218d549ee7000000000000000c8dcad08960b097c68ae73d0c86a807d763605e0ebf6c40df88826657",
+)
+EXEFS = {
+    128: SAMPLE_EXEF_128,
+    192: SAMPLE_EXEF_192,
+    256: SAMPLE_EXEF_256,
+}
 
 
 # Helper functions
 def _generate_invalid_magic():
-    invalid = b"NOPE" + SAMPLE_EXEF[4:]
+    invalid = b"NOPE" + SAMPLE_EXEF_192[4:]
     return invalid
 
 
 def _generate_invalid_version():
-    invalid = SAMPLE_EXEF[:4] + b"\xff" + SAMPLE_EXEF[5:]
+    invalid = SAMPLE_EXEF_192[:4] + b"\xff" + SAMPLE_EXEF_192[5:]
     return invalid
 
 
 def _generate_invalid_footer():
-    invalid = SAMPLE_EXEF[:-1]  # One byte short
+    invalid = SAMPLE_EXEF_192[:-1]  # One byte short
     return invalid
 
 
 def _generate_invalid_tag():
-    invalid = SAMPLE_EXEF[:-1] + ((SAMPLE_EXEF[-1] + 0x01) % 0xFF).to_bytes(1, "big")
+    invalid = SAMPLE_EXEF_192[:-1] + ((SAMPLE_EXEF_192[-1] + 0x01) % 0xFF).to_bytes(1, "big")
     return invalid
 
 
@@ -46,30 +49,32 @@ def _generate_invalid_tag():
 class TestValidExEF:
     def test_parsing(self):
         # Parse header
-        header = Header.from_serialized(SAMPLE_EXEF[: Header.size])
+        header = Header.from_serialized(SAMPLE_EXEF_192[: Header.size])
 
         assert header.cipher_id == 2
         assert header.nonce == NONCE
-        assert header.header_mac == HEADER_MAC, f"Different header MAC: {header.header_mac.hex()} != {HEADER_MAC.hex()}"
+        assert header.header_mac.hex() == "3a5a8758e2c946869e38d6ae9d7f"
         assert header.ct_len == 12
-        assert header.serialize_as_bytes() == HEADER
 
         # Parse footer
-        footer = Footer.from_serialized(SAMPLE_EXEF[-Footer.size :])
-        assert footer.tag == FOOTER
-        assert footer.serialize_as_bytes() == FOOTER
+        footer = Footer.from_serialized(SAMPLE_EXEF_192[-Footer.size :])
+        assert footer.tag.hex() == "b50d70e450d7892345f7ce463da59d22"
 
     def test_validation(self):
-        assert ExEF.validate(SAMPLE_EXEF)
+        assert ExEF.validate(SAMPLE_EXEF_128)
+        assert ExEF.validate(SAMPLE_EXEF_192)
+        assert ExEF.validate(SAMPLE_EXEF_256)
 
-    def test_encrypt(self):
-        ct_test = ExEF(KEY, nonce=NONCE).encrypt(b"Hello World!")
-        assert ct_test == SAMPLE_EXEF
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_encrypt(self, strength: KeyStrength):
+        ct_test = ExEF(KEY, nonce=NONCE, strength=strength).encrypt(b"Hello World!")
+        assert ct_test == EXEFS[strength]
 
-    def test_encrypt_stream_1(self):
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_encrypt_stream_1(self, strength: KeyStrength):
         iterable = iter([b"Hello World!"])
 
-        encryptor = ExEF(KEY, nonce=NONCE).encryptor
+        encryptor = ExEF(KEY, nonce=NONCE, strength=strength).encryptor
         encryptor.set_params(length=12)
 
         output = encryptor.get()  # Header
@@ -78,12 +83,13 @@ class TestValidExEF:
             output += encryptor.get()
         output += encryptor.get()  # Footer
 
-        assert output == SAMPLE_EXEF
+        assert output == EXEFS[strength]
 
-    def test_encrypt_stream_2(self):
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_encrypt_stream_2(self, strength: KeyStrength):
         iterable = iter([b"He", b"llo Wo", b"rld!"])
 
-        encryptor = ExEF(KEY, nonce=NONCE).encryptor
+        encryptor = ExEF(KEY, nonce=NONCE, strength=strength).encryptor
         encryptor.set_params(length=12)
 
         output = encryptor.get()  # Header
@@ -92,14 +98,16 @@ class TestValidExEF:
             output += encryptor.get()
         output += encryptor.get()  # Footer
 
-        assert output == SAMPLE_EXEF
+        assert output == EXEFS[strength]
 
-    def test_decrypt(self):
-        pt_test = ExEF(KEY).decrypt(SAMPLE_EXEF)
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_decrypt(self, strength: KeyStrength):
+        pt_test = ExEF(KEY).decrypt(EXEFS[strength])
         assert pt_test == b"Hello World!"
 
-    def test_decrypt_stream_1(self):
-        iterable = iter([SAMPLE_EXEF])
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_decrypt_stream_1(self, strength: KeyStrength):
+        iterable = iter([EXEFS[strength]])
 
         decryptor = ExEF(KEY).decryptor
         output = b""
@@ -110,8 +118,9 @@ class TestValidExEF:
         decryptor.verify()
         assert output == b"Hello World!"
 
-    def test_decrypt_stream_2(self):
-        iterable = iter([SAMPLE_EXEF[i : i + 2] for i in range(0, len(SAMPLE_EXEF), 2)])
+    @pytest.mark.parametrize("strength", EXEFS.keys())
+    def test_decrypt_stream_2(self, strength: KeyStrength):
+        iterable = iter([EXEFS[strength][i : i + 2] for i in range(0, len(EXEFS[strength]), 2)])
 
         decryptor = ExEF(KEY).decryptor
         output = b""
@@ -140,7 +149,7 @@ class TestInvalidExEF:
         fake_key = bytearray(KEY)
         fake_key[0] = 255 - fake_key[0]
         with pytest.raises(ValueError, match="header MAC mismatch"):
-            ExEF(key=fake_key, nonce=NONCE).decrypt(SAMPLE_EXEF)
+            ExEF(key=fake_key, nonce=NONCE).decrypt(SAMPLE_EXEF_192)
 
     def test_invalid_magic(self, exef: ExEF):
         invalid_magic = _generate_invalid_magic()

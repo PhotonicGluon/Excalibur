@@ -54,6 +54,7 @@ describe("ExEF", () => {
         const header = ExEFHeader.fromBuffer(SAMPLE_EXEF_192.subarray(0, ExEFHeader.headerSize));
         expect(header.cipherID).toBe(2);
         expect(header.nonce.toString("hex")).toBe("abababababababababababab");
+        expect(header.headerMAC.toString("hex")).toBe("3a5a8758e2c946869e38d6ae9d7f");
         expect(header.ctLen).toBe(12);
 
         // Parse footer

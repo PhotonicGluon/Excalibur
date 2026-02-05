@@ -3,7 +3,7 @@ from typing import ClassVar, Literal
 from Crypto.Random import get_random_bytes
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 
-from .crypto import Decryptor, Encryptor
+from .crypto import Decryptor, Encryptor, KeyStrength
 from .structures import EXEF_VERSION, Footer, Header
 
 
@@ -33,19 +33,24 @@ class ExEF(BaseModel):
     decryptor: Decryptor
     """Decryptor object"""
 
-    def __init__(self, key: bytes, nonce: bytes | None = None):
+    def __init__(self, key: bytes, nonce: bytes | None = None, strength: KeyStrength | None = None):
         """
         Initializes an ExEF object.
 
-        :param key: The key to use for encryption and decryption.
+        :param key: The key to use for encryption and decryption
         :param nonce: The 12-byte nonce to use for encryption. If not provided, a random nonce is
-            generated.
+            generated
+        :param strength: The key strength to use for encryption, defaults to the length of `key` in
+            bits
         """
+
+        if strength is None:
+            strength = len(key) * 8
 
         if nonce is None:
             nonce = get_random_bytes(12)
 
-        super().__init__(key=key, nonce=nonce, encryptor=Encryptor(key, nonce), decryptor=Decryptor(key))
+        super().__init__(key=key, nonce=nonce, encryptor=Encryptor(key, nonce, strength), decryptor=Decryptor(key))
 
     # Properties
     @computed_field
