@@ -113,6 +113,7 @@ export function useUploadFile() {
                         auth.vaultKey!,
                         auth.authInfo!.key!,
                         rawFileSize,
+                        settings.cryptoKeyStrength,
                         settings.cryptoChunkSize,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {

@@ -1,6 +1,6 @@
 import { expose } from "comlink";
 
-import ExEF from "@lib/exef";
+import ExEF, { KeyStrength } from "@lib/exef";
 
 const encryptionProcessor = {
     /** Flag to track cancellation */
@@ -23,6 +23,7 @@ const encryptionProcessor = {
      * @param vaultKey The vault key to use for encryption
      * @param e2eeKey The E2EE key to use for encryption
      * @param fileSize The size of the file
+     * @param keyStrength The key strength to use for encryption
      * @param chunkSize The size of each chunk to encrypt
      * @param onProgress A callback function to report progress (a value from 0 to 1)
      * @throws {Error} If the encryption process is cancelled
@@ -33,14 +34,15 @@ const encryptionProcessor = {
         vaultKey: Buffer,
         e2eeKey: Buffer,
         fileSize: number,
+        keyStrength: KeyStrength,
         chunkSize: number,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
         this._isAborted = false;
 
         // Define ExEF encryption instances
-        const vaultExEF = new ExEF(vaultKey, undefined, "encrypt");
-        const e2eeExEF = new ExEF(e2eeKey, undefined, "encrypt");
+        const vaultExEF = new ExEF(vaultKey, undefined, "encrypt", keyStrength);
+        const e2eeExEF = new ExEF(e2eeKey, undefined, "encrypt", keyStrength);
 
         // Form nesting of streams for encryption
         const encryptedFileSize = fileSize + ExEF.additionalSize;
