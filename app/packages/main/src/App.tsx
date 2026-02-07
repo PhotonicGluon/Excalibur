@@ -58,7 +58,7 @@ if (Capacitor.isNativePlatform() && !isPrerelease(packageInfo.version)) {
 
 // Change router for electron build
 // (https://github.com/ionic-team/ionic-framework/issues/19246#issuecomment-552858490)
-const TheRouter = IS_DEV && isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
+const TheRouter = !IS_DEV && isPlatform("electron") ? IonReactHashRouter : IonReactRouter;
 
 // App component
 const App: React.FC = () => {
