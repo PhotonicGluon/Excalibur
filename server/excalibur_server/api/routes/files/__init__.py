@@ -33,6 +33,7 @@ from .folder import directory_changes_listener_endpoint as directory_changes_lis
 from .folder import listdir_endpoint as listdir_endpoint
 from .move import move_path_endpoint as move_path_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
+from .search import search_endpoint as search_endpoint
 
 # Add encrypted routes to overall router
 router.include_router(encrypted_router)

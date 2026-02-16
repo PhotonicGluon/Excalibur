@@ -138,7 +138,11 @@ async def get_credentials(
     ] = "",
     credentials: HTTPAuthorizationCredentials | None = Security(API_TOKEN_HEADER),
     encrypted: Annotated[
-        bool, Header(alias="X-Encrypted", description="Whether the request was encrypted; affects only path variables")
+        bool,
+        Header(
+            alias="X-Encrypted",
+            description="Whether the request was encrypted; affects only body data and path variables",
+        ),
     ] = False,
 ) -> Credentials:
     """
