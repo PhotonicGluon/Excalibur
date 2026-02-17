@@ -53,12 +53,15 @@ export interface ContainerProps extends FileLikePartial {
     oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
     keepExEF?: boolean;
+    /** Whether to show the ellipsis menu */
+    ellipsisMenuEnabled?: boolean;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isLoading = props.type === undefined;
     const isFile = props.type === "file";
     const nameNoExEF = props.name?.replace(/\.exef$/, "");
+    const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
 
     // Contexts
     const auth = useAuth();
@@ -291,31 +294,30 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             break;
     }
 
-    const Popover = () =>
-        props.type !== "parent" && (
-            <IonContent>
-                <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
-                    <IonItem button={true} onClick={() => onClickRename()}>
-                        <IonLabel>
-                            <IonIcon icon={pencilOutline} size="large" />
-                            <IonText className="pl-2">Rename</IonText>
-                        </IonLabel>
-                    </IonItem>
-                    <IonItem button={true} onClick={() => onClickMove()}>
-                        <IonLabel>
-                            <IonIcon icon={moveOutline} size="large" />
-                            <IonText className="pl-2">Move</IonText>
-                        </IonLabel>
-                    </IonItem>
-                    <IonItem button={true} onClick={() => onClickDelete()}>
-                        <IonLabel>
-                            <IonIcon icon={trashOutline} size="large" />
-                            <IonText className="pl-2">Delete</IonText>
-                        </IonLabel>
-                    </IonItem>
-                </IonList>
-            </IonContent>
-        );
+    const Popover = () => (
+        <IonContent>
+            <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
+                <IonItem button={true} onClick={() => onClickRename()}>
+                    <IonLabel>
+                        <IonIcon icon={pencilOutline} size="large" />
+                        <IonText className="pl-2">Rename</IonText>
+                    </IonLabel>
+                </IonItem>
+                <IonItem button={true} onClick={() => onClickMove()}>
+                    <IonLabel>
+                        <IonIcon icon={moveOutline} size="large" />
+                        <IonText className="pl-2">Move</IonText>
+                    </IonLabel>
+                </IonItem>
+                <IonItem button={true} onClick={() => onClickDelete()}>
+                    <IonLabel>
+                        <IonIcon icon={trashOutline} size="large" />
+                        <IonText className="pl-2">Delete</IonText>
+                    </IonLabel>
+                </IonItem>
+            </IonList>
+        </IonContent>
+    );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
     return (
         <IonItem id={props.id} className={rowColourClass} button={!isLoading}>
@@ -325,7 +327,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     className="w-full"
                     onClick={!isLoading ? onClickItem : undefined}
                     onContextMenu={(e) => {
-                        if (isLoading || props.type === "parent") return;
+                        if (isLoading || !ellipsisMenuEnabled) return;
                         e.preventDefault();
                         showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
                     }}
@@ -355,7 +357,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             <IonButtons className="m-0 size-12 justify-end" slot="end">
                 {/* Ellipsis menu button */}
-                {!isLoading && props.type !== "parent" && (
+                {!isLoading && ellipsisMenuEnabled && (
                     <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                         <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
                     </IonButton>

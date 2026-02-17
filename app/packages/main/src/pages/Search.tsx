@@ -6,6 +6,7 @@ import {
     IonContent,
     IonHeader,
     IonIcon,
+    IonList,
     IonPage,
     IonSearchbar,
     IonToolbar,
@@ -14,10 +15,12 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { searchFiles } from "@lib/files/api";
+import { File } from "@lib/files/structures";
 
 import { useAuth } from "@components/auth/context";
+import DirectoryItem from "@components/explorer/DirectoryItem";
 
-export const DEBOUNCE_TIME = 250; // In ms
+export const DEBOUNCE_TIME = 300; // In ms
 export const SEARCH_LIMIT = 10; // Number of results to return
 export const SIMILARITY_THRESHOLD = 0.6; // Minimum similarity score for results to be returned
 
@@ -28,6 +31,7 @@ const Search: React.FC = () => {
 
     // States
     const [searchText, setSearchText] = useState("");
+    const [searchResults, setSearchResults] = useState<{ file: File; similarity: number }[]>([]);
 
     // Functions
     /**
@@ -36,16 +40,24 @@ const Search: React.FC = () => {
      * @param e The event object
      */
     async function handleInputChange(e: CustomEvent) {
+        // Update search text
         const newSearchText = e.detail.value || "";
         setSearchText(newSearchText);
 
+        // Get query
         const query = newSearchText.trim();
         if (query === "") {
+            setSearchResults([]);
             return;
         }
 
-        const results = await searchFiles(auth, query, SEARCH_LIMIT, SIMILARITY_THRESHOLD);
-        console.log(results);
+        // Search for files
+        const searchResponse = await searchFiles(auth, query, SEARCH_LIMIT, SIMILARITY_THRESHOLD);
+        if (!searchResponse.success) {
+            console.error(searchResponse.error);
+            return;
+        }
+        setSearchResults(searchResponse.results!);
     }
 
     // Render
@@ -71,7 +83,26 @@ const Search: React.FC = () => {
             </IonHeader>
 
             {/* Body content */}
-            <IonContent fullscreen></IonContent>
+            <IonContent fullscreen>
+                {/* Items List */}
+                <IonList lines="none" className="overflow-y-auto rounded-lg bg-transparent pt-0">
+                    {/* TODO: Allow downloading */}
+                    {searchResults.map(({ file, similarity: _similarity }, idx) => {
+                        return (
+                            <DirectoryItem
+                                key={idx}
+                                ellipsisMenuEnabled={false}
+                                oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
+                                name={file.name}
+                                fullpath={file.fullpath}
+                                type={file.type}
+                                mimetype={file.type === "file" ? file.mimetype : undefined}
+                                size={file.type === "file" ? file.size : undefined}
+                            />
+                        );
+                    })}
+                </IonList>
+            </IonContent>
         </IonPage>
     );
 };

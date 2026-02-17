@@ -47,6 +47,9 @@ export async function searchFiles(
             return { success: false, error: "Unknown error" };
     }
 
-    const results = await ExEF.decryptResponse<{ file: File; similarity: number }[]>(auth.authInfo!.key, response);
-    return { success: true, results };
+    const results = await ExEF.decryptResponse<[File, number][]>(auth.authInfo!.key, response);
+    return {
+        success: true,
+        results: results.map(([file, similarity]) => ({ file, similarity })),
+    };
 }
