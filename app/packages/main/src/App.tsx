@@ -34,6 +34,7 @@ import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
+import Search from "@pages/Search";
 import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
 import Welcome from "@pages/Welcome";
@@ -134,6 +135,7 @@ const App: React.FC = () => {
                     {/* Main */}
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
+                    <PrivateRoute path="/search" component={Search} />
                     <Route path="/settings" component={Settings} />
 
                     {/* Testing */}

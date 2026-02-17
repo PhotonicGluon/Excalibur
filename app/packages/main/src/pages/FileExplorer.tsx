@@ -26,7 +26,7 @@ import {
     useIonRouter,
     useIonToast,
 } from "@ionic/react";
-import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline } from "ionicons/icons";
+import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline, searchOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, moveItem, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
@@ -356,6 +356,18 @@ const FileExplorer: React.FC = () => {
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
                 <IonContent>
                     <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
+                        <IonItem
+                            button={true}
+                            onClick={() => {
+                                router.push("/search", "forward", "push");
+                                menuController.close();
+                            }}
+                        >
+                            <IonLabel>
+                                <IonIcon icon={searchOutline} size="large" />
+                                <IonText className="pl-2">Search</IonText>
+                            </IonLabel>
+                        </IonItem>
                         <IonItem button={true} onClick={() => setShowVaultKeyDialog(true)}>
                             <IonLabel>
                                 <IonIcon icon={keyOutline} size="large" />
