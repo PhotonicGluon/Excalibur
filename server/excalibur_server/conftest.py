@@ -27,8 +27,8 @@ def auth_client() -> TestClient:
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
     token = generate_auth_token("test-user", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
-    client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
-    yield client
+    with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
+        yield client
 
 
 @pytest.fixture(scope="session", autouse=True)

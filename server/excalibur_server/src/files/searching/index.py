@@ -21,6 +21,9 @@ class FileIndex:
         return str(dict(self._index))
 
     def __contains__(self, path: Path) -> bool:
+        if path == CONFIG.storage.vault_folder:  # Don't index the vault folder itself
+            return False
+
         username, relative_path = self._split_path(path)
         return relative_path in self._index[username]
 
@@ -32,8 +35,6 @@ class FileIndex:
         :param path: absolute path to the file
         :return: tuple of (username, relative path)
         """
-
-        # FIXME: This approach lacks validation of whether the file path format is correct
 
         vault_file_path = path.relative_to(CONFIG.storage.vault_folder)
         username = vault_file_path.parts[0]  # First folder is always the username

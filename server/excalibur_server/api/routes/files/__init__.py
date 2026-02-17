@@ -27,13 +27,13 @@ def add_folder_change(credentials: Credentials, path: Path):
 from .checks import check_path_endpoint as check_path_endpoint
 from .delete import delete_endpoint as delete_endpoint
 from .file import download_file_endpoint as download_file_endpoint
+from .file import search_endpoint as search_endpoint
 from .file import upload_file_endpoint as upload_file_endpoint
 from .folder import create_directory_endpoint as create_directory_endpoint
 from .folder import directory_changes_listener_endpoint as directory_changes_listener_endpoint
 from .folder import listdir_endpoint as listdir_endpoint
 from .move import move_path_endpoint as move_path_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
-from .search import search_endpoint as search_endpoint
 
 # Add encrypted routes to overall router
 router.include_router(encrypted_router)
