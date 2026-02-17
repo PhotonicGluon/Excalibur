@@ -6,8 +6,8 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.files.listings import listdir
 from excalibur_server.src.files.structures import Directory
+from excalibur_server.src.files.utils import listdir
 from excalibur_server.src.path import check_path_subdir
 
 
@@ -23,8 +23,8 @@ from excalibur_server.src.path import check_path_subdir
 def listdir_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to list (use `.` to specify root directory)")],
-    with_exef_header: Annotated[
-        bool, Query(description="Whether to include ExEF header size in the file sizes")
+    include_exef_size: Annotated[
+        bool, Query(description="Whether to include the additional ExEF size (i.e., header and footer) in file sizes")
     ] = False,
     processed_path: str = Depends(process_path_param("path")),
 ):
@@ -42,7 +42,7 @@ def listdir_endpoint(
     if not valid:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
 
-    contents = listdir(username, user_path, include_exef_size=with_exef_header)
+    contents = listdir(username, user_path, include_exef_size=include_exef_size)
     if contents is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
