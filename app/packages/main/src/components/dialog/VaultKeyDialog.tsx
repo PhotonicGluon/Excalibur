@@ -18,8 +18,6 @@ import { toMnemonic } from "@lib/security/bip39";
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 
-import "./VaultKeyDialog.css";
-
 interface VaultKeyDialogProps {
     /**
      * A vault key to display.
@@ -55,7 +53,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     const localVaultKeyMnemonic = localVaultKey ? toMnemonic(localVaultKey) : undefined;
     return (
         <IonModal
-            className="min-h-172"
+            className="min-h-172 [--height:55%] [--width:min(22rem,85vw)]"
             id="vault-key-modal"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}
