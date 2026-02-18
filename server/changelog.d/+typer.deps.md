@@ -1,0 +1,1 @@
+Updated `typer` from `0.21.1` to `0.24.0`

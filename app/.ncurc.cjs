@@ -1,0 +1,20 @@
+/** @type {import("npm-check-updates").RcOptions } */
+module.exports = {
+    upgrade: true,
+    filterResults: (packageName, { currentVersionSemver, upgradedVersionSemver }) => {
+        // Get version majors
+        const currentMajor = parseInt(currentVersionSemver[0]?.major, 10);
+        const upgradedMajor = parseInt(upgradedVersionSemver?.major, 10);
+
+        if (!currentMajor || !upgradedMajor) {
+            return true;
+        }
+
+        // Prohibit Electron v40 updates
+        if (packageName == "electron" && upgradedMajor >= 40) {
+            return false;
+        }
+
+        return true;
+    },
+};
