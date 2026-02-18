@@ -33,6 +33,12 @@ FILES_ROUTING_TREE = RoutingTree(
                 "GET": EncryptedRoute(),
             },
         ),
+        "search": RoutingTree(
+            segment="search",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
         "upload": RoutingTree(
             segment="upload",
             has_path_param=True,
