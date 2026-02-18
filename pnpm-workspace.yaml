@@ -23,7 +23,7 @@ overrides:
   lodash-es@<4.17.23: ^4.17.23
   lodash@<4.17.23: ^4.17.23
   qs@<6.14.2: ^6.14.2
-  tar@<7.5.7: ^7.5.7
+  tar@<7.5.8: ^7.5.8
 
 sideEffectsCache: false
 
