@@ -36,6 +36,7 @@ import FolderOpener from "@native/FolderOpenerPlugin";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
+import SearchDialog from "@components/dialog/SearchDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
@@ -101,6 +102,7 @@ const FileExplorer: React.FC = () => {
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
 
+    const [showSearchDialog, setShowSearchDialog] = useState(false);
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -356,13 +358,7 @@ const FileExplorer: React.FC = () => {
             <IonPopover dismissOnSelect={true} trigger="ellipsis-button">
                 <IonContent>
                     <IonList lines="none" className="h-full [&_ion-label]:flex [&_ion-label]:items-center">
-                        <IonItem
-                            button={true}
-                            onClick={() => {
-                                router.push("/search", "forward", "push");
-                                menuController.close();
-                            }}
-                        >
+                        <IonItem button={true} onClick={() => setShowSearchDialog(true)}>
                             <IonLabel>
                                 <IonIcon icon={searchOutline} size="large" />
                                 <IonText className="pl-2">Search</IonText>
@@ -464,7 +460,8 @@ const FileExplorer: React.FC = () => {
                                 <IonRefresherContent />
                             </IonRefresher>
 
-                            {/* Vault key info dialog */}
+                            {/* Dialogs */}
+                            <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
                             <VaultKeyDialog
                                 isOpen={showVaultKeyDialog}
                                 onDidDismiss={() => setShowVaultKeyDialog(false)}

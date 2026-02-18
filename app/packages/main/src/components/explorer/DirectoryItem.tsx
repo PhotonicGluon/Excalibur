@@ -197,6 +197,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     console.debug(`Job '${jobID}' (download) cancelled`);
                     return;
                 }
+                console.error(err);
             } finally {
                 jobsManager.deleteJob(jobID);
             }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 import {
     IonButton,
@@ -7,12 +7,11 @@ import {
     IonHeader,
     IonIcon,
     IonList,
-    IonPage,
+    IonModal,
     IonSearchbar,
     IonToolbar,
-    useIonRouter,
 } from "@ionic/react";
-import { arrowBack } from "ionicons/icons";
+import { close } from "ionicons/icons";
 
 import { searchFiles } from "@lib/files/api";
 import { File } from "@lib/files/structures";
@@ -21,13 +20,19 @@ import { useAuth } from "@components/auth/context";
 import DirectoryItem from "@components/explorer/DirectoryItem";
 
 export const DEBOUNCE_TIME = 300; // In ms
-export const SEARCH_LIMIT = 10; // Number of results to return
+export const SEARCH_LIMIT = 5; // Number of results to return
 export const SIMILARITY_THRESHOLD = 0.6; // Minimum similarity score for results to be returned
 
-const Search: React.FC = () => {
+interface SearchDialogProps {
+    /** Whether the dialog is open */
+    isOpen: boolean;
+    /** Callback when the dialog is dismissed */
+    onDidDismiss?: () => void;
+}
+
+const SearchDialog: React.FC<SearchDialogProps> = (props) => {
     // Contexts
     const auth = useAuth();
-    const router = useIonRouter();
 
     // States
     const [searchText, setSearchText] = useState("");
@@ -62,31 +67,35 @@ const Search: React.FC = () => {
 
     // Render
     return (
-        <IonPage>
-            {/* Header content */}
-            <IonHeader>
-                <IonToolbar className="[&::part(container)]:min-h-16">
-                    <IonButtons slot="start">
-                        <IonButton onClick={() => router.goBack()}>
-                            <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
-                        </IonButton>
-                    </IonButtons>
-                    <IonSearchbar
-                        value={searchText}
-                        placeholder="Enter query here..."
-                        onIonInput={handleInputChange}
-                        debounce={DEBOUNCE_TIME}
-                        disabled={false}
-                        showClearButton={"always"}
-                    />
-                </IonToolbar>
-            </IonHeader>
+        <IonModal
+            className="min-h-172 [--height:55%] [--width:min(22rem,85vw)]"
+            id="search-modal"
+            isOpen={props.isOpen}
+            onDidDismiss={props.onDidDismiss}
+            backdropDismiss={true}
+            handle={false} // Hide drag handle for cleaner look
+        >
+            <IonContent className="flex h-172 flex-col">
+                <IonHeader className="h-14">
+                    <IonToolbar className="pt-0">
+                        <IonSearchbar
+                            value={searchText}
+                            placeholder="Enter query here..."
+                            onIonInput={handleInputChange}
+                            debounce={DEBOUNCE_TIME}
+                            disabled={false}
+                            showClearButton={"always"}
+                        />
+                        <IonButtons slot="end">
+                            <IonButton id="search-modal-close" onClick={props.onDidDismiss}>
+                                <IonIcon size="large" icon={close} slot="icon-only" />
+                            </IonButton>
+                        </IonButtons>
+                    </IonToolbar>
+                </IonHeader>
 
-            {/* Body content */}
-            <IonContent fullscreen>
                 {/* Items List */}
                 <IonList lines="none" className="overflow-y-auto rounded-lg bg-transparent pt-0">
-                    {/* TODO: Allow downloading */}
                     {searchResults.map(({ file, similarity: _similarity }, idx) => {
                         return (
                             <DirectoryItem
@@ -103,8 +112,8 @@ const Search: React.FC = () => {
                     })}
                 </IonList>
             </IonContent>
-        </IonPage>
+        </IonModal>
     );
 };
 
-export default Search;
+export default SearchDialog;
