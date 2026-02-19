@@ -28,14 +28,14 @@ import {
 } from "@ionic/react";
 import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline, searchOutline } from "ionicons/icons";
 
-import { checkDir, checkPath, deleteItem, mkdir, moveItem, renameItem } from "@lib/files/api";
+import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
-import { getParent } from "@lib/util";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
+import MoveDialog from "@components/dialog/MoveDialog";
 import SearchDialog from "@components/dialog/SearchDialog";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
@@ -101,6 +101,9 @@ const FileExplorer: React.FC = () => {
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
+
+    const [showMoveDialog, setShowMoveDialog] = useState(false);
+    const [moveOrigPath, setMoveOrigPath] = useState<string>("");
 
     const [showSearchDialog, setShowSearchDialog] = useState(false);
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
@@ -263,43 +266,8 @@ const FileExplorer: React.FC = () => {
      * @param path The path of the item to move
      */
     async function onMoveItem(path: string) {
-        // TODO: Update this method to be less janky - should just allow moving within GUI, not make a popup
-        const origPath = getParent("./" + path);
-
-        // Ask for user input
-        presentAlert({
-            header: "Enter New Destination Folder",
-            subHeader: "'.' means root directory",
-            inputs: [
-                {
-                    type: "text",
-                    name: "destFolder",
-                    placeholder: "New Destination Folder",
-                    value: origPath,
-                },
-            ],
-            buttons: [
-                "Cancel",
-                {
-                    text: "Move",
-                    handler: async (data: { destFolder: string }) => {
-                        const destFolder = data.destFolder;
-                        if (destFolder === "") {
-                            presentSnackbar("Destination folder cannot be empty", "danger");
-                            return;
-                        }
-
-                        const moveResponse = await moveItem(auth, path, destFolder);
-                        if (!moveResponse.success) {
-                            presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
-                            return;
-                        }
-
-                        presentSnackbar("Item moved", "success");
-                    },
-                },
-            ],
-        });
+        setMoveOrigPath(path);
+        setShowMoveDialog(true);
     }
 
     /**
@@ -461,6 +429,11 @@ const FileExplorer: React.FC = () => {
                             </IonRefresher>
 
                             {/* Dialogs */}
+                            <MoveDialog
+                                isOpen={showMoveDialog}
+                                onDidDismiss={() => setShowMoveDialog(false)}
+                                path={moveOrigPath}
+                            />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
                             <VaultKeyDialog
                                 isOpen={showVaultKeyDialog}

@@ -49,12 +49,16 @@ type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
     /** The ID of the directory item */
     id?: string;
+    /** Whether the item should be disabled */
+    disabled?: boolean;
     /** Whether the item is on an even row */
     oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
     keepExEF?: boolean;
     /** Whether to show the ellipsis menu */
     ellipsisMenuEnabled?: boolean;
+    /** Optional override for the click handler */
+    onClickItemOverride?: (fullpath: string) => void;
 }
 
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -75,6 +79,11 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking on an item.
      */
     async function onClickItem() {
+        if (props.onClickItemOverride) {
+            props.onClickItemOverride(props.fullpath!);
+            return;
+        }
+
         if (!isFile) {
             // Navigate into the directory
             setTimeout(() => {
@@ -321,14 +330,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
     return (
-        <IonItem id={props.id} className={rowColourClass} button={!isLoading}>
+        <IonItem id={props.id} className={rowColourClass} button={!props.disabled && !isLoading}>
             {/* Main item content */}
             <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
                 <IonGrid
                     className="w-full"
-                    onClick={!isLoading ? onClickItem : undefined}
+                    onClick={!props.disabled && !isLoading ? onClickItem : undefined}
                     onContextMenu={(e) => {
-                        if (isLoading || !ellipsisMenuEnabled) return;
+                        if (props.disabled || isLoading || !ellipsisMenuEnabled) return;
                         e.preventDefault();
                         showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
                     }}
@@ -336,17 +345,19 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     <IonRow className="ion-align-items-center">
                         <IonCol className="flex items-center">
                             <IonThumbnail className="size-6 *:size-full">
-                                {!isLoading && <IonIcon icon={icon} />}
+                                {!isLoading && <IonIcon icon={icon} color={props.disabled ? "light" : undefined} />}
                                 {isLoading && <IonSkeletonText animated={true} />}
                             </IonThumbnail>
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
-                                <IonLabel className="max-w-100 truncate">
+                                <IonLabel className="max-w-100 truncate" color={props.disabled ? "light" : undefined}>
                                     {!isLoading &&
                                         (props.type === "directory" || props.keepExEF ? props.name : nameNoExEF)}
                                     {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                                 </IonLabel>
                                 {!isLoading && props.size !== undefined && (
-                                    <IonNote>{bytesToHumanReadable(props.size, settings.fileSizeUnits)}</IonNote>
+                                    <IonNote color={props.disabled ? "light" : undefined}>
+                                        {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
+                                    </IonNote>
                                 )}
                                 {!isLoading && props.size === undefined}
                                 {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
@@ -356,14 +367,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 </IonGrid>
             </div>
 
-            <IonButtons className="m-0 size-12 justify-end" slot="end">
-                {/* Ellipsis menu button */}
-                {!isLoading && ellipsisMenuEnabled && (
+            {!props.disabled && !isLoading && ellipsisMenuEnabled && (
+                <IonButtons className="m-0 size-12 justify-end" slot="end">
+                    {/* Ellipsis menu button */}
                     <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                         <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
                     </IonButton>
-                )}
-            </IonButtons>
+                </IonButtons>
+            )}
         </IonItem>
     );
 };

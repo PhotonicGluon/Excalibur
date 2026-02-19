@@ -14,24 +14,6 @@ describe("CRUD operations", () => {
         createFolder();
     });
 
-    it("should move items", () => {
-        // Create test file and folder
-        const fileName = createFile(SMALL_SIZE, true)[0];
-        const folderName = createFolder();
-
-        // Move file to folder
-        cy.get(`div[data-name='${fileName}']`).rightclick();
-        cy.get(".item").contains("Move").click().wait(200); // Wait for the alert to appear
-        cy.get(".alert-input-wrapper").type(`{backspace}./${folderName}`);
-        cy.get(".alert-button-group").contains("Move").click();
-        cy.get(".alert-head").should("not.exist");
-
-        // Check that file was moved
-        cy.get(`div[data-name='${fileName}']`).should("not.exist");
-        cy.get(`div[data-name='${folderName}']`).click();
-        cy.get(`div[data-name='${fileName}']`).should("exist");
-    });
-
     describe("single-file upload and download", () => {
         it("should handle small file", () => {
             createFile(SMALL_SIZE);
@@ -76,6 +58,65 @@ describe("CRUD operations", () => {
 
         it("should create nested file", () => {
             createFile(1000);
+        });
+    });
+
+    describe("move items", () => {
+        let fileName: string;
+        let folderName: string;
+
+        beforeEach(() => {
+            // Create test file and folder
+            fileName = createFile(SMALL_SIZE, true)[0];
+            folderName = createFolder();
+        });
+
+        it("should handle simple moving", () => {
+            // Clicking on move button should bring up move dialog
+            cy.get(`div[data-name='${fileName}']`).scrollIntoView(); // Make sure its visible
+            cy.get(`div[data-name='${fileName}']`).rightclick();
+            cy.get(".item").contains("Move").click();
+            cy.get("#move-modal ion-title").should("have.text", "Select Destination");
+
+            // Click into destination folder and confirm move
+            cy.get(`#move-modal div[data-name='${folderName}']`).click();
+            cy.get("#move-modal-confirm").click();
+            cy.get("#move-modal").should("not.be.visible");
+
+            // Check that file was moved
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.get(`div[data-name='${fileName}']`).should("exist");
+        });
+
+        it("should handle complex moving", () => {
+            // Make nested folder
+            cy.get(`div[data-name='${folderName}']`).click();
+            const nestedFolderName = createFolder();
+            cy.get("#files-area").contains("(Go Back)").click();
+            cy.get(`div[data-name='${folderName}']`).should("exist");
+
+            // Clicking on move button should bring up move dialog
+            cy.get(`div[data-name='${fileName}']`).scrollIntoView(); // Make sure its visible
+            cy.get(`div[data-name='${fileName}']`).rightclick();
+            cy.get(".item").contains("Move").click();
+
+            // Go into destination, then nested, then back out
+            cy.get(`#move-modal div[data-name='${folderName}']`).click();
+            cy.get(`#move-modal div[data-name='${nestedFolderName}']`).click();
+            cy.get("#move-modal").contains("(Go Back)").click();
+            cy.get(`#move-modal div[data-name='${nestedFolderName}']`).should("exist"); // Should be back out
+
+            // Actually move file into nested
+            cy.get(`#move-modal div[data-name='${nestedFolderName}']`).click();
+            cy.get("#move-modal-confirm").click();
+
+            // Check that file was moved correctly
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+            cy.get(`div[data-name='${nestedFolderName}']`).click();
+            cy.get(`div[data-name='${fileName}']`).should("exist");
         });
     });
 });

@@ -5,7 +5,8 @@ import { RowAlternatingColours } from "@lib/preferences/settings";
 
 import { settingsContext } from "@components/settings/context";
 
-import DirectoryList, { NUM_PENDING_ITEMS } from "./DirectoryList";
+import DirectoryList from "./DirectoryList";
+import { NUM_PENDING_ITEMS } from "./DirectoryListRaw";
 import { explorerContext } from "./context";
 
 const files: File[] = [];
@@ -59,6 +60,7 @@ describe("<DirectoryList />", () => {
                             iconStyle: "default",
                             rowAlternatingColours,
                             fileSizeUnits: "si",
+                            cryptoKeyStrength: 128,
                             cryptoChunkSize: 262144,
                             change: () => {},
                             save: () => Promise.resolve(),
