@@ -1,6 +1,6 @@
 let ack: string[];
 describe("New User Page", () => {
-    const SERVER_URL = Cypress.env("serverURL");
+    const SERVER_URL = Cypress.expose("serverURL");
 
     before(() => {
         // Fetch ACK once before tests start and wrap it as an alias

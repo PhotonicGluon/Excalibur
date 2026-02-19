@@ -1,6 +1,6 @@
 describe("Check Login Page Contents", () => {
     beforeEach(() => {
-        cy.onboard(Cypress.env("serverURL"));
+        cy.onboard(Cypress.expose("serverURL"));
         cy.visit("/login");
     });
 
@@ -20,7 +20,7 @@ describe("Check Login Page Contents", () => {
 
 describe("Handle Auth Process", () => {
     it("should handle login gracefully", () => {
-        cy.login(Cypress.env("serverURL"), "test-user", "Password");
+        cy.login(Cypress.expose("serverURL"), "test-user", "Password");
         cy.visit("/files/");
         cy.url().should("not.include", "/login");
     });
@@ -28,7 +28,7 @@ describe("Handle Auth Process", () => {
 
 describe("Check All Inputs Filled", () => {
     beforeEach(() => {
-        cy.onboard(Cypress.env("serverURL"));
+        cy.onboard(Cypress.expose("serverURL"));
         cy.visit("/login");
     });
 

@@ -22,7 +22,7 @@ describe("Check Welcome Page", () => {
 });
 
 describe("Check Server Choice Page", () => {
-    const SERVER_URL = Cypress.env("serverURL");
+    const SERVER_URL = Cypress.expose("serverURL");
 
     beforeEach(() => {
         cy.visit("/server-choice");

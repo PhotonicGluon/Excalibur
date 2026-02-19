@@ -1,13 +1,14 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
+    allowCypressEnv: false,
     e2e: {
         // Base configurations
         baseUrl: "http://localhost:5173",
         setupNodeEvents(on, config) {
             // implement node event listeners here
         },
-        env: {
+        expose: {
             serverURL: "http://127.0.0.1:8989",
         },
         // Pixel 7
