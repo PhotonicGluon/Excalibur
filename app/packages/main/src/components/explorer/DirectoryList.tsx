@@ -1,10 +1,10 @@
-import naturalCompare from "natural-compare";
 import { useState } from "react";
 
 import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
 import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
 
-import { Directory, FileLike } from "@lib/files/structures";
+import { sortItems } from "@lib/files/sorting";
+import { Directory } from "@lib/files/structures";
 import { getParent } from "@lib/util";
 
 import DirectoryItem from "@components/explorer/DirectoryItem";
@@ -31,39 +31,6 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // Contexts
     const explorerContext = useExplorerContext();
 
-    // Functions
-    /**
-     * Sorts the {@link FileLike} items in the directory.
-     *
-     * Directories are prioritized over files. Items of the same type are sorted alphabetically
-     * by name. The sort order can be ascending or descending based on the `sortAsc` state.
-     *
-     * @returns A sorted array of `FileLike` items. Will be an empty array if `items` is `null` or
-     *      empty.
-     */
-    function sortItems() {
-        if (!props.directory || !props.directory.items || props.directory.items.length === 0) {
-            return [];
-        }
-
-        const items = props.directory.items;
-
-        function sortFunc(a: FileLike, b: FileLike): number {
-            // Directories come before files
-            if (a.type === "directory" && b.type === "file") {
-                return -1;
-            } else if (a.type === "file" && b.type === "directory") {
-                return 1;
-            }
-
-            // Otherwise, since they are of the same type, sort by name using 'natural' ordering
-            const sortVal = naturalCompare(a.name, b.name);
-            return sortAsc ? sortVal : -sortVal;
-        }
-
-        return items.sort(sortFunc);
-    }
-
     // Render
     const path = explorerContext.path;
     const hasParent = path !== ".";
@@ -77,7 +44,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             ></DirectoryItem>
         ));
     } else if (props.directory.items && props.directory.items.length > 0) {
-        MainBody = sortItems().map((item, idx) => (
+        MainBody = sortItems(props.directory, sortAsc).map((item, idx) => (
             <DirectoryItem
                 key={idx}
                 oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
