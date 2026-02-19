@@ -18,7 +18,7 @@ import { close, sadOutline } from "ionicons/icons";
 import { listdir, moveItem } from "@lib/files/api";
 import { sortItems } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
-import { getBaseName, getParent } from "@lib/util";
+import { getParent } from "@lib/util";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryItem from "@components/explorer/DirectoryItem";
@@ -133,10 +133,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
         >
             <IonHeader className="h-14">
                 <IonToolbar className="pt-0">
-                    <IonTitle>
-                        Select destination for{" "}
-                        <span className="font-mono">{getBaseName(props.path).replace(".exef", "")}</span>
-                    </IonTitle>
+                    <IonTitle>Select Destination</IonTitle>
                     <IonButtons slot="end">
                         <IonButton id="move-modal-close" onClick={props.onDidDismiss}>
                             <IonIcon size="large" icon={close} slot="icon-only" />
@@ -162,7 +159,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
                 <IonToolbar>
                     <IonButtons className="m-2 gap-2" slot="end">
                         <IonButton onClick={props.onDidDismiss}>Cancel</IonButton>
-                        <IonButton onClick={() => handleMove()} color="primary" fill="solid">
+                        <IonButton id="move-modal-confirm" onClick={() => handleMove()} color="primary" fill="solid">
                             Move
                         </IonButton>
                     </IonButtons>
