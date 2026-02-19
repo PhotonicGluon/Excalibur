@@ -1,23 +1,18 @@
 import { useState } from "react";
 
-import { IonCol, IonGrid, IonIcon, IonLabel, IonList, IonRow } from "@ionic/react";
-import { arrowDown, arrowUp, sadOutline } from "ionicons/icons";
+import { IonCol, IonGrid, IonIcon, IonLabel, IonRow } from "@ionic/react";
+import { arrowDown, arrowUp } from "ionicons/icons";
 
-import { sortItems } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
-import { getParent } from "@lib/util";
 
-import DirectoryItem from "@components/explorer/DirectoryItem";
-
+import DirectoryListRaw from "./DirectoryListRaw";
 import { useExplorerContext } from "./context";
-
-export const NUM_PENDING_ITEMS = 5; // Number of "skeleton" items to show when directory is null
 
 interface ContainerProps {
     /** The ID of the directory list */
     id?: string;
     /**
-     * The directory to display.
+     * The directory's contents to display.
      *
      * If `null`, will interpret as pending content.
      */
@@ -32,40 +27,6 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     const explorerContext = useExplorerContext();
 
     // Render
-    const path = explorerContext.path;
-    const hasParent = path !== ".";
-
-    let MainBody: React.ReactNode;
-    if (props.directory === null) {
-        MainBody = Array.from({ length: NUM_PENDING_ITEMS }).map((_, idx) => (
-            <DirectoryItem
-                key={idx}
-                oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
-            ></DirectoryItem>
-        ));
-    } else if (props.directory.items && props.directory.items.length > 0) {
-        MainBody = sortItems(props.directory, sortAsc).map((item, idx) => (
-            <DirectoryItem
-                key={idx}
-                oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
-                name={item.name}
-                fullpath={item.fullpath}
-                type={item.type}
-                mimetype={item.type === "file" ? item.mimetype : undefined}
-                size={item.type === "file" ? item.size : undefined}
-            />
-        ));
-    } else {
-        MainBody = (
-            <div className="mt-4 flex justify-center">
-                <div className="flex flex-col items-center">
-                    <IonIcon icon={sadOutline} className="size-16 pb-1"></IonIcon>
-                    <IonLabel className="text-lg">No items</IonLabel>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div id={props.id}>
             {/* Sorting Buttons */}
@@ -81,17 +42,12 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
             </IonGrid>
 
             {/* Items List */}
-            <IonList lines="none" className="h-[calc(80vh-4rem)] overflow-y-auto rounded-lg bg-transparent pt-0">
-                {hasParent && (
-                    <DirectoryItem
-                        oddRow={true}
-                        name="(Go Back)"
-                        fullpath={getParent(path)}
-                        type="parent"
-                    ></DirectoryItem>
-                )}
-                {MainBody}
-            </IonList>
+            <DirectoryListRaw
+                className="h-[calc(80vh-4rem)]"
+                path={explorerContext.path}
+                directory={props.directory}
+                sortAsc={sortAsc}
+            />
         </div>
     );
 };

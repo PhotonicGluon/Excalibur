@@ -7,22 +7,17 @@ import {
     IonFooter,
     IonHeader,
     IonIcon,
-    IonLabel,
-    IonList,
     IonModal,
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
-import { close, sadOutline } from "ionicons/icons";
+import { close } from "ionicons/icons";
 
 import { listdir, moveItem } from "@lib/files/api";
-import { sortItems } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
-import { getParent } from "@lib/util";
 
 import { useAuth } from "@components/auth/context";
-import DirectoryItem from "@components/explorer/DirectoryItem";
-import { NUM_PENDING_ITEMS } from "@components/explorer/DirectoryList";
+import DirectoryListRaw from "@components/explorer/DirectoryListRaw";
 import { useExplorerContext } from "@components/explorer/context";
 
 interface MoveDialogProps {
@@ -41,14 +36,13 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
 
     // States
     const [destFolder, setDestFolder] = useState<string>(".");
-    const [destFolderContents, setDestFolderContents] = useState<Directory | null>();
+    const [destFolderContents, setDestFolderContents] = useState<Directory | null>(null);
 
     // Functions
     /**
      * Handles clicking on a folder.
      */
     function onClickFolder(fullpath: string) {
-        // TODO: Add animation
         setDestFolderContents(null);
         setDestFolder(fullpath);
     }
@@ -80,48 +74,12 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
         console.debug("Refreshing possible destination folder contents: " + destFolder);
         listdir(auth, destFolder).then((response) => {
             if (response.success) {
-                setDestFolderContents(response.directory);
+                setDestFolderContents(response.directory!);
             }
         });
     }, [auth, destFolder, props.isOpen]);
 
     // Render
-    const hasParent = destFolder !== ".";
-
-    let MainBody: React.ReactNode;
-    if (destFolderContents === null) {
-        MainBody = Array.from({ length: NUM_PENDING_ITEMS }).map((_, idx) => (
-            <DirectoryItem
-                key={idx}
-                oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
-            ></DirectoryItem>
-        ));
-    } else if (destFolderContents && destFolderContents.items && destFolderContents.items.length > 0) {
-        MainBody = sortItems(destFolderContents).map((item, idx) => (
-            <DirectoryItem
-                key={idx}
-                disabled={item.type === "file"}
-                oddRow={idx % 2 === (hasParent ? 1 : 0)} // Treat row 0 as the first odd row
-                name={item.name}
-                fullpath={item.fullpath}
-                type={item.type}
-                mimetype={item.type === "file" ? item.mimetype : undefined}
-                size={item.type === "file" ? item.size : undefined}
-                ellipsisMenuEnabled={false}
-                onClickItemOverride={onClickFolder}
-            />
-        ));
-    } else {
-        MainBody = (
-            <div className="mt-4 flex justify-center">
-                <div className="flex flex-col items-center">
-                    <IonIcon icon={sadOutline} className="size-16 pb-1"></IonIcon>
-                    <IonLabel className="text-lg">No items</IonLabel>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <IonModal
             className="min-h-172 [--height:80%] [--width:85vw]"
@@ -142,18 +100,16 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent className="flex h-172 flex-col">
-                <IonList lines="none" className="overflow-y-auto rounded-lg bg-transparent pt-0">
-                    {hasParent && (
-                        <DirectoryItem
-                            oddRow={true}
-                            name="(Go Back)"
-                            fullpath={getParent("./" + destFolder)}
-                            type="parent"
-                            onClickItemOverride={onClickFolder}
-                        ></DirectoryItem>
-                    )}
-                    {MainBody}
-                </IonList>
+                <DirectoryListRaw
+                    path={destFolder}
+                    directory={destFolderContents}
+                    onParentClickOverride={onClickFolder}
+                    directoryItemPropsOverride={(item) => ({
+                        disabled: item.type === "file",
+                        ellipsisMenuEnabled: false,
+                        onClickItemOverride: onClickFolder,
+                    })}
+                />
             </IonContent>
             <IonFooter>
                 <IonToolbar>

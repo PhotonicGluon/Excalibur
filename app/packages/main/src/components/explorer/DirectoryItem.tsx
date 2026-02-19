@@ -367,14 +367,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 </IonGrid>
             </div>
 
-            <IonButtons className="m-0 size-12 justify-end" slot="end">
-                {/* Ellipsis menu button */}
-                {!props.disabled && !isLoading && ellipsisMenuEnabled && (
+            {!props.disabled && !isLoading && ellipsisMenuEnabled && (
+                <IonButtons className="m-0 size-12 justify-end" slot="end">
+                    {/* Ellipsis menu button */}
                     <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
                         <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
                     </IonButton>
-                )}
-            </IonButtons>
+                </IonButtons>
+            )}
         </IonItem>
     );
 };

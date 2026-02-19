@@ -5,7 +5,8 @@ import { RowAlternatingColours } from "@lib/preferences/settings";
 
 import { settingsContext } from "@components/settings/context";
 
-import DirectoryList, { NUM_PENDING_ITEMS } from "./DirectoryList";
+import DirectoryList from "./DirectoryList";
+import { NUM_PENDING_ITEMS } from "./DirectoryListRaw";
 import { explorerContext } from "./context";
 
 const files: File[] = [];
