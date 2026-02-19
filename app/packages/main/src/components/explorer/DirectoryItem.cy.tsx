@@ -39,6 +39,7 @@ describe("<DirectoryItem />", () => {
                         iconStyle: "default",
                         rowAlternatingColours: "normal",
                         fileSizeUnits: "si",
+                        cryptoKeyStrength: 128,
                         cryptoChunkSize: 262144,
                         change: () => {},
                         save: () => Promise.resolve(),
@@ -102,6 +103,11 @@ describe("<DirectoryItem />", () => {
         cy.get("ion-skeleton-text").should("exist");
     });
 
+    it("renders when disabled", () => {
+        renderComponent({ disabled: true });
+        cy.get("#directory-item ion-label").should("have.attr", "color", "light");
+    });
+
     it("keeps the .exef extension if specified", () => {
         renderComponent({ keepExEF: true });
         cy.get("#directory-item ion-label").should("exist");
@@ -140,5 +146,12 @@ describe("<DirectoryItem />", () => {
         cy.get("#directory-item .button").click();
         cy.get(".item").contains("Delete").click();
         cy.wrap(deleteHook).should("have.been.called");
+    });
+
+    it("calls overridden click handler when provided", () => {
+        const clickHook = cy.stub();
+        renderComponent({ onClickItemOverride: clickHook });
+        cy.get("#directory-item ion-grid").click();
+        cy.wrap(clickHook).should("have.been.called");
     });
 });

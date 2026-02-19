@@ -59,6 +59,7 @@ describe("<DirectoryList />", () => {
                             iconStyle: "default",
                             rowAlternatingColours,
                             fileSizeUnits: "si",
+                            cryptoKeyStrength: 128,
                             cryptoChunkSize: 262144,
                             change: () => {},
                             save: () => Promise.resolve(),
