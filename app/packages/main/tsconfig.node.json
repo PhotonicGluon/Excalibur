@@ -3,7 +3,9 @@
         "composite": true,
         "module": "NodeNext",
         "moduleResolution": "nodenext",
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "allowImportingTsExtensions": true,
+        "emitDeclarationOnly": true
     },
-    "include": ["vite.config.ts"]
+    "include": ["vite.config.ts", "src/theme/sync-theme.ts"]
 }

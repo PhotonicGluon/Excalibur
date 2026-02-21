@@ -38,7 +38,7 @@ import ServerChoice from "@pages/ServerChoice";
 import Settings from "@pages/Settings";
 import Welcome from "@pages/Welcome";
 
-import "@theme/variables.css";
+import "@theme";
 
 // Set up app
 setupIonicReact();

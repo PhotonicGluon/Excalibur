@@ -7,6 +7,8 @@ import path from "path";
 import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+import { syncTheme } from "./src/theme/sync-theme.ts";
+
 /**
  * Get aliases from tsconfig.json. This is done by reading the paths section of the tsconfig.json
  * and replacing the '*' with the path resolved from the current working directory.
@@ -32,6 +34,7 @@ export const viteConfig = {
         legacy({}),
         tailwindcss(),
         nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
+        syncTheme(),
     ],
     resolve: {
         alias: getAliasesFromTSConfig(),

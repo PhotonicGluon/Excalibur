@@ -13,7 +13,7 @@ const config = {
         "^@native/(.*)$",
         "^(?:@components|@contexts)/(.*)$",
         "^@pages/(.*)$",
-        "^@theme/(.*)$",
+        "^@theme(/?.*)$",
         "^@assets/(.*)$",
         "^[./]",
     ],
