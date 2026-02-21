@@ -311,6 +311,6 @@
     --color-taupe-900: oklch(21.4% 0.009 43.1);
     --color-taupe-950: oklch(14.7% 0.004 49.3);
 
-    --color-black: #000;
-    --color-white: #fff;
+    --color-black: oklch(0% 0 0);
+    --color-white: oklch(100% 0 0);
 }
