@@ -1,4 +1,3 @@
-import { oklch2rgb } from "colorizr";
 import fs from "fs";
 import path from "path";
 import { PluginOption } from "vite";
@@ -6,6 +5,42 @@ import { PluginOption } from "vite";
 const COLOURS_CSS = "colours.css";
 const COLOURS_GEN_CSS = "colours.gen.css";
 const THEME_REFERENCE_CSS = "_theme_reference.css";
+
+/**
+ * Converts OKLCH color values to sRGB.
+ */
+function oklchToRGB(l: number, c: number, h: number): { r: number; g: number; b: number } {
+    // Convert OKLCH to OKLAB
+    const hRad = (h * Math.PI) / 180;
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+
+    // Convert OKLAB to LMS
+    const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+
+    const l_cube = l_ * l_ * l_;
+    const m_cube = m_ * m_ * m_;
+    const s_cube = s_ * s_ * s_;
+
+    // LMS to Linear sRGB
+    const rLin = +4.0767416621 * l_cube - 3.3077115913 * m_cube + 0.2309699292 * s_cube;
+    const gLin = -1.2684380046 * l_cube + 2.6097574011 * m_cube - 0.3413193965 * s_cube;
+    const bLin = -0.0041960863 * l_cube - 0.7034186147 * m_cube + 1.707614701 * s_cube;
+
+    // Linear sRGB to sRGB
+    const toSRGB = (val: number) => {
+        const clamped = Math.max(0, Math.min(1, val)); // Clamp to 0-1 to handle out-of-gamut
+        return clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+    };
+
+    return {
+        r: Math.round(toSRGB(rLin) * 255),
+        g: Math.round(toSRGB(gLin) * 255),
+        b: Math.round(toSRGB(bLin) * 255),
+    };
+}
 
 /**
  * Generates the Ionic theme CSS file from the Tailwind theme reference and colour map.
@@ -46,7 +81,7 @@ function generateTheme() {
         const tailwindVar = match.groups!.tailwind_var;
 
         const tailwindColour = themeReferenceMap[tailwindVar];
-        const rgb = oklch2rgb({ l: tailwindColour.l, c: tailwindColour.c, h: tailwindColour.h });
+        const rgb = oklchToRGB(tailwindColour.l, tailwindColour.c, tailwindColour.h);
         newLines.push(`    ${ionVar}-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`);
     }
 

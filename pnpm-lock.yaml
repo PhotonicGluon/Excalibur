@@ -163,9 +163,6 @@ importers:
       capacitor-blob-writer:
         specifier: ^1.1.20
         version: 1.1.20(@capacitor/core@8.1.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.1.0))
-      colorizr:
-        specifier: ^4.0.1
-        version: 4.0.1
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -2609,9 +2606,6 @@ packages:
 
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
-
-  colorizr@4.0.1:
-    resolution: {integrity: sha512-CBHSSK2PE+uPKGGufG0tqsjNrvhWnbkSyerALcZljF62CCw2KzW6nEEJOWWfy7uu3/+MOdGjMtBG6gtBo7t9QA==}
 
   colors@1.4.0:
     resolution: {integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==}
@@ -8703,8 +8697,6 @@ snapshots:
       color-string: 1.9.1
 
   colorette@2.0.20: {}
-
-  colorizr@4.0.1: {}
 
   colors@1.4.0:
     optional: true
