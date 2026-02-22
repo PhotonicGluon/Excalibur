@@ -35,10 +35,19 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     const explorerContext = useExplorerContext();
 
     // States
-    const [destFolder, setDestFolder] = useState<string>(".");
+    const [destFolder, setDestFolder] = useState<string>(explorerContext.path);
     const [destFolderContents, setDestFolderContents] = useState<Directory | null>(null);
 
     // Functions
+    /**
+     * Triggered when modal is about to be presented.
+     */
+    function onWillPresent() {
+        if (destFolder !== explorerContext.path) {
+            onClickFolder(explorerContext.path);
+        }
+    }
+
     /**
      * Handles clicking on a folder.
      */
@@ -69,15 +78,13 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
 
     // Effects
     useEffect(() => {
-        if (!props.isOpen) return;
-
         console.debug("Refreshing possible destination folder contents: " + destFolder);
         listdir(auth, destFolder).then((response) => {
             if (response.success) {
                 setDestFolderContents(response.directory!);
             }
         });
-    }, [auth, destFolder, props.isOpen]);
+    }, [auth, destFolder]);
 
     // Render
     return (
@@ -86,6 +93,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
             id="move-modal"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}
+            onWillPresent={onWillPresent}
             backdropDismiss={true}
             handle={false} // Hide drag handle for cleaner look
         >
