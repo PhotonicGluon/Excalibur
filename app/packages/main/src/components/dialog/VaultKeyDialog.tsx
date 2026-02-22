@@ -83,10 +83,12 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                         <summary className="ion-text-wrap" style={{ cursor: "pointer", userSelect: "none" }}>
                             Reveal vault key
                         </summary>
-                        <div className="ion-padding-start ion-padding-end mt-1 flex gap-1 *:leading-none">
-                            <p className="m-0 text-justify text-sm text-yellow-600 md:text-base">
-                                Consider saving a copy of the vault key, storing it in a secure location.
-                            </p>
+                        <div className="ion-padding-start ion-padding-end mt-1 flex gap-1">
+                            <IonText className="text-justify" color="warning">
+                                <p className="m-0 text-sm leading-none md:text-base">
+                                    Consider saving a copy of the vault key, storing it in a secure location.
+                                </p>
+                            </IonText>
                             <IonButton
                                 className="m-0 size-12"
                                 style={{ "--color": "none" }}

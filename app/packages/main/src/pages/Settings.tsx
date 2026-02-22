@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
-    IonCheckbox,
     IonCol,
     IonContent,
     IonGrid,
@@ -16,6 +15,7 @@ import {
     IonSelect,
     IonSelectOption,
     IonTitle,
+    IonToggle,
     IonToolbar,
     useIonAlert,
     useIonRouter,
@@ -329,7 +329,7 @@ const Settings: React.FC = () => {
                     <SettingsItem
                         label={<IonLabel>Check for Updates?</IonLabel>}
                         input={
-                            <IonCheckbox
+                            <IonToggle
                                 id="check-update"
                                 checked={settings.checkUpdate}
                                 onIonChange={(e) => {
@@ -339,7 +339,7 @@ const Settings: React.FC = () => {
                                     });
                                     setHasUnsavedChanges(true);
                                 }}
-                            ></IonCheckbox>
+                            ></IonToggle>
                         }
                     ></SettingsItem>
                     <SettingsItem

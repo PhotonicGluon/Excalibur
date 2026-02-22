@@ -388,7 +388,7 @@ const FileExplorer: React.FC = () => {
                                     isOpen={showJobsPopover}
                                     onDidDismiss={() => setShowJobsPopover(false)}
                                 >
-                                    <IonContent className="ion-padding rounded-lg">
+                                    <IonContent className="ion-padding">
                                         <JobsList />
                                     </IonContent>
                                 </IonPopover>

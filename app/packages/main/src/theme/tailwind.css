@@ -1,16 +1,3 @@
-@import url("./fonts.css");
-
-/* Ionic configuration */
-:root {
-    /* Set the font family of the entire app */
-    --ion-font-family: var(--font-sans);
-}
-
-ion-button::part(native) {
-    @apply py-4;
-}
-
-/* TailwindCSS configuration */
 @layer theme, base, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme) important;

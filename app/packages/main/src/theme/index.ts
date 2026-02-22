@@ -1,2 +1,3 @@
 import "@theme/colours.gen.css";
-import "@theme/variables.css";
+import "@theme/ionic.css";
+import "@theme/tailwind.css";

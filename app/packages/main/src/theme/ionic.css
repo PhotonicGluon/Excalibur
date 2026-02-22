@@ -1,0 +1,48 @@
+@import url("./fonts.css");
+@reference "./tailwind.css";
+
+:root {
+    --ion-font-family: var(--font-sans);
+}
+
+/* Components */
+ion-button::part(native) {
+    @apply rounded-full py-4;
+}
+
+ion-fab-button::part(native) {
+    @apply rounded-[25%];
+}
+
+ion-toggle {
+    @apply contain-none [--handle-height:calc(var(--spacing)*4)] [--handle-max-height:auto] [--handle-spacing:var(--spacing)] [--handle-width:calc(var(--spacing)*4)];
+}
+
+ion-toggle::part(track) {
+    @apply h-6 w-12 rounded-full border-2 border-(--ion-background-color-step-600) bg-(--ion-background-color-step-200);
+}
+
+ion-toggle::part(handle) {
+    @apply bg-(--ion-background-color-step-600) shadow-none;
+}
+
+ion-toggle.toggle-checked::part(track) {
+    @apply border-(--ion-color-primary) bg-(--ion-color-primary);
+}
+
+ion-toggle.toggle-checked::part(handle) {
+    @apply bg-(--color-white) [--handle-height:calc(var(--spacing)*5)] [--handle-spacing:calc(var(--spacing)*1.5)] [--handle-width:calc(var(--spacing)*5)];
+}
+
+/* Popups */
+ion-alert .alert-wrapper {
+    @apply rounded-xl!;
+}
+
+ion-modal {
+    @apply [--border-radius:var(--radius-xl)];
+}
+
+ion-popover::part(content) {
+    @apply rounded-xl!;
+}
