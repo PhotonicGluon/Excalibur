@@ -276,8 +276,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     // Render
-    const lighter = "[--background:#ffffff] dark:[--background:var(--ion-background-color)]";
-    const darker = "[--background:var(--ion-color-light)] dark:[--background:var(--ion-background-color-step-50)]";
+    const lighter = "[--background:var(--ion-background-color)]";
+    const darker =
+        "light:[--background:var(--ion-background-color-step-100)] dark:[--background:var(--ion-background-color-step-50)] ";
     let rowColourClass;
     switch (settings.rowAlternatingColours) {
         case "off":
