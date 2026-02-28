@@ -15,7 +15,7 @@ We need a way for the client to know when a folder has been updated so that it c
 Like with all operations, this request needs to be authenticated. Provide the following values _as query parameters_ in the WebSocket request:
 
 - `auth_token`: The JWT authentication token obtained during initial authentication with the server.
-- `hmac_validation`: The proof-of-possession (PoP) token computed according to the [WebSocket PoP token generation process](../03-authentication.md#proof-of-possession-pop).
+- `hmac_validation`: The proof-of-possession (PoP) token computed according to the [WebSocket PoP token generation process](../authentication.md#proof-of-possession-pop).
 
 There is an optional query parameter, `encrypted`, describing whether the WebSocket messages should be encrypted. It is recommended to _not_ set this to `false` (it is set to `true` by default).
 
@@ -27,7 +27,7 @@ Once connected, the client should listen for any messages from the server. A mes
 - If the subfolder `sub/sub2` was updated, the message `sub/sub2` will be sent to the user.
 - If the root folder was updated, the message `.` will be sent to the user.
 
-If `encrypted` is `true`, messages will be sent in the Excalibur Encryption Format (ExEF). Do remember to decrypt the messages using the [SRP master key](../03-authentication.md).
+If `encrypted` is `true`, messages will be sent in the Excalibur Encryption Format (ExEF). Do remember to decrypt the messages using the [SRP master key](../authentication.md).
 
 :::note
 
