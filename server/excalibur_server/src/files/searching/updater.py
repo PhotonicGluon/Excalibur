@@ -15,6 +15,8 @@ from watchdog.observers import Observer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.searching.index import file_index
 
+gEventHandler = None
+
 
 class IndexUpdater(FileSystemEventHandler):
     def on_created(self, event: DirCreatedEvent | FileCreatedEvent):
@@ -49,7 +51,11 @@ def build_file_index():
         for file in files:
             file_index.add(Path(root) / file)
 
-    event_handler = IndexUpdater()
+    global gEventHandler
+    if gEventHandler is not None:
+        return
+
+    gEventHandler = IndexUpdater()
     observer = Observer()
-    observer.schedule(event_handler, CONFIG.storage.vault_folder, recursive=True)
+    observer.schedule(gEventHandler, CONFIG.storage.vault_folder, recursive=True)
     observer.start()

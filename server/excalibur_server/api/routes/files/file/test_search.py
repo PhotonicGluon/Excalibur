@@ -10,7 +10,7 @@ from excalibur_server.api.app import app
 from excalibur_server.src.exef import ExEF
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="module")
 def search_folder(test_user_vault_folder: Path):
     s_folder = test_user_vault_folder / "search-folder"
     s_folder.mkdir()
