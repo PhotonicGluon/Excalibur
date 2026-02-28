@@ -1,18 +1,17 @@
-# Authentication
+# Logging In
 
-Before allowing any user access to the files of a user on the server, they have to be authenticated.
+Before allowing any user access to the files of a user on the server, they have to be logged in.
 
 ## Process
 
-To communicate with an Excalibur server, the following steps should be performed.
+To log in and communicate with an Excalibur server, the following steps should be performed.
 
 0. Check if server is alive.
 1. Check version compatibility.
 2. Check if the requested user is registered on the server.
     1. If not, get the SRP group size.
     2. Then add the user on the server.
-3. Authenticate.
-    - The description of the authentication protocol can be found [here](../authentication.md).
+3. Authenticate using the [aforementioned authentication protocol](authentication.md).
     - The result of this should be a JSON Web Token (JWT) containing a **communication UUID**.
 4. Get user's encrypted vault key.
     - This request _needs to be authenticated_ with the JWT and a Proof-of-Possession (PoP). Again, more details on the authentication protocol can be found at the link above.
