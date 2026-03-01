@@ -1,0 +1,49 @@
+# Encrypted Requests and Responses
+
+Data security is of utmost importance to Excalibur. As such, certain sensitive endpoints will accept and return encrypted data.
+
+In general, any endpoint that is marked as "encrypted" within the API documentation (available at `/api/docs`) will return an encrypted response and accept encrypted parameters.
+
+## Encrypted Requests
+
+Some endpoints accept encrypted data.
+
+### Path Parameters
+
+In general, path parameters for file-related endpoints can be (and should be) encrypted. These requests' path parameters **must**:
+
+- be encrypted using [the ExEF specification](../exef.md);
+- be converted to [URL-safe Base64 encoding](https://developer.mozilla.org/en-US/docs/Glossary/Base64#url_and_filename_safe_base64); and
+- have the `X-Encrypted` header present and set to `true`.
+
+Take for example the `/api/files/list/{path}` endpoint. If you want to send an encrypted `path` argument, you should first encrypt the path and convert it to URL-safe Base64, for example:
+
+```
+RXhFRgMBMDEyMzQ1Njc4OWFiN9InY1nhSxjAdpLYWJkAAAAAAAAAAef1DJBNTxYeCGto9-DcT00R
+```
+
+This value would then be used as the path parameter, i.e.
+
+```
+/api/files/list/RXhFRgMBMDEyMzQ1Njc4OWFiN9InY1nhSxjAdpLYWJkAAAAAAAAAAef1DJBNTxYeCGto9-DcT00R
+```
+
+Remember to specify the `X-Encrypted` header as `true`.
+
+### Request Bodies
+
+Some endpoints accept encrypted request bodies. These requests' request bodies **must**:
+
+- be encrypted using [the ExEF specification](../exef.md);
+- have the `X-Encrypted` header present and set to `true`;
+- have the `Content-Type` header set to `application/octet-stream`; and
+- have the `X-Content-Type` header set to the original content type of the request body.
+
+## Encrypted Responses
+
+Any endpoint that is marked as "encrypted" within the API documentation (available at `/api/docs`) will return an encrypted response. The response will:
+
+- specify the `X-Encrypted` header as `true`; and
+- specify the `Content-Type` header as `application/octet-stream`.
+
+The original format of the response can be identified by reading the specification for that endpoint (as given in the API documentation).
