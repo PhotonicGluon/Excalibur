@@ -40,7 +40,10 @@ describe("New User Page", () => {
             .each(($el, index) => {
                 const el = cy.wrap($el);
                 el.type(ack[index]);
-                el.blur();
+                if (index === ack.length - 1) {
+                    // Only need to blur on last one to update the internal state of the component
+                    el.blur();
+                }
             });
 
         cy.contains("ion-button", "Confirm").click();
@@ -53,11 +56,6 @@ describe("New User Page", () => {
         cy.url().should("include", "/login");
 
         // Now try to log in again
-        cy.get("#username-input").find("input").type(username);
-        cy.get("#password-input").find("input").type("Password123");
-        cy.get("#login-button").click();
-
-        // Ensure login successful
-        cy.url().should("include", "/files");
+        cy.login(SERVER_URL, username, "Password123"); // This checks if login was successful too
     });
 });

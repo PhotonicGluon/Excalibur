@@ -28,6 +28,8 @@ export function createFolder() {
     cy.get(".alert-button-group").contains("Create").click();
     cy.get(".alert-head").should("not.exist");
 
+    cy.pullRefresh();
+
     // Folder should have been created
     cy.get(".h-16 > ion-grid.md").should("exist");
     cy.get(".h-16 > ion-grid.md").should("contain.text", folderName);
@@ -53,11 +55,13 @@ export function createFile(n: number | number[], dropOnly?: boolean): string[] {
         fileContents.push(fileContent);
         selectFileList.push({ contents: fileContent, fileName: fileName });
     }
-    cy.get("#files-area").selectFile(selectFileList, { action: "drag-drop" });
+    cy.get("#files-area").selectFile(selectFileList, { action: "drag-drop" }).wait(100);
 
     if (dropOnly) {
         return fileNames;
     }
+
+    cy.pullRefresh();
 
     // File(s) should have been uploaded
     const fileElements = [];

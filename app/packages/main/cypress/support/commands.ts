@@ -63,11 +63,28 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
     );
 });
 
+Cypress.Commands.add("pullRefresh", () => {
+    cy.get("ion-refresher").then(($refresher) => {
+        // Manually dispatch the event that IonRefresher listens for
+        const event = new CustomEvent("ionRefresh", {
+            bubbles: true,
+            cancelable: true,
+            detail: {
+                complete: () => {
+                    $refresher[0].complete();
+                },
+            },
+        });
+        $refresher[0].dispatchEvent(event);
+    });
+});
+
 declare global {
     namespace Cypress {
         interface Chainable {
             onboard(serverURL: string): Chainable<void>;
             login(serverURL: string, username: string, password: string): Chainable<void>;
+            pullRefresh(): Chainable<void>;
         }
     }
 }
