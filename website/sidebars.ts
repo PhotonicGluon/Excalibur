@@ -43,8 +43,9 @@ const sidebars: SidebarsConfig = {
                     "Any Excalibur server exposes a common API for clients to connect to. This documentation will guide you through interacting with the server API.",
             },
             items: [
-                "reference/server-api/authentication",
                 "reference/server-api/logging-in",
+                "reference/server-api/authentication",
+                "reference/server-api/encrypted-requests-and-responses",
                 "reference/server-api/files",
             ],
         },
