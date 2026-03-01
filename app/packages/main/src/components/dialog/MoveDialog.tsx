@@ -40,11 +40,26 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
 
     // Functions
     /**
+     * Refreshes the contents of the destination folder.
+     */
+    function refreshDestFolderContents() {
+        console.debug("Refreshing destination folder contents: " + destFolder);
+        listdir(auth, destFolder).then((response) => {
+            if (response.success) {
+                setDestFolderContents(response.directory!);
+            }
+        });
+    }
+
+    /**
      * Triggered when modal is about to be presented.
      */
     function onWillPresent() {
         if (destFolder !== explorerContext.path) {
             onClickFolder(explorerContext.path);
+        } else {
+            // We still need to refresh the contents of the current folder
+            refreshDestFolderContents();
         }
     }
 
@@ -77,14 +92,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     }
 
     // Effects
-    useEffect(() => {
-        console.debug("Refreshing possible destination folder contents: " + destFolder);
-        listdir(auth, destFolder).then((response) => {
-            if (response.success) {
-                setDestFolderContents(response.directory!);
-            }
-        });
-    }, [auth, destFolder]);
+    useEffect(refreshDestFolderContents, [auth, destFolder]);
 
     // Render
     return (
