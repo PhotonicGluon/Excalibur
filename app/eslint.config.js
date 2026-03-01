@@ -2,11 +2,12 @@ import js from "@eslint/js";
 import chaiFriendly from "eslint-plugin-chai-friendly";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
-    { ignores: ["dist", "out", "packages/main/cypress.config.ts", "packages/android"] },
+export default defineConfig(
+    { ignores: ["**/dist", "**/out", "packages/main/cypress.config.ts", "packages/android"] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ["**/*.{ts,tsx}"],
