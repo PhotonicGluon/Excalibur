@@ -9,6 +9,10 @@
     - [Android](#android)
       - [Android Studio](#android-studio)
     - [Electron](#electron)
+  - [Testing](#testing)
+    - [Unit Tests](#unit-tests)
+    - [Component Tests](#component-tests)
+    - [End-to-End Tests](#end-to-end-tests)
   - [Building](#building)
     - [PWA](#pwa-1)
     - [Android](#android-1)
@@ -17,6 +21,7 @@
 - [Server](#server)
   - [Setup](#setup-1)
   - [Running the API Server](#running-the-api-server)
+  - [Testing](#testing-1)
   - [Linting](#linting)
 - [General](#general)
   - [Generating Changelog](#generating-changelog)
@@ -146,6 +151,46 @@ To preview the Electron app in production mode, run
 pnpm run preview
 ```
 
+### Testing
+
+The app has several test suites that should be run.
+
+#### Unit Tests
+
+These will test some core operations of the application without needing to spawn a graphical interface.
+
+Within the `app/packages/main` directory, run
+
+```bash
+pnpm run test:unit
+```
+
+#### Component Tests
+
+These test the application's components in isolation. We use Cypress to handle these component tests.
+
+Within the `app/packages/main` directory, run
+
+```bash
+pnpm run test:component
+```
+
+#### End-to-End Tests
+
+These test the application's functionality in a more realistic environment, but still without needing to spawn a graphical interface. This will also interact with the Excalibur Server API.
+
+Within the root directory, run
+
+```bash
+pnpm run test:e2e
+```
+
+If you want to interact with the Cypress interface while running these tests, you can run
+
+```bash
+pnpm run cy:e2e
+```
+
 ### Building
 
 #### PWA
@@ -218,6 +263,20 @@ uv version
 ### Running the API Server
 
 See the [usage section](#usage) above, but append `uv run` before every command.
+
+### Testing
+
+Testing is done using `pytest`. While in the `server` directory, run
+
+```bash
+uv run excalibur test
+```
+
+If you want to test a specific test file, run
+
+```bash
+uv run excalibur test [TEST_FILE]
+```
 
 ### Linting
 
