@@ -115,7 +115,7 @@ const BIP39WordInput = forwardRef<HTMLIonSearchbarElement, ContainerProps>((prop
         <div className="relative">
             <IonSearchbar
                 ref={ref}
-                className="font-mono [&_.searchbar-search-icon]:hidden [&_input]:pr-8 [&_input]:pl-4"
+                className="font-mono [--border-radius:var(--spacing)] [&_.searchbar-search-icon]:hidden [&_input]:pr-8 [&_input]:pl-4"
                 value={searchText}
                 placeholder={props.placeholder}
                 onIonInput={handleInputChange}

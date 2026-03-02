@@ -332,16 +332,17 @@ const Login: React.FC = () => {
                             <hr className="mt-4 mb-2 h-px w-full bg-neutral-200 dark:bg-neutral-700"></hr>
                             <IonText className="mt-2 text-center">
                                 No account?{" "}
-                                <span
+                                <IonText
                                     id="new-user-link"
-                                    className="text-blue-400 underline transition-all duration-100 hover:cursor-pointer hover:text-blue-500"
+                                    className="underline transition-all duration-100 hover:cursor-pointer hover:text-blue-500 dark:hover:text-blue-600"
+                                    color="primary"
                                     onClick={(event) => {
                                         event.preventDefault();
                                         router.push("/new-user", "forward", "push");
                                     }}
                                 >
                                     Sign Up
-                                </span>
+                                </IonText>
                             </IonText>
                         </div>
                     </div>

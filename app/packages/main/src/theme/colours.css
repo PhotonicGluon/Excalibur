@@ -2,9 +2,9 @@
 :root {
     /* Application colours */
     --ion-background-color: var(--color-gray-50);
-    --ion-background-color-step-50: color-mix(in srgb, var(--color-gray-50) 50%, var(--color-gray-100) 50%);
-    --ion-background-color-step-100: var(--color-gray-100);
-    --ion-background-color-step-150: color-mix(in srgb, var(--color-gray-100) 50%, var(--color-gray-200) 50%);
+    --ion-background-color-step-50: var(--color-gray-100);
+    --ion-background-color-step-100: color-mix(in srgb, var(--color-gray-100) 50%, var(--color-gray-200) 50%);
+    --ion-background-color-step-150: color-mix(in srgb, var(--color-gray-100) 25%, var(--color-gray-200) 75%);
     --ion-background-color-step-200: var(--color-gray-200);
     --ion-background-color-step-250: color-mix(in srgb, var(--color-gray-200) 50%, var(--color-gray-300) 50%);
     --ion-background-color-step-300: var(--color-gray-300);

@@ -34,6 +34,10 @@ ion-toggle.toggle-checked::part(handle) {
     @apply bg-(--color-white) [--handle-height:calc(var(--spacing)*5)] [--handle-spacing:calc(var(--spacing)*1.5)] [--handle-width:calc(var(--spacing)*5)];
 }
 
+ion-searchbar.md {
+    @apply [--background:var(--ion-background-color-step-50)] [--border-radius:calc(infinity*1px)] [--box-shadow:none];
+}
+
 /* Popups */
 ion-alert .alert-wrapper {
     @apply rounded-xl!;
