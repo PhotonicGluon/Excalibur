@@ -9,6 +9,8 @@ import {
     IonList,
     IonModal,
     IonSearchbar,
+    IonSpinner,
+    IonText,
     IonToolbar,
 } from "@ionic/react";
 import { close } from "ionicons/icons";
@@ -36,7 +38,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
 
     // States
     const [searchText, setSearchText] = useState("");
-    const [searchResults, setSearchResults] = useState<{ file: File; similarity: number }[]>([]);
+    const [searchResults, setSearchResults] = useState<{ file: File; similarity: number }[] | null>([]);
 
     // Functions
     /**
@@ -57,6 +59,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
         }
 
         // Search for files
+        setSearchResults(null);
         const searchResponse = await searchFiles(auth, query, SEARCH_LIMIT, SIMILARITY_THRESHOLD);
         if (!searchResponse.success) {
             console.error(searchResponse.error);
@@ -95,21 +98,31 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                 </IonHeader>
 
                 {/* Items List */}
-                <IonList lines="none" className="overflow-y-auto rounded-lg bg-transparent pt-0">
-                    {searchResults.map(({ file, similarity: _similarity }, idx) => {
-                        return (
-                            <DirectoryItem
-                                key={idx}
-                                ellipsisMenuEnabled={false}
-                                oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
-                                name={file.name}
-                                fullpath={file.fullpath}
-                                type={file.type}
-                                mimetype={file.type === "file" ? file.mimetype : undefined}
-                                size={file.type === "file" ? file.size : undefined}
-                            />
-                        );
-                    })}
+                <IonList lines="none" className="overflow-y-auto rounded-lg bg-transparent">
+                    {!searchResults && (
+                        <div className="flex h-16 items-center pt-4">
+                            <IonSpinner className="mx-auto h-12 w-12" name="circular"></IonSpinner>
+                        </div>
+                    )}
+                    {searchResults && searchResults.length === 0 && (
+                        <IonText className="block w-full pt-4 text-center">No results</IonText>
+                    )}
+                    {searchResults &&
+                        searchResults.length > 0 &&
+                        searchResults.map(({ file, similarity: _similarity }, idx) => {
+                            return (
+                                <DirectoryItem
+                                    key={idx}
+                                    ellipsisMenuEnabled={false}
+                                    oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
+                                    name={file.name}
+                                    fullpath={file.fullpath}
+                                    type={file.type}
+                                    mimetype={file.type === "file" ? file.mimetype : undefined}
+                                    size={file.type === "file" ? file.size : undefined}
+                                />
+                            );
+                        })}
                 </IonList>
             </IonContent>
         </IonModal>
