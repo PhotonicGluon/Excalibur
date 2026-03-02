@@ -53,7 +53,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     const localVaultKeyMnemonic = localVaultKey ? toMnemonic(localVaultKey) : undefined;
     return (
         <IonModal
-            className="min-h-172 [--height:55%] [--width:min(22rem,85vw)]"
+            className="min-h-172 [--height:55%] [--width:min(24rem,90vw)]"
             id="vault-key-modal"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}

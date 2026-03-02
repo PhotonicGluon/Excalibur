@@ -97,7 +97,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     // Render
     return (
         <IonModal
-            className="min-h-172 [--height:80%] [--width:85vw]"
+            className="min-h-172 [--height:80%] [--width:90vw]"
             id="move-modal"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}
