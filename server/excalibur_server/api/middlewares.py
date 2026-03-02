@@ -33,9 +33,10 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
         )
 
     # Add artificial delay
-    if get_artificial_delay() != (0, 0):
-        logger.warning(f"Artificial delay enabled (in {get_artificial_delay[0]} ms, out {get_artificial_delay[1]} ms).")
-        app.add_middleware(DelayMiddleware, delay_in=get_artificial_delay[0], delay_out=get_artificial_delay[1])
+    artificial_delay = get_artificial_delay()
+    if artificial_delay != (0, 0):
+        logger.warning(f"Artificial delay enabled (in {artificial_delay[0]} ms, out {artificial_delay[1]} ms).")
+        app.add_middleware(DelayMiddleware, delay_in=artificial_delay[0], delay_out=artificial_delay[1])
 
     # Encrypt responses for specific routes
     from excalibur_server.src.middleware.crypto.middleware import RouteEncryptionMiddleware
