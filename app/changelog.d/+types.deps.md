@@ -1,4 +1,4 @@
 Updated type dependencies:
 
-- `@types/node` from `25.0.6` to `25.2.3`
+- `@types/node` from `25.0.6` to `25.3.3`
 - `@types/react` from `19.2.8` to `19.2.14`

@@ -4,26 +4,26 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.5.0a12"
+version = "0.5.0b1"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",
     "duckdb~=1.4.4",
     "duckdb-engine>=0.17.0",
-    "fastapi>=0.129.0",
+    "fastapi>=0.135.1",
     "gitpython>=3.1.46",
     "packaging>=25.0",
     "pycryptodome>=3.23.0",
     "pydantic>=2.12.5",
-    "pydantic-settings>=2.13.0",
+    "pydantic-settings>=2.13.1",
     "pyjwt>=2.11.0",
     "rapidfuzz>=3.14.3",
     "semver>=3.0.4",
-    "sqlalchemy>=2.0.46",
-    "sqlmodel>=0.0.34",
+    "sqlalchemy>=2.0.47",
+    "sqlmodel>=0.0.37",
     "toml>=0.10.2",
     "tomlkit>=0.14.0",
-    "typer>=0.24.0",
+    "typer>=0.24.1",
     "uvicorn[standard]>=0.41.0",
     "watchdog>=6.0.0",
     "websockets>=16.0",
@@ -44,7 +44,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython>=9.10.0", "pytest-timeout>=2.4.0", "ruff>=0.15.1"]
+dev = ["ipython>=9.10.0", "pytest-timeout>=2.4.0", "ruff>=0.15.4"]
 test = ["httpx>=0.28.1", "pytest>=9.0.2"]
 
 [tool.uv]
