@@ -327,7 +327,7 @@ See [Towncrier for monorepos](https://towncrier.readthedocs.io/en/stable/monorep
 
 ### Testing GitHub Actions Locally
 
-We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions locally.
+We use [nektos' `act` version 0.2.84](https://github.com/nektar/act) to test GitHub Actions locally.
 
 > [!WARNING]
 >
@@ -347,15 +347,6 @@ We use [nektos' `act`](https://github.com/nektar/act) to test GitHub Actions loc
 > [!TIP]
 >
 > - To specify the workflow(s) to run, use the `--workflows` flag (e.g., `--workflows ./.github/workflows/test.yml`)
-> - If you want to speed up running act and using cached actions and container images you can enable offline mode by specifying the `--action-offline-mode` flag.
-> - Consider setting up an [`act` cache server](https://github.com/sp-ricard-valverde/github-act-cache-server/tree/main) to cache package downloads and to speed up the server.
->   1. Run `git clone https://github.com/sp-ricard-valverde/github-act-cache-server.git` within this root directory.
->   2. Set the `ACT_CACHE_AUTH_KEY` to `foo`.
->      - Windows:
->        - Powershell: `$env:ACT_CACHE_AUTH_KEY="foo"`
->        - Command Prompt: `set ACT_CACHE_AUTH_KEY="foo"`
->      - Unix: `export ACT_CACHE_AUTH_KEY="foo"`
->   3. While in `github-act-cache-server`, run `docker compose up --build -d`.
 > - If you are encountering `EACCES: permission denied` errors, try [removing the `act-toolcache` volume](https://github.com/nektos/act/issues/2374#issuecomment-2859056727).
 
 #### Running `test.yml`
@@ -383,9 +374,10 @@ ANDROID_SIGNING_KEY_BASE64="Base64 string of the FULL Android Key Store file's c
 ANDROID_SIGNING_KEY_STORE_PASSWORD="Password of the Android Key Store file"
 ANDROID_SIGNING_KEY_ALIAS="Alias of the key"
 ANDROID_SIGNING_KEY_PASSWORD="Password of the key"
+GITHUB_TOKEN="GitHub fine-grained token which has 'Read and Write access to code and workflows'"
 ```
 
-Now, create an `event.json` file in the `.github` folder with the following content:
+Now, create an `event.json` file in the `.github` folder with the following contents:
 
 ```json
 {
@@ -398,7 +390,7 @@ Now, create an `event.json` file in the `.github` folder with the following cont
 We can now run the workflow:
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json
 ```
 
 ##### Running Electron Builds
@@ -417,17 +409,17 @@ Now, you might want to test each platform's building process for the application
 - Windows
 
 ```bash
-act -P windows-latest=-self-hosted --matrix os:windows-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+act -P windows-latest=-self-hosted --matrix os:windows-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json -j build-app-electron
 ```
 
 - macOS
 
 ```bash
-act -P macos-latest=-self-hosted --matrix os:macos-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+act -P macos-latest=-self-hosted --matrix os:macos-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json -j build-app-electron
 ```
 
 - Linux
 
 ```bash
-act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --matrix os:ubuntu-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json --artifact-server-path ./dist -j build-app-electron
+act -P ubuntu-latest=catthehacker/ubuntu:full-latest@sha256:25231ac9a541d4b1ff7d5957e25596465ce0c1bdc0da7927d870163c4375a4a5 --matrix os:ubuntu-latest --workflows ./.github/workflows/release-builds.yml --secret-file ./.secrets -e ./.github/event.json -j build-app-electron
 ```
