@@ -104,7 +104,7 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list").should("exist");
 
         cy.get("#directory-list ion-list").should("exist");
-        cy.get("#directory-list ion-list").should("contain.text", "No items");
+        cy.get("#directory-list ion-label").should("contain.text", "No items");
     });
 
     it("renders correctly if has parent directory", () => {
