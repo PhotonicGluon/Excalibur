@@ -1,10 +1,10 @@
 [build-system]
-requires = ["uv_build>=0.9.30,<0.10.0"]
+requires = ["uv_build>=0.10.9,<0.11.0"]
 build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.5.0b2"
+version = "0.6.0a1"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",

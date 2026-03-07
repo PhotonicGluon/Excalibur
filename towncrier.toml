@@ -10,6 +10,11 @@ title_format = "## [{version}](https://github.com/PhotonicGluon/Excalibur/tree/{
 issue_format = "[#{issue}](https://github.com/PhotonicGluon/Excalibur/issues/{issue})"
 
 [[tool.towncrier.type]]
+directory = "breaking"
+name = "💥 Breaking Changes"
+showcontent = true
+
+[[tool.towncrier.type]]
 directory = "security"
 name = "🔒 Security"
 showcontent = true
