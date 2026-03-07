@@ -110,7 +110,7 @@ export function useUploadFile() {
                     blob = await processor.processStream(
                         // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                         Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
-                        auth.vaultKey!,
+                        auth.vaultKey!, // FIXME: Sometimes, in Cypress, this is undefined
                         auth.authInfo!.key!,
                         rawFileSize,
                         settings.cryptoKeyStrength,

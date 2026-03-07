@@ -74,6 +74,7 @@ describe("CRUD operations", () => {
         it("should handle simple moving", () => {
             // Clicking on move button should bring up move dialog
             cy.get(`div[data-name='${fileName}']`).scrollIntoView(); // Make sure its visible
+            cy.wait(100); // Make sure scroll completes
             cy.get(`div[data-name='${fileName}']`).rightclick();
             cy.get(".item").contains("Move").click();
             cy.get("#move-modal ion-title").should("have.text", "Select Destination");
@@ -98,6 +99,7 @@ describe("CRUD operations", () => {
 
             // Clicking on move button should bring up move dialog
             cy.get(`div[data-name='${fileName}']`).scrollIntoView(); // Make sure its visible
+            cy.wait(100); // Make sure scroll completes
             cy.get(`div[data-name='${fileName}']`).rightclick();
             cy.get(".item").contains("Move").click();
 
