@@ -97,7 +97,7 @@ const FileExplorer: React.FC = () => {
 
     // States
     const [presentAlert, dismissAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
+    const [presentToast, dismissToast] = useIonToast();
 
     const jobsPopover = useRef<HTMLIonPopoverElement>(null);
     const [showJobsPopover, setShowJobsPopover] = useState(false);
@@ -118,7 +118,8 @@ const FileExplorer: React.FC = () => {
      * @param colour The colour of the toast
      */
     const presentSnackbar = useCallback(
-        (message: string, colour: Color = "primary") => {
+        async (message: string, colour: Color = "primary") => {
+            await dismissToast().catch(() => {}); // Safely handle cases where no toast is active
             presentToast({
                 message: message,
                 duration: 2000,
@@ -128,7 +129,7 @@ const FileExplorer: React.FC = () => {
                 cssClass: "[--max-width:min(var(--spacing)*128,calc(100%-var(--spacing)*32))]",
             });
         },
-        [presentToast],
+        [presentToast, dismissToast],
     );
 
     // Hooks
