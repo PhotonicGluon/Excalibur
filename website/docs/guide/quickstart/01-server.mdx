@@ -60,9 +60,11 @@ This will print the ACK mnemonic to the console.
 ### Configuration
 
 The configuration file is a TOML file named `config.toml` in the `excalibur-files` folder. There are a few key values that you might want to edit:
-- **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `20` and `1` respectively.
+
+- **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `250` and `25` respectively.
 - **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
-- **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`. 
+- **`security.key_strength`**: The size of the keys used for cryptographic operations, in bits. The default value of `128` bits should be both secure and performant, but if you prefer a higher security, you can set it to `192` or `256`.
+- **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`.
 
 ## Starting the Server
 

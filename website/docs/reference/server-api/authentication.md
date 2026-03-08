@@ -67,6 +67,8 @@ Here are two examples of messages:
 
 ### Specification
 
+The specification of how the authentication process works is very technical and is described below.
+
 <details>
 <summary>Authentication Process Specification</summary>
 
@@ -80,7 +82,7 @@ Let
 
 :::danger
 
-$x$ and $v$ should be treated as secrets. The server should **never** gain access to $x$, and no one other than the server and client should gain access to $v$.
+$x$ and $v$ should be treated as secrets. The server should **never** have access to $x$, and no one other than the server and client should have access to $v$.
 
 :::
 
@@ -88,37 +90,39 @@ The initial authentication process is as follows:
 
 1. Client sends its username to the server.
 2. Server checks whether it has a record of the requested username.
-    - Username not found: sends message with status `ERR` and data `User does not exist`. Terminate connection.
-3. Server sends message with status `OK` and the SRP group size as an ASCII string (e.g., `1024`).
-4. Server generates its ephemeral values (private value $b$ and public value $B = (kv + g^b) \mod N$) and sends the public value $B$ to the client (setting `binary = true`).
-5. Client checks received $B$.
-    - If $B$ is invalid (e.g., $B \mod N = 0$), sends message with status `ERR` (data can be anything). Can choose to terminate, or wait for server to try another $B$.
-6. Client generates its ephemeral values (private value $a$ and public value $A = g^a \mod N$) and sends the public value $A$ to the server (setting `binary = true`) with status `OK`.
+    - If username is not found, server sends message with status `ERR` and data `User does not exist`. Terminate connection.
+3. Server sends message with status `OK` and the SRP group size (in bits) as an ASCII string (e.g., `1024`).
+4. Server generates its ephemeral values (private value $b$ and public value $B = (kv + g^b) \mod N$) and sends the public value $B$ to the client (specifying `binary = true`).
+5. Client checks the received $B$.
+    - If $B$ is invalid (e.g., $B \mod N = 0$), client sends message with status `ERR` (data can be anything). Client can choose to terminate the connection, or wait for server to try another $B$.
+6. Client generates its ephemeral values (private value $a$ and public value $A = g^a \mod N$) and sends the public value $A$ to the server (specifying `binary = true`) with status `OK`.
 7. Server checks received $A$.
-    - If $A$ is invalid (e.g., $A \mod N = 0$), sends message with status `ERR` (data can be anything). Can choose to terminate, or wait for client to try another $A$.
-8. Both client and server computes $u = \texttt{SHA1}(A || B)$ where $||$ refers to concatenation. Note that $A$ and $B$ have been padded to SRP group size bits using zero padding.
-    - If server detects $u \equiv 0 \pmod N$, sends message with status `ERR` and data `Shared U value is 0`. Terminate connection.
-    - If client detects $u \equiv 0 \pmod N$, can just choose to close connection.
+    - If $A$ is invalid (e.g., $A \mod N = 0$), sends message with status `ERR` (data can be anything). Server can choose to terminate the connection, or wait for client to try another $A$.
+8. Both client and server computes $u = \texttt{SHA1}(A || B)$ where $||$ refers to concatenation. Note that $A$ and $B$ have been padded to SRP group size bits using zero padding on the left.
+    - If server detects $u \equiv 0 \pmod N$, it sends message with status `ERR` and data `Shared U value is 0` and then terminates the connection.
+    - If client detects $u \equiv 0 \pmod N$, it can just choose to close the connection.
 9. Server sends message with status `OK` and data `U is OK`.
-10. Client and server each computes their premaster:
-    - Client: $\texttt{preK} = (B - kg^x)^{a + ux} \mod N$
-    - Server: $\texttt{preK} = (Av^u)^b \mod N$
+10. Client and server each computes their premaster value:
+    - Client: $\texttt{pre}K = (B - kg^x)^{a + ux} \mod N$
+    - Server: $\texttt{pre}K = (Av^u)^b \mod N$
 
     The master $K$ is computed by computing SHA3-256 of the premaster, padded to the SRP group size bits using zero padding.
 
-11. Client computes $M_1 = H((H(N) \oplus H(g)) \; || \; \texttt{username} \; || \; \texttt{salt} \; || \; A \; || \; B \; || \; K_{\texttt{client}})$, where $\oplus$ means XOR and $H$ is SHA3-256. Client sends $M_1$ to the server (setting `binary = true`) with status `OK`.
-12. Server computes its own $M_1$ value using the same formula (using $K_{\texttt{server}}$ in place of $K_{\texttt{client}}$), and checks with the received $M_1$.
-    - If they do not match, sends message with status `ERR` and data `M1 values do not match`. Terminate connection.
-13. Server computes $M_2 = H(A \; || \; M_1 \; || \; K_{\texttt{server}})$ and sends it to the client (setting `binary = true`) with status `OK`.
-14. Client computes its own $M_2$ value using the same formula (using $K_{\texttt{client}}$ in place of $K_{\texttt{server}}$), and checks with the received $M_2$.
-    - If they do not match, terminate connection.
-15. Client sends message with status `OK` with no data.
-16. Server prepares [authentication token](#authentication-token) in the form of a JWT. Encrypts it with shared master key $K$ using AES-GCM-256.
-17. Server sends message with no status and JSON data containing three fields: `nonce`, `token`, and `tag`.
-    - `nonce`: A random value, as a Base64 encoded byte array.
-    - `token`: The encrypted JWT, as a Base64 encoded byte array.
-    - `tag`: The authentication tag, as a Base64 encoded byte array.
-18. Both sides close connection.
+11. Client computes $M_1 = H((H(N) \oplus H(g)) \; || \; \texttt{username} \; || \; \texttt{salt} \; || \; A \; || \; B \; || \; K_{\texttt{client}})$, where $\oplus$ means XOR and $H$ is SHA3-256.
+12. Client sends $M_1$ to the server (setting `binary = true`) with status `OK`.
+13. Server computes its own $M_1$ value using the same formula (using $K_{\texttt{server}}$ in place of $K_{\texttt{client}}$), and checks with the received $M_1$.
+    - If they do not match, sends message with status `ERR` and data `M1 values do not match`, terminating the connection.
+14. Server computes $M_2 = H(A \; || \; M_1 \; || \; K_{\texttt{server}})$, where $\oplus$ means XOR and $H$ is SHA3-256.
+15. Server sends $M_2$ to the client (setting `binary = true`) with status `OK`.
+16. Client computes its own $M_2$ value using the same formula (using $K_{\texttt{client}}$ in place of $K_{\texttt{server}}$), and checks with the received $M_2$.
+    - If they do not match, client terminates the connection.
+17. Client sends message with status `OK` with no data.
+18. Server prepares [authentication token](#authentication-token) in the form of a JSON Web Token (JWT) and encrypts it with the shared master key $K$ using AES-GCM-256.
+19. Server sends message with no status and JSON data containing three fields: `nonce`, `token`, and `tag`, each as a Base64 encoded byte array:
+    - `nonce`: A random value
+    - `token`: The encrypted JWT
+    - `tag`: The authentication tag
+20. Both sides close the connection.
 
 :::note
 
@@ -134,7 +138,7 @@ Once this initial authentication process is complete, future requests to secure 
 
 ### Authentication Token
 
-The authentication token is a JWT that contains the following claims:
+The authentication token is a JSON Web Token (JWT) that contains the following claims:
 
 - `sub`: The subject of the token, which is the username.
 - `iat`: The issued at time of the token, which is the current time.

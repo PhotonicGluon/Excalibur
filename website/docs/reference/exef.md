@@ -44,16 +44,16 @@ The table below describes the fields present in the header. All multi-byte integ
 | `4`     | **Version**         | 1            | `0x03` for this version.                                                                                                            |
 | `5`     | **Cipher ID**       | 1            | A 1-byte identifier for the encryption algorithm. See table below.                                                                  |
 | `6-17`  | **Nonce / Salt**    | 12           | The unique 12-byte nonce for AES-GCM, also used as the salt for HKDF. **Must be unique for each file encrypted with the same key.** |
-| `18-31` | **Header MAC**      | 14           | The first 14 bytes of the full HMAC-SHA256 output. Used to quickly verify the master key.                                           |
-| `32-39` | **Ciphertext Size** | 8            | The length of the ciphertext data in bytes. An 8-byte unsigned integer.                                                             |
+| `18-31` | **Header MAC**      | 14           | The first 14 bytes of the full HMAC-SHA256 output. Used to quickly verify if the vault key is correct.                              |
+| `32-39` | **Ciphertext Size** | 8            | The length of the ciphertext data in bytes, represented as an 8-byte unsigned integer.                                              |
 
 The currently supported ciphers are listed below.
 
-| ID     | Algorithm   | Key Size           |
-| :----- | :---------- | :----------------- |
-| `0x01` | AES-128-GCM | 128-bit (16 bytes) |
-| `0x02` | AES-192-GCM | 192-bit (24 bytes) |
-| `0x03` | AES-256-GCM | 256-bit (32 bytes) |
+| ID     | Algorithm   | Key Size            |
+| :----- | :---------- | :------------------ |
+| `0x01` | AES-128-GCM | 128 bits (16 bytes) |
+| `0x02` | AES-192-GCM | 192 bits (24 bytes) |
+| `0x03` | AES-256-GCM | 256 bits (32 bytes) |
 
 Details on the header MAC are provided [below](#header-mac-generation).
 
