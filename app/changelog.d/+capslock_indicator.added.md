@@ -1,1 +1,1 @@
-Added caps lock indicator to login page
+✨ Added caps lock indicator to login page

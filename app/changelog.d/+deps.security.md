@@ -1,4 +1,4 @@
-Overridden version minima of several dependencies in `pnpm-workspace.yaml` to address security vulnerabilities:
+🔒️ Overridden version minima of several dependencies in `pnpm-workspace.yaml` to address security vulnerabilities:
 
 - CVE-2026-25547: `@isaacs/brace-expansion` to `5.0.1`
 - CVE-2025-69873: `ajv` to `6.14.0`

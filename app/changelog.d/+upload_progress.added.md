@@ -1,1 +1,1 @@
-Added file upload progress to all upload jobs
+🚸 Added file upload progress to all upload jobs

@@ -1,4 +1,4 @@
-Updated Capacitor dependencies:
+⬆️ Updated Capacitor dependencies:
 
 - `@capacitor/android` from `8.0.0` to `8.2.0`
 - `@capacitor/app` from `8.0.0` to `8.0.1`

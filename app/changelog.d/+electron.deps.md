@@ -1,4 +1,4 @@
-Updated Electron dependencies:
+⬆️ Updated Electron dependencies:
 
 - `dmg-builder` from `26.4.0` to `26.8.1`
 - `electron-builder` from `26.4.0` to `26.8.1`

@@ -1,1 +1,1 @@
-Changed "Operations" to "Crypto" in the settings
+✏️ Changed "Operations" to "Crypto" in the settings

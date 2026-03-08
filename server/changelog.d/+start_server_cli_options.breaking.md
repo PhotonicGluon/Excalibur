@@ -1,4 +1,4 @@
-Changed CLI options for the `start` command:
+💥 Changed CLI options for the `start` command:
 
 - `--host` can now be specified with `-h`
 - `--port` can now be specified with `-p`

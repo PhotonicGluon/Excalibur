@@ -1,1 +1,1 @@
-Path parameters will now be encrypted by default
+🔒️ Path parameters will now be encrypted by default

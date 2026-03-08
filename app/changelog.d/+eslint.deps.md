@@ -1,4 +1,4 @@
-Updated ESLint development dependencies:
+⬆️ Updated ESLint development dependencies:
 
 - `eslint` from `9.39.2` to `9.39.3`
 - `eslint-plugin-cypress` from `5.2.1` to `6.1.0`
