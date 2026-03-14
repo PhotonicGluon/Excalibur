@@ -168,7 +168,7 @@ const config: Config = {
         },
     } satisfies Preset.ThemeConfig,
     customFields: {
-        latestVersion: "0.4.4",
+        latestVersion: "0.5.0",
     },
 };
 

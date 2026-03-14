@@ -6,12 +6,6 @@ description: Guide explaining the upgrade process from Excalibur 0.4 to 0.5.
 
 # Upgrading from Excalibur 0.4 to Excalibur 0.5
 
-:::warning
-
-This is unreleased documentation. It is subject to change.
-
-:::
-
 In this guide, you'll find steps to update your Excalibur app and server instances to version 0.5.
 
 :::important
@@ -46,7 +40,7 @@ You should see `Config is valid!` appear in the terminal.
 
 Additionally, it is recommended to make the following changes to the configuration file:
 
-- `logging.no_log_endpoints`: remove `"/api/well-known/heartbeat"` as that endpoint no longer exists. You may replace it with `"/api/docs"`. See [the section below](#removal-of-the-heartbeat-endpoint) for more information.
+- **`logging.no_log_endpoints`**: remove `"/api/well-known/heartbeat"` as that endpoint no longer exists. You may replace it with `"/api/docs"`. See [the section below](#removal-of-the-heartbeat-endpoint) for more information.
 
 ## Server Breaking Changes
 
