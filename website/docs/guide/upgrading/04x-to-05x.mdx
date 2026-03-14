@@ -46,7 +46,43 @@ You should see `Config is valid!` appear in the terminal.
 
 Additionally, it is recommended to make the following changes to the configuration file:
 
-- `logging.no_log_endpoints`: remove `"/api/well-known/heartbeat"` as that endpoint no longer exists. You may replace it with `"/api/docs"`.
+- `logging.no_log_endpoints`: remove `"/api/well-known/heartbeat"` as that endpoint no longer exists. You may replace it with `"/api/docs"`. See [the section below](#removal-of-the-heartbeat-endpoint) for more information.
+
+## Server Breaking Changes
+
+There are some breaking changes introduced in this version, particularly for the server.
+
+### The `excalibur start` Command
+
+The `excalibur start` command is used to start the server. This version includes changes to the command's options:
+
+- The `--encrypt-responses/--no-encrypt-responses` option no longer has the short forms of `-e/-E`. You **must** use `--encrypt-responses/--no-encrypt-responses`.
+- The `--delay` option no longer has the short form of `-d`. You **must** use `--delay`.
+- The `--enable-cors/--disable-cors` option no longer has the short forms of `-c/-C`. You **must** use `--enable-cors/--disable-cors`.
+
+In addition, some options now support short forms:
+
+- The `--host` option can now be specified with `-h`.
+- The `--port` option can now be specified with `-p`.
+- The `--clean-up-logs/--no-clean-up-logs` option can now be specified with `-c/-C`.
+
+### Removal of the Heartbeat Endpoint
+
+Since [Excalibur 0.4.2](/changelog/v0.4.2), the Excalibur app no longer makes requests to the heartbeat endpoint (which was at `/api/well-known/heartbeat`). We assume that the client will be able to discern whether they are still connected to the server by observing the responses to the requests made to the server. As a result, as of Excalibur 0.5, this endpoint has been ***removed*** from the server.
+
+If you are using custom code that makes requests to this endpoint, you will need to **update it to use a different endpoint**.
+
+### The Upload File Endpoint
+
+The upload file endpoint (`/api/files/upload/{path:path}`) has a path parameter named `path`. Previously, this `path` refers to the _file's containing directory_. Now, this `path` refers to the _file path_.
+
+To give an example of what this change means, suppose you wanted to upload a file named `test.txt` to the directory `/sub1/sub2`. Previously, you would have called the endpoint with the path `/sub1/sub2`. Now, you would call the endpoint with the path `/sub1/sub2/test.txt`.
+
+Please **update all custom code that calls this endpoint** to reflect this change.
+
+### The File List Endpoint
+
+The file list endpoint (`/api/files/list/{path}`) has a query parameter named `with_exef_header`. This parameter has been renamed to `include_exef_size` to match the naming convention used in other endpoints. Please **update all custom code that calls this endpoint** to reflect this change.
 
 ## Conclusion
 
