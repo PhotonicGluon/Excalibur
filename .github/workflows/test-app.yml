@@ -1,0 +1,49 @@
+name: Test App
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - pnpm-lock.yaml
+            - app/packages/main/**
+    pull_request:
+        branches:
+            - main
+        paths:
+            - pnpm-lock.yaml
+            - app/packages/main/**
+
+jobs:
+    test-app:
+        name: Test App
+        runs-on: ubuntu-latest
+        if: ${{ !github.event.repository.private }}
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  sparse-checkout: app
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  cache: "pnpm"
+                  cache-dependency-path: pnpm-lock.yaml
+
+            - name: Install Dependencies
+              working-directory: ./app
+              run: pnpm install --filter !excalibur-electron
+
+            - name: Run Unit Tests
+              working-directory: ./app/packages/main
+              run: pnpm run test:unit-run
+
+            - name: Run Component Tests
+              working-directory: ./app/packages/main
+              run: pnpm run test:component
