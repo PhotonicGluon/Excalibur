@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.5.0b2"
+version = "0.5.0rc1"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",
@@ -16,7 +16,7 @@ dependencies = [
     "pycryptodome>=3.23.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
-    "pyjwt>=2.12.0",
+    "pyjwt>=2.12.1",
     "rapidfuzz>=3.14.3",
     "semver>=3.0.4",
     "sqlalchemy>=2.0.48",
@@ -44,7 +44,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.10.0", "pytest-timeout>=2.4.0", "ruff>=0.15.5"]
+dev = ["ipython~=9.10.0", "pytest-timeout>=2.4.0", "ruff>=0.15.6"]
 test = ["httpx>=0.28.1", "pytest>=9.0.2"]
 
 [tool.uv]
