@@ -34,7 +34,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
               with:
                   enable-cache: true
-                  version: "0.9.30"
+                  version: "0.10.9"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Install App Dependencies
