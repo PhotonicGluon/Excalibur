@@ -1,3 +1,4 @@
+from base64 import b64decode
 from pathlib import Path
 
 from pydantic import BaseModel, field_validator
@@ -17,6 +18,19 @@ class Security(BaseModel):
                 return SRPGroup[value.upper()]
             except KeyError:
                 raise ValueError(f"Invalid SRP group '{value}'; choose from {list(SRPGroup.__members__.keys())}")
+
+    class OPAQUE(BaseModel):
+        oprf_seed: bytes
+        private_key: bytes
+        public_key: bytes
+
+        @field_validator("oprf_seed", mode="before")
+        def edit_oprf_seed(cls, value: str) -> bytes:
+            return bytes.fromhex(value)
+
+        @field_validator("private_key", "public_key", mode="before")
+        def edit_keys(cls, value: str) -> bytes:
+            return b64decode(value)
 
     class E2EE(BaseModel):
         comm_cache_size: int

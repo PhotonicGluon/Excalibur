@@ -21,6 +21,7 @@
         "keygen",
         "keysize",
         "maxfail",
+        "OPRF",
         "priv",
         "repr",
         "secho",
