@@ -24,6 +24,7 @@
         "OPRF",
         "priv",
         "repr",
+        "ristretto",
         "secho",
         "sessionmaker",
         "sqlalchemy",
