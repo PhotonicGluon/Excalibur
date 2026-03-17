@@ -1,5 +1,6 @@
 import base64
 from abc import ABC, abstractmethod
+from math import ceil, log2
 from typing import Self
 
 from Crypto.Random import get_random_bytes
@@ -98,6 +99,37 @@ class EllipticPoint(ABC):
     @abstractmethod
     def __eq__(self, other: Self) -> bool:
         raise NotImplementedError("__eq__ must be implemented by subclass")
+
+    # Public methods
+    def is_identity(self) -> bool:
+        """
+        :returns: whether the current point is the identity point
+        """
+
+        return self == self.IDENTITY
+
+    @classmethod
+    def random_scalar(cls) -> int:
+        """
+        Generates a random scalar for the curve, using RFC9497 section 4.7.2.
+
+        :returns: a random scalar in GF(P)
+        """
+
+        # To ensure a uniform distribution we generate a random sequence and reduce it modulo the group order
+        random_bytes = get_random_bytes(ceil(((3 * ceil(log2(cls.ORDER))) / 2) / 8))
+        return int.from_bytes(random_bytes, byteorder="little") % cls.ORDER
+
+    @classmethod
+    def scalar_inverse(cls, scalar: int) -> int:
+        """
+        Computes the multiplicative inverse of a scalar in the finite field GF(P).
+
+        :param scalar: the scalar to invert
+        :returns: the multiplicative inverse of the scalar
+        """
+
+        return pow(scalar, -1, cls.ORDER)
 
 
 class Decaf448(EllipticPoint):
@@ -318,10 +350,7 @@ class Decaf448ECC:
         """
 
         if private_key_bytes is None:
-            # Per RFC 9497 section 4.7.2, to ensure a uniform distribution we generate a 64-byte random sequence and
-            # reduce it modulo the group order
-            random_bytes = get_random_bytes(84)  # L = ceil(((3 * ceil(log2(Decaf448Point.ORDER))) / 2) / 8)
-            scalar: int = int.from_bytes(random_bytes, byteorder="little") % Decaf448.ORDER
+            scalar = Decaf448.random_scalar()
 
             self._private_key = scalar.to_bytes(56, byteorder="little")
             self._scalar = scalar
