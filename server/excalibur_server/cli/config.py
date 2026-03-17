@@ -112,7 +112,7 @@ def update_config():
     def v4_to_v5(config: TOMLDocument) -> TOMLDocument:
         from Crypto.Random import get_random_bytes
 
-        from excalibur_server.src.auth.opaque.ecc import Ristretto255
+        from excalibur_server.src.auth.opaque.elliptic import Decaf448ECC
 
         config["version"] = 5
 
@@ -130,20 +130,20 @@ def update_config():
         )
 
         # Add private and public key fields
-        curve = Ristretto255()
+        curve = Decaf448ECC()
         private_key, public_key = curve.keypair
 
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
             "public_key",
             public_key,
-            top_comment="Ristretto255 public key for OPAQUE protocol",
+            top_comment="Decaf448 public key for OPAQUE protocol",
         )
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
             "private_key",
             private_key,
-            top_comment="Ristretto255 private key for OPAQUE protocol\n# SECURITY NOTE: Keep this value secret "
+            top_comment="Decaf448 private key for OPAQUE protocol\n# SECURITY NOTE: Keep this value secret "
             + "and secure!",
         )
 
@@ -204,7 +204,7 @@ def generate_keys():
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
-    from excalibur_server.src.auth.opaque.ecc import Ristretto255
+    from excalibur_server.src.auth.opaque.elliptic import Decaf448ECC
 
     # Check if the config is valid
     # (Just importing is enough to validate the config)
@@ -227,7 +227,7 @@ def generate_keys():
 
     # Generate new keys
     typer.secho("Generating new keys...", fg="yellow")
-    curve = Ristretto255()
+    curve = Decaf448ECC()
     private_key, public_key = curve.keypair
 
     config["security"]["opaque"]["private_key"] = private_key

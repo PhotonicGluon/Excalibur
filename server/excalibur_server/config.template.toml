@@ -91,12 +91,12 @@ group = "small"
 # SECURITY NOTE: Keep this value secret and secure!
 oprf_seed = "Oblivious Pseudo-Random Function (OPRF) Seed Array Goes Here!!!!"
 
-# Ristretto255 public key for OPAQUE protocol
-public_key = "44 Base64 characters: Ristretto255 pub key!!"
+# Decaf448 public key for OPAQUE protocol
+public_key = "76-character Base64-encoded Decaf448 public key for OPRF and OPAQUE protocol"
 
-# Ristretto255 private key for OPAQUE protocol
+# Decaf448 private key for OPAQUE protocol
 # SECURITY NOTE: Keep this value secret and secure!
-private_key = "44 Base64 characters: Ristretto255 priv key!"
+private_key = "76-character Base64-encoded Decaf448 private key for OPRF & OPAQUE protocol!"
 
 [security.e2ee]
 # The maximum number of end-to-end encryption communication sessions to cache
