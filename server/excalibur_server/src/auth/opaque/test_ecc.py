@@ -1,4 +1,4 @@
-from excalibur_server.src.auth.opaque.ristretto import Ristretto255Point
+from excalibur_server.src.auth.opaque.ecc import Ristretto255Point
 
 # Test vectors from RFC9496, Appendix A
 EXPECTED_A1_RAW = [  # Multiples of the generator
