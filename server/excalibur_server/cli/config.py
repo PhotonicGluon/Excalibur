@@ -112,7 +112,7 @@ def update_config():
     def v4_to_v5(config: TOMLDocument) -> TOMLDocument:
         from Crypto.Random import get_random_bytes
 
-        from excalibur_server.src.auth.opaque.elliptic import Decaf448ECC
+        from excalibur_server.src.auth.elliptic import Decaf448ECC
 
         config["version"] = 5
 
@@ -204,7 +204,7 @@ def generate_keys():
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
-    from excalibur_server.src.auth.opaque.elliptic import Decaf448ECC
+    from excalibur_server.src.auth.elliptic import Decaf448ECC
 
     # Check if the config is valid
     # (Just importing is enough to validate the config)

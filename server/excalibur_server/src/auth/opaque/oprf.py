@@ -1,15 +1,21 @@
-from hashlib import shake_256
+from abc import ABC, abstractmethod
+from hashlib import sha512, shake_256
+from math import ceil
+from typing import Any, Callable
 
-from excalibur_server.src.auth.opaque.elliptic import Decaf448
+from excalibur_server.src.auth.elliptic import BaseCurve, Decaf448, Ristretto255
 
 
-class OPRF:
+class BaseOPRF(ABC):
     """
-    An Oblivious Pseudo-Random Function (OPRF) implementation based on
-    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497) upon the elliptic curve Decaf448.
+    Base class for an Oblivious Pseudo-Random Function (OPRF) implementation based on
+    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
     """
 
-    CONTEXT_STRING = b"OPRFV1-\x00-decaf448-SHAKE256"  # See section 3.1 for main format and 4.2 for identifier
+    # To be overridden by subclasses
+    Curve: type[BaseCurve] = None  # To be overridden by subclasses
+    hashfunc: Callable[[bytes], Any] = None  # To be overridden by subclasses
+    CONTEXT_STRING: bytes = b""
 
     # Helper methods
     @staticmethod
@@ -24,53 +30,31 @@ class OPRF:
 
         return value.to_bytes(length, "big")
 
-    @staticmethod
-    def _expand_message_xof(msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
+    @classmethod
+    @abstractmethod
+    def _hash_to_group(cls, msg: bytes) -> BaseCurve:
         """
-        Implements the `expand_message_xof()` function in RFC9380, section 5.3.2.
+        Hashes a message to a curve point.
 
         :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes
-        :param len_in_bytes: the length of the requested output in bytes
-        :return: a byte string of length `len_in_bytes`
+        :return: a curve point
         """
+        raise NotImplementedError
 
-        if len_in_bytes > 65535 or len(dst) > 255:
-            raise ValueError("length or destination too long")
-
-        dst_prime = dst + OPRF._i2osp(len(dst), 1)
-        msg_prime = msg + OPRF._i2osp(len_in_bytes, 2) + dst_prime
-        uniform_bytes = shake_256(msg_prime).digest(len_in_bytes)
-        return uniform_bytes
-
-    @staticmethod
-    def _hash_to_decaf448(msg: bytes, dst: bytes) -> Decaf448:
+    @classmethod
+    @abstractmethod
+    def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
         """
-        Implements the `hash_to_decaf448()` function described in RFC9380, appendix C.
+        The final hash function used in the `finalize()` method.
 
-        :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes
-        :return: a point on the Decaf448 curve
+        :param hash_input: the input to the hash function
+        :return: a byte string
         """
-
-        uniform_bytes = OPRF._expand_message_xof(msg, dst, 112)
-        pt = Decaf448.derive(uniform_bytes)
-        return pt
-
-    @staticmethod
-    def _hash_to_group(msg: bytes) -> Decaf448:
-        """
-        Implements the `HashToGroup()` function described in RFC9497, section 4.2.
-
-        :param msg: a byte string
-        :return: a point on the Decaf448 curve
-        """
-
-        return OPRF._hash_to_decaf448(msg, b"HashToGroup-" + OPRF.CONTEXT_STRING)
+        raise NotImplementedError
 
     # Public methods
-    @staticmethod
-    def blind(input: bytes, blind: int | None = None) -> tuple[int, Decaf448]:
+    @classmethod
+    def blind(cls, input: bytes, blind: int | None = None) -> tuple[int, Ristretto255]:
         """
         The client `Blind()` function as described in RFC9497, section 3.1.1.
 
@@ -81,18 +65,17 @@ class OPRF:
         :raises ValueError: if the input element is the identity
         """
 
-        blind = blind or Decaf448.random_scalar()
-        input_element = OPRF._hash_to_group(input)
+        blind = blind or cls.Curve.random_scalar()
+        input_element = cls._hash_to_group(input)
 
         if input_element.is_identity():
             raise ValueError("input element is identity")
 
         blinded_element = blind * input_element
-
         return blind, blinded_element
 
     @staticmethod
-    def blind_evaluate(sk_scalar: int, blinded_element: Decaf448) -> Decaf448:
+    def blind_evaluate(sk_scalar: int, blinded_element: BaseCurve) -> BaseCurve:
         """
         The server `BlindEvaluate()` function as described in RFC9497, section 3.1.1.
 
@@ -103,8 +86,8 @@ class OPRF:
 
         return sk_scalar * blinded_element
 
-    @staticmethod
-    def finalize(input: bytes, blind: int, evaluated_element: Decaf448) -> bytes:
+    @classmethod
+    def finalize(cls, input: bytes, blind: int, evaluated_element: BaseCurve) -> bytes:
         """
         The client `Finalize()` function as described in RFC9497, section 3.1.1.
 
@@ -114,14 +97,150 @@ class OPRF:
         :return: a byte string
         """
 
-        unblinded_element = Decaf448.scalar_inverse(blind) * evaluated_element
+        unblinded_element = cls.Curve.scalar_inverse(blind) * evaluated_element
         unblinded_element_bytes = unblinded_element.to_bytes()
 
         hash_input = (
-            OPRF._i2osp(len(input), 2)
+            cls._i2osp(len(input), 2)
             + input
-            + OPRF._i2osp(len(unblinded_element_bytes), 2)
+            + cls._i2osp(len(unblinded_element_bytes), 2)
             + unblinded_element_bytes
             + b"Finalize"
         )
-        return shake_256(hash_input).digest(64)
+        return cls._finalize_final_hash(hash_input)
+
+
+class OPRFRistretto(BaseOPRF):
+    """
+    The `OPRF(ristretto255, SHA-512)` implementation based on
+    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+    """
+
+    Curve = Ristretto255
+    hashfunc = sha512
+    CONTEXT_STRING = b"OPRFV1-\x00-ristretto255-SHA512"  # See section 3.1 for main format and 4.1 for identifier
+
+    # Helper methods
+    @staticmethod
+    def _strxor(s1: bytes, s2: bytes) -> bytes:
+        return bytes(a ^ b for a, b in zip(s1, s2))
+
+    @classmethod
+    def _expand_message_xmd(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
+        """
+        Implements the `expand_message_xmd()` function in RFC9380, section 5.3.1.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :param len_in_bytes: the length of the requested output in bytes
+        :return: a byte string of length `len_in_bytes`
+        :raises ValueError: if the length or destination is too long
+        """
+
+        ell = ceil(len_in_bytes / 64)
+        DST_prime = dst + cls._i2osp(len(dst), 1)
+
+        Z_pad = cls._i2osp(0, 128)
+        l_i_b_str = cls._i2osp(len_in_bytes, 2)
+        msg_prime = Z_pad + msg + l_i_b_str + cls._i2osp(0, 1) + DST_prime
+
+        b_0 = sha512(msg_prime).digest()
+
+        b = [None] * (ell + 1)  # Preallocate array
+        b[1] = sha512(b_0 + cls._i2osp(1, 1) + DST_prime).digest()
+
+        for i in range(2, ell + 1):
+            b[i] = sha512(cls._strxor(b[i - 1], b_0) + cls._i2osp(i, 1) + DST_prime).digest()
+
+        uniform_bytes = b"".join(b[1 : ell + 1])
+        return uniform_bytes[:len_in_bytes]
+
+    @classmethod
+    def _hash_to_ristretto255(cls, msg: bytes, dst: bytes) -> Ristretto255:
+        """
+        Implements the `hash_to_ristretto255()` function described in RFC9380, appendix B.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :return: a point on the Ristretto255 curve
+        """
+
+        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
+        pt = cls.Curve.derive(uniform_bytes)
+        return pt
+
+    @classmethod
+    def _hash_to_group(cls, msg: bytes) -> Ristretto255:
+        """
+        Implements the `HashToGroup()` function described in RFC9497, section 4.1.
+
+        :param msg: a byte string
+        :return: a point on the Ristretto255 curve
+        """
+
+        return cls._hash_to_ristretto255(msg, b"HashToGroup-" + cls.CONTEXT_STRING)
+
+    @classmethod
+    def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
+        return cls.hashfunc(hash_input).digest()
+
+
+class OPRFDecaf(BaseOPRF):
+    """
+    The `OPRF(decaf448, SHAKE256)` implementation based on
+    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+    """
+
+    Curve = Decaf448
+    hashfunc = shake_256
+    CONTEXT_STRING = b"OPRFV1-\x00-decaf448-SHAKE256"  # See section 3.1 for main format and 4.2 for identifier
+
+    # Helper methods
+    @classmethod
+    def _expand_message_xof(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
+        """
+        Implements the `expand_message_xof()` function in RFC9380, section 5.3.2.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :param len_in_bytes: the length of the requested output in bytes
+        :return: a byte string of length `len_in_bytes`
+        :raises ValueError: if the length or destination is too long
+        """
+
+        if len_in_bytes > 65535 or len(dst) > 255:
+            raise ValueError("length or destination too long")
+
+        dst_prime = dst + cls._i2osp(len(dst), 1)
+        msg_prime = msg + cls._i2osp(len_in_bytes, 2) + dst_prime
+        uniform_bytes = cls.hashfunc(msg_prime).digest(len_in_bytes)
+        return uniform_bytes
+
+    @classmethod
+    def _hash_to_decaf448(cls, msg: bytes, dst: bytes) -> Decaf448:
+        """
+        Implements the `hash_to_decaf448()` function described in RFC9380, appendix C.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :return: a point on the Decaf448 curve
+        """
+
+        uniform_bytes = cls._expand_message_xof(msg, dst, 112)
+        pt = cls.Curve.derive(uniform_bytes)
+        return pt
+
+    @classmethod
+    def _hash_to_group(cls, msg: bytes) -> Decaf448:
+        """
+        Implements the `HashToGroup()` function described in RFC9497, section 4.2.
+
+        :param msg: a byte string
+        :return: a point on the Decaf448 curve
+        """
+
+        return cls._hash_to_decaf448(msg, b"HashToGroup-" + cls.CONTEXT_STRING)
+
+    @classmethod
+    def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
+        return cls.hashfunc(hash_input).digest(64)
