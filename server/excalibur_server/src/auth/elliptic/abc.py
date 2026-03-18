@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from math import ceil, log2
 from typing import Self
 
 from Crypto.Random import get_random_bytes
@@ -32,7 +31,7 @@ class BaseCurve(ABC):
     @property
     @abstractmethod
     def KEY_LENGTH(self) -> int:
-        """The key length for the specific elliptic curve group, in bytes."""
+        """The private/public key length for the specific elliptic curve group, in bytes."""
         pass
 
     @property
@@ -170,7 +169,7 @@ class BaseCurve(ABC):
         """
 
         # To ensure a uniform distribution we generate a random sequence and reduce it modulo the group order
-        random_bytes = get_random_bytes(ceil(((3 * ceil(log2(cls.ORDER))) / 2) / 8))
+        random_bytes = get_random_bytes(cls.KEY_LENGTH)
         return int.from_bytes(random_bytes, byteorder="little") % cls.ORDER
 
     @classmethod
