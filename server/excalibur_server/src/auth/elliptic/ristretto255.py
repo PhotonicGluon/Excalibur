@@ -1,6 +1,6 @@
 from typing import Self
 
-from excalibur_server.src.auth.elliptic.curves.abc import BaseCurve
+from excalibur_server.src.auth.elliptic.abc import BaseCurve
 
 
 class Ristretto255(BaseCurve):
@@ -11,6 +11,7 @@ class Ristretto255(BaseCurve):
 
     P = 2**255 - 19  # See section 2
     ORDER = 2**252 + 27742317777372353535851937790883648493  # `l` in Section 4
+    GENERATOR: Self = None  # Defined below
     KEY_LENGTH = 32
 
     # Constants taken from Section 4.1
@@ -201,6 +202,6 @@ class Ristretto255(BaseCurve):
         return s.to_bytes(32, "little")
 
 
-GENERATOR = Ristretto255.from_bytes(
+Ristretto255.GENERATOR = Ristretto255.from_bytes(
     bytes.fromhex("e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76")  # See Section 4
 )

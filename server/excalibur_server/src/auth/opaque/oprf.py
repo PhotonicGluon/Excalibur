@@ -4,7 +4,6 @@ from math import ceil
 from typing import Any, Callable, Literal
 
 from excalibur_server.src.auth.elliptic import BaseCurve, Decaf448, Ristretto255
-from excalibur_server.src.auth.elliptic.curves import DECAF_GENERATOR, RISTRETTO_GENERATOR
 
 
 class BaseOPRF(ABC):
@@ -15,7 +14,6 @@ class BaseOPRF(ABC):
 
     # To be overridden by subclasses
     Curve: type[BaseCurve] = None  # To be overridden by subclasses
-    generator: BaseCurve = None  # To be overridden by subclasses
     hashfunc: Callable[[bytes], Any] = None  # To be overridden by subclasses
     CONTEXT_STRING: bytes = b""
 
@@ -127,34 +125,41 @@ class BaseOPRF(ABC):
 
     # Public methods
     @classmethod
-    def generate_keys(cls, seed: bytes = b"", info: bytes = b"") -> tuple[int, BaseCurve]:
+    def generate_keys(
+        cls, seed: bytes = b"", info: bytes = b"", for_export: bool = False
+    ) -> tuple[int, BaseCurve] | tuple[bytes, bytes]:
         """
         Generates a public-private key pair, following RFC9497 section 3.2 (and 3.2.1).
 
         :param seed: a byte string used as a seed for key generation
         :param info: additional information to include in the key generation process
+        :param for_export: whether the keys are being generated for export (i.e. they will be
+            converted into bytes)
         :return: a tuple of (private_key, public_key)
         """
 
         if not seed:
             # See RFC9497, section 3.2
             private_key = cls.Curve.random_scalar()
-            public_key = cls.generator * private_key
-            return private_key, public_key
+        else:
+            # See RFC9497, section 3.2.1
+            deriveInput = seed + cls._i2osp(len(info), 2) + info
+            counter = 0
+            private_key = 0
+            while private_key == 0:
+                if counter > 255:
+                    raise RuntimeError("unable to generate private key")
+                private_key = cls._hash_to_scalar(
+                    deriveInput + cls._i2osp(counter, 1), dst=b"DeriveKeyPair" + cls.CONTEXT_STRING
+                )
+                counter += 1
 
-        # See RFC9497, section 3.2.1
-        deriveInput = seed + cls._i2osp(len(info), 2) + info
-        counter = 0
-        private_key = 0
-        while private_key == 0:
-            if counter > 255:
-                raise RuntimeError("unable to generate private key")
-            private_key = cls._hash_to_scalar(
-                deriveInput + cls._i2osp(counter, 1), dst=b"DeriveKeyPair" + cls.CONTEXT_STRING
-            )
-            counter += 1
+        public_key: BaseCurve = cls.Curve.GENERATOR * private_key
 
-        public_key = cls.generator * private_key
+        if for_export:
+            private_key = private_key.to_bytes(cls.Curve.KEY_LENGTH, byteorder="little")
+            public_key = public_key.to_bytes()
+
         return private_key, public_key
 
     @classmethod
@@ -221,7 +226,6 @@ class OPRFRistretto(BaseOPRF):
     """
 
     Curve = Ristretto255
-    generator = RISTRETTO_GENERATOR
     hashfunc = sha512
     CONTEXT_STRING = b"OPRFV1-\x00-ristretto255-SHA512"  # See section 3.1 for main format and 4.1 for identifier
 
@@ -271,7 +275,6 @@ class OPRFDecaf(BaseOPRF):
     """
 
     Curve = Decaf448
-    generator = DECAF_GENERATOR
     hashfunc = shake_256
     CONTEXT_STRING = b"OPRFV1-\x00-decaf448-SHAKE256"  # See section 3.1 for main format and 4.2 for identifier
 

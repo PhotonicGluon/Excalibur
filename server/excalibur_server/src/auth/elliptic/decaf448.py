@@ -1,6 +1,6 @@
 from typing import Self
 
-from excalibur_server.src.auth.elliptic.curves.abc import BaseCurve
+from excalibur_server.src.auth.elliptic.abc import BaseCurve
 
 
 class Decaf448(BaseCurve):
@@ -11,6 +11,7 @@ class Decaf448(BaseCurve):
 
     P = 2**448 - 2**224 - 1  # See section 2
     ORDER = 2**446 - 13818066809895115352007386748515426880336692474882178609894547503885  # `l` in Section 5
+    GENERATOR: Self = None  # Defined below
     KEY_LENGTH = 56
 
     # Constants taken from Section 5.1
@@ -172,7 +173,7 @@ class Decaf448(BaseCurve):
         return s.to_bytes(56, "little")
 
 
-GENERATOR = Decaf448.from_bytes(
+Decaf448.GENERATOR = Decaf448.from_bytes(
     bytes.fromhex(
         "6666666666666666666666666666666666666666666666666666666633333333333333333333333333333333333333333333333333333333"
     )  # See Section 5

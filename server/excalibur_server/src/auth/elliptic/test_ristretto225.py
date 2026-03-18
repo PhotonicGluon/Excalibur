@@ -1,4 +1,4 @@
-from excalibur_server.src.auth.elliptic.curves.ristretto255 import Ristretto255
+from excalibur_server.src.auth.elliptic.ristretto255 import Ristretto255
 
 # Test vectors from RFC9496, Appendix A
 EXPECTED_A1_RAW = [  # Multiples of the generator

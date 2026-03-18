@@ -25,14 +25,20 @@ class BaseCurve(ABC):
 
     @property
     @abstractmethod
-    def D(self) -> int:
-        """The D parameter for the specific elliptic curve group."""
+    def GENERATOR(self) -> Self:
+        """The generator point for the specific elliptic curve group."""
         pass
 
     @property
     @abstractmethod
     def KEY_LENGTH(self) -> int:
         """The key length for the specific elliptic curve group, in bytes."""
+        pass
+
+    @property
+    @abstractmethod
+    def D(self) -> int:
+        """The D parameter for the specific elliptic curve group."""
         pass
 
     def __init__(self, x: int, y: int, z: int, t: int):

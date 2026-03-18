@@ -1,5 +1,5 @@
 # ruff: noqa: E501
-from excalibur_server.src.auth.elliptic.curves.decaf448 import Decaf448
+from excalibur_server.src.auth.elliptic.decaf448 import Decaf448
 
 # Test vectors from RFC9496, Appendix B
 EXPECTED_B1_RAW = [  # Multiples of the generator
