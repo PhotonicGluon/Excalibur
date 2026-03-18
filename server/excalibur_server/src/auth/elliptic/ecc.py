@@ -11,38 +11,41 @@ class BaseECC(ABC):
     Implementation of elliptic curve cryptography (ECC) operations.
     """
 
-    def __init__(self, cls: type[BaseCurve], generator: BaseCurve, private_key_bytes: bytes = None):
+    Curve: type[BaseCurve] = None  # To be set by subclasses
+    generator: BaseCurve = None  # To be set by subclasses
+
+    def __init__(self, private_key_bytes: bytes = None):
         """
         Initializes a new ECC instance.
 
-        :param cls: the elliptic curve class
+        :param curve: the elliptic curve class
         :param generator: the generator point
-        :param private_key_bytes: the private key as bytes, which must be 56 bytes long. If not
-            provided, a secure random key is generated
+        :param private_key_bytes: the private key as bytes. If not provided, a secure random key is
+            generated
         """
 
+        # See RFC9497, section 3.2
         if private_key_bytes is None:
-            scalar = cls.random_scalar()
+            scalar = self.Curve.random_scalar()
 
-            self._private_key = scalar.to_bytes(56, byteorder="little")
+            self._private_key = scalar.to_bytes(self.Curve.KEY_LENGTH, byteorder="little")
             self._scalar = scalar
         else:
-            if len(private_key_bytes) != 56:
-                raise ValueError("Private key must be exactly 56 bytes.")
+            if len(private_key_bytes) != self.Curve.KEY_LENGTH:
+                raise ValueError(f"Private key must be exactly {self.Curve.KEY_LENGTH} bytes.")
 
             self._private_key = private_key_bytes
-            self._scalar = int.from_bytes(private_key_bytes, byteorder="little") % cls.ORDER
+            self._scalar = int.from_bytes(private_key_bytes, byteorder="little") % self.Curve.ORDER
 
-        # Generate the public key point per SEC 1, ver. 1.9, section 3.2.1
-        self._public_key_point = generator * self._scalar
+        self._public_key_point = self.generator * self._scalar
 
     @classmethod
     def from_key(cls, private_key: str) -> Self:
         """
-        Creates a new Decaf448 instance from a private key.
+        Creates a new instance from a private key.
 
         :param private_key: the private key as a base64 string
-        :return: a new Decaf448 instance
+        :return: a new instance
         """
 
         private_key_bytes = b64decode(private_key)
@@ -81,15 +84,8 @@ class Ristretto255ECC(BaseECC):
     [RFC9496](https://www.rfc-editor.org/rfc/rfc9496).
     """
 
-    def __init__(self, private_key_bytes: bytes = None):
-        """
-        Initializes a new Ristretto255 elliptic curve instance.
-
-        :param private_key_bytes: the private key as bytes, which must be 56 bytes long. If not
-            provided, a secure random key is generated
-        """
-
-        super().__init__(Ristretto255, RISTRETTO_GENERATOR, private_key_bytes)
+    Curve = Ristretto255
+    generator = RISTRETTO_GENERATOR
 
 
 class Decaf448ECC(BaseECC):
@@ -98,12 +94,5 @@ class Decaf448ECC(BaseECC):
     [RFC9496](https://www.rfc-editor.org/rfc/rfc9496).
     """
 
-    def __init__(self, private_key_bytes: bytes = None):
-        """
-        Initializes a new Decaf448 elliptic curve instance.
-
-        :param private_key_bytes: the private key as bytes, which must be 56 bytes long. If not
-            provided, a secure random key is generated
-        """
-
-        super().__init__(Decaf448, DECAF_GENERATOR, private_key_bytes)
+    Curve = Decaf448
+    generator = DECAF_GENERATOR

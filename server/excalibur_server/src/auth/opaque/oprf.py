@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from hashlib import sha512, shake_256
 from math import ceil
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from excalibur_server.src.auth.elliptic import BaseCurve, Decaf448, Ristretto255
+from excalibur_server.src.auth.elliptic.curves import DECAF_GENERATOR, RISTRETTO_GENERATOR
 
 
 class BaseOPRF(ABC):
@@ -14,6 +15,7 @@ class BaseOPRF(ABC):
 
     # To be overridden by subclasses
     Curve: type[BaseCurve] = None  # To be overridden by subclasses
+    generator: BaseCurve = None  # To be overridden by subclasses
     hashfunc: Callable[[bytes], Any] = None  # To be overridden by subclasses
     CONTEXT_STRING: bytes = b""
 
@@ -30,13 +32,84 @@ class BaseOPRF(ABC):
 
         return value.to_bytes(length, "big")
 
+    @staticmethod
+    def _strxor(s1: bytes, s2: bytes) -> bytes:
+        return bytes(a ^ b for a, b in zip(s1, s2))
+
+    @classmethod
+    def _expand_message_xmd(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
+        """
+        Implements the `expand_message_xmd()` function in RFC9380, section 5.3.1.
+
+        Call this if the class uses an XMD hash function.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :param len_in_bytes: the length of the requested output in bytes
+        :return: a byte string of length `len_in_bytes`
+        :raises ValueError: if the length or destination is too long
+        """
+
+        ell = ceil(len_in_bytes / 64)
+        DST_prime = dst + cls._i2osp(len(dst), 1)
+
+        Z_pad = cls._i2osp(0, 128)
+        l_i_b_str = cls._i2osp(len_in_bytes, 2)
+        msg_prime = Z_pad + msg + l_i_b_str + cls._i2osp(0, 1) + DST_prime
+
+        b_0 = cls.hashfunc(msg_prime).digest()
+
+        b = [None] * (ell + 1)  # Preallocate array
+        b[1] = cls.hashfunc(b_0 + cls._i2osp(1, 1) + DST_prime).digest()
+
+        for i in range(2, ell + 1):
+            b[i] = cls.hashfunc(cls._strxor(b[i - 1], b_0) + cls._i2osp(i, 1) + DST_prime).digest()
+
+        uniform_bytes = b"".join(b[1 : ell + 1])
+        return uniform_bytes[:len_in_bytes]
+
+    @classmethod
+    def _expand_message_xof(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
+        """
+        Implements the `expand_message_xof()` function in RFC9380, section 5.3.2.
+
+        Call this if the class uses an XOF hash function.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :param len_in_bytes: the length of the requested output in bytes
+        :return: a byte string of length `len_in_bytes`
+        :raises ValueError: if the length or destination is too long
+        """
+
+        if len_in_bytes > 65535 or len(dst) > 255:
+            raise ValueError("length or destination too long")
+
+        dst_prime = dst + cls._i2osp(len(dst), 1)
+        msg_prime = msg + cls._i2osp(len_in_bytes, 2) + dst_prime
+        uniform_bytes = cls.hashfunc(msg_prime).digest(len_in_bytes)
+        return uniform_bytes
+
     @classmethod
     @abstractmethod
-    def _hash_to_group(cls, msg: bytes) -> BaseCurve:
+    def _hash_to_scalar(cls, msg: bytes, dst: bytes | None = None) -> int:
+        """
+        Hashes a message to a scalar.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes, or `None` if using the default
+        :return: a scalar
+        """
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def _hash_to_group(cls, msg: bytes, dst: bytes | None = None) -> BaseCurve:
         """
         Hashes a message to a curve point.
 
         :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes, or `None` if using the default
         :return: a curve point
         """
         raise NotImplementedError
@@ -53,6 +126,37 @@ class BaseOPRF(ABC):
         raise NotImplementedError
 
     # Public methods
+    @classmethod
+    def generate_keys(cls, seed: bytes = b"", info: bytes = b"") -> tuple[int, BaseCurve]:
+        """
+        Generates a public-private key pair, following RFC9497 section 3.2 (and 3.2.1).
+
+        :param seed: a byte string used as a seed for key generation
+        :param info: additional information to include in the key generation process
+        :return: a tuple of (private_key, public_key)
+        """
+
+        if not seed:
+            # See RFC9497, section 3.2
+            private_key = cls.Curve.random_scalar()
+            public_key = cls.generator * private_key
+            return private_key, public_key
+
+        # See RFC9497, section 3.2.1
+        deriveInput = seed + cls._i2osp(len(info), 2) + info
+        counter = 0
+        private_key = 0
+        while private_key == 0:
+            if counter > 255:
+                raise RuntimeError("unable to generate private key")
+            private_key = cls._hash_to_scalar(
+                deriveInput + cls._i2osp(counter, 1), dst=b"DeriveKeyPair" + cls.CONTEXT_STRING
+            )
+            counter += 1
+
+        public_key = cls.generator * private_key
+        return private_key, public_key
+
     @classmethod
     def blind(cls, input: bytes, blind: int | None = None) -> tuple[int, Ristretto255]:
         """
@@ -117,44 +221,11 @@ class OPRFRistretto(BaseOPRF):
     """
 
     Curve = Ristretto255
+    generator = RISTRETTO_GENERATOR
     hashfunc = sha512
     CONTEXT_STRING = b"OPRFV1-\x00-ristretto255-SHA512"  # See section 3.1 for main format and 4.1 for identifier
 
     # Helper methods
-    @staticmethod
-    def _strxor(s1: bytes, s2: bytes) -> bytes:
-        return bytes(a ^ b for a, b in zip(s1, s2))
-
-    @classmethod
-    def _expand_message_xmd(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
-        """
-        Implements the `expand_message_xmd()` function in RFC9380, section 5.3.1.
-
-        :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes
-        :param len_in_bytes: the length of the requested output in bytes
-        :return: a byte string of length `len_in_bytes`
-        :raises ValueError: if the length or destination is too long
-        """
-
-        ell = ceil(len_in_bytes / 64)
-        DST_prime = dst + cls._i2osp(len(dst), 1)
-
-        Z_pad = cls._i2osp(0, 128)
-        l_i_b_str = cls._i2osp(len_in_bytes, 2)
-        msg_prime = Z_pad + msg + l_i_b_str + cls._i2osp(0, 1) + DST_prime
-
-        b_0 = sha512(msg_prime).digest()
-
-        b = [None] * (ell + 1)  # Preallocate array
-        b[1] = sha512(b_0 + cls._i2osp(1, 1) + DST_prime).digest()
-
-        for i in range(2, ell + 1):
-            b[i] = sha512(cls._strxor(b[i - 1], b_0) + cls._i2osp(i, 1) + DST_prime).digest()
-
-        uniform_bytes = b"".join(b[1 : ell + 1])
-        return uniform_bytes[:len_in_bytes]
-
     @classmethod
     def _hash_to_ristretto255(cls, msg: bytes, dst: bytes) -> Ristretto255:
         """
@@ -170,15 +241,23 @@ class OPRFRistretto(BaseOPRF):
         return pt
 
     @classmethod
-    def _hash_to_group(cls, msg: bytes) -> Ristretto255:
+    def _hash_to_scalar(cls, msg: bytes, dst: bytes | None = None) -> int:
+        dst = dst or b"HashToScalar-" + cls.CONTEXT_STRING
+        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
+        return int.from_bytes(uniform_bytes, byteorder="little") % cls.Curve.ORDER
+
+    @classmethod
+    def _hash_to_group(cls, msg: bytes, dst: bytes | None = None) -> Ristretto255:
         """
         Implements the `HashToGroup()` function described in RFC9497, section 4.1.
 
         :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes, or `None` if using the default
         :return: a point on the Ristretto255 curve
         """
 
-        return cls._hash_to_ristretto255(msg, b"HashToGroup-" + cls.CONTEXT_STRING)
+        dst = dst or b"HashToGroup-" + cls.CONTEXT_STRING
+        return cls._hash_to_ristretto255(msg, dst)
 
     @classmethod
     def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
@@ -192,30 +271,11 @@ class OPRFDecaf(BaseOPRF):
     """
 
     Curve = Decaf448
+    generator = DECAF_GENERATOR
     hashfunc = shake_256
     CONTEXT_STRING = b"OPRFV1-\x00-decaf448-SHAKE256"  # See section 3.1 for main format and 4.2 for identifier
 
     # Helper methods
-    @classmethod
-    def _expand_message_xof(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
-        """
-        Implements the `expand_message_xof()` function in RFC9380, section 5.3.2.
-
-        :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes
-        :param len_in_bytes: the length of the requested output in bytes
-        :return: a byte string of length `len_in_bytes`
-        :raises ValueError: if the length or destination is too long
-        """
-
-        if len_in_bytes > 65535 or len(dst) > 255:
-            raise ValueError("length or destination too long")
-
-        dst_prime = dst + cls._i2osp(len(dst), 1)
-        msg_prime = msg + cls._i2osp(len_in_bytes, 2) + dst_prime
-        uniform_bytes = cls.hashfunc(msg_prime).digest(len_in_bytes)
-        return uniform_bytes
-
     @classmethod
     def _hash_to_decaf448(cls, msg: bytes, dst: bytes) -> Decaf448:
         """
@@ -231,16 +291,27 @@ class OPRFDecaf(BaseOPRF):
         return pt
 
     @classmethod
-    def _hash_to_group(cls, msg: bytes) -> Decaf448:
+    def _hash_to_scalar(cls, msg: bytes, dst: bytes | None = None) -> int:
+        dst = dst or b"HashToScalar-" + cls.CONTEXT_STRING
+        uniform_bytes = cls._expand_message_xof(msg, dst, 64)
+        return int.from_bytes(uniform_bytes, byteorder="little") % cls.Curve.ORDER
+
+    @classmethod
+    def _hash_to_group(cls, msg: bytes, dst: bytes | None = None) -> Decaf448:
         """
         Implements the `HashToGroup()` function described in RFC9497, section 4.2.
 
         :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes, or `None` if using the default
         :return: a point on the Decaf448 curve
         """
 
-        return cls._hash_to_decaf448(msg, b"HashToGroup-" + cls.CONTEXT_STRING)
+        dst = dst or b"HashToGroup-" + cls.CONTEXT_STRING
+        return cls._hash_to_decaf448(msg, dst)
 
     @classmethod
     def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
         return cls.hashfunc(hash_input).digest(64)
+
+
+OPRFType = Literal["ristretto255-sha512", "decaf448-shake256"]
