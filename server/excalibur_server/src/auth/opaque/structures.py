@@ -10,6 +10,19 @@ class CleartextCredentials(BaseModel):
     server_identity: bytes
     client_identity: bytes
 
+    @model_serializer
+    def serialize(self):
+        server_identity_len = len(self.server_identity).to_bytes(2, "big")
+        client_identity_len = len(self.client_identity).to_bytes(2, "big")
+
+        return (
+            self.server_public_key.to_bytes()
+            + server_identity_len
+            + self.server_identity
+            + client_identity_len
+            + self.client_identity
+        )
+
 
 class CredentialRequest(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -93,3 +106,11 @@ class KE2(BaseModel):
     @model_serializer
     def serialize(self):
         return self.credential_response.serialize() + self.auth_response.serialize()
+
+
+class KE3(BaseModel):
+    client_mac: bytes
+
+    @model_serializer
+    def serialize(self):
+        return self.client_mac
