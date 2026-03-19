@@ -9,12 +9,15 @@ class HKDF:
     """
 
     def __init__(self, hash_function: Literal["sha256", "sha512", "shake256"]):
+        self.hash_name = hash_function
         if hash_function == "sha256":
             self.hash_function = sha256
         elif hash_function == "sha512":
             self.hash_function = sha512
         elif hash_function == "shake256":
             self.hash_function = shake_256
+
+        self.digest_size = self.hash_function().digest_size
 
     # Helper methods
     def _hmac_hash(self, key: bytes, data: bytes) -> bytes:

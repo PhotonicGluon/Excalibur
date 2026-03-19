@@ -18,11 +18,6 @@ class BaseOPRF(ABC):
     hashfunc: Callable[[bytes], Any] = None  # To be overridden by subclasses
     CONTEXT_STRING: bytes = b""
 
-    # Properties
-    @property
-    def private_key_length(self):
-        return self.Curve.KEY_LENGTH
-
     # Helper methods
     @classmethod
     def _expand_message_xmd(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:

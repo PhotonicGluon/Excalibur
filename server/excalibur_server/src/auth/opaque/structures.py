@@ -3,12 +3,22 @@ from pydantic import BaseModel, ConfigDict, model_serializer
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 
 
+class CleartextCredentials(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    server_public_key: BaseCurve
+    server_identity: bytes
+    client_identity: bytes
+
+
 class CredentialRequest(BaseModel):
-    blinded_message: bytes
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    blinded_element: BaseCurve
 
     @model_serializer
     def serialize(self):
-        return self.blinded_message
+        return self.blinded_element.to_bytes()
 
 
 class CredentialResponse(BaseModel):
@@ -17,6 +27,10 @@ class CredentialResponse(BaseModel):
     evaluated_element: BaseCurve
     masking_nonce: bytes
     masked_response: bytes
+
+    @model_serializer
+    def serialize(self):
+        return self.evaluated_element.to_bytes() + self.masking_nonce + self.masked_response
 
 
 class AuthRequest(BaseModel):
@@ -30,6 +44,18 @@ class AuthRequest(BaseModel):
         return self.client_nonce + self.client_public_keyshare.to_bytes()
 
 
+class AuthResponse(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    server_nonce: bytes
+    server_public_keyshare: BaseCurve
+    server_mac: bytes
+
+    @model_serializer
+    def serialize(self):
+        return self.server_nonce + self.server_public_keyshare.to_bytes() + self.server_mac
+
+
 class Envelope(BaseModel):
     envelope_nonce: bytes
     auth_tag: bytes
@@ -37,6 +63,10 @@ class Envelope(BaseModel):
     @model_serializer
     def serialize(self):
         return self.envelope_nonce + self.auth_tag
+
+    @classmethod
+    def deserialize(cls, data: bytes, nonce_length: int):
+        return cls(envelope_nonce=data[:nonce_length], auth_tag=data[nonce_length:])
 
 
 class RegistrationRecord(BaseModel):
@@ -54,3 +84,12 @@ class KE1(BaseModel):
     @model_serializer
     def serialize(self):
         return self.credential_request.serialize() + self.auth_request.serialize()
+
+
+class KE2(BaseModel):
+    credential_response: CredentialResponse
+    auth_response: AuthResponse
+
+    @model_serializer
+    def serialize(self):
+        return self.credential_response.serialize() + self.auth_response.serialize()
