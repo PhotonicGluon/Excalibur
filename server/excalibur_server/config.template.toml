@@ -89,15 +89,14 @@ group = "small"
 [security.opaque]
 # The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal format
 # SECURITY NOTE: Keep this value secret and secure!
-oprf_seed = "Oblivious Pseudo-Random Function (OPRF) Seed Array Goes Here!!!!"
+oprf_seed = "OPRF seed goes here!"
 
-# TODO: Re-enable once we're sure what keys we're using
-# # Decaf448 public key for OPAQUE protocol
-# public_key = "76-character Base64-encoded Decaf448 public key for OPRF and OPAQUE protocol"
+# Public key for OPAQUE protocol
+public_key = "Public key for the OPAQUE protocol goes here"
 
-# # Decaf448 private key for OPAQUE protocol
-# # SECURITY NOTE: Keep this value secret and secure!
-# private_key = "76-character Base64-encoded Decaf448 private key for OPRF & OPAQUE protocol!"
+# Private key for OPAQUE protocol
+# SECURITY NOTE: Keep this value secret and secure!
+private_key = "Private key for OPAQUE protocol goes here"
 
 [security.e2ee]
 # The maximum number of end-to-end encryption communication sessions to cache

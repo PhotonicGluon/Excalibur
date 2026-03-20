@@ -110,7 +110,9 @@ def update_config():
         return config
 
     def v4_to_v5(config: TOMLDocument) -> TOMLDocument:
-        from Crypto.Random import get_random_bytes
+        from base64 import b64encode
+
+        from excalibur_server.src.auth.opaque import OPAQUE
 
         config["version"] = 5
 
@@ -122,29 +124,26 @@ def update_config():
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
             "oprf_seed",
-            get_random_bytes(32).hex(),
+            OPAQUE.generate_seed().hex(),
             top_comment="The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal "
             + "format\n# SECURITY NOTE: Keep this value secret and secure!",
         )
 
-        # TODO: Re-enable once we're sure what keys we're using
-        # # Add private and public key fields
-        # curve = Decaf448ECC()
-        # private_key, public_key = curve.keypair
+        # Add private and public key fields
+        private_key, public_key = OPAQUE.generate_keys(for_export=True)
 
-        # config["security"]["srp"]["opaque"] = _add_new_field(
-        #     config["security"]["srp"]["opaque"],
-        #     "public_key",
-        #     public_key,
-        #     top_comment="Decaf448 public key for OPAQUE protocol",
-        # )
-        # config["security"]["srp"]["opaque"] = _add_new_field(
-        #     config["security"]["srp"]["opaque"],
-        #     "private_key",
-        #     private_key,
-        #     top_comment="Decaf448 private key for OPAQUE protocol\n# SECURITY NOTE: Keep this value secret "
-        #     + "and secure!",
-        # )
+        config["security"]["srp"]["opaque"] = _add_new_field(
+            config["security"]["srp"]["opaque"],
+            "public_key",
+            b64encode(public_key).decode("utf-8"),
+            top_comment="Public key for OPAQUE protocol",
+        )
+        config["security"]["srp"]["opaque"] = _add_new_field(
+            config["security"]["srp"]["opaque"],
+            "private_key",
+            b64encode(private_key).decode("utf-8"),
+            top_comment="Private key for OPAQUE protocol\n# SECURITY NOTE: Keep this value secret " + "and secure!",
+        )
 
         # Now dump the config data and correct the OPAQUE table to be be its own table
         config_str = dumps(config)
@@ -193,48 +192,48 @@ def update_config():
     typer.secho("Config updated!", fg="green")
 
 
-# TODO: Re-enable once we're sure what keys we're using
-# @config_app.command(name="generate-keys")
-# def generate_keys():
-#     """
-#     Generate Curve25519 keys for OPAQUE protocol.
-#     """
+@config_app.command(name="generate-keys")
+def generate_keys():
+    """
+    Generate Curve25519 keys for OPAQUE protocol.
+    """
 
-#     from tomlkit import dump, load
-#     from tomlkit.exceptions import ParseError
+    from base64 import b64encode
 
-#     from excalibur_server.consts import CONFIG_FILE
-#     from excalibur_server.src.auth.elliptic import Decaf448ECC
+    from tomlkit import dump, load
+    from tomlkit.exceptions import ParseError
 
-#     # Check if the config is valid
-#     # (Just importing is enough to validate the config)
-#     try:
-#         from excalibur_server.src.config import CONFIG as CONFIG
-#     except Exception as e:
-#         typer.secho(f"Config is invalid: {e}", fg="red")
-#         raise typer.Exit(1)
+    from excalibur_server.consts import CONFIG_FILE
+    from excalibur_server.src.auth.opaque import OPAQUE
 
-#     # Read the config
-#     try:
-#         with open(CONFIG_FILE, "r") as f:
-#             config = load(f)
-#     except FileNotFoundError:
-#         typer.secho("Config file not found!", fg="red")
-#         raise typer.Exit(1)
-#     except ParseError as e:
-#         typer.secho(f"Config file is invalid: {e}", fg="red")
-#         raise typer.Exit(1)
+    # Check if the config is valid
+    # (Just importing is enough to validate the config)
+    try:
+        from excalibur_server.src.config import CONFIG as CONFIG
+    except Exception as e:
+        typer.secho(f"Config is invalid: {e}", fg="red")
+        raise typer.Exit(1)
 
-#     # Generate new keys
-#     typer.secho("Generating new keys...", fg="yellow")
-#     curve = Decaf448ECC()
-#     private_key, public_key = curve.keypair
+    # Read the config
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            config = load(f)
+    except FileNotFoundError:
+        typer.secho("Config file not found!", fg="red")
+        raise typer.Exit(1)
+    except ParseError as e:
+        typer.secho(f"Config file is invalid: {e}", fg="red")
+        raise typer.Exit(1)
 
-#     config["security"]["opaque"]["private_key"] = private_key
-#     config["security"]["opaque"]["public_key"] = public_key
+    # Generate new keys
+    typer.secho("Generating new keys...", fg="yellow")
+    private_key, public_key = OPAQUE.generate_keys(for_export=True)
 
-#     # Write the config
-#     with open(CONFIG_FILE, "w") as f:
-#         dump(config, f)
+    config["security"]["opaque"]["private_key"] = b64encode(private_key).decode("utf-8")
+    config["security"]["opaque"]["public_key"] = b64encode(public_key).decode("utf-8")
 
-#     typer.secho("Keys (re)generated!", fg="green")
+    # Write the config
+    with open(CONFIG_FILE, "w") as f:
+        dump(config, f)
+
+    typer.secho("Keys (re)generated!", fg="green")

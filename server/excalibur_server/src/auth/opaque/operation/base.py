@@ -1,6 +1,8 @@
 import hmac
 from typing import Callable
 
+from Crypto.Random import get_random_bytes
+
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.hkdf import HKDF
 from excalibur_server.src.auth.opaque.misc import i2osp
@@ -101,7 +103,7 @@ class BaseOPAQUE:
         :return: a tuple of the private key and the public key
         """
 
-        return self._oprf.generate_keys(seed, b"OPAQUE-DeriveDiffieHellmanKeyPair")
+        return self._oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveDiffieHellmanKeyPair")
 
     def _diffie_hellman(self, k: int, b: BaseCurve) -> BaseCurve:
         """
@@ -213,6 +215,30 @@ class BaseOPAQUE:
         return km2, km3, session_key
 
     # Main methods
+    def generate_seed(self) -> bytes:
+        """
+        Generates a seed for use in OPAQUE.
+
+        Not an official method of the OPAQUE specification.
+
+        :return: a random seed
+        """
+
+        return get_random_bytes(self.SEED_LENGTH)
+
+    def generate_keys(self, for_export: bool = False) -> tuple[int, BaseCurve] | tuple[bytes, bytes]:
+        """
+        Generates a public-private key pair for OPAQUE.
+
+        Not an official method of the OPAQUE specification.
+
+        :param for_export: whether the keys are being generated for export (i.e. they will be
+            converted into bytes)
+        :return: a tuple of (private_key, public_key)
+        """
+
+        return self._oprf.generate_keys(for_export=for_export)
+
     def deserialize_registration_request(self, registration_request_raw: bytes) -> RegistrationRequest:
         """
         Deserializes a registration request from raw bytes.
