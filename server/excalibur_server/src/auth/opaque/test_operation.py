@@ -31,6 +31,10 @@ class TestOPAQUERistretto255:
         "436f7272656374486f72736542617474657279537461706c65",
         "436f7272656374486f72736542617474657279537461706c65",
     ]
+    ENVELOPE_NONCES_RAW = [
+        "ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec",
+        "ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec",
+    ]
     MASKING_NONCES_RAW = [
         "38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d",
         "38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d",
@@ -59,6 +63,10 @@ class TestOPAQUERistretto255:
         "05a4f54206eef1ba2f615bc0aa285cb22f26d1153b5b40a1e85ff80da12f982f",
         "05a4f54206eef1ba2f615bc0aa285cb22f26d1153b5b40a1e85ff80da12f982f",
     ]
+    BLIND_REGISTRATIONS_RAW = [
+        "76cfbfe758db884bebb33582331ba9f159720ca8784a2a070a265d9c2d6abe01",
+        "76cfbfe758db884bebb33582331ba9f159720ca8784a2a070a265d9c2d6abe01",
+    ]
     BLIND_LOGINS_RAW = [
         "6ecc102d2e7a7cf49617aad7bbe188556792d4acd60a1a8a8d2b65d4b0790308",
         "6ecc102d2e7a7cf49617aad7bbe188556792d4acd60a1a8a8d2b65d4b0790308",
@@ -77,6 +85,18 @@ class TestOPAQUERistretto255:
         "ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec1ac902dc5589e9a5f0de56ad685ea8486210ef41449cd4d8712828913c5d2b680b2b3af4a26c765cff329bfb66d38ecf1d6cfa9e7a73c222c6efe0d9520f7d7c",
     ]
 
+    REGISTRATION_REQUESTS_RAW = [
+        "5059ff249eb1551b7ce4991f3336205bde44a105a032e747d21bf382e75f7a71",
+        "5059ff249eb1551b7ce4991f3336205bde44a105a032e747d21bf382e75f7a71",
+    ]
+    REGISTRATION_RESPONSES_RAW = [
+        "7408a268083e03abc7097fc05b587834539065e86fb0c7b6342fcf5e01e5b019b2fe7af9f48cc502d016729d2fe25cdd433f2c4bc904660b2a382c9b79df1a78",
+        "7408a268083e03abc7097fc05b587834539065e86fb0c7b6342fcf5e01e5b019b2fe7af9f48cc502d016729d2fe25cdd433f2c4bc904660b2a382c9b79df1a78",
+    ]
+    REGISTRATION_UPLOADS_RAW = [
+        "76a845464c68a5d2f7e442436bb1424953b17d3e2e289ccbaccafb57ac5c36751ac5844383c7708077dea41cbefe2fa15724f449e535dd7dd562e66f5ecfb95864eadddec9db5874959905117dad40a4524111849799281fefe3c51fa82785c5ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec634b0f5b96109c198a8027da51854c35bee90d1e1c781806d07d49b76de6a28b8d9e9b6c93b9f8b64d16dddd9c5bfb5fea48ee8fd2f75012a8b308605cdd8ba5",
+        "76a845464c68a5d2f7e442436bb1424953b17d3e2e289ccbaccafb57ac5c36751ac5844383c7708077dea41cbefe2fa15724f449e535dd7dd562e66f5ecfb95864eadddec9db5874959905117dad40a4524111849799281fefe3c51fa82785c5ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec1ac902dc5589e9a5f0de56ad685ea8486210ef41449cd4d8712828913c5d2b680b2b3af4a26c765cff329bfb66d38ecf1d6cfa9e7a73c222c6efe0d9520f7d7c",
+    ]
     KE1_RAW = [
         "c4dedb0ba6ed5d965d6f250fbe554cd45cba5dfcce3ce836e4aee778aa3cd44dda7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc6e29bee50701498605b2c085d7b241ca15ba5c32027dd21ba420b94ce60da326",
         "c4dedb0ba6ed5d965d6f250fbe554cd45cba5dfcce3ce836e4aee778aa3cd44dda7e07376d6d6f034cfa9bb537d11b8c6b4238c334333d1f0aebb380cae6a6cc6e29bee50701498605b2c085d7b241ca15ba5c32027dd21ba420b94ce60da326",
@@ -104,6 +124,7 @@ class TestOPAQUERistretto255:
     CLIENT_IDENTITIES = [bytes.fromhex(identity) for identity in CLIENT_IDENTITIES_RAW]
     SERVER_IDENTITIES = [bytes.fromhex(identity) for identity in SERVER_IDENTITIES_RAW]
     PASSWORDS = [bytes.fromhex(password) for password in PASSWORDS_RAW]
+    ENVELOPE_NONCES = [bytes.fromhex(nonce) for nonce in ENVELOPE_NONCES_RAW]
     MASKING_NONCES = [bytes.fromhex(nonce) for nonce in MASKING_NONCES_RAW]
     SERVER_PRIVATE_KEYS = [int.from_bytes(bytes.fromhex(key), "little") for key in SERVER_PRIVATE_KEYS_RAW]
     SERVER_PUBLIC_KEYS = [Ristretto255.from_bytes(bytes.fromhex(key)) for key in SERVER_PUBLIC_KEYS_RAW]
@@ -111,12 +132,16 @@ class TestOPAQUERistretto255:
     CLIENT_NONCES = [bytes.fromhex(nonce) for nonce in CLIENT_NONCES_RAW]
     CLIENT_KEYSHARE_SEEDS = [bytes.fromhex(seed) for seed in CLIENT_KEYSHARE_SEEDS_RAW]
     SERVER_KEYSHARE_SEEDS = [bytes.fromhex(seed) for seed in SERVER_KEYSHARE_SEEDS_RAW]
+    BLIND_REGISTRATIONS = [int.from_bytes(bytes.fromhex(blind), "little") for blind in BLIND_REGISTRATIONS_RAW]
     BLIND_LOGINS = [int.from_bytes(bytes.fromhex(blind), "little") for blind in BLIND_LOGINS_RAW]
 
     CLIENT_PUBLIC_KEYS = [Ristretto255.from_bytes(bytes.fromhex(key)) for key in CLIENT_PUBLIC_KEYS_RAW]
     RANDOMIZED_PASSWORDS = [bytes.fromhex(password) for password in RANDOMIZED_PASSWORDS_RAW]
     ENVELOPES = [bytes.fromhex(envelope) for envelope in ENVELOPES_RAW]
 
+    REGISTRATION_REQUESTS = [bytes.fromhex(request) for request in REGISTRATION_REQUESTS_RAW]
+    REGISTRATION_RESPONSES = [bytes.fromhex(response) for response in REGISTRATION_RESPONSES_RAW]
+    REGISTRATION_UPLOADS = [bytes.fromhex(upload) for upload in REGISTRATION_UPLOADS_RAW]
     KE1 = [bytes.fromhex(ke1) for ke1 in KE1_RAW]
     KE2 = [bytes.fromhex(ke2) for ke2 in KE2_RAW]
     KE3 = [bytes.fromhex(ke3) for ke3 in KE3_RAW]
@@ -131,6 +156,50 @@ class TestOPAQUERistretto255:
     def opaque_server(self):
         return OPAQUEServer(oprf_type="ristretto255-sha512")
 
+    # Registration tests
+    @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_REQUESTS)))
+    def test_registration_request(self, test_idx, opaque_client: OPAQUEClient):
+        expected_request, expected_blind = opaque_client.create_registration_request(
+            password=self.PASSWORDS[test_idx],
+            # Parameters specified for tests
+            blind=self.BLIND_REGISTRATIONS[test_idx],
+        )
+
+        assert expected_blind == self.BLIND_REGISTRATIONS[test_idx]
+        assert expected_request.serialize() == self.REGISTRATION_REQUESTS[test_idx]
+        assert opaque_client.deserialize_registration_request(self.REGISTRATION_REQUESTS[test_idx]) == expected_request
+
+    @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_RESPONSES)))
+    def test_registration_responses(self, test_idx, opaque_server: OPAQUEServer):
+        request = opaque_server.deserialize_registration_request(self.REGISTRATION_REQUESTS[test_idx])
+
+        expected_response = opaque_server.create_registration_response(
+            request=request,
+            server_public_key=self.SERVER_PUBLIC_KEYS[test_idx],
+            credential_identifier=self.CREDENTIAL_IDENTIFIERS[test_idx],
+            oprf_seed=self.OPRF_SEEDS[test_idx],
+        )
+        assert expected_response.serialize() == self.REGISTRATION_RESPONSES[test_idx]
+        assert (
+            opaque_server.deserialize_registration_response(self.REGISTRATION_RESPONSES[test_idx]) == expected_response
+        )
+
+    @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_REQUESTS)))
+    def test_registration_upload(self, test_idx, opaque_client: OPAQUEClient):
+        expected_record, expected_export_key = opaque_client.finalize_registration_request(
+            password=self.PASSWORDS[test_idx],
+            blind=self.BLIND_REGISTRATIONS[test_idx],
+            response=opaque_client.deserialize_registration_response(self.REGISTRATION_RESPONSES[test_idx]),
+            server_identity=self.SERVER_IDENTITIES[test_idx],
+            client_identity=self.CLIENT_IDENTITIES[test_idx],
+            # Parameters specified for tests
+            envelope_nonce=self.ENVELOPE_NONCES[test_idx],
+        )
+
+        assert expected_export_key == self.EXPORT_KEYS[test_idx]
+        assert expected_record.serialize() == self.REGISTRATION_UPLOADS[test_idx]
+
+    # Authenticated key exchange tests
     @pytest.mark.parametrize("test_idx", range(len(KE1)))
     def test_ke1(self, test_idx, opaque_client: OPAQUEClient):
         our_ke1 = opaque_client.generate_ke1(
@@ -142,7 +211,7 @@ class TestOPAQUERistretto255:
         )
 
         assert our_ke1.serialize() == self.KE1[test_idx]
-        assert opaque_client._deserialize_ke1(self.KE1[test_idx]) == our_ke1
+        assert opaque_client.deserialize_ke1(self.KE1[test_idx]) == our_ke1
 
     @pytest.mark.parametrize("test_idx", range(len(KE2)))
     def test_ke2(self, test_idx, opaque_server: OPAQUEServer):
@@ -162,7 +231,7 @@ class TestOPAQUERistretto255:
             ),
             credential_identifier=self.CREDENTIAL_IDENTIFIERS[test_idx],
             oprf_seed=self.OPRF_SEEDS[test_idx],
-            ke1=opaque_server._deserialize_ke1(self.KE1[test_idx]),
+            ke1=opaque_server.deserialize_ke1(self.KE1[test_idx]),
             client_identity=self.CLIENT_IDENTITIES[test_idx],
             # Parameters specified for tests
             masking_nonce=self.MASKING_NONCES[test_idx],
@@ -171,7 +240,7 @@ class TestOPAQUERistretto255:
         )
 
         assert our_ke2.serialize() == self.KE2[test_idx]
-        assert opaque_server._deserialize_ke2(self.KE2[test_idx]) == our_ke2
+        assert opaque_server.deserialize_ke2(self.KE2[test_idx]) == our_ke2
 
     @pytest.mark.parametrize("test_idx", range(len(KE3)))
     def test_ke3(self, test_idx, opaque_client: OPAQUEClient):
@@ -181,7 +250,7 @@ class TestOPAQUERistretto255:
         opaque_client._client_secret = opaque_client._derive_diffie_hellman_keypair(
             self.CLIENT_KEYSHARE_SEEDS[test_idx]
         )[0]
-        opaque_client._ke1 = opaque_client._deserialize_ke1(self.KE1[test_idx])
+        opaque_client._ke1 = opaque_client.deserialize_ke1(self.KE1[test_idx])
 
         client_identity = self.CLIENT_IDENTITIES[test_idx]
         if client_identity == b"":
@@ -194,11 +263,11 @@ class TestOPAQUERistretto255:
         our_ke3, our_session_key, our_export_key = opaque_client.generate_ke3(
             client_identity=client_identity,
             server_identity=server_identity,
-            ke2=opaque_client._deserialize_ke2(self.KE2[test_idx]),
+            ke2=opaque_client.deserialize_ke2(self.KE2[test_idx]),
         )
 
         assert our_ke3.serialize() == self.KE3[test_idx]
-        assert opaque_client._deserialize_ke3(self.KE3[test_idx]) == our_ke3
+        assert opaque_client.deserialize_ke3(self.KE3[test_idx]) == our_ke3
         assert our_export_key == self.EXPORT_KEYS[test_idx]
         assert our_session_key == self.SESSION_KEYS[test_idx]
 
@@ -221,7 +290,7 @@ class TestOPAQUERistretto255:
             ),
             credential_identifier=self.CREDENTIAL_IDENTIFIERS[test_idx],
             oprf_seed=self.OPRF_SEEDS[test_idx],
-            ke1=opaque_server._deserialize_ke1(self.KE1[test_idx]),
+            ke1=opaque_server.deserialize_ke1(self.KE1[test_idx]),
             client_identity=self.CLIENT_IDENTITIES[test_idx],
             # Parameters specified for tests
             masking_nonce=self.MASKING_NONCES[test_idx],
@@ -230,6 +299,6 @@ class TestOPAQUERistretto255:
         )
 
         # Check finishing
-        ke3 = opaque_server._deserialize_ke3(self.KE3[test_idx])
+        ke3 = opaque_server.deserialize_ke3(self.KE3[test_idx])
         our_session_key = opaque_server.finish(ke3)
         assert our_session_key == self.SESSION_KEYS[test_idx]

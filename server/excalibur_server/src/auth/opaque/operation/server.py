@@ -13,6 +13,8 @@ from excalibur_server.src.auth.opaque.structures import (
     CredentialRequest,
     CredentialResponse,
     RegistrationRecord,
+    RegistrationRequest,
+    RegistrationResponse,
 )
 
 
@@ -50,12 +52,15 @@ class OPAQUEServer(BaseOPAQUE):
         :return: the credential response
         """
 
-        seed = self._kdf.expand(oprf_seed, credential_identifier + b"OprfKey", self._oprf.Curve.KEY_LENGTH)
-        oprf_key, _ = self._oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveKeyPair")
+        # The first part is exactly the same as `create_registration_response()`
+        registration_response = self.create_registration_response(
+            request=request,
+            server_public_key=server_public_key,
+            credential_identifier=credential_identifier,
+            oprf_seed=oprf_seed,
+        )
 
-        blinded_element = request.blinded_element
-        evaluated_element = self._oprf.blind_evaluate(oprf_key, blinded_element)
-
+        # We continue with the rest of the credential response creation
         masking_nonce = masking_nonce or get_random_bytes(self.NONCE_LENGTH)
         credential_response_pad = self._kdf.expand(
             record.masking_key,
@@ -65,7 +70,9 @@ class OPAQUEServer(BaseOPAQUE):
         masked_response = xor(credential_response_pad, server_public_key.to_bytes() + record.envelope.serialize())
 
         response = CredentialResponse(
-            evaluated_element=evaluated_element, masking_nonce=masking_nonce, masked_response=masked_response
+            evaluated_element=registration_response.evaluated_element,
+            masking_nonce=masking_nonce,
+            masked_response=masked_response,
         )
 
         return response
@@ -134,6 +141,27 @@ class OPAQUEServer(BaseOPAQUE):
         return self._session_key
 
     # Main functions
+    def create_registration_response(
+        self, request: RegistrationRequest, server_public_key: BaseCurve, credential_identifier: bytes, oprf_seed: bytes
+    ) -> RegistrationResponse:
+        """
+        Create a registration response for the given registration request, following section 5.2.2.
+
+        :param request: the registration request
+        :param server_public_key: the server's public key
+        :param credential_identifier: the credential identifier
+        :param oprf_seed: the OPRF seed
+        :return: the registration response
+        """
+
+        seed = self._kdf.expand(oprf_seed, credential_identifier + b"OprfKey", self._oprf.Curve.KEY_LENGTH)
+        oprf_key, _ = self._oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveKeyPair")
+
+        blinded_element = request.blinded_element
+        evaluated_element = self._oprf.blind_evaluate(oprf_key, blinded_element)
+
+        return RegistrationResponse(evaluated_element=evaluated_element, server_public_key=server_public_key)
+
     def generate_ke2(
         self,
         server_identity: bytes,

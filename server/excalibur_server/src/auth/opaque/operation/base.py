@@ -14,6 +14,8 @@ from excalibur_server.src.auth.opaque.structures import (
     CleartextCredentials,
     CredentialRequest,
     CredentialResponse,
+    RegistrationRequest,
+    RegistrationResponse,
 )
 
 
@@ -65,8 +67,8 @@ class BaseOPAQUE:
         self,
         server_public_key: BaseCurve,
         client_public_key: BaseCurve,
-        server_identity: bytes | None = None,
-        client_identity: bytes | None = None,
+        server_identity: bytes,
+        client_identity: bytes,
     ):
         """
         Create cleartext credentials for the server, following section 4's
@@ -74,14 +76,14 @@ class BaseOPAQUE:
 
         :param server_public_key: the server's public key
         :param client_public_key: the client's public key
-        :param server_identity: the server's identity
-        :param client_identity: the client's identity
+        :param server_identity: optional server's identity
+        :param client_identity: optional client's identity
         :return: the cleartext credentials
         """
 
-        if server_identity is None:
+        if server_identity == b"":
             server_identity = server_public_key.to_bytes()
-        if client_identity is None:
+        if client_identity == b"":
             client_identity = client_public_key.to_bytes()
 
         cleartext_credentials = CleartextCredentials(
@@ -210,7 +212,33 @@ class BaseOPAQUE:
 
         return km2, km3, session_key
 
-    def _deserialize_ke1(self, ke1_raw: bytes) -> KE1:
+    # Main methods
+    def deserialize_registration_request(self, registration_request_raw: bytes) -> RegistrationRequest:
+        """
+        Deserializes a registration request from raw bytes.
+
+        :param registration_request_raw: the raw bytes of the registration request
+        :return: the deserialized registration request
+        """
+        return RegistrationRequest(blinded_element=self._oprf.Curve.from_bytes(registration_request_raw))
+
+    def deserialize_registration_response(self, registration_response_raw: bytes) -> RegistrationResponse:
+        """
+        Deserializes a registration response from raw bytes.
+
+        :param registration_response_raw: the raw bytes of the registration response
+        :return: the deserialized registration response
+        """
+
+        evaluated_element_raw = registration_response_raw[: self._oprf.Curve.KEY_LENGTH]
+        server_public_key_raw = registration_response_raw[self._oprf.Curve.KEY_LENGTH :]
+
+        return RegistrationResponse(
+            evaluated_element=self._oprf.Curve.from_bytes(evaluated_element_raw),
+            server_public_key=self._oprf.Curve.from_bytes(server_public_key_raw),
+        )
+
+    def deserialize_ke1(self, ke1_raw: bytes) -> KE1:
         """
         Deserializes a KE1 message from raw bytes.
 
@@ -229,7 +257,7 @@ class BaseOPAQUE:
 
         return KE1(credential_request=credential_request, auth_request=auth_request)
 
-    def _deserialize_ke2(self, ke2_raw: bytes) -> KE2:
+    def deserialize_ke2(self, ke2_raw: bytes) -> KE2:
         """
         Deserializes a KE2 message from raw bytes.
 
@@ -268,7 +296,7 @@ class BaseOPAQUE:
 
         return KE2(credential_response=credential_response, auth_response=auth_response)
 
-    def _deserialize_ke3(self, ke3_raw: bytes) -> KE3:
+    def deserialize_ke3(self, ke3_raw: bytes) -> KE3:
         """
         Deserializes a KE3 message from raw bytes.
 
