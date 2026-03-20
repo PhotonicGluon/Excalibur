@@ -62,10 +62,10 @@ class OPAQUEServer(BaseOPAQUE):
 
         # We continue with the rest of the credential response creation
         masking_nonce = masking_nonce or get_random_bytes(self.NONCE_LENGTH)
-        credential_response_pad = self._kdf.expand(
+        credential_response_pad = self.kdf.expand(
             record.masking_key,
             masking_nonce + b"CredentialResponsePad",
-            self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self._kdf.digest_size,
+            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
         )
         masked_response = xor(credential_response_pad, server_public_key.to_bytes() + record.envelope.serialize())
 
@@ -128,11 +128,12 @@ class OPAQUEServer(BaseOPAQUE):
 
         return AuthResponse(server_nonce=nonce, server_public_keyshare=public_keyshare, server_mac=mac)
 
-    def _auth_server_finalize(self, ke3: KE3) -> None:
+    def _auth_server_finalize(self, ke3: KE3) -> bytes:
         """
         Finishes the AKE protocol by processing the client's KE3 message, following section 6.4.4.
 
         :param ke3: the client's KE3 message
+        :return: the session key
         """
 
         if ke3.client_mac != self._expected_client_mac:
@@ -154,11 +155,11 @@ class OPAQUEServer(BaseOPAQUE):
         :return: the registration response
         """
 
-        seed = self._kdf.expand(oprf_seed, credential_identifier + b"OprfKey", self._oprf.Curve.KEY_LENGTH)
-        oprf_key, _ = self._oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveKeyPair")
+        seed = self.kdf.expand(oprf_seed, credential_identifier + b"OprfKey", self.oprf.Curve.KEY_LENGTH)
+        oprf_key, _ = self.oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveKeyPair")
 
         blinded_element = request.blinded_element
-        evaluated_element = self._oprf.blind_evaluate(oprf_key, blinded_element)
+        evaluated_element = self.oprf.blind_evaluate(oprf_key, blinded_element)
 
         return RegistrationResponse(evaluated_element=evaluated_element, server_public_key=server_public_key)
 
@@ -225,11 +226,12 @@ class OPAQUEServer(BaseOPAQUE):
 
         return KE2(credential_response=credential_response, auth_response=auth_response)
 
-    def finish(self, ke3: KE3) -> None:
+    def finish(self, ke3: KE3) -> bytes:
         """
         Finishes the AKE protocol by processing the client's KE3 message.
 
         :param ke3: the client's KE3 message
+        :return: the session key
         """
 
         return self._auth_server_finalize(ke3)

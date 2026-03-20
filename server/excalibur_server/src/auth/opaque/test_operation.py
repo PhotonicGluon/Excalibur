@@ -198,6 +198,7 @@ class TestOPAQUERistretto255:
 
         assert expected_export_key == self.EXPORT_KEYS[test_idx]
         assert expected_record.serialize() == self.REGISTRATION_UPLOADS[test_idx]
+        assert opaque_client.deserialize_registration_record(self.REGISTRATION_UPLOADS[test_idx]) == expected_record
 
     # Authenticated key exchange tests
     @pytest.mark.parametrize("test_idx", range(len(KE1)))
@@ -216,8 +217,8 @@ class TestOPAQUERistretto255:
     @pytest.mark.parametrize("test_idx", range(len(KE2)))
     def test_ke2(self, test_idx, opaque_server: OPAQUEServer):
         opaque_server.context = self.CONTEXTS[test_idx]
-        masking_key = opaque_server._kdf.expand(
-            self.RANDOMIZED_PASSWORDS[test_idx], b"MaskingKey", opaque_server._kdf.digest_size
+        masking_key = opaque_server.kdf.expand(
+            self.RANDOMIZED_PASSWORDS[test_idx], b"MaskingKey", opaque_server.kdf.digest_size
         )
 
         our_ke2 = opaque_server.generate_ke2(
@@ -275,8 +276,8 @@ class TestOPAQUERistretto255:
     def test_server_finish(self, test_idx, opaque_server: OPAQUEServer):
         # Test server setting up and sending KE2
         opaque_server.context = self.CONTEXTS[test_idx]
-        masking_key = opaque_server._kdf.expand(
-            self.RANDOMIZED_PASSWORDS[test_idx], b"MaskingKey", opaque_server._kdf.digest_size
+        masking_key = opaque_server.kdf.expand(
+            self.RANDOMIZED_PASSWORDS[test_idx], b"MaskingKey", opaque_server.kdf.digest_size
         )
 
         opaque_server.generate_ke2(

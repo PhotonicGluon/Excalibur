@@ -66,10 +66,6 @@ def mock_get_user(username: str):
     return None
 
 
-def mock_is_user(username: str):
-    return username == "test-user"
-
-
 # Pytest fixture to apply the mocks
 @pytest.fixture(autouse=True)
 def mock_test_user(monkeypatch: pytest.MonkeyPatch):

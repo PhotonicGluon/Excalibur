@@ -16,6 +16,8 @@ from excalibur_server.src.auth.opaque.structures import (
     CleartextCredentials,
     CredentialRequest,
     CredentialResponse,
+    Envelope,
+    RegistrationRecord,
     RegistrationRequest,
     RegistrationResponse,
 )
@@ -37,13 +39,14 @@ class BaseOPAQUE:
         context: bytes = b"Excalibur",
     ) -> None:
         self.context = context
+        self.oprf_type = oprf_type
 
         if oprf_type == "decaf448-shake256":
-            self._oprf = OPRFDecaf
-            self._kdf = HKDF("shake256")
+            self.oprf = OPRFDecaf
+            self.kdf = HKDF("shake256")
         elif oprf_type == "ristretto255-sha512":
-            self._oprf = OPRFRistretto
-            self._kdf = HKDF("sha512")
+            self.oprf = OPRFRistretto
+            self.kdf = HKDF("sha512")
 
         self._ksf = ksf or (lambda x: x)  # Identity function as default
 
@@ -53,7 +56,7 @@ class BaseOPAQUE:
         Implements the `MAC()` function described in section 2.2.
         """
 
-        return hmac.new(key, msg, self._kdf.hash_name).digest()
+        return hmac.new(key, msg, self.kdf.hash_name).digest()
 
     def _hash(self, data: bytes) -> bytes:
         """
@@ -63,7 +66,7 @@ class BaseOPAQUE:
         :return: the hash of the data
         """
 
-        return self._oprf.hashfunc(data).digest()
+        return self.oprf.hashfunc(data).digest()
 
     def _create_cleartext_credentials(
         self,
@@ -103,7 +106,7 @@ class BaseOPAQUE:
         :return: a tuple of the private key and the public key
         """
 
-        return self._oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveDiffieHellmanKeyPair")
+        return self.oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveDiffieHellmanKeyPair")
 
     def _diffie_hellman(self, k: int, b: BaseCurve) -> BaseCurve:
         """
@@ -140,7 +143,7 @@ class BaseOPAQUE:
             + context
         )
 
-        return self._kdf.expand(
+        return self.kdf.expand(
             secret,
             custom_label,
             length,
@@ -156,7 +159,7 @@ class BaseOPAQUE:
         :return: the derived secret
         """
 
-        return self._expand_label(secret, label, transcript_hash, self._kdf.digest_size)
+        return self._expand_label(secret, label, transcript_hash, self.kdf.digest_size)
 
     def _generate_preamble(
         self,
@@ -204,7 +207,7 @@ class BaseOPAQUE:
         :return: the `km2`, `km3`, and `session_key` values
         """
 
-        prk = self._kdf.extract(b"", ikm)
+        prk = self.kdf.extract(b"", ikm)
 
         preamble_hash = self._hash(preamble)
         handshake_secret = self._derive_secret(prk, b"HandshakeSecret", preamble_hash)
@@ -237,7 +240,7 @@ class BaseOPAQUE:
         :return: a tuple of (private_key, public_key)
         """
 
-        return self._oprf.generate_keys(for_export=for_export)
+        return self.oprf.generate_keys(for_export=for_export)
 
     def deserialize_registration_request(self, registration_request_raw: bytes) -> RegistrationRequest:
         """
@@ -246,7 +249,7 @@ class BaseOPAQUE:
         :param registration_request_raw: the raw bytes of the registration request
         :return: the deserialized registration request
         """
-        return RegistrationRequest(blinded_element=self._oprf.Curve.from_bytes(registration_request_raw))
+        return RegistrationRequest(blinded_element=self.oprf.Curve.from_bytes(registration_request_raw))
 
     def deserialize_registration_response(self, registration_response_raw: bytes) -> RegistrationResponse:
         """
@@ -256,13 +259,30 @@ class BaseOPAQUE:
         :return: the deserialized registration response
         """
 
-        evaluated_element_raw = registration_response_raw[: self._oprf.Curve.KEY_LENGTH]
-        server_public_key_raw = registration_response_raw[self._oprf.Curve.KEY_LENGTH :]
+        evaluated_element_raw = registration_response_raw[: self.oprf.Curve.KEY_LENGTH]
+        server_public_key_raw = registration_response_raw[self.oprf.Curve.KEY_LENGTH :]
 
         return RegistrationResponse(
-            evaluated_element=self._oprf.Curve.from_bytes(evaluated_element_raw),
-            server_public_key=self._oprf.Curve.from_bytes(server_public_key_raw),
+            evaluated_element=self.oprf.Curve.from_bytes(evaluated_element_raw),
+            server_public_key=self.oprf.Curve.from_bytes(server_public_key_raw),
         )
+
+    def deserialize_registration_record(self, registration_record_raw: bytes) -> RegistrationRecord:
+        """
+        Deserializes a registration record from raw bytes.
+
+        :param registration_record_raw: the raw bytes of the registration record
+        :return: the deserialized registration record
+        """
+
+        client_public_key = self.oprf.Curve.from_bytes(registration_record_raw[: self.oprf.Curve.KEY_LENGTH])
+        masking_key = registration_record_raw[
+            self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.kdf.digest_size
+        ]
+        envelope = Envelope.deserialize(
+            registration_record_raw[self.oprf.Curve.KEY_LENGTH + self.kdf.digest_size :], self.NONCE_LENGTH
+        )
+        return RegistrationRecord(client_public_key=client_public_key, masking_key=masking_key, envelope=envelope)
 
     def deserialize_ke1(self, ke1_raw: bytes) -> KE1:
         """
@@ -273,12 +293,12 @@ class BaseOPAQUE:
         """
 
         # The first part is the credential request, which consists of the OPRF blinded message
-        blinded_element = self._oprf.Curve.from_bytes(ke1_raw[: self._oprf.Curve.KEY_LENGTH])
+        blinded_element = self.oprf.Curve.from_bytes(ke1_raw[: self.oprf.Curve.KEY_LENGTH])
         credential_request = CredentialRequest(blinded_element=blinded_element)
 
         # Then we have the auth request, consisting of a client nonce and public keyshare
-        client_nonce = ke1_raw[self._oprf.Curve.KEY_LENGTH : self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
-        client_public_keyshare = self._oprf.Curve.from_bytes(ke1_raw[self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH :])
+        client_nonce = ke1_raw[self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
+        client_public_keyshare = self.oprf.Curve.from_bytes(ke1_raw[self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH :])
         auth_request = AuthRequest(client_nonce=client_nonce, client_public_keyshare=client_public_keyshare)
 
         return KE1(credential_request=credential_request, auth_request=auth_request)
@@ -292,12 +312,12 @@ class BaseOPAQUE:
         """
 
         # First part is the credential response
-        evaluated_element = self._oprf.Curve.from_bytes(ke2_raw[: self._oprf.Curve.KEY_LENGTH])
-        masking_nonce = ke2_raw[self._oprf.Curve.KEY_LENGTH : self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
+        evaluated_element = self.oprf.Curve.from_bytes(ke2_raw[: self.oprf.Curve.KEY_LENGTH])
+        masking_nonce = ke2_raw[self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
 
-        masked_response_length = self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self._kdf.digest_size
+        masked_response_length = self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
         masked_response = ke2_raw[
-            self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH : self._oprf.Curve.KEY_LENGTH
+            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH : self.oprf.Curve.KEY_LENGTH
             + self.NONCE_LENGTH
             + masked_response_length
         ]
@@ -308,14 +328,14 @@ class BaseOPAQUE:
 
         # Then we have the auth response, consisting of a server nonce, public keyshare, and server MAC
         server_nonce = ke2_raw[credential_response_length : credential_response_length + self.NONCE_LENGTH]
-        server_public_keyshare = self._oprf.Curve.from_bytes(
+        server_public_keyshare = self.oprf.Curve.from_bytes(
             ke2_raw[
                 credential_response_length + self.NONCE_LENGTH : credential_response_length
                 + self.NONCE_LENGTH
-                + self._oprf.Curve.KEY_LENGTH
+                + self.oprf.Curve.KEY_LENGTH
             ]
         )
-        server_mac = ke2_raw[credential_response_length + self.NONCE_LENGTH + self._oprf.Curve.KEY_LENGTH :]
+        server_mac = ke2_raw[credential_response_length + self.NONCE_LENGTH + self.oprf.Curve.KEY_LENGTH :]
         auth_response = AuthResponse(
             server_nonce=server_nonce, server_public_keyshare=server_public_keyshare, server_mac=server_mac
         )

@@ -59,10 +59,10 @@ class OPAQUEClient(BaseOPAQUE):
 
         envelope_nonce = envelope_nonce or get_random_bytes(self.NONCE_LENGTH)
 
-        masking_key = self._kdf.expand(randomized_password, b"MaskingKey", self._kdf.digest_size)
-        auth_key = self._kdf.expand(randomized_password, envelope_nonce + b"AuthKey", self._kdf.digest_size)
-        export_key = self._kdf.expand(randomized_password, envelope_nonce + b"ExportKey", self._kdf.digest_size)
-        seed = self._kdf.expand(randomized_password, envelope_nonce + b"PrivateKey", self.SEED_LENGTH)
+        masking_key = self.kdf.expand(randomized_password, b"MaskingKey", self.kdf.digest_size)
+        auth_key = self.kdf.expand(randomized_password, envelope_nonce + b"AuthKey", self.kdf.digest_size)
+        export_key = self.kdf.expand(randomized_password, envelope_nonce + b"ExportKey", self.kdf.digest_size)
+        seed = self.kdf.expand(randomized_password, envelope_nonce + b"PrivateKey", self.SEED_LENGTH)
         client_private_key, client_public_key = self._derive_diffie_hellman_keypair(seed)
 
         cleartext_credentials = self._create_cleartext_credentials(
@@ -160,24 +160,22 @@ class OPAQUEClient(BaseOPAQUE):
 
         evaluated_element = response.evaluated_element
 
-        oprf_output = self._oprf.finalize(password, blind, evaluated_element)
+        oprf_output = self.oprf.finalize(password, blind, evaluated_element)
         stretched_oprf_output = self._ksf(oprf_output)
 
-        randomized_password = self._kdf.extract(b"", oprf_output + stretched_oprf_output)
+        randomized_password = self.kdf.extract(b"", oprf_output + stretched_oprf_output)
 
-        masking_key = self._kdf.expand(randomized_password, b"MaskingKey", self._kdf.digest_size)
+        masking_key = self.kdf.expand(randomized_password, b"MaskingKey", self.kdf.digest_size)
 
-        credential_response_pad = self._kdf.expand(
+        credential_response_pad = self.kdf.expand(
             masking_key,
             response.masking_nonce + b"CredentialResponsePad",
-            self._oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self._kdf.digest_size,
+            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
         )
 
         server_public_key_and_envelope = xor(credential_response_pad, response.masked_response)
-        server_public_key = self._oprf.Curve.from_bytes(server_public_key_and_envelope[: self._oprf.Curve.KEY_LENGTH])
-        envelope = Envelope.deserialize(
-            server_public_key_and_envelope[self._oprf.Curve.KEY_LENGTH :], self.NONCE_LENGTH
-        )
+        server_public_key = self.oprf.Curve.from_bytes(server_public_key_and_envelope[: self.oprf.Curve.KEY_LENGTH])
+        envelope = Envelope.deserialize(server_public_key_and_envelope[self.oprf.Curve.KEY_LENGTH :], self.NONCE_LENGTH)
 
         client_private_key, cleartext_credentials, export_key = self._recover(
             randomized_password, server_public_key, envelope, server_identity, client_identity
@@ -255,7 +253,7 @@ class OPAQUEClient(BaseOPAQUE):
         :return: a tuple containing the registration request and the blind used for the registration
         """
 
-        blind, blinded_element = self._oprf.blind(password, blind)
+        blind, blinded_element = self.oprf.blind(password, blind)
         return RegistrationRequest(blinded_element=blinded_element), blind
 
     def finalize_registration_request(
@@ -282,10 +280,10 @@ class OPAQUEClient(BaseOPAQUE):
 
         evaluated_element = response.evaluated_element
 
-        oprf_output = self._oprf.finalize(password, blind, evaluated_element)
+        oprf_output = self.oprf.finalize(password, blind, evaluated_element)
         stretched_oprf_output = self._ksf(oprf_output)
 
-        randomized_password = self._kdf.extract(b"", oprf_output + stretched_oprf_output)
+        randomized_password = self.kdf.extract(b"", oprf_output + stretched_oprf_output)
 
         envelope, client_public_key, masking_key, export_key = self._store(
             randomized_password,
