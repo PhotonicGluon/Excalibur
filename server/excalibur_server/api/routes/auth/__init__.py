@@ -5,7 +5,7 @@ from excalibur_server.env import is_debug
 
 router = APIRouter(tags=["auth"])
 
-from .comms import comms_endpoint as comms_endpoint
+from .comms import srp_comms_endpoint as srp_comms_endpoint
 from .info import get_group_size_endpoint as get_group_size_endpoint
 from .token import get_token_endpoint as get_token_endpoint
 
