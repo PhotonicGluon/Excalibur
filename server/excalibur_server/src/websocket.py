@@ -1,8 +1,11 @@
+import json
 from base64 import b64decode, b64encode
 from typing import Literal
 
 from fastapi import WebSocket as WebSocket
 from pydantic import BaseModel, model_serializer
+
+from excalibur_server.src.exef import ExEF
 
 
 class WebSocketMsg(BaseModel):
@@ -78,3 +81,41 @@ class WebSocketManager:
         """
 
         return WebSocketMsg(**await self._ws.receive_json())
+
+
+class EncryptedWebSocketManager(WebSocketManager):
+    """
+    A manager for an encrypted WebSocket connection.
+    """
+
+    def __init__(self, ws: WebSocket, encryption_key: bytes):
+        """
+        Initialize the encrypted WebSocket manager.
+
+        :param ws: the WebSocket connection
+        :param encryption_key: the encryption key
+        """
+
+        super().__init__(ws)
+        self._encryption_key = encryption_key
+
+    async def send(self, msg: WebSocketMsg):
+        """
+        Send a message over the WebSocket connection.
+
+        :param msg: the message to send
+        """
+
+        encrypted_data = ExEF(self._encryption_key).encrypt(json.dumps(msg.serialize()).encode("utf-8"))
+        await self._ws.send_bytes(encrypted_data)
+
+    async def receive(self) -> WebSocketMsg:
+        """
+        Receive a message from the WebSocket connection.
+
+        :return: the received message
+        """
+
+        data = await self._ws.receive_bytes()
+        decrypted_data = ExEF(self._encryption_key).decrypt(data)
+        return WebSocketMsg(**json.loads(decrypted_data))

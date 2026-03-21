@@ -2,7 +2,18 @@
 
 ## Registration
 
-TODO: Add
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+
+    C->>S: username
+    C->>S: request
+    Note right of S: Check username
+    S->>C: [OK] response
+    C->>S: record
+    Note right of S: Save record
+```
 
 ## Login
 

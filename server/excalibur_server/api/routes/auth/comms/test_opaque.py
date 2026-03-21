@@ -3,15 +3,95 @@ from base64 import b64decode, b64encode
 
 import pytest
 from Crypto.Cipher import AES
+from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.tables import User
+from excalibur_server.src.exef import ExEF
 
 client = TestClient(app)
+
+
+@pytest.mark.parametrize("test_idx", range(len(OPAQUETestVectors.CONTEXTS)))
+def test_registration(test_idx: int, monkeypatch: pytest.MonkeyPatch):
+    username = OPAQUETestVectors.CLIENT_IDENTITIES[test_idx].decode("utf-8")
+
+    # Perform monkeypatching of ALL the functions
+    # (Note that we monkeypatch the destination, not the source)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.registration.get_user", lambda _username: None)
+    monkeypatch.setattr(
+        "excalibur_server.api.routes.auth.comms.opaque.registration._get_oprf_seed",
+        lambda: OPAQUETestVectors.OPRF_SEEDS[test_idx],
+    )
+    monkeypatch.setattr(
+        "excalibur_server.api.routes.auth.comms.opaque.registration._get_public_key",
+        lambda: OPAQUETestVectors.SERVER_PUBLIC_KEYS[test_idx],
+    )
+    monkeypatch.setattr(
+        "excalibur_server.api.routes.auth.comms.opaque.registration._get_credential_identifier",
+        lambda _username: OPAQUETestVectors.CREDENTIAL_IDENTIFIERS[test_idx],
+    )
+
+    # Mock the server also
+    mock_server = OPAQUEServer(oprf_type="ristretto255-sha512")
+    mock_server.context = OPAQUETestVectors.CONTEXTS[test_idx]
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.registration._get_opaque", lambda: mock_server)
+
+    # Mock the adding of user
+    added_user = None
+
+    def mock_add_user(user: User):
+        nonlocal added_user
+        added_user = user
+
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.registration.add_user", mock_add_user)
+
+    # Connect and register
+    with client.websocket_connect("/api/auth/opaque/register") as ws:
+        # Helper functions for sending and receiving JSON messages
+        def send_json(data: dict):
+            encrypted_data = ExEF(CONFIG.security.account_creation_key).encrypt(json.dumps(data).encode("utf-8"))
+            ws.send_bytes(encrypted_data)
+
+        def recv_json() -> dict:
+            encrypted_data = ws.receive_bytes()
+            return json.loads(ExEF(CONFIG.security.account_creation_key).decrypt(encrypted_data))
+
+        # Send username and registration request
+        send_json({"data": username})
+        send_json(
+            {"data": b64encode(OPAQUETestVectors.REGISTRATION_REQUESTS[test_idx]).decode("utf-8"), "binary": True}
+        )
+
+        # Receive registration response
+        registration_response_raw = recv_json()
+        assert registration_response_raw.get("binary") is True
+        registration_response = b64decode(registration_response_raw["data"])
+        assert registration_response == OPAQUETestVectors.REGISTRATION_RESPONSES[test_idx]
+
+        # Send registration record, AUK salt, and encrypted vault key
+        send_json({"data": b64encode(OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]).decode("utf-8"), "binary": True})
+        send_json({"data": b64encode(b"one 32 byte string for testing!!").decode("utf-8"), "binary": True})
+        send_json({"data": b64encode(b"Some value").decode("utf-8"), "binary": True})
+
+        # Wait for the server to close the connection
+        try:
+            ws.receive_bytes()
+        except WebSocketDisconnect:
+            pass
+
+        # Verify user was added
+        assert added_user is not None
+        assert added_user.username == username
+        assert added_user.auth_protocol == AuthProtocol.OPAQUE_3DH
+        assert added_user.registration_record == OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]
+        assert added_user.auk_salt == b"one 32 byte string for testing!!"
+        assert added_user.key_enc == b"Some value"
 
 
 @pytest.mark.parametrize("test_idx", range(len(OPAQUETestVectors.CONTEXTS)))

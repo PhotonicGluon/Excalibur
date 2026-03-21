@@ -30,7 +30,7 @@ async def comms_endpoint(websocket: WebSocket):
 
     await ws_manager.accept()
     try:
-        # Wait username and first key exchange message
+        # Wait for username and first key exchange message
         username = (await ws_manager.receive()).data
         ke1_raw = (await ws_manager.receive()).data
 

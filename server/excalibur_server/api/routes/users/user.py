@@ -131,7 +131,7 @@ def add_user_endpoint(
     tag: Annotated[str, Body(description="Base64 string of the tag.")],
 ):
     """
-    Endpoint that enrols the verifier.
+    Endpoint that enrols the user.
 
     Encrypt a JSON object using the Account Creation Key (ACK) with the following details:
     - `auk_salt`: Base64 string of the account unlock key (AUK) salt.
