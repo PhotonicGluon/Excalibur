@@ -11,7 +11,9 @@ class User(SQLModel, table=True):
 
     # Basic information
     username: str = Field(primary_key=True)
-    auth_protocol: int = Field(sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH))
+    auth_protocol: AuthProtocol = Field(
+        sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
+    )
     "Authentication protocol to use"
 
     # Secure Remote Password (SRP)

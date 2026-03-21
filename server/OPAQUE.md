@@ -1,6 +1,16 @@
 # OPAQUE Protocol
 
-## Registration
+## Commands
+
+Create `test-user-opaque`:
+
+```sh
+excalibur user add --username test-user-opaque --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0= --auth-protocol=OPAQUE-3DH
+```
+
+## Process Diagrams
+
+### Registration
 
 ```mermaid
 sequenceDiagram
@@ -15,7 +25,7 @@ sequenceDiagram
     S->>C: [OK]
 ```
 
-## Login
+### Login
 
 ```mermaid
 sequenceDiagram

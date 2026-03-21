@@ -11,25 +11,21 @@ from pydantic import BaseModel, field_serializer
 from excalibur_server.api.routes.users import router
 from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.users import User, add_user, get_user, is_user, remove_user
 
 
 class SecurityDetails(BaseModel):
     auk_salt: bytes
-    srp_salt: bytes
+    auth_protocol: AuthProtocol
+    srp_salt: bytes | None = None
 
     @field_serializer("auk_salt", "srp_salt")
-    def serialize_salts(self, a_bytes: bytes, _info) -> str:
-        return b64encode(a_bytes).decode("utf-8")
-
-    @classmethod
-    def from_base64s(cls, obj: dict[str, str]) -> "SecurityDetails":
-        assert "auk_salt" in obj and "srp_salt" in obj
-        return SecurityDetails(
-            auk_salt=b64decode(obj["auk_salt"]),
-            srp_salt=b64decode(obj["srp_salt"]),
-        )
+    def serialize_salts(self, b: bytes | None, _info) -> str | None:
+        if b is None:
+            return None
+        return b64encode(b).decode("utf-8")
 
 
 class EncryptedVaultKey(BaseModel):
