@@ -21,9 +21,9 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { getGroup } from "@lib/auth/api";
+import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
-import { getGroup } from "@lib/security/api";
-import generateKey from "@lib/security/keygen";
 import { addUser } from "@lib/users/api";
 
 import { useAuth } from "@components/auth/context";

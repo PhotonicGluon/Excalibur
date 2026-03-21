@@ -1,7 +1,7 @@
 import { createDecipheriv } from "crypto";
 
-import generateKey from "@lib/security/keygen";
-import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
+import generateKey from "@lib/auth/keygen";
+import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
 import { getSecurityDetails } from "@lib/users/api";
 import { b64decode, b64encode, bufferToNumber, numberToBuffer } from "@lib/util";
 

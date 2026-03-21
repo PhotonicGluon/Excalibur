@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 
+import { generatePoPHeader } from "@lib/auth/pop";
 import ExEF from "@lib/exef";
-import { generatePoPHeader } from "@lib/security/pop";
 import { getURLEncodedPath, quotePlus } from "@lib/url";
 
 import { AuthProvider } from "@components/auth/context";

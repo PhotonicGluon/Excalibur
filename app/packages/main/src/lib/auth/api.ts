@@ -1,6 +1,6 @@
+import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
 import ExEF from "@lib/exef";
 import { popFetch, timedFetch } from "@lib/network";
-import { type _SRPGroup, getSRPGroup } from "@lib/security/srp";
 
 import { AuthProvider } from "@components/auth/context";
 

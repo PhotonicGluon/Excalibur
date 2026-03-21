@@ -20,8 +20,8 @@ import {
     useIonToast,
 } from "@ionic/react";
 
+import { e2ee } from "@lib/auth/e2ee";
 import Preferences from "@lib/preferences";
-import { e2ee } from "@lib/security/e2ee";
 import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 

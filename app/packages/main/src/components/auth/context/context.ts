@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-import { E2EEData } from "@lib/security/e2ee";
+import { E2EEData } from "@lib/auth/e2ee";
 
 export interface AuthInfo extends E2EEData {
     /** Username */
