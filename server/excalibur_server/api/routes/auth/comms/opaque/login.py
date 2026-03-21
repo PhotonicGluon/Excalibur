@@ -31,8 +31,9 @@ async def comms_endpoint(websocket: WebSocket):
     await ws_manager.accept()
     try:
         # Wait for username and first key exchange message
-        username = (await ws_manager.receive()).data
-        ke1_raw = (await ws_manager.receive()).data
+        ke1_raw_and_username = (await ws_manager.receive()).data
+        ke1_raw = ke1_raw_and_username[: OPAQUE.ke1_size]
+        username = ke1_raw_and_username[OPAQUE.ke1_size :].decode("utf-8")
 
         # Check username
         user = get_user(username)

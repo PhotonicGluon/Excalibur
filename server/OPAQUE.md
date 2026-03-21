@@ -7,12 +7,12 @@ sequenceDiagram
     participant C as Client
     participant S as Server
 
-    C->>S: username
-    C->>S: request
+    C->>S: request + username
     Note right of S: Check username
     S->>C: [OK] response
-    C->>S: record
+    C->>S: record + auk_salt + key_enc
     Note right of S: Save record
+    S->>C: [OK]
 ```
 
 ## Login
@@ -22,8 +22,7 @@ sequenceDiagram
     participant C as Client
     participant S as Server
 
-    C->>S: username
-    C->>S: KE1
+    C->>S: KE1 + username
     Note right of S: Check username
     S->>C: KE2
     C->>S: KE3

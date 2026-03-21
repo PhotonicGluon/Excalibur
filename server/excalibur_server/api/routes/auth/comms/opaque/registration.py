@@ -25,8 +25,9 @@ async def registration_endpoint(websocket: WebSocket):
     await ws_manager.accept()
     try:
         # Wait for username and registration request
-        username = (await ws_manager.receive()).data
-        registration_request_raw = (await ws_manager.receive()).data
+        registration_request_raw_and_username = (await ws_manager.receive()).data
+        registration_request_raw = registration_request_raw_and_username[: OPAQUE.registration_request_size]
+        username = registration_request_raw_and_username[OPAQUE.registration_request_size :].decode("utf-8")
 
         # Check username
         user = get_user(username)
@@ -46,9 +47,10 @@ async def registration_endpoint(websocket: WebSocket):
         await ws_manager.send(WebSocketMsg(registration_response.serialize()))
 
         # Wait for client to send registration record, AUK salt, and encrypted vault key
-        registration_record_raw = (await ws_manager.receive()).data
-        auk_salt = (await ws_manager.receive()).data
-        key_enc = (await ws_manager.receive()).data
+        upload_data = (await ws_manager.receive()).data
+        registration_record_raw = upload_data[: OPAQUE.registration_record_size]
+        auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
+        key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
         # Add new user
         user = User(
@@ -59,6 +61,9 @@ async def registration_endpoint(websocket: WebSocket):
             key_enc=key_enc,
         )
         add_user(user)
+
+        # Send confirmation
+        await ws_manager.send(WebSocketMsg(status="OK"))
 
         # Finally, close connection
         await ws_manager.close()

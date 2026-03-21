@@ -3,7 +3,6 @@ from base64 import b64decode, b64encode
 
 import pytest
 from Crypto.Cipher import AES
-from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
@@ -62,11 +61,9 @@ def test_registration(test_idx: int, monkeypatch: pytest.MonkeyPatch):
             encrypted_data = ws.receive_bytes()
             return json.loads(ExEF(CONFIG.security.account_creation_key).decrypt(encrypted_data))
 
-        # Send username and registration request
-        send_json({"data": username})
-        send_json(
-            {"data": b64encode(OPAQUETestVectors.REGISTRATION_REQUESTS[test_idx]).decode("utf-8"), "binary": True}
-        )
+        # Send registration request and username
+        to_send = OPAQUETestVectors.REGISTRATION_REQUESTS[test_idx] + username.encode("utf-8")
+        send_json({"data": b64encode(to_send).decode("utf-8"), "binary": True})
 
         # Receive registration response
         registration_response_raw = recv_json()
@@ -75,15 +72,15 @@ def test_registration(test_idx: int, monkeypatch: pytest.MonkeyPatch):
         assert registration_response == OPAQUETestVectors.REGISTRATION_RESPONSES[test_idx]
 
         # Send registration record, AUK salt, and encrypted vault key
-        send_json({"data": b64encode(OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]).decode("utf-8"), "binary": True})
-        send_json({"data": b64encode(b"one 32 byte string for testing!!").decode("utf-8"), "binary": True})
-        send_json({"data": b64encode(b"Some value").decode("utf-8"), "binary": True})
+        to_send = (
+            OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]  # Registration record
+            + b"one 32 byte string for testing!!"  # AUK salt
+            + b"Some value"  # key_enc
+        )
+        send_json({"data": b64encode(to_send).decode("utf-8"), "binary": True})
 
-        # Wait for the server to close the connection
-        try:
-            ws.receive_bytes()
-        except WebSocketDisconnect:
-            pass
+        # Receive confirmation
+        assert recv_json()["status"] == "OK"
 
         # Verify user was added
         assert added_user is not None
@@ -151,9 +148,9 @@ def test_auth_negotiation(test_idx: int, monkeypatch: pytest.MonkeyPatch):
 
     # Connect and authenticate
     with client.websocket_connect("/api/auth/opaque") as ws:
-        # Send a verified username and KE1
-        ws.send_json({"data": username})
-        ws.send_json({"data": b64encode(OPAQUETestVectors.KE1[test_idx]).decode("utf-8"), "binary": True})
+        # Send KE1 and a verified username
+        to_send = OPAQUETestVectors.KE1[test_idx] + username.encode("utf-8")
+        ws.send_json({"data": b64encode(to_send).decode("utf-8"), "binary": True})
 
         # Receive KE2, should not be an error
         response: dict = ws.receive_json()
