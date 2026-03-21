@@ -70,9 +70,9 @@ def mock_get_user(username: str):
 @pytest.fixture(autouse=True)
 def mock_test_user(monkeypatch: pytest.MonkeyPatch):
     # Note that we monkeypatch the destination, not the source
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp.get_user", mock_get_user)
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp._get_verifier", lambda _: V)
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp._get_b_priv", lambda: B_PRIV)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp.login.get_user", mock_get_user)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp.login._get_verifier", lambda _: V)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.srp.login._get_b_priv", lambda: B_PRIV)
     yield
 
 

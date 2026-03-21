@@ -26,47 +26,48 @@ def test_auth_negotiation(test_idx: int, monkeypatch: pytest.MonkeyPatch):
 
     # Perform monkeypatching of ALL the functions
     # (Note that we monkeypatch the destination, not the source)
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.get_user", lambda _username: user)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.login.get_user", lambda _username: user)
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_oprf_seed", lambda: OPAQUETestVectors.OPRF_SEEDS[test_idx]
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_oprf_seed",
+        lambda: OPAQUETestVectors.OPRF_SEEDS[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_public_key",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_public_key",
         lambda: OPAQUETestVectors.SERVER_PUBLIC_KEYS[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_private_key",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_private_key",
         lambda: OPAQUETestVectors.SERVER_PRIVATE_KEYS[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_client_identity",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_client_identity",
         lambda _username: OPAQUETestVectors.CLIENT_IDENTITIES[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_server_identity",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_server_identity",
         lambda: OPAQUETestVectors.SERVER_IDENTITIES[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_credential_identifier",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_credential_identifier",
         lambda _username: OPAQUETestVectors.CREDENTIAL_IDENTIFIERS[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_masking_nonce",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_masking_nonce",
         lambda: OPAQUETestVectors.MASKING_NONCES[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_nonce",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_nonce",
         lambda: OPAQUETestVectors.SERVER_NONCES[test_idx],
     )
     monkeypatch.setattr(
-        "excalibur_server.api.routes.auth.comms.opaque._get_keyshare_seed",
+        "excalibur_server.api.routes.auth.comms.opaque.login._get_keyshare_seed",
         lambda: OPAQUETestVectors.SERVER_KEYSHARE_SEEDS[test_idx],
     )
 
     # Mock the server also
     mock_server = OPAQUEServer(oprf_type="ristretto255-sha512")
     mock_server.context = OPAQUETestVectors.CONTEXTS[test_idx]
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque._get_opaque", lambda: mock_server)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.login._get_opaque", lambda: mock_server)
 
     # Connect and authenticate
     with client.websocket_connect("/api/auth/opaque") as ws:
