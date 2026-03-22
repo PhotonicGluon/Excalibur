@@ -4,10 +4,10 @@ from typing import Callable
 
 from Crypto.Random import get_random_bytes
 
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.hkdf import HKDF
 from excalibur_server.src.auth.opaque.misc import i2osp
-from excalibur_server.src.auth.opaque.oprf import OPRFDecaf, OPRFRistretto, OPRFType
+from excalibur_server.src.auth.opaque.oprf import OPRFRistretto, OPRFType
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
     KE2,
@@ -35,17 +35,14 @@ class BaseOPAQUE:
 
     def __init__(
         self,
-        oprf_type: OPRFType = "decaf448-shake256",
+        oprf_type: OPRFType = "ristretto255-sha512",
         ksf: Callable[[bytes], bytes] | None = None,
         context: bytes = b"Excalibur",
     ) -> None:
         self.context = context
         self.oprf_type = oprf_type
 
-        if oprf_type == "decaf448-shake256":
-            self.oprf = OPRFDecaf
-            self.kdf = HKDF("shake256")
-        elif oprf_type == "ristretto255-sha512":
+        if oprf_type == "ristretto255-sha512":
             self.oprf = OPRFRistretto
             self.kdf = HKDF("sha512")
 
@@ -147,8 +144,8 @@ class BaseOPAQUE:
 
     def _create_cleartext_credentials(
         self,
-        server_public_key: BaseCurve,
-        client_public_key: BaseCurve,
+        server_public_key: Ristretto255,
+        client_public_key: Ristretto255,
         server_identity: bytes,
         client_identity: bytes,
     ):
@@ -175,7 +172,7 @@ class BaseOPAQUE:
         )
         return cleartext_credentials
 
-    def _derive_diffie_hellman_keypair(self, seed: bytes) -> tuple[int, BaseCurve]:
+    def _derive_diffie_hellman_keypair(self, seed: bytes) -> tuple[int, Ristretto255]:
         """
         Derive a Diffie-Hellman keypair from a seed, as described in section 6.4.1.1.
 
@@ -185,7 +182,7 @@ class BaseOPAQUE:
 
         return self.oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveDiffieHellmanKeyPair")
 
-    def _diffie_hellman(self, k: int, b: BaseCurve) -> BaseCurve:
+    def _diffie_hellman(self, k: int, b: Ristretto255) -> Ristretto255:
         """
         Performs the Diffie-Hellman operation between the private input `k` and public input `b`, as
         described in section 6.4.1.1.
@@ -245,7 +242,7 @@ class BaseOPAQUE:
         server_identity: bytes,
         credential_response: CredentialResponse,
         server_nonce: bytes,
-        server_public_keyshare: BaseCurve,
+        server_public_keyshare: Ristretto255,
     ) -> bytes:
         """
         Generates the preamble string for the key scheduling, following section 6.4.2.1's
@@ -306,7 +303,7 @@ class BaseOPAQUE:
 
         return get_random_bytes(self.SEED_LENGTH)
 
-    def generate_keys(self, for_export: bool = False) -> tuple[int, BaseCurve] | tuple[bytes, bytes]:
+    def generate_keys(self, for_export: bool = False) -> tuple[int, Ristretto255] | tuple[bytes, bytes]:
         """
         Generates a public-private key pair for OPAQUE.
 

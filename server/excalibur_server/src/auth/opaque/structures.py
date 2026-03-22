@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, model_serializer
 
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 
 
 class CleartextCredentials(BaseModel):
@@ -10,7 +10,7 @@ class CleartextCredentials(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    server_public_key: BaseCurve
+    server_public_key: Ristretto255
     server_identity: bytes
     client_identity: bytes
 
@@ -52,7 +52,7 @@ class RegistrationRequest(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    blinded_element: BaseCurve
+    blinded_element: Ristretto255
 
     @model_serializer
     def serialize(self):
@@ -66,8 +66,8 @@ class RegistrationResponse(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    evaluated_element: BaseCurve
-    server_public_key: BaseCurve
+    evaluated_element: Ristretto255
+    server_public_key: Ristretto255
 
     @model_serializer
     def serialize(self):
@@ -81,7 +81,7 @@ class RegistrationRecord(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    client_public_key: BaseCurve
+    client_public_key: Ristretto255
     masking_key: bytes
     envelope: Envelope
 
@@ -98,7 +98,7 @@ class AuthRequest(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     client_nonce: bytes
-    client_public_keyshare: BaseCurve
+    client_public_keyshare: Ristretto255
 
     @model_serializer
     def serialize(self):
@@ -113,7 +113,7 @@ class AuthResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     server_nonce: bytes
-    server_public_keyshare: BaseCurve
+    server_public_keyshare: Ristretto255
     server_mac: bytes
 
     @model_serializer
@@ -137,7 +137,7 @@ class CredentialResponse(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    evaluated_element: BaseCurve
+    evaluated_element: Ristretto255
     masking_nonce: bytes
     masked_response: bytes
 

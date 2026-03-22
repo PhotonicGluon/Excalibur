@@ -1,10 +1,10 @@
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
@@ -97,7 +97,7 @@ def _get_oprf_seed() -> bytes:
     return CONFIG.security.opaque.oprf_seed
 
 
-def _get_public_key() -> BaseCurve:
+def _get_public_key() -> Ristretto255:
     """
     Get the server public key.
 
