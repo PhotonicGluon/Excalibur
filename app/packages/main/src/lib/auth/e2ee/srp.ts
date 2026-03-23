@@ -3,18 +3,11 @@ import { createDecipheriv } from "crypto";
 import generateKey from "@lib/auth/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
 import { getSecurityDetails } from "@lib/users/api";
-import { b64decode, b64encode, bufferToNumber, numberToBuffer } from "@lib/util";
+import { b64decode, bufferToNumber, numberToBuffer } from "@lib/util";
+
+import { E2EEData, parseResponse, sendResponse } from "./helpers";
 
 const MAX_ITER_COUNT = 3;
-
-export interface E2EEData {
-    /** Bilaterally agreed symmetric key to encrypt communications */
-    key: Buffer;
-    /** Account unlock key (AUK) */
-    auk: Buffer;
-    /** Authentication token */
-    token: string;
-}
 
 enum E2EEStage {
     GET_SRP_GROUP,
@@ -50,36 +43,6 @@ interface E2EEState {
 }
 
 /**
- * Sends a response to the server.
- *
- * @param ws The WebSocket connection to send the response to
- * @param data Optional data to send with the response
- * @param status The status of the response
- */
-function sendResponse(ws: WebSocket, data?: string | Buffer, status?: "OK" | "ERR") {
-    const response = {
-        status: status ?? null,
-        binary: data instanceof Buffer,
-        data: data instanceof Buffer ? b64encode(data) : data,
-    };
-    ws.send(JSON.stringify(response));
-}
-
-/**
- * Parses a response from the server.
- *
- * @param data The response data to parse
- * @returns An object containing the status and optional data
- */
-function parseResponse(data: string): { status: "OK" | "ERR" | null; data?: string | Buffer } {
-    const raw = JSON.parse(data);
-    if (raw.binary) {
-        return { status: raw.status, data: b64decode(raw.data) };
-    }
-    return { status: raw.status, data: raw.data };
-}
-
-/**
  * Perform end-to-end encryption setup with the server using the SRP protocol.
  *
  * @param apiURL The HTTP(S) URL of the API server to query
@@ -90,7 +53,7 @@ function parseResponse(data: string): { status: "OK" | "ERR" | null; data?: stri
  * @param showAlert A function to call if an error occurs, which takes a header and a message
  * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
  */
-export async function e2ee(
+export async function e2eeSRP(
     apiURL: string,
     username: string,
     password: string,

@@ -1,5 +1,6 @@
 import { createCipheriv, randomBytes } from "crypto";
 
+import { AuthProtocol } from "@lib/auth/enums";
 import ExEF from "@lib/exef";
 import { popFetch, timedFetch } from "@lib/network";
 import { b64decode, b64encode, numberToBuffer } from "@lib/util";
@@ -34,7 +35,7 @@ export async function checkUser(apiURL: string, username: string): Promise<boole
 export async function getSecurityDetails(
     apiURL: string,
     username: string,
-): Promise<{ success: boolean; aukSalt?: Buffer; srpSalt?: Buffer; error?: string }> {
+): Promise<{ success: boolean; aukSalt?: Buffer; authProtocol?: AuthProtocol; srpSalt?: Buffer; error?: string }> {
     const response = await timedFetch(`${apiURL}/users/security/${username}`, {
         method: "GET",
     });
@@ -51,7 +52,8 @@ export async function getSecurityDetails(
     return {
         success: true,
         aukSalt: b64decode(data["auk_salt"]),
-        srpSalt: b64decode(data["srp_salt"]),
+        authProtocol: data["auth_protocol"] as AuthProtocol,
+        srpSalt: data["srp_salt"] !== null ? b64decode(data["srp_salt"]) : undefined,
     };
 }
 
