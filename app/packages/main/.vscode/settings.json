@@ -15,6 +15,7 @@
         "keysize",
         "listdir",
         "mimetypes",
+        "oprf",
         "popover",
         "powmod",
         "priv",

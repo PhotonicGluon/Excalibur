@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 
-import { bigIntToBytes, bytesToBigInt, modulo, powmod } from "@lib/util";
+import { bigIntToBytes, bytesToBigInt, modInv, modulo, powmod } from "@lib/util";
 
 /**
  * Implementation of the Ristretto255 group from [RFC9496](https://www.rfc-editor.org/rfc/rfc9496),
@@ -232,9 +232,8 @@ export class Ristretto255 {
      * @param scalar the scalar to invert
      * @returns the multiplicative inverse of the scalar
      */
-    static scalarInverse(_scalar: bigint): bigint {
-        // TODO: Implement
-        throw new Error("Not implemented");
+    static scalarInverse(scalar: bigint): bigint {
+        return modInv(scalar, Ristretto255.ORDER);
     }
 
     /**

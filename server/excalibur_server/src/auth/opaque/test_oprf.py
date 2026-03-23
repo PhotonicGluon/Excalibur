@@ -30,7 +30,7 @@ class TestOPRFRistretto:
 
     @pytest.mark.parametrize("test_vector", TEST_VECTORS)
     def test_oprf(self, test_vector):
-        input, blind, blinded_element_hex, evaluated_element_hex, expected_output = (
+        input, blind, blinded_element_bytes, evaluated_element_bytes, expected_output = (
             bytes.fromhex(test_vector["input"]),
             int.from_bytes(bytes.fromhex(test_vector["blind"]), "little"),
             bytes.fromhex(test_vector["blinded_element"]),
@@ -41,11 +41,11 @@ class TestOPRFRistretto:
         # Test `blind()`
         out_blind, out_blinded_element = OPRFRistretto.blind(input, blind=blind)
         assert out_blind == blind
-        assert out_blinded_element.to_bytes() == blinded_element_hex
+        assert out_blinded_element.to_bytes() == blinded_element_bytes
 
         # Test `blind_evaluate()`
         out_evaluated_element = OPRFRistretto.blind_evaluate(self.SK_SCALAR, out_blinded_element)
-        assert out_evaluated_element.to_bytes() == evaluated_element_hex
+        assert out_evaluated_element.to_bytes() == evaluated_element_bytes
 
         # Test `finalize()`
         our_output = OPRFRistretto.finalize(input, blind, out_evaluated_element)

@@ -42,6 +42,17 @@ export function padBuffer(buffer: Buffer, n: number): Buffer {
 /**
  * Compute the element-wise XOR of two buffers.
  *
+ * @param s1 first byte array
+ * @param s2 second byte array
+ * @returns XORed bytes
+ */
+export function xor(s1: Uint8Array, s2: Uint8Array): Uint8Array {
+    return s1.map((v, i) => v ^ s2[i]);
+}
+
+/**
+ * Compute the element-wise XOR of two buffers.
+ *
  * @param a The first buffer.
  * @param b The second buffer.
  * @returns A new buffer with the same length as `a` and `b`, where each element is the XOR of the
