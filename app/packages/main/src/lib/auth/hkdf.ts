@@ -14,26 +14,24 @@ const HASH_LEN: Record<HKDFAlgorithm, number> = {
  */
 export default class HKDF {
     private algorithm: HKDFAlgorithm;
-    private digestSize: number;
+    readonly digestSize: number;
 
     constructor(algorithm: HKDFAlgorithm) {
         this.algorithm = algorithm;
         this.digestSize = HASH_LEN[algorithm];
     }
 
-    // Helper methods
     /**
      * HKDF HMAC-Hash function as defined in RFC5869.
      *
      * @param key the key to use for the HMAC
-     * @param data the data to hash
-     * @returns the hashed data
+     * @param msg the message to hash
+     * @returns the hashed message
      */
-    private hmacHash(key: Buffer, data: Buffer): Buffer {
-        return createHmac(this.algorithm, key).update(data).digest();
+    hmacHash(key: Buffer, msg: Buffer): Buffer {
+        return createHmac(this.algorithm, key).update(msg).digest();
     }
 
-    // Main methods
     /**
      * The `HKDF-Extract()` function described in section 2.2.
      *

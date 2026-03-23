@@ -1,4 +1,3 @@
-import hmac
 from functools import cached_property
 from typing import Callable
 
@@ -128,13 +127,6 @@ class BaseOPAQUE:
         return self.kdf.digest_size
 
     # Helper methods
-    def _mac(self, key: bytes, msg: bytes) -> bytes:
-        """
-        Implements the `MAC()` function described in section 2.2.
-        """
-
-        return hmac.new(key, msg, self.kdf.algorithm).digest()
-
     def _hash(self, data: bytes) -> bytes:
         """
         Implements the `Hash()` function described in section 2.3.
@@ -212,13 +204,7 @@ class BaseOPAQUE:
         """
 
         opaque_label = b"OPAQUE-" + label
-        custom_label = (
-            length.to_bytes(2, "big")
-            + len(opaque_label).to_bytes(1, "big")
-            + opaque_label
-            + len(context).to_bytes(1, "big")
-            + context
-        )
+        custom_label = i2osp(length, 2) + i2osp(len(opaque_label), 1) + opaque_label + i2osp(len(context), 1) + context
 
         return self.kdf.expand(
             secret,
@@ -401,6 +387,7 @@ class BaseOPAQUE:
             + self.NONCE_LENGTH
             + masked_response_length
         ]
+
         credential_response = CredentialResponse(
             evaluated_element=evaluated_element, masking_nonce=masking_nonce, masked_response=masked_response
         )

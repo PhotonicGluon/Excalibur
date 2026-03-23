@@ -121,9 +121,9 @@ class OPAQUEServer(BaseOPAQUE):
         ikm = dh1.to_bytes() + dh2.to_bytes() + dh3.to_bytes()
 
         km2, km3, session_key = self._derive_keys(ikm, preamble)
-        mac = self._mac(km2, self._hash(preamble))
+        mac = self.kdf.hmac_hash(km2, self._hash(preamble))
 
-        self._expected_client_mac = self._mac(km3, self._hash(preamble + mac))
+        self._expected_client_mac = self.kdf.hmac_hash(km3, self._hash(preamble + mac))
         self._session_key = session_key
 
         return AuthResponse(server_nonce=nonce, server_public_keyshare=public_keyshare, server_mac=mac)

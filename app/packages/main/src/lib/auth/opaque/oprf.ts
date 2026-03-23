@@ -6,7 +6,7 @@ import { i2osp } from "./misc";
 import { Ristretto255 } from "./ristretto255";
 
 abstract class BaseOPRF {
-    protected abstract hashfunc(msg: Uint8Array): { digest(): Uint8Array };
+    abstract hashfunc(msg: Uint8Array): { digest(): Uint8Array };
     protected abstract readonly CONTEXT_STRING: Uint8Array;
 
     // Helper methods
@@ -177,7 +177,7 @@ abstract class BaseOPRF {
 class OPRFRistretto extends BaseOPRF {
     protected readonly CONTEXT_STRING = Buffer.from("OPRFV1-\x00-ristretto255-SHA512");
 
-    protected hashfunc(msg: Uint8Array): { digest(): Uint8Array } {
+    hashfunc(msg: Uint8Array): { digest(): Uint8Array } {
         const hash = createHash("sha512").update(msg);
         return { digest: () => hash.digest() };
     }
@@ -212,4 +212,7 @@ class OPRFRistretto extends BaseOPRF {
 }
 
 const oprfRistretto = new OPRFRistretto();
+
+export type OPRFType = "ristretto255-sha512";
+export type OPRFRistrettoType = typeof oprfRistretto;
 export { oprfRistretto as OPRFRistretto };

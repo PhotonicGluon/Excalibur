@@ -20,11 +20,17 @@ class HKDF:
 
         self.digest_size = self.hash_function().digest_size
 
-    # Helper methods
-    def _hmac_hash(self, key: bytes, data: bytes) -> bytes:
-        return hmac.new(key, data, self.hash_function).digest()
+    def hmac_hash(self, key: bytes, msg: bytes) -> bytes:
+        """
+        HKDF HMAC-Hash function as defined in RFC5869.
 
-    # Main methods
+        :param key: the key to use for the HMAC
+        :param msg: the message to hash
+        :return: the hashed message
+        """
+
+        return hmac.new(key, msg, self.hash_function).digest()
+
     def extract(self, salt: bytes, ikm: bytes) -> bytes:
         """
         The `HKDF-Extract()` function described in section 2.2.
@@ -37,7 +43,7 @@ class HKDF:
         if len(salt) == 0:
             salt = bytes([0] * self.hash_function().digest_size)
 
-        return self._hmac_hash(salt, ikm)
+        return self.hmac_hash(salt, ikm)
 
     def expand(self, prk: bytes, info: bytes, length: int) -> bytes:
         """
@@ -54,6 +60,6 @@ class HKDF:
         i = 0
         while len(okm) < length:
             i += 1
-            t = self._hmac_hash(prk, t + info + bytes([i]))
+            t = self.hmac_hash(prk, t + info + bytes([i]))
             okm += t
         return okm[:length]

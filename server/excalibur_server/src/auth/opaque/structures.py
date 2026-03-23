@@ -107,7 +107,7 @@ class AuthRequest(BaseModel):
 
 class AuthResponse(BaseModel):
     """
-    A client authentication request structure as defined in section 6.1.
+    A server authentication response structure as defined in section 6.1.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

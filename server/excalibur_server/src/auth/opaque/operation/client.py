@@ -69,7 +69,7 @@ class OPAQUEClient(BaseOPAQUE):
             server_public_key, client_public_key, server_identity, client_identity
         )
 
-        auth_tag = self._mac(auth_key, envelope_nonce + cleartext_credentials.serialize())
+        auth_tag = self.kdf.hmac_hash(auth_key, envelope_nonce + cleartext_credentials.serialize())
 
         envelope = Envelope(envelope_nonce=envelope_nonce, auth_tag=auth_tag)
         return envelope, cleartext_credentials, client_private_key, client_public_key, masking_key, export_key
@@ -235,12 +235,12 @@ class OPAQUEClient(BaseOPAQUE):
             ke2.auth_response.server_public_keyshare,
         )
         km2, km3, session_key = self._derive_keys(ikm, preamble)
-        expected_server_mac = self._mac(km2, self._hash(preamble))
+        expected_server_mac = self.kdf.hmac_hash(km2, self._hash(preamble))
 
         if ke2.auth_response.server_mac != expected_server_mac:
             raise ValueError("failed to authenticate server")
 
-        client_mac = self._mac(km3, self._hash(preamble + expected_server_mac))
+        client_mac = self.kdf.hmac_hash(km3, self._hash(preamble + expected_server_mac))
         return KE3(client_mac=client_mac), session_key
 
     # Main functions
