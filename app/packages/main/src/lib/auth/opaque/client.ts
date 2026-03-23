@@ -11,7 +11,9 @@ import {
     KE1,
     KE2,
     KE3,
+    RegistrationRecord,
     RegistrationRequest,
+    RegistrationResponse,
 } from "@lib/auth/opaque/structures";
 import { xorBuffer } from "@lib/util";
 
@@ -54,6 +56,16 @@ export class OPAQUEClient {
     }
 
     // Helper properties
+    /**
+     * @returns size of the registration response in bytes
+     */
+    get registrationResponseSize() {
+        return (
+            Ristretto255.KEY_LENGTH + // Evaluated element
+            Ristretto255.KEY_LENGTH // Server public key
+        );
+    }
+
     /**
      * @returns size of the KE1 message in bytes
      */
@@ -177,6 +189,34 @@ export class OPAQUEClient {
 
         const envelope = new Envelope(envelopeNonce, authTag);
         return [envelope, cleartextCredentials, clientPrivateKey, clientPublicKey, maskingKey, exportKey];
+    }
+
+    /**
+     * Creates an envelope at registration, following section 4.1.2.
+     *
+     * @param randomizedPassword a randomized password
+     * @param serverPublicKey the encoded server public key for the AKE protocol
+     * @param serverIdentity the optional encoded server identity
+     * @param clientIdentity the optional encoded client identity
+     * @param envelopeNonce optional nonce for the envelope
+     * @returns the envelope, client's public key, masking key, and export key
+     */
+    private _store(
+        randomizedPassword: Uint8Array,
+        serverPublicKey: Ristretto255,
+        serverIdentity: Uint8Array,
+        clientIdentity: Uint8Array,
+        envelopeNonce?: Uint8Array,
+    ): [Envelope, Ristretto255, Uint8Array, Uint8Array] {
+        const [envelope, _cleartextCredentials, _clientPrivateKey, clientPublicKey, maskingKey, exportKey] =
+            this._envelopeComputation(
+                randomizedPassword,
+                serverPublicKey,
+                serverIdentity,
+                clientIdentity,
+                envelopeNonce,
+            );
+        return [envelope, clientPublicKey, maskingKey, exportKey];
     }
 
     /**
@@ -469,6 +509,45 @@ export class OPAQUEClient {
     }
 
     /**
+     * Finalizes the registration request and generates the registration record for the server to
+     * keep, following section 5.2.3.
+     *
+     * @param password the password to use for the registration
+     * @param blind the blind used for the registration
+     * @param response the response from the server
+     * @param serverIdentity the server identity
+     * @param clientIdentity the client identity
+     * @param envelopeNonce optional nonce to use for the envelope
+     * @returns a tuple containing the registration record and the export key
+     */
+    finalizeRegistrationRequest(
+        password: Uint8Array,
+        blind: bigint,
+        response: RegistrationResponse,
+        serverIdentity: Uint8Array,
+        clientIdentity: Uint8Array,
+        envelopeNonce?: Uint8Array,
+    ): [RegistrationRecord, Uint8Array] {
+        const evaluatedElement = response.evaluatedElement;
+
+        const oprfOutput = this.oprf.finalize(password, blind, evaluatedElement);
+        const stretchedOPRFOutput = this._ksf(oprfOutput);
+
+        const randomizedPassword = this.kdf.extract(null, Buffer.concat([oprfOutput, stretchedOPRFOutput]));
+
+        const [envelope, clientPublicKey, maskingKey, exportKey] = this._store(
+            randomizedPassword,
+            response.serverPublicKey,
+            serverIdentity,
+            clientIdentity,
+            envelopeNonce,
+        );
+
+        const record = new RegistrationRecord(clientPublicKey, maskingKey, envelope);
+        return [record, exportKey];
+    }
+
+    /**
      * Generate the KE1 message to send to the server.
      *
      * @param password the password to use for the authentication
@@ -506,6 +585,35 @@ export class OPAQUEClient {
     }
 
     // Deserialization methods
+    /**
+     * Deserializes a registration request from raw bytes.
+     *
+     * @param registrationRequestRaw the raw bytes of the registration request
+     * @returns the deserialized registration request
+     */
+    deserializeRegistrationRequest(registrationRequestRaw: Uint8Array): RegistrationRequest {
+        return new RegistrationRequest(Ristretto255.fromBytes(registrationRequestRaw));
+    }
+
+    /**
+     * Deserializes a registration response from raw bytes.
+     *
+     * @param registrationResponseRaw the raw bytes of the registration response
+     * @returns the deserialized registration response
+     */
+    deserializeRegistrationResponse(registrationResponseRaw: Uint8Array): RegistrationResponse {
+        const evaluatedElementRaw = registrationResponseRaw.slice(0, Ristretto255.KEY_LENGTH);
+        const serverPublicKeyRaw = registrationResponseRaw.slice(
+            Ristretto255.KEY_LENGTH,
+            this.registrationResponseSize,
+        );
+
+        return new RegistrationResponse(
+            Ristretto255.fromBytes(evaluatedElementRaw),
+            Ristretto255.fromBytes(serverPublicKeyRaw),
+        );
+    }
+
     /**
      * Deserializes a KE1 message from raw bytes.
      *

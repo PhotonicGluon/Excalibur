@@ -59,6 +59,38 @@ export class RegistrationRequest {
 }
 
 /**
+ * A server registration response structure as defined in section 5.1.
+ */
+export class RegistrationResponse {
+    evaluatedElement: Ristretto255;
+    serverPublicKey: Ristretto255;
+
+    constructor(evaluatedElement: Ristretto255, serverPublicKey: Ristretto255) {
+        this.evaluatedElement = evaluatedElement;
+        this.serverPublicKey = serverPublicKey;
+    }
+}
+
+/**
+ * A registration record structure as defined in section 5.1.
+ */
+export class RegistrationRecord {
+    clientPublicKey: Ristretto255;
+    maskingKey: Uint8Array;
+    envelope: Envelope;
+
+    constructor(clientPublicKey: Ristretto255, maskingKey: Uint8Array, envelope: Envelope) {
+        this.clientPublicKey = clientPublicKey;
+        this.maskingKey = maskingKey;
+        this.envelope = envelope;
+    }
+
+    serialize(): Uint8Array {
+        return new Uint8Array([...this.clientPublicKey.toBytes(), ...this.maskingKey, ...this.envelope.serialize()]);
+    }
+}
+
+/**
  * A client authentication request structure as defined in section 6.1.
  */
 export class AuthRequest {

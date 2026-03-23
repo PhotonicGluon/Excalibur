@@ -159,34 +159,32 @@ class TestOPAQUERistretto255:
     # Registration tests
     @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_REQUESTS)))
     def test_registration_request(self, test_idx, opaque_client: OPAQUEClient):
-        expected_request, expected_blind = opaque_client.create_registration_request(
+        our_request, our_blind = opaque_client.create_registration_request(
             password=self.PASSWORDS[test_idx],
             # Parameters specified for tests
             blind=self.BLIND_REGISTRATIONS[test_idx],
         )
 
-        assert expected_blind == self.BLIND_REGISTRATIONS[test_idx]
-        assert expected_request.serialize() == self.REGISTRATION_REQUESTS[test_idx]
-        assert opaque_client.deserialize_registration_request(self.REGISTRATION_REQUESTS[test_idx]) == expected_request
+        assert our_blind == self.BLIND_REGISTRATIONS[test_idx]
+        assert our_request.serialize() == self.REGISTRATION_REQUESTS[test_idx]
+        assert opaque_client.deserialize_registration_request(self.REGISTRATION_REQUESTS[test_idx]) == our_request
 
     @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_RESPONSES)))
     def test_registration_responses(self, test_idx, opaque_server: OPAQUEServer):
         request = opaque_server.deserialize_registration_request(self.REGISTRATION_REQUESTS[test_idx])
 
-        expected_response = opaque_server.create_registration_response(
+        our_response = opaque_server.create_registration_response(
             request=request,
             server_public_key=self.SERVER_PUBLIC_KEYS[test_idx],
             credential_identifier=self.CREDENTIAL_IDENTIFIERS[test_idx],
             oprf_seed=self.OPRF_SEEDS[test_idx],
         )
-        assert expected_response.serialize() == self.REGISTRATION_RESPONSES[test_idx]
-        assert (
-            opaque_server.deserialize_registration_response(self.REGISTRATION_RESPONSES[test_idx]) == expected_response
-        )
+        assert our_response.serialize() == self.REGISTRATION_RESPONSES[test_idx]
+        assert opaque_server.deserialize_registration_response(self.REGISTRATION_RESPONSES[test_idx]) == our_response
 
     @pytest.mark.parametrize("test_idx", range(len(REGISTRATION_REQUESTS)))
     def test_registration_upload(self, test_idx, opaque_client: OPAQUEClient):
-        expected_record, expected_export_key = opaque_client.finalize_registration_request(
+        our_record, our_export_key = opaque_client.finalize_registration_request(
             password=self.PASSWORDS[test_idx],
             blind=self.BLIND_REGISTRATIONS[test_idx],
             response=opaque_client.deserialize_registration_response(self.REGISTRATION_RESPONSES[test_idx]),
@@ -196,9 +194,9 @@ class TestOPAQUERistretto255:
             envelope_nonce=self.ENVELOPE_NONCES[test_idx],
         )
 
-        assert expected_export_key == self.EXPORT_KEYS[test_idx]
-        assert expected_record.serialize() == self.REGISTRATION_UPLOADS[test_idx]
-        assert opaque_client.deserialize_registration_record(self.REGISTRATION_UPLOADS[test_idx]) == expected_record
+        assert our_export_key == self.EXPORT_KEYS[test_idx]
+        assert our_record.serialize() == self.REGISTRATION_UPLOADS[test_idx]
+        assert opaque_client.deserialize_registration_record(self.REGISTRATION_UPLOADS[test_idx]) == our_record
 
     # Authenticated key exchange tests
     @pytest.mark.parametrize("test_idx", range(len(KE1)))
