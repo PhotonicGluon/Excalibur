@@ -1,6 +1,6 @@
 import { CipherCCM, DecipherCCM, createCipheriv, createDecipheriv, createHmac, randomBytes } from "crypto";
 
-import hkdf from "@lib/auth/hkdf";
+import HKDF from "@lib/auth/hkdf";
 import { chunkStream } from "@lib/util";
 
 const EXEF_VERSION = 3;
@@ -202,7 +202,7 @@ export default class ExEF {
 
     // Helper methods
     private static _genKey(key: Buffer, nonce: Buffer, context: Buffer, length: number): Buffer {
-        return hkdf("sha256", key, nonce, context, length);
+        return new HKDF("sha256").hkdf(key, nonce, context, length);
     }
 
     private static _genCryptoKey(key: Buffer, nonce: Buffer, length: number): Buffer {

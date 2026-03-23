@@ -1,6 +1,6 @@
 import pytest
 
-from excalibur_server.src.auth.opaque.hkdf import HKDF
+from excalibur_server.src.auth.hkdf import HKDF
 
 # Test vectors from RFC5869, Appendix A.1 to A.3
 IKMS = [

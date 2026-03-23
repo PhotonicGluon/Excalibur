@@ -1,59 +1,82 @@
 import { createHmac } from "crypto";
 
 /** Supported algorithms for HKDF */
-export type HKDFAlgorithm = "sha1" | "sha256";
+export type HKDFAlgorithm = "sha1" | "sha256" | "sha512";
 const HASH_LEN: Record<HKDFAlgorithm, number> = {
     sha1: 20,
     sha256: 32,
+    sha512: 64,
 };
 
 /**
- * HKDF HMAC-Hash function as defined in RFC5869
+ * HMAC-based Key Derivation Function (HKDF) implementation based on
+ * [RFC5869](https://datatracker.ietf.org/doc/html/rfc5869).
  */
-function hmacHash(algorithm: HKDFAlgorithm, key: Buffer, data: Buffer): Buffer {
-    return createHmac(algorithm, key).update(data).digest();
-}
+export default class HKDF {
+    private algorithm: HKDFAlgorithm;
+    private digestSize: number;
 
-/**
- * HKDF-Extract function as defined in RFC5869
- */
-function extract(algorithm: HKDFAlgorithm, salt: Buffer | null, ikm: Buffer): Buffer {
-    if (!salt) {
-        salt = Buffer.alloc(HASH_LEN[algorithm]);
+    constructor(algorithm: HKDFAlgorithm) {
+        this.algorithm = algorithm;
+        this.digestSize = HASH_LEN[algorithm];
     }
-    return hmacHash(algorithm, salt, ikm);
-}
 
-/**
- * HKDF-Expand function as defined in RFC5869
- */
-function expand(algorithm: HKDFAlgorithm, prk: Buffer, info: Buffer, l: number): Buffer {
-    let t: Buffer = Buffer.from([]);
-    let o: Buffer = Buffer.from([]);
-    for (let i = 0; i < Math.ceil(l / HASH_LEN[algorithm]); i++) {
-        t = hmacHash(algorithm, prk, Buffer.concat([t, info, Buffer.from([i + 1])]));
-        o = Buffer.concat([o, t]);
+    // Helper methods
+    /**
+     * HKDF HMAC-Hash function as defined in RFC5869.
+     *
+     * @param key the key to use for the HMAC
+     * @param data the data to hash
+     * @returns the hashed data
+     */
+    private hmacHash(key: Buffer, data: Buffer): Buffer {
+        return createHmac(this.algorithm, key).update(data).digest();
     }
-    return o.subarray(0, l);
-}
 
-/**
- * HMAC-based Key Derivation Function (HKDF).
- *
- * @param algorithm HMAC algorithm to use
- * @param ikm Input keying material
- * @param salt Optional salt value (a non-secret random value). If not provided, it is set to a string of zeros equivalent to the hash length of the algorithm
- * @param info Optional context and application specific information (can be a zero-length string)
- * @param l Length of output keying material in bytes (octets)
- * @returns Output keying material (of `l` bytes)
- */
-export default function hkdf(
-    algorithm: HKDFAlgorithm,
-    ikm: Buffer,
-    salt: Buffer | null,
-    info: Buffer,
-    l: number,
-): Buffer {
-    const prk = extract(algorithm, salt, ikm);
-    return expand(algorithm, prk, info, l);
+    // Main methods
+    /**
+     * The `HKDF-Extract()` function described in section 2.2.
+     *
+     * @param salt optional salt value
+     * @param ikm input keying material
+     * @returns a pseudorandom key
+     */
+    extract(salt: Buffer | null, ikm: Buffer): Buffer {
+        if (!salt) {
+            salt = Buffer.alloc(HASH_LEN[this.algorithm]);
+        }
+        return this.hmacHash(salt, ikm);
+    }
+
+    /**
+     * The `HKDF-Expand()` function described in section 2.3.
+     *
+     * @param prk a pseudorandom key of at least digest size bytes
+     * @param info optional context and application specific information
+     * @param length length of output keying material in bytes
+     * @returns output keying material of `length` bytes
+     */
+    expand(prk: Buffer, info: Buffer, length: number) {
+        let t: Buffer = Buffer.from([]);
+        let o: Buffer = Buffer.from([]);
+        for (let i = 0; i < Math.ceil(length / this.digestSize); i++) {
+            t = this.hmacHash(prk, Buffer.concat([t, info, Buffer.from([i + 1])]));
+            o = Buffer.concat([o, t]);
+        }
+        return o.subarray(0, length);
+    }
+
+    /**
+     * HMAC-based Key Derivation Function (HKDF).
+     *
+     * @param ikm input keying material
+     * @param salt optional salt value
+     * @param info optional context and application specific information
+     * @param length length of output keying material in bytes
+     * @returns output keying material (of `l` bytes)
+     */
+    hkdf(ikm: Buffer, salt: Buffer | null, info: Buffer, length: number): Buffer {
+        const prk = this.extract(salt, ikm);
+        return this.expand(prk, info, length);
+    }
 }

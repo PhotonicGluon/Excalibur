@@ -1,6 +1,6 @@
 import { pbkdf2 } from "crypto";
 
-import hkdf from "@lib/auth/hkdf";
+import HKDF from "@lib/auth/hkdf";
 import { xorBuffer } from "@lib/util";
 
 const DIGEST_ALGORITHM = "sha256";
@@ -55,8 +55,7 @@ export async function slowHash(passwordBuf: Uint8Array, salt: Buffer): Promise<B
  * @returns The hashed additional information
  */
 export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Buffer {
-    const key = hkdf(
-        DIGEST_ALGORITHM,
+    const key = new HKDF(DIGEST_ALGORITHM).hkdf(
         Buffer.from(JSON.stringify(additionalInfo), "utf8"),
         salt,
         Buffer.from([]),

@@ -5,7 +5,7 @@ from typing import Callable
 from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
-from excalibur_server.src.auth.opaque.hkdf import HKDF
+from excalibur_server.src.auth.hkdf import HKDF
 from excalibur_server.src.auth.opaque.misc import i2osp
 from excalibur_server.src.auth.opaque.oprf import OPRFDecaf, OPRFRistretto, OPRFType
 from excalibur_server.src.auth.opaque.structures import (
@@ -133,7 +133,7 @@ class BaseOPAQUE:
         Implements the `MAC()` function described in section 2.2.
         """
 
-        return hmac.new(key, msg, self.kdf.hash_name).digest()
+        return hmac.new(key, msg, self.kdf.algorithm).digest()
 
     def _hash(self, data: bytes) -> bytes:
         """

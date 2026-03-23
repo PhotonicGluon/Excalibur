@@ -5,16 +5,17 @@ from typing import Literal
 
 class HKDF:
     """
-    HMAC-based Key Derivation Function (HKDF) implementation based on RFC5869.
+    HMAC-based Key Derivation Function (HKDF) implementation based on
+    [RFC5869](https://datatracker.ietf.org/doc/html/rfc5869).
     """
 
-    def __init__(self, hash_function: Literal["sha256", "sha512", "shake256"]):
-        self.hash_name = hash_function
-        if hash_function == "sha256":
+    def __init__(self, algorithm: Literal["sha256", "sha512", "shake256"]):
+        self.algorithm = algorithm
+        if algorithm == "sha256":
             self.hash_function = sha256
-        elif hash_function == "sha512":
+        elif algorithm == "sha512":
             self.hash_function = sha512
-        elif hash_function == "shake256":
+        elif algorithm == "shake256":
             self.hash_function = shake_256
 
         self.digest_size = self.hash_function().digest_size
