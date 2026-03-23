@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 
-import { bigIntToBytes, bytesToBigInt, modulo, xor } from "@lib/util";
+import { bigIntToBytes, bytesToBigInt, modulo, xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";
 import { Ristretto255 } from "./ristretto255";
@@ -29,13 +29,15 @@ abstract class BaseOPRF {
         const lenInBytesAsBytes = i2osp(BigInt(lenInBytes), 2);
         const msgPrime = Buffer.concat([zPad, msg, lenInBytesAsBytes, i2osp(0n, 1), dstPrime]);
 
-        const b0 = this.hashfunc(msgPrime).digest();
+        const b0 = Buffer.from(this.hashfunc(msgPrime).digest());
 
-        const b: Uint8Array[] = new Array(ell + 1); // Preallocate array
-        b[1] = this.hashfunc(Buffer.concat([b0, i2osp(1n, 1), dstPrime])).digest();
+        const b: Buffer[] = new Array(ell + 1); // Preallocate array
+        b[1] = Buffer.from(this.hashfunc(Buffer.concat([b0, i2osp(1n, 1), dstPrime])).digest());
 
         for (let i = 2; i <= ell; i++) {
-            b[i] = this.hashfunc(Buffer.concat([xor(b[i - 1], b0), i2osp(BigInt(i), 1), dstPrime])).digest();
+            b[i] = Buffer.from(
+                this.hashfunc(Buffer.concat([xorBuffer(b[i - 1], b0), i2osp(BigInt(i), 1), dstPrime])).digest(),
+            );
         }
 
         const uniformBytes = Buffer.concat(b.slice(1));
