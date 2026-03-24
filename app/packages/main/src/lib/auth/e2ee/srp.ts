@@ -4,7 +4,7 @@ import generateKey, { KeygenAdditionalInfo } from "@lib/auth/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
 import { b64decode, bufferToNumber, numberToBuffer } from "@lib/util";
 
-import { parseResponse, sendResponse } from "./misc";
+import { parseResponse, sendResponse } from "./response-handling";
 import { HandshakeData } from "./structures";
 
 const MAX_ITER_COUNT = 3;

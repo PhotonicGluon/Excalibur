@@ -2,9 +2,10 @@ import json
 from base64 import b64decode, b64encode
 from typing import Literal
 
-from fastapi import WebSocket as WebSocket
+from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, model_serializer
 
+from excalibur_server.api.logging import logger
 from excalibur_server.src.exef import ExEF
 
 
@@ -117,5 +118,13 @@ class EncryptedWebSocketManager(WebSocketManager):
         """
 
         data = await self._ws.receive_bytes()
-        decrypted_data = ExEF(self._encryption_key).decrypt(data)
-        return WebSocketMsg(**json.loads(decrypted_data))
+        try:
+            decrypted_data = ExEF(self._encryption_key).decrypt(data)
+            return WebSocketMsg(**json.loads(decrypted_data))
+        except ValueError:
+            logger.warning("Failed to decrypt WebSocket message from client")
+
+            # Out of courtesy, send a disconnect message in plaintext
+            await super().send(WebSocketMsg(status="ERR", data="Failed to decrypt message. Is the key correct?"))
+            await self._ws.close()
+            raise WebSocketDisconnect(status.WS_1007_INVALID_FRAME_PAYLOAD_DATA, "Failed to decrypt message")

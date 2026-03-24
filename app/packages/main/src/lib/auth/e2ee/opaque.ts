@@ -1,6 +1,6 @@
 import { createDecipheriv } from "crypto";
 
-import { parseResponse, sendResponse } from "@lib/auth/e2ee/misc";
+import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
 import generateKey from "@lib/auth/keygen";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEClientAuthError } from "@lib/auth/opaque/client";
