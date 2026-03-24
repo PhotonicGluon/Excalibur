@@ -1,14 +1,5 @@
 import { b64decode, b64encode } from "@lib/util";
 
-export interface E2EEData {
-    /** Bilaterally agreed symmetric key to encrypt communications */
-    key: Buffer;
-    /** Account unlock key (AUK) */
-    auk: Buffer;
-    /** Authentication token */
-    token: string;
-}
-
 /**
  * Sends a response to the server.
  *

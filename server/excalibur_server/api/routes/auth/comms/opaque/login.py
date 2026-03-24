@@ -58,7 +58,6 @@ async def comms_endpoint(websocket: WebSocket):
             nonce=_get_nonce(),
             keyshare_seed=_get_keyshare_seed(),
         )
-        print(ke2)
         await ws_manager.send(WebSocketMsg(ke2.serialize()))
 
         # Wait for client to send final key exchange message

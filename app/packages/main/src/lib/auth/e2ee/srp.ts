@@ -1,15 +1,15 @@
 import { createDecipheriv } from "crypto";
 
-import generateKey from "@lib/auth/keygen";
+import generateKey, { KeygenAdditionalInfo } from "@lib/auth/keygen";
 import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
-import { getSecurityDetails } from "@lib/users/api";
 import { b64decode, bufferToNumber, numberToBuffer } from "@lib/util";
 
-import { E2EEData, parseResponse, sendResponse } from "./helpers";
+import { parseResponse, sendResponse } from "./misc";
+import { HandshakeData } from "./structures";
 
 const MAX_ITER_COUNT = 3;
 
-enum E2EEStage {
+enum HandshakeStage {
     GET_SRP_GROUP,
     GET_SERVER_PUBLIC_VALUE,
     SHARED_VALUE_CHECK,
@@ -17,9 +17,9 @@ enum E2EEStage {
     GET_AUTH_TOKEN,
 }
 
-interface E2EEState {
+interface HandshakeState {
     /** Current stage of the negotiation */
-    stage: E2EEStage;
+    stage: HandshakeStage;
     /** Iteration number for negotiation */
     negotiationIter: number;
     /** SRP group to use */
@@ -43,7 +43,7 @@ interface E2EEState {
 }
 
 /**
- * Perform end-to-end encryption setup with the server using the SRP protocol.
+ * Perform Secure Remote Password (SRP) protocol handshake.
  *
  * @param apiURL The HTTP(S) URL of the API server to query
  * @param username The username to log in as
@@ -51,34 +51,20 @@ interface E2EEState {
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
+ * @returns A promise which resolves to the handshake data, or undefined if the handshake fails
  */
-export async function e2eeSRP(
+export async function handshakeSRP(
     apiURL: string,
     username: string,
     password: string,
+    srpSalt: Buffer,
+    additionalInfo: KeygenAdditionalInfo,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
-): Promise<E2EEData | undefined> {
-    // Get security details
-    setLoadingState?.("Loading security details...");
-    const securityDetailsResponse = await getSecurityDetails(apiURL, username);
-    if (!securityDetailsResponse.success) {
-        stopLoading?.();
-        showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);
-        return;
-    }
-    const aukSalt = securityDetailsResponse.aukSalt!;
-    const srpSalt = securityDetailsResponse.srpSalt!;
-    console.debug(`Loaded security details with salts '${aukSalt.toString("hex")}' and '${srpSalt.toString("hex")}'`);
-
-    // Generate keys
-    setLoadingState?.("Generating keys...");
-    const additionalInfo = { username };
-    const auk = await generateKey(password, additionalInfo, aukSalt);
+): Promise<HandshakeData | undefined> {
+    // Generate SRP key
     const srpKey = await generateKey(password, additionalInfo, srpSalt);
-    console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
     console.log(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
 
     // Perform SRP handshake
@@ -86,12 +72,12 @@ export async function e2eeSRP(
     const ws = new WebSocket(`${wsURL}/auth`);
 
     setLoadingState?.("Checking username...");
-    const state: E2EEState = {
-        stage: E2EEStage.GET_SRP_GROUP,
+    const state: HandshakeState = {
+        stage: HandshakeStage.GET_SRP_GROUP,
         negotiationIter: 0,
     };
 
-    return new Promise<E2EEData>((resolve, reject) => {
+    return new Promise<HandshakeData>((resolve, reject) => {
         ws.addEventListener("error", (event) => {
             const e = event as ErrorEvent;
             ws.close();
@@ -109,7 +95,7 @@ export async function e2eeSRP(
         ws.addEventListener("message", async (event) => {
             const response = parseResponse(event.data as string);
             try {
-                if (state.stage === E2EEStage.GET_SRP_GROUP) {
+                if (state.stage === HandshakeStage.GET_SRP_GROUP) {
                     if (response.status !== "OK") {
                         ws.close();
                         stopLoading?.();
@@ -120,12 +106,12 @@ export async function e2eeSRP(
 
                     const srpBits = parseInt(response.data!.toString());
                     state.srpGroup = getSRPGroup(srpBits);
-                    state.stage = E2EEStage.GET_SERVER_PUBLIC_VALUE;
+                    state.stage = HandshakeStage.GET_SERVER_PUBLIC_VALUE;
                     console.debug(`Server is using ${state.srpGroup.bits}-bit SRP group`);
                     return;
                 }
 
-                if (state.stage === E2EEStage.GET_SERVER_PUBLIC_VALUE) {
+                if (state.stage === HandshakeStage.GET_SERVER_PUBLIC_VALUE) {
                     // Receive server's public value
                     const serverPub = bufferToNumber(response.data! as Buffer);
                     if (serverPub % state.srpGroup!.prime === 0n) {
@@ -154,11 +140,11 @@ export async function e2eeSRP(
                     const { priv, pub } = state.srpGroup!.generateClientValues();
                     state.values.client = { priv, pub };
                     sendResponse(ws, numberToBuffer(pub), "OK");
-                    state.stage = E2EEStage.SHARED_VALUE_CHECK;
+                    state.stage = HandshakeStage.SHARED_VALUE_CHECK;
                     return;
                 }
 
-                if (state.stage === E2EEStage.SHARED_VALUE_CHECK) {
+                if (state.stage === HandshakeStage.SHARED_VALUE_CHECK) {
                     // Check if the server accepted the client's public value
                     if (response.status !== "OK") {
                         console.log(response.toString());
@@ -211,11 +197,11 @@ export async function e2eeSRP(
                     sendResponse(ws, m1Client, "OK");
 
                     state.values!.m1 = m1Client;
-                    state.stage = E2EEStage.M_VALUE_CHECKS;
+                    state.stage = HandshakeStage.M_VALUE_CHECKS;
                     return;
                 }
 
-                if (state.stage === E2EEStage.M_VALUE_CHECKS) {
+                if (state.stage === HandshakeStage.M_VALUE_CHECKS) {
                     // Check that server accepted M1
                     if (response.status !== "OK") {
                         ws.close();
@@ -254,11 +240,11 @@ export async function e2eeSRP(
                         return;
                     }
                     sendResponse(ws, undefined, "OK");
-                    state.stage = E2EEStage.GET_AUTH_TOKEN;
+                    state.stage = HandshakeStage.GET_AUTH_TOKEN;
                     return;
                 }
 
-                if (state.stage === E2EEStage.GET_AUTH_TOKEN) {
+                if (state.stage === HandshakeStage.GET_AUTH_TOKEN) {
                     const auth_token_data = JSON.parse(response.data! as string);
                     const nonce = b64decode(auth_token_data.nonce);
                     const token = b64decode(auth_token_data.token);
@@ -270,7 +256,7 @@ export async function e2eeSRP(
                     const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);
                     state.authToken = plaintext.toString("utf-8");
 
-                    resolve({ key: state.master!, auk: auk, token: state.authToken });
+                    resolve({ key: state.master!, token: state.authToken });
                     return;
                 }
             } catch (e: unknown) {

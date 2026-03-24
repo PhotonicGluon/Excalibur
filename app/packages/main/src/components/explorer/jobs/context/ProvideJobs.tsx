@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useImmer } from "use-immer";
 
-import { Job } from "../JobEntry";
-import { JobsManager, jobsContext } from "./context";
+import { Job } from "@components/explorer/jobs/JobEntry";
+import { JobsManager, jobsContext } from "@components/explorer/jobs/context";
 
 export const ProvideJobs: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const jobsManager = useProvideJobsManager();

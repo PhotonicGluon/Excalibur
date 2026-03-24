@@ -20,7 +20,7 @@ import {
     useIonToast,
 } from "@ionic/react";
 
-import { e2eeSRP } from "@lib/auth/e2ee";
+import { e2ee } from "@lib/auth/e2ee";
 import Preferences from "@lib/preferences";
 import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
@@ -134,8 +134,7 @@ const Login: React.FC = () => {
         }
 
         // Set up End-to-End Encryption (E2EE)
-        // TODO: Determine authentication protocol based on server info
-        const e2eeData = await e2eeSRP(
+        const e2eeData = await e2ee(
             auth.serverInfo!.apiURL!,
             values.username,
             values.password,

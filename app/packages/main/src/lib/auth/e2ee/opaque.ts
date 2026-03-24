@@ -1,27 +1,28 @@
 import { createDecipheriv } from "crypto";
 
-import { E2EEData, parseResponse, sendResponse } from "@lib/auth/e2ee/helpers";
+import { parseResponse, sendResponse } from "@lib/auth/e2ee/misc";
 import generateKey from "@lib/auth/keygen";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
+import { OPAQUEAuthError, OPAQUEClientAuthError } from "@lib/auth/opaque/client";
 import { getSecurityDetails } from "@lib/users/api";
 import { b64decode } from "@lib/util";
 
-import { OPAQUEAuthError, OPAQUEClientAuthError } from "../opaque/client";
+import { HandshakeData } from "./structures";
 
-enum E2EEStage {
+enum HandshakeStage {
     SENT_KE1_AND_USERNAME,
     SENT_KE3,
 }
 
-interface E2EEState {
+interface HandshakeState {
     /** Current stage of the negotiation */
-    stage: E2EEStage;
+    stage: HandshakeStage;
     /** Bilaterally agreed master key */
     master?: Buffer;
 }
 
 /**
- * Perform end-to-end encryption setup with the server using the OPAQUE-3DH protocol.
+ * Perform OPAQUE-3DH protocol handshake.
  *
  * @param apiURL The HTTP(S) URL of the API server to query
  * @param username The username to log in as
@@ -29,16 +30,16 @@ interface E2EEState {
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
+ * @returns A promise which resolves to the handshake data, or undefined if the handshake fails
  */
-export async function e2eeOPAQUE(
+export async function handshakeOPAQUE(
     apiURL: string,
     username: string,
     password: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
-): Promise<E2EEData | undefined> {
+): Promise<HandshakeData | undefined> {
     // Get security details
     setLoadingState?.("Loading security details...");
     const securityDetailsResponse = await getSecurityDetails(apiURL, username);
@@ -62,11 +63,11 @@ export async function e2eeOPAQUE(
     const ws = new WebSocket(`${wsURL}/auth/opaque`);
 
     setLoadingState?.("Sending key exchange message 1...");
-    const state: E2EEState = {
-        stage: E2EEStage.SENT_KE1_AND_USERNAME,
+    const state: HandshakeState = {
+        stage: HandshakeStage.SENT_KE1_AND_USERNAME,
     };
 
-    return new Promise<E2EEData>((resolve, reject) => {
+    return new Promise<HandshakeData>((resolve, reject) => {
         ws.addEventListener("error", (event) => {
             const e = event as ErrorEvent;
             ws.close();
@@ -88,7 +89,7 @@ export async function e2eeOPAQUE(
         ws.addEventListener("message", async (event) => {
             const response = parseResponse(event.data as string);
             try {
-                if (state.stage === E2EEStage.SENT_KE1_AND_USERNAME) {
+                if (state.stage === HandshakeStage.SENT_KE1_AND_USERNAME) {
                     if (response.status === "ERR") {
                         ws.close();
                         stopLoading?.();
@@ -145,12 +146,12 @@ export async function e2eeOPAQUE(
 
                     // Derive master key
                     state.master = OPAQUE.kdf.expand(Buffer.from(sessionKey), Buffer.from("Master Key"), 32);
-                    state.stage = E2EEStage.SENT_KE3;
+                    state.stage = HandshakeStage.SENT_KE3;
                     setLoadingState?.("Waiting for authentication token...");
                     return;
                 }
 
-                if (state.stage === E2EEStage.SENT_KE3) {
+                if (state.stage === HandshakeStage.SENT_KE3) {
                     if (response.status === "ERR") {
                         // Server rejected client
                         ws.close();
@@ -179,7 +180,7 @@ export async function e2eeOPAQUE(
                     cipher.setAuthTag(tag);
 
                     const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);
-                    resolve({ key: state.master!, auk: auk, token: plaintext.toString("utf-8") });
+                    resolve({ key: state.master!, token: plaintext.toString("utf-8") });
                     return;
                 }
             } catch (e: unknown) {

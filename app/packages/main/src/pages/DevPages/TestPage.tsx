@@ -2,7 +2,7 @@ import React from "react";
 
 import { IonButton, IonContent, IonInput, IonPage } from "@ionic/react";
 
-import { e2eeOPAQUE } from "@lib/auth/e2ee";
+import { handshakeOPAQUE } from "@lib/auth/e2ee/opaque";
 
 const TestPage: React.FC = () => {
     // States
@@ -20,7 +20,7 @@ const TestPage: React.FC = () => {
                 ></IonInput>
                 <IonButton
                     onClick={() => {
-                        e2eeOPAQUE(
+                        handshakeOPAQUE(
                             "http://localhost:8888/api",
                             "test-user-opaque",
                             password,
