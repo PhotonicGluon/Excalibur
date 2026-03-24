@@ -178,7 +178,7 @@ export async function e2eeSRP(
                         if (sharedU === 0n) {
                             message = "Computed shared value is zero.";
                         }
-                        showAlert?.("Hand shake Failed", undefined, message);
+                        showAlert?.("Handshake Failed", undefined, message);
                         reject(message);
                         return;
                     }

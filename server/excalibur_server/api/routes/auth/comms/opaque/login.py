@@ -11,6 +11,7 @@ from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
+from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.users import get_user
@@ -57,6 +58,7 @@ async def comms_endpoint(websocket: WebSocket):
             nonce=_get_nonce(),
             keyshare_seed=_get_keyshare_seed(),
         )
+        print(ke2)
         await ws_manager.send(WebSocketMsg(ke2.serialize()))
 
         # Wait for client to send final key exchange message
@@ -64,7 +66,12 @@ async def comms_endpoint(websocket: WebSocket):
         ke3 = OPAQUE.deserialize_ke3(ke3_raw)
 
         # Finalize the key exchange, generating the session key
-        session_key = OPAQUE.finish(ke3)
+        try:
+            session_key = OPAQUE.finish(ke3)
+        except OPAQUEAuthError as e:
+            await ws_manager.send(WebSocketMsg(str(e), "ERR"))
+            await ws_manager.close()
+            return
 
         # Derive master key by HKDFing the session key
         master_key = OPAQUE.kdf.expand(session_key, b"Master Key", 32)

@@ -1,3 +1,4 @@
+from csv import Error
 from functools import cached_property
 from typing import Callable
 
@@ -22,6 +23,9 @@ from excalibur_server.src.auth.opaque.structures import (
     RegistrationResponse,
 )
 
+
+class OPAQUEAuthError(Error):
+    pass
 
 class BaseOPAQUE:
     """

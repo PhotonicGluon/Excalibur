@@ -21,6 +21,17 @@ import { i2osp } from "./misc";
 import { OPRFRistretto, OPRFRistrettoType, OPRFType } from "./oprf";
 import { Ristretto255 } from "./ristretto255";
 
+export class OPAQUEAuthError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "OPAQUEAuthError";
+
+        // Manually set the prototype for compatibility with older TS targets (ES5/ES3)
+        // See https://medium.com/@dannyguo/how-to-fix-instanceof-not-working-for-custom-errors-in-typescript-1df978100a27
+        Object.setPrototypeOf(this, OPAQUEAuthError.prototype);
+    }
+}
+
 export class OPAQUEClient {
     // OPAQUE constants
     readonly NONCE_LENGTH = 32;
@@ -228,7 +239,7 @@ export class OPAQUEClient {
      * @param serverIdentity the optional encoded server identity
      * @param clientIdentity the optional encoded client identity
      * @returns the client's private key, cleartext credentials, and the `export_key`
-     * @throws {Error} if the Envelope fails to be recovered
+     * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
      */
     private _recover(
         randomizedPassword: Uint8Array,
@@ -248,7 +259,7 @@ export class OPAQUEClient {
             );
 
         if (!Buffer.from(envelope.authTag).equals(Buffer.from(expectedEnvelope.authTag))) {
-            throw new Error("envelope authentication tag does not match expected tag");
+            throw new OPAQUEAuthError("envelope authentication tag does not match expected tag");
         }
 
         return [clientPrivateKey, cleartextCredentials, exportKey];
@@ -278,6 +289,7 @@ export class OPAQUEClient {
      * @param server_identity optional server's identity
      * @param client_identity the client's identity
      * @return the client's private key, cleartext credentials, and the `export_key`
+     * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
      */
     private _recoverCredentials(
         password: Uint8Array,
@@ -464,7 +476,7 @@ export class OPAQUEClient {
      * @param clientPrivateKey the client's private key
      * @param ke2 a KE2 message structure
      * @returns the KE3 message to send to the server and the shared session secret
-     * @throws {Error} if the server authentication fails
+     * @throws {OPAQUEAuthError} if the server authentication fails
      */
     private _authClientFinalize(
         cleartextCredentials: CleartextCredentials,
@@ -488,7 +500,7 @@ export class OPAQUEClient {
         const expectedServerMAC = this.kdf.hmacHash(km2, this._hash(preamble));
 
         if (!Buffer.from(ke2.authResponse.serverMAC).equals(Buffer.from(expectedServerMAC))) {
-            throw new Error("failed to authenticate server");
+            throw new OPAQUEAuthError("failed to authenticate server");
         }
 
         const clientMAC = this.kdf.hmacHash(km3, this._hash(Buffer.concat([preamble, expectedServerMAC])));
@@ -571,6 +583,8 @@ export class OPAQUEClient {
      * @param serverIdentity the server's identity
      * @param ke2 the KE2 message from the server
      * @returns the client's KE3 message, the session key, and the export key
+     * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
+     * @throws {OPAQUEAuthError} if the server authentication fails
      */
     generateKE3(clientIdentity: Uint8Array, serverIdentity: Uint8Array, ke2: KE2): [KE3, Uint8Array, Uint8Array] {
         const [clientPrivateKey, cleartextCredentials, exportKey] = this._recoverCredentials(
