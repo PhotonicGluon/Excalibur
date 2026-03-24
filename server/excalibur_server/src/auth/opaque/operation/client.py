@@ -2,7 +2,12 @@ from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.misc import xor
-from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE, OPAQUEAuthError
+from excalibur_server.src.auth.opaque.operation.base import (
+    BaseOPAQUE,
+    OPAQUEAuthError,
+    OPAQUEClientAuthError,
+    OPAQUEServerAuthError,
+)
 from excalibur_server.src.auth.opaque.oprf import OPRFType
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
@@ -156,6 +161,7 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: optional server's identity
         :param client_identity: the client's identity
         :return: the client's private key, cleartext credentials, and the `export_key`
+        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by incorrect credentials)
         :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
         """
 
@@ -175,7 +181,10 @@ class OPAQUEClient(BaseOPAQUE):
         )
 
         server_public_key_and_envelope = xor(credential_response_pad, response.masked_response)
-        server_public_key = self.oprf.Curve.from_bytes(server_public_key_and_envelope[: self.oprf.Curve.KEY_LENGTH])
+        try:
+            server_public_key = self.oprf.Curve.from_bytes(server_public_key_and_envelope[: self.oprf.Curve.KEY_LENGTH])
+        except Exception as e:
+            raise OPAQUEClientAuthError("failed to recover server public key") from e
         envelope = Envelope.deserialize(server_public_key_and_envelope[self.oprf.Curve.KEY_LENGTH :], self.NONCE_LENGTH)
 
         client_private_key, cleartext_credentials, export_key = self._recover(
@@ -219,7 +228,7 @@ class OPAQUEClient(BaseOPAQUE):
         :param client_private_key: the client's private key
         :param ke2: a KE2 message structure
         :return: the KE3 message to send to the server and the shared session secret
-        :raises OPAQUEAuthError: if the server authentication fails
+        :raises OPAQUEServerAuthError: if the server authentication fails
         """
 
         dh1 = self._diffie_hellman(self._client_secret, ke2.auth_response.server_public_keyshare)
@@ -239,7 +248,7 @@ class OPAQUEClient(BaseOPAQUE):
         expected_server_mac = self.kdf.hmac_hash(km2, self._hash(preamble))
 
         if ke2.auth_response.server_mac != expected_server_mac:
-            raise OPAQUEAuthError("failed to authenticate server")
+            raise OPAQUEServerAuthError("failed to authenticate server")
 
         client_mac = self.kdf.hmac_hash(km3, self._hash(preamble + expected_server_mac))
         return KE3(client_mac=client_mac), session_key
@@ -324,8 +333,9 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: the server's identity
         :param ke2: the KE2 message from the server
         :return: the client's KE3 message, the session key, and the export key
+        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by incorrect credentials)
         :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
-        :raises OPAQUEAuthError: if the server authentication fails
+        :raises OPAQUEServerAuthError: if the server authentication fails
         """
 
         client_private_key, cleartext_credentials, export_key = self._recover_credentials(

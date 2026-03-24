@@ -2,6 +2,7 @@ import pytest
 
 from excalibur_server.src.auth.elliptic.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.operation import OPAQUEClient, OPAQUEServer
+from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.structures import Envelope, RegistrationRecord
 
 
@@ -301,3 +302,70 @@ class TestOPAQUERistretto255:
         ke3 = opaque_server.deserialize_ke3(self.KE3[test_idx])
         our_session_key = opaque_server.finish(ke3)
         assert our_session_key == self.SESSION_KEYS[test_idx]
+
+    # Invalid requests
+    @pytest.mark.parametrize("test_idx", range(len(KE3)))
+    def test_ke3_invalid_credentials(self, test_idx: int, opaque_client: OPAQUEClient):
+        opaque_client.context = self.CONTEXTS[test_idx]
+        opaque_client._password = self.PASSWORDS[test_idx]
+        opaque_client._blind = self.BLIND_LOGINS[test_idx]
+        opaque_client._client_secret = opaque_client._derive_diffie_hellman_keypair(
+            self.CLIENT_KEYSHARE_SEEDS[test_idx]
+        )[0]
+        opaque_client._ke1 = opaque_client.deserialize_ke1(self.KE1[test_idx])
+
+        client_identity = self.CLIENT_IDENTITIES[test_idx]
+        if client_identity == b"":
+            client_identity = self.CLIENT_PUBLIC_KEYS[test_idx].to_bytes()
+
+        server_identity = self.SERVER_IDENTITIES[test_idx]
+        if server_identity == b"":
+            server_identity = self.SERVER_PUBLIC_KEYS[test_idx].to_bytes()
+
+        # First test is to truncate the client identity by 1
+        with pytest.raises(OPAQUEAuthError):
+            opaque_client.generate_ke3(
+                client_identity=client_identity[:-1],  # We truncate the client identity to check if an error is thrown
+                server_identity=server_identity,
+                ke2=opaque_client.deserialize_ke2(self.KE2[test_idx]),
+            )
+
+        # Next test is to truncate the password by 1
+        with pytest.raises(OPAQUEClientAuthError):
+            opaque_client._password = self.PASSWORDS[test_idx][:-1]
+            opaque_client.generate_ke3(
+                client_identity=client_identity,
+                server_identity=server_identity,
+                ke2=opaque_client.deserialize_ke2(self.KE2[test_idx]),
+            )
+
+    @pytest.mark.parametrize("test_idx", range(len(KE3)))
+    def test_server_finish_invalid_mac(self, test_idx, opaque_server: OPAQUEServer):
+        # Test server setting up and sending KE2
+        opaque_server.context = self.CONTEXTS[test_idx]
+        masking_key = opaque_server.kdf.expand(
+            self.RANDOMIZED_PASSWORDS[test_idx], b"MaskingKey", opaque_server.kdf.digest_size
+        )
+
+        opaque_server.generate_ke2(
+            server_identity=self.SERVER_IDENTITIES[test_idx],
+            server_private_key=self.SERVER_PRIVATE_KEYS[test_idx],
+            server_public_key=self.SERVER_PUBLIC_KEYS[test_idx],
+            record=RegistrationRecord(
+                client_public_key=self.CLIENT_PUBLIC_KEYS[test_idx],
+                masking_key=masking_key,
+                envelope=Envelope.deserialize(self.ENVELOPES[test_idx], nonce_length=opaque_server.NONCE_LENGTH),
+            ),
+            credential_identifier=self.CREDENTIAL_IDENTIFIERS[test_idx],
+            oprf_seed=self.OPRF_SEEDS[test_idx],
+            ke1=opaque_server.deserialize_ke1(self.KE1[test_idx]),
+            client_identity=self.CLIENT_IDENTITIES[test_idx],
+            # Parameters specified for tests
+            masking_nonce=self.MASKING_NONCES[test_idx],
+            nonce=self.SERVER_NONCES[test_idx],
+            keyshare_seed=self.SERVER_KEYSHARE_SEEDS[test_idx],
+        )
+
+        # Test server finishing with invalid MAC
+        with pytest.raises(OPAQUEClientAuthError):
+            opaque_server.finish(opaque_server.deserialize_ke3(b"\x00" * 32))

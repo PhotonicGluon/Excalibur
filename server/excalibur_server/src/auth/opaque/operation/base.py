@@ -27,6 +27,15 @@ from excalibur_server.src.auth.opaque.structures import (
 class OPAQUEAuthError(Error):
     pass
 
+
+class OPAQUEClientAuthError(OPAQUEAuthError):
+    pass
+
+
+class OPAQUEServerAuthError(OPAQUEAuthError):
+    pass
+
+
 class BaseOPAQUE:
     """
     Base class for the OPAQUE protocol implementation as described in

@@ -11,7 +11,7 @@ from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
-from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError
+from excalibur_server.src.auth.opaque.operation.base import OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.users import get_user
@@ -68,8 +68,8 @@ async def comms_endpoint(websocket: WebSocket):
         # Finalize the key exchange, generating the session key
         try:
             session_key = OPAQUE.finish(ke3)
-        except OPAQUEAuthError as e:
-            await ws_manager.send(WebSocketMsg(str(e), "ERR"))
+        except OPAQUEClientAuthError:
+            await ws_manager.send("Failed to authenticate client", "ERR")
             await ws_manager.close()
             return
 

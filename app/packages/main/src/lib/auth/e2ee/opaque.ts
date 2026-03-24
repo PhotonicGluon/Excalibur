@@ -6,7 +6,7 @@ import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { getSecurityDetails } from "@lib/users/api";
 import { b64decode } from "@lib/util";
 
-import { OPAQUEAuthError } from "../opaque/client";
+import { OPAQUEAuthError, OPAQUEClientAuthError } from "../opaque/client";
 
 enum E2EEStage {
     SENT_KE1_AND_USERNAME,
@@ -113,6 +113,20 @@ export async function e2eeOPAQUE(
                             throw e;
                         }
 
+                        const opaqueError = e as OPAQUEAuthError;
+                        if (opaqueError instanceof OPAQUEClientAuthError) {
+                            // Likely due to incorrect client credentials
+                            ws.close();
+                            stopLoading?.();
+                            showAlert?.(
+                                "Authentication Failed",
+                                "Invalid username or password",
+                                "Please check your credentials and try again",
+                            );
+                            reject("Invalid username or password");
+                            return;
+                        }
+
                         // Failed to authenticate server
                         ws.close();
                         stopLoading?.();
@@ -142,7 +156,7 @@ export async function e2eeOPAQUE(
                         ws.close();
                         stopLoading?.();
                         const errorMsg = response.data! as string;
-                        if (errorMsg === "M1 values do not match") {
+                        if (errorMsg === "Failed to authenticate client") {
                             showAlert?.(
                                 "Client Verification Failed",
                                 "Server failed to verify client",

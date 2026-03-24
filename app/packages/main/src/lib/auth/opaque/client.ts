@@ -25,10 +25,19 @@ export class OPAQUEAuthError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "OPAQUEAuthError";
+    }
+}
 
-        // Manually set the prototype for compatibility with older TS targets (ES5/ES3)
-        // See https://medium.com/@dannyguo/how-to-fix-instanceof-not-working-for-custom-errors-in-typescript-1df978100a27
-        Object.setPrototypeOf(this, OPAQUEAuthError.prototype);
+export class OPAQUEClientAuthError extends OPAQUEAuthError {
+    constructor(message: string) {
+        super(message);
+        this.name = "OPAQUEClientAuthError";
+    }
+}
+export class OPAQUEServerAuthError extends OPAQUEAuthError {
+    constructor(message: string) {
+        super(message);
+        this.name = "OPAQUEServerAuthError";
     }
 }
 
@@ -286,9 +295,10 @@ export class OPAQUEClient {
      * @param password an opaque byte string containing the client's password
      * @param blind OPRF blinding scalar value
      * @param response the server's `CredentialResponse` message
-     * @param server_identity optional server's identity
-     * @param client_identity the client's identity
+     * @param serverIdentity optional server's identity
+     * @param clientIdentity the client's identity
      * @return the client's private key, cleartext credentials, and the `export_key`
+     * @throws {OPAQUEClientAuthError} if the server public key is invalid (could be caused by incorrect credentials)
      * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
      */
     private _recoverCredentials(
@@ -314,7 +324,12 @@ export class OPAQUEClient {
         );
 
         const serverPublicKeyAndEnvelope = xorBuffer(credentialResponsePad, Buffer.from(response.maskedResponse));
-        const serverPublicKey = Ristretto255.fromBytes(serverPublicKeyAndEnvelope.subarray(0, Ristretto255.KEY_LENGTH));
+        let serverPublicKey: Ristretto255;
+        try {
+            serverPublicKey = Ristretto255.fromBytes(serverPublicKeyAndEnvelope.subarray(0, Ristretto255.KEY_LENGTH));
+        } catch (_e) {
+            throw new OPAQUEClientAuthError("failed to recover server public key");
+        }
         const envelope = Envelope.deserialize(
             serverPublicKeyAndEnvelope.subarray(Ristretto255.KEY_LENGTH),
             this.NONCE_LENGTH,
@@ -583,8 +598,9 @@ export class OPAQUEClient {
      * @param serverIdentity the server's identity
      * @param ke2 the KE2 message from the server
      * @returns the client's KE3 message, the session key, and the export key
+     * @throws {OPAQUEClientAuthError} if the server public key is invalid (could be caused by incorrect credentials)
      * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
-     * @throws {OPAQUEAuthError} if the server authentication fails
+     * @throws {OPAQUEServerAuthError} if the server authentication fails
      */
     generateKE3(clientIdentity: Uint8Array, serverIdentity: Uint8Array, ke2: KE2): [KE3, Uint8Array, Uint8Array] {
         const [clientPrivateKey, cleartextCredentials, exportKey] = this._recoverCredentials(

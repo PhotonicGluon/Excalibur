@@ -2,7 +2,7 @@ from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.misc import xor
-from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE, OPAQUEAuthError
+from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.oprf import OPRFType
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
@@ -134,11 +134,11 @@ class OPAQUEServer(BaseOPAQUE):
 
         :param ke3: the client's KE3 message
         :return: the session key
-        :raises OPAQUEAuthError: if the client MAC does not match the expected MAC
+        :raises OPAQUEClientAuthError: if the client MAC does not match the expected MAC
         """
 
         if ke3.client_mac != self._expected_client_mac:
-            raise OPAQUEAuthError("client MAC does not match expected MAC")
+            raise OPAQUEClientAuthError("client MAC does not match expected MAC")
 
         return self._session_key
 

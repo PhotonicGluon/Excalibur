@@ -2,7 +2,7 @@ import { expect } from "vitest";
 
 import { bytesToBigInt } from "@lib/util";
 
-import { OPAQUEClient } from "./client";
+import { OPAQUEAuthError, OPAQUEClient, OPAQUEClientAuthError } from "./client";
 import { Ristretto255 } from "./ristretto255";
 
 // Test vectors from RFC9807, Appendix C.1.1 and C.1.2
@@ -194,6 +194,47 @@ describe("OPAQUEClient", () => {
                     expect(opaqueClient.deserializeKE3(KE3[i]).serialize()).toEqual(ourKE3.serialize());
                     expect(ourExportKey).toEqual(EXPORT_KEYS[i]);
                     expect(ourSessionKey).toEqual(SESSION_KEYS[i]);
+                });
+            }
+        });
+
+        describe("Invalid Credentials in KE3", () => {
+            for (let i = 0; i < KE3.length; i++) {
+                it(`test case ${i + 1}`, () => {
+                    opaqueClient.context = CONTEXTS[i];
+
+                    const clientIdentity =
+                        CLIENT_IDENTITIES[i].length === 0 ? CLIENT_PUBLIC_KEYS[i].toBytes() : CLIENT_IDENTITIES[i];
+                    const serverIdentity =
+                        SERVER_IDENTITIES[i].length === 0 ? SERVER_PUBLIC_KEYS[i].toBytes() : SERVER_IDENTITIES[i];
+
+                    // First test is to truncate the client identity by 1
+                    expect(() => {
+                        opaqueClient.generateKE1(
+                            PASSWORDS[i],
+                            BLIND_LOGINS[i],
+                            // Parameters specified for tests
+                            CLIENT_NONCES[i],
+                            CLIENT_KEYSHARE_SEEDS[i],
+                        );
+                        opaqueClient.generateKE3(
+                            clientIdentity.slice(0, -1),
+                            serverIdentity,
+                            opaqueClient.deserializeKE2(KE2[i]),
+                        );
+                    }).toThrow(OPAQUEAuthError);
+
+                    // Next test is to truncate the password by 1
+                    expect(() => {
+                        opaqueClient.generateKE1(
+                            PASSWORDS[i].subarray(0, -1),
+                            BLIND_LOGINS[i],
+                            // Parameters specified for tests
+                            CLIENT_NONCES[i],
+                            CLIENT_KEYSHARE_SEEDS[i],
+                        );
+                        opaqueClient.generateKE3(clientIdentity, serverIdentity, opaqueClient.deserializeKE2(KE2[i]));
+                    }).toThrow(OPAQUEClientAuthError);
                 });
             }
         });

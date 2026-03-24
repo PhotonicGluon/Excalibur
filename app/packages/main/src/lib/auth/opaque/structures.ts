@@ -22,6 +22,7 @@ export class CleartextCredentials {
         ]);
     }
 }
+
 /**
  * Envelope structure as defined in section 4.1.1.
  */
