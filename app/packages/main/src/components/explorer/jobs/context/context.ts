@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-import { Job } from "../JobEntry";
+import { Job } from "@components/explorer/jobs/JobEntry";
 
 /**
  * Manages jobs and their states.

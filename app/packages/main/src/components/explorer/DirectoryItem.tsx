@@ -24,11 +24,11 @@ import {
 } from "@ionic/react";
 import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
+import { randID } from "@lib/auth/util";
 import ExEF from "@lib/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
-import { randID } from "@lib/security/util";
 import { bytesToHumanReadable } from "@lib/util";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";

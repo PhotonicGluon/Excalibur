@@ -3,9 +3,9 @@ import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
 import { DragEvent } from "react";
 
+import { randID } from "@lib/auth/util";
 import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
-import { randID } from "@lib/security/util";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";

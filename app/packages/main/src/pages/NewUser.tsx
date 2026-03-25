@@ -21,10 +21,9 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
-import { getGroup } from "@lib/security/api";
-import generateKey from "@lib/security/keygen";
-import { addUser } from "@lib/users/api";
+import { registerUser } from "@lib/users/api";
 
 import { useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
@@ -106,22 +105,6 @@ const NewUser: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(values)}`);
         setIsLoading(true);
 
-        // Get SRP group used for communication
-        setLoadingState("Determining SRP group...");
-        const groupResponse = await getGroup(auth.serverInfo!.apiURL!);
-        const srpGroup = groupResponse.group;
-        if (!srpGroup) {
-            setIsLoading(false);
-            presentToast({
-                message: `Unable to determine server's SRP group: ${groupResponse.error!}`,
-                duration: 2000,
-                color: "danger",
-            });
-            return;
-        }
-
-        console.debug(`Server is using ${srpGroup.bits}-bit SRP group`);
-
         // Set up account unlock key (AUK) and vault key
         setLoadingState("Creating new AUK and vault key...");
         const additionalInfo = { username: values.username };
@@ -136,32 +119,23 @@ const NewUser: React.FC = () => {
         const exef = new ExEF(auk);
         const encryptedVaultKey = exef.encrypt(vaultKey);
 
-        // Set up SRP key
-        setLoadingState("Creating new SRP key...");
-        const srpSalt = randomBytes(32);
-        const srpKey = await generateKey(values.password, additionalInfo, srpSalt);
-        console.debug(`Generated SRP key '${srpKey.toString("hex")}' with salt '${srpSalt.toString("hex")}'`);
-
-        const srpVerifier = srpGroup.generateVerifier(srpKey);
-
-        // Set up security details
-        setLoadingState("Adding user...");
-        const result = await addUser(
+        // Register new user
+        setLoadingState("Registering user...");
+        const result = await registerUser(
             auth.serverInfo!.apiURL!,
-            ack,
             values.username,
+            values.password,
+            ack,
             aukSalt,
-            srpSalt,
-            srpVerifier,
             encryptedVaultKey,
+            () => setIsLoading(false),
+            setLoadingState,
+            (header, subheader, msg) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
+            },
         );
         if (!result.success) {
-            setIsLoading(false);
-            presentToast({
-                message: `Unable to add user: ${result.error!}`,
-                duration: 2000,
-                color: "danger",
-            });
+            // We've already handled the error
             return;
         }
 

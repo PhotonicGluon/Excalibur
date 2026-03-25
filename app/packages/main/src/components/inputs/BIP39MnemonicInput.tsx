@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 import { IonButton } from "@ionic/react";
 
-import { BIP39MnemonicLength, WORD_TRIE, fromMnemonic } from "@lib/security/bip39";
+import { BIP39MnemonicLength, WORD_TRIE, fromMnemonic } from "@lib/auth/bip39";
 
 import BIP39WordInput from "./BIP39WordInput";
 

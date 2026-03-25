@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { bytesToHumanReadable, padNumber } from "./numbers";
+import { bigIntToBytes, bytesToBigInt, bytesToHumanReadable, padNumber } from "./numbers";
 
 describe("padNumber", () => {
     test("pads numbers correctly", () => {
@@ -9,6 +9,51 @@ describe("padNumber", () => {
         expect(padNumber(123, 3)).toBe("123");
         expect(padNumber(123, 4)).toBe("0123");
         expect(padNumber(12, 5)).toBe("00012");
+    });
+});
+
+describe("bytesToBigInt", () => {
+    test("converts bytes to bigint", () => {
+        expect(bytesToBigInt(new Uint8Array([0xab, 0x54, 0xa9, 0x8c, 0xeb, 0x1f, 0x0a, 0xd2]), "big")).toBe(
+            12345678901234567890n,
+        );
+        expect(
+            bytesToBigInt(
+                new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xab, 0x54, 0xa9, 0x8c, 0xeb, 0x1f, 0x0a, 0xd2]),
+                "big",
+            ),
+        ).toBe(12345678901234567890n);
+        expect(bytesToBigInt(new Uint8Array([0xd2, 0x0a, 0x1f, 0xeb, 0x8c, 0xa9, 0x54, 0xab]), "little")).toBe(
+            12345678901234567890n,
+        );
+        expect(
+            bytesToBigInt(
+                new Uint8Array([0xd2, 0x0a, 0x1f, 0xeb, 0x8c, 0xa9, 0x54, 0xab, 0x00, 0x00, 0x00, 0x00]),
+                "little",
+            ),
+        ).toBe(12345678901234567890n);
+    });
+
+    test("handles edge cases", () => {
+        expect(bytesToBigInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), "big")).toBe(0n);
+        expect(bytesToBigInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]), "little")).toBe(0n);
+    });
+});
+
+describe("bigIntToBytes", () => {
+    test("converts bigint to bytes", () => {
+        expect(bigIntToBytes(12345678901234567890n, 8, "big")).toEqual(
+            new Uint8Array([0xab, 0x54, 0xa9, 0x8c, 0xeb, 0x1f, 0x0a, 0xd2]),
+        );
+        expect(bigIntToBytes(12345678901234567890n, 12, "big")).toEqual(
+            new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xab, 0x54, 0xa9, 0x8c, 0xeb, 0x1f, 0x0a, 0xd2]),
+        );
+        expect(bigIntToBytes(12345678901234567890n, 8, "little")).toEqual(
+            new Uint8Array([0xd2, 0x0a, 0x1f, 0xeb, 0x8c, 0xa9, 0x54, 0xab]),
+        );
+        expect(bigIntToBytes(12345678901234567890n, 12, "little")).toEqual(
+            new Uint8Array([0xd2, 0x0a, 0x1f, 0xeb, 0x8c, 0xa9, 0x54, 0xab, 0x00, 0x00, 0x00, 0x00]),
+        );
     });
 });
 

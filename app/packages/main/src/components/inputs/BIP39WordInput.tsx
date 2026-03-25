@@ -2,7 +2,7 @@ import { forwardRef, useState } from "react";
 
 import { IonItem, IonLabel, IonList, IonSearchbar } from "@ionic/react";
 
-import { WORDS, WORD_TRIE } from "@lib/security/bip39";
+import { WORDS, WORD_TRIE } from "@lib/auth/bip39";
 
 export const DEBOUNCE_TIME = 100; // In ms
 export const LOSS_FOCUS_CLEAR_DELAY = 100; // In ms

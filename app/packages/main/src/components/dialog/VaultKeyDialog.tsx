@@ -13,7 +13,7 @@ import {
 } from "@ionic/react";
 import { close, copyOutline } from "ionicons/icons";
 
-import { toMnemonic } from "@lib/security/bip39";
+import { toMnemonic } from "@lib/auth/bip39";
 
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";

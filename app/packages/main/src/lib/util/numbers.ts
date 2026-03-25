@@ -12,6 +12,41 @@ export function padNumber(num: number, length: number): string {
 }
 
 /**
+ * Converts a given array of bytes into a bigint.
+ *
+ * @param bytes The array of bytes
+ * @param endianness The endianness to use
+ * @returns A bigint representation of the bytes
+ */
+export function bytesToBigInt(bytes: Uint8Array, endianness: "little" | "big" = "big"): bigint {
+    const numBytes = bytes.length;
+
+    let hex = "";
+    for (let i = 0; i < numBytes; i++) {
+        const byte = endianness === "little" ? bytes[numBytes - 1 - i] : bytes[i];
+        hex += byte.toString(16).padStart(2, "0");
+    }
+    return BigInt(`0x${hex}`);
+}
+
+/**
+ * Converts a given bigint into an array of bytes.
+ *
+ * @param bigint The bigint to convert
+ * @param length The length of the array
+ * @param endianness The endianness to use
+ * @returns An array of bytes
+ */
+export function bigIntToBytes(bigint: bigint, length: number, endianness: "little" | "big" = "big"): Uint8Array {
+    const hex = bigint.toString(16).padStart(length * 2, "0");
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        const byte = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+        bytes[endianness === "little" ? length - 1 - i : i] = byte;
+    }
+    return bytes;
+}
+/**
  * Converts a given number of bytes into a human-readable format.
  *
  * @param bytes The number of bytes

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.6.0a1"
+version = "0.6.0a2"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",
@@ -19,7 +19,7 @@ dependencies = [
     "pyjwt>=2.12.1",
     "rapidfuzz>=3.14.3",
     "semver>=3.0.4",
-    "sqlalchemy>=2.0.48",
+    "sqlalchemy<=2.0.44",        # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
     "sqlmodel>=0.0.37",
     "toml>=0.10.2",
     "tomlkit>=0.14.0",

@@ -23,6 +23,7 @@ export default defineConfig(
         rules: {
             ...reactHooks.configs.recommended.rules,
             "@typescript-eslint/no-namespace": "off",
+            "@typescript-eslint/no-this-alias": "off",
             "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
             "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
             "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",

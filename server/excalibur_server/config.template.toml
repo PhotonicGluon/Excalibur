@@ -11,7 +11,7 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 4
+version = 5
 
 # -----------------------------------------------------------------------------
 # Server & Network Configuration
@@ -86,6 +86,18 @@ key_strength = 128
 # Valid values (case insensitive): "small", "medium", "large"
 group = "small"
 
+[security.opaque]
+# The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal format
+# SECURITY NOTE: Keep this value secret and secure!
+oprf_seed = "OPRF seed goes here!"
+
+# Public key for OPAQUE protocol
+public_key = "Public key for the OPAQUE protocol goes here"
+
+# Private key for OPAQUE protocol
+# SECURITY NOTE: Keep this value secret and secure!
+private_key = "Private key for OPAQUE protocol goes here"
+
 [security.e2ee]
 # The maximum number of end-to-end encryption communication sessions to cache
 comm_cache_size = 1024
@@ -99,6 +111,7 @@ nonce_cache_size = 8192
 
 # How long a received Proof-of-Possession (PoP) timestamp is considered valid, in seconds
 timestamp_validity = 60
+
 
 # -----------------------------------------------------------------------------
 # Logging Configuration
