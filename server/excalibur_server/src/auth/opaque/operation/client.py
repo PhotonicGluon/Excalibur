@@ -121,7 +121,8 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: the optional encoded server identity
         :param client_identity: the optional encoded client identity
         :returns: the client's private key, cleartext credentials, and the `export_key`
-        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
+        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
+            mismatch)
         """
 
         # The first part of section 4.1.3's code is identical to section 4.1.2, so we can reuse code
@@ -161,8 +162,10 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: optional server's identity
         :param client_identity: the client's identity
         :return: the client's private key, cleartext credentials, and the `export_key`
-        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by incorrect credentials)
-        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
+        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by
+            incorrect credentials)
+        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
+            mismatch)
         """
 
         evaluated_element = response.evaluated_element
@@ -177,15 +180,15 @@ class OPAQUEClient(BaseOPAQUE):
         credential_response_pad = self.kdf.expand(
             masking_key,
             response.masking_nonce + b"CredentialResponsePad",
-            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
+            Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
         )
 
         server_public_key_and_envelope = xor(credential_response_pad, response.masked_response)
         try:
-            server_public_key = self.oprf.Curve.from_bytes(server_public_key_and_envelope[: self.oprf.Curve.KEY_LENGTH])
+            server_public_key = Ristretto255.from_bytes(server_public_key_and_envelope[: Ristretto255.KEY_LENGTH])
         except Exception as e:
             raise OPAQUEClientAuthError("failed to recover server public key") from e
-        envelope = Envelope.deserialize(server_public_key_and_envelope[self.oprf.Curve.KEY_LENGTH :], self.NONCE_LENGTH)
+        envelope = Envelope.deserialize(server_public_key_and_envelope[Ristretto255.KEY_LENGTH :], self.NONCE_LENGTH)
 
         client_private_key, cleartext_credentials, export_key = self._recover(
             randomized_password, server_public_key, envelope, server_identity, client_identity
@@ -327,14 +330,16 @@ class OPAQUEClient(BaseOPAQUE):
 
     def generate_ke3(self, client_identity: bytes, server_identity: bytes, ke2: KE2) -> tuple[KE3, bytes, bytes]:
         """
-        Generate the KE3 message to send to the client.
+        Generate the KE3 message to send to the server.
 
         :param client_identity: the client's identity
         :param server_identity: the server's identity
         :param ke2: the KE2 message from the server
         :return: the client's KE3 message, the session key, and the export key
-        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by incorrect credentials)
-        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
+        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by
+            incorrect credentials)
+        :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
+            mismatch)
         :raises OPAQUEServerAuthError: if the server authentication fails
         """
 

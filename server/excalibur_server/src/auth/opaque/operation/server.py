@@ -36,7 +36,7 @@ class OPAQUEServer(BaseOPAQUE):
         request: CredentialRequest,
         server_public_key: Ristretto255,
         record: RegistrationRecord,
-        credential_identifier: bytes,  # TODO: Do we need this?
+        credential_identifier: bytes,
         oprf_seed: bytes,
         masking_nonce: bytes | None = None,
     ) -> CredentialResponse:
@@ -65,7 +65,7 @@ class OPAQUEServer(BaseOPAQUE):
         credential_response_pad = self.kdf.expand(
             record.masking_key,
             masking_nonce + b"CredentialResponsePad",
-            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
+            Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size,
         )
         masked_response = xor(credential_response_pad, server_public_key.to_bytes() + record.envelope.serialize())
 
@@ -160,7 +160,7 @@ class OPAQUEServer(BaseOPAQUE):
         :return: the registration response
         """
 
-        seed = self.kdf.expand(oprf_seed, credential_identifier + b"OprfKey", self.oprf.Curve.KEY_LENGTH)
+        seed = self.kdf.expand(oprf_seed, credential_identifier + b"OprfKey", Ristretto255.KEY_LENGTH)
         oprf_key, _ = self.oprf.generate_keys(seed=seed, info=b"OPAQUE-DeriveKeyPair")
 
         blinded_element = request.blinded_element

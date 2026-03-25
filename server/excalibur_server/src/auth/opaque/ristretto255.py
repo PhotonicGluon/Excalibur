@@ -11,7 +11,6 @@ class Ristretto255:
 
     P = 2**255 - 19  # See section 2
     ORDER = 2**252 + 27742317777372353535851937790883648493  # `l` in Section 4
-    GENERATOR: Self = None  # Defined below
     KEY_LENGTH = 32
 
     # Constants taken from Section 4.1
@@ -21,6 +20,10 @@ class Ristretto255:
     INVSQRT_A_MINUS_D = 54469307008909316920995813868745141605393597292927456921205312896311721017578
     ONE_MINUS_D_SQ = 1159843021668779879193775521855586647937357759715417654439879720876111806838
     D_MINUS_ONE_SQ = 40440834346308536858101042469323190826248399146238708352240133220865137265952
+
+    # Generator and identity points (defined below)
+    IDENTITY: Self = None
+    GENERATOR: Self = None
 
     def __init__(self, x: int, y: int, z: int, t: int):
         """
@@ -36,10 +39,6 @@ class Ristretto255:
         self.y = y % self.P
         self.z = z % self.P
         self.t = t % self.P
-
-    @property
-    def IDENTITY(self) -> Self:
-        return self.__class__(0, 1, 1, 0)
 
     # Magic methods
     def __neg__(self) -> Self:
@@ -187,10 +186,10 @@ class Ristretto255:
         s = s if was_square else s_prime
         c = -1 if was_square else r
 
-        N = (c * (r - 1) * cls.D_MINUS_ONE_SQ - v) % cls.P
+        n = (c * (r - 1) * cls.D_MINUS_ONE_SQ - v) % cls.P
 
         w0 = (2 * s * v) % cls.P
-        w1 = (N * cls.SQRT_AD_MINUS_ONE) % cls.P
+        w1 = (n * cls.SQRT_AD_MINUS_ONE) % cls.P
         w2 = (1 - pow(s, 2, cls.P)) % cls.P
         w3 = (1 + pow(s, 2, cls.P)) % cls.P
 
@@ -257,10 +256,10 @@ class Ristretto255:
         u2_sqr = pow(u2, 2, cls.P)
 
         v = (-cls.D * pow(u1, 2, cls.P) - u2_sqr) % cls.P
-        (was_square, invsqrt) = cls._sqrt_ratio_m1(1, (v * u2_sqr) % cls.P)
+        (was_square, inv_sqrt) = cls._sqrt_ratio_m1(1, (v * u2_sqr) % cls.P)
 
-        den_x = (invsqrt * u2) % cls.P
-        den_y = (invsqrt * den_x * v) % cls.P
+        den_x = (inv_sqrt * u2) % cls.P
+        den_y = (inv_sqrt * den_x * v) % cls.P
 
         x = cls._ct_abs(2 * s * den_x)
         y = (u1 * den_y) % cls.P
@@ -288,10 +287,10 @@ class Ristretto255:
         u1 = ((z0 + y0) * (z0 - y0)) % self.P
         u2 = (x0 * y0) % self.P
 
-        (_, invsqrt) = self._sqrt_ratio_m1(1, u1 * u2 * u2)  # Ignore `was_square` since this is always square
+        (_, inv_sqrt) = self._sqrt_ratio_m1(1, u1 * u2 * u2)  # Ignore `was_square` since this is always square
 
-        den1 = (invsqrt * u1) % self.P
-        den2 = (invsqrt * u2) % self.P
+        den1 = (inv_sqrt * u1) % self.P
+        den2 = (inv_sqrt * u2) % self.P
         z_inv = (den1 * den2 * t0) % self.P
 
         ix0 = (x0 * self.SQRT_M1) % self.P
@@ -325,6 +324,7 @@ class Ristretto255:
         return cls._map_function(b[0 : cls.KEY_LENGTH]) + cls._map_function(b[cls.KEY_LENGTH : 2 * cls.KEY_LENGTH])
 
 
+Ristretto255.IDENTITY = Ristretto255(0, 1, 1, 0)
 Ristretto255.GENERATOR = Ristretto255.from_bytes(
     bytes.fromhex("e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76")  # See Section 4
 )

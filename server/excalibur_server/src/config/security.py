@@ -4,7 +4,6 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
-from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.srp.group import SRPGroup
 from excalibur_server.src.exef.crypto import KeyStrength
@@ -35,7 +34,7 @@ class Security(BaseModel):
         @field_validator("public_key", mode="before")
         def edit_public_key(cls, value: str) -> bytes:
             raw = b64decode(value)
-            return OPAQUE.oprf.Curve.from_bytes(raw)
+            return Ristretto255.from_bytes(raw)
 
         @field_validator("private_key", mode="before")
         def edit_private_key(cls, value: str) -> bytes:

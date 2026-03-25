@@ -1,4 +1,3 @@
-from csv import Error
 from functools import cached_property
 from typing import Callable
 
@@ -6,7 +5,7 @@ from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.hkdf import HKDF
 from excalibur_server.src.auth.opaque.misc import i2osp
-from excalibur_server.src.auth.opaque.oprf import OPRFRistretto, OPRFType
+from excalibur_server.src.auth.opaque.oprf import OPRFRistrettoSHA512, OPRFType
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
@@ -24,7 +23,7 @@ from excalibur_server.src.auth.opaque.structures import (
 )
 
 
-class OPAQUEAuthError(Error):
+class OPAQUEAuthError(Exception):
     pass
 
 
@@ -55,8 +54,10 @@ class BaseOPAQUE:
         self.oprf_type = oprf_type
 
         if oprf_type == "ristretto255-sha512":
-            self.oprf = OPRFRistretto
+            self.oprf = OPRFRistrettoSHA512
             self.kdf = HKDF("sha512")
+        else:
+            raise ValueError(f"Unsupported OPRF type: {oprf_type}")
 
         self._ksf = ksf or (lambda x: x)  # Identity function as default
 
@@ -67,7 +68,7 @@ class BaseOPAQUE:
         :returns: size of the registration request in bytes
         """
 
-        return self.oprf.Curve.KEY_LENGTH
+        return Ristretto255.KEY_LENGTH
 
     @cached_property
     def registration_response_size(self) -> int:
@@ -76,8 +77,8 @@ class BaseOPAQUE:
         """
 
         return (
-            self.oprf.Curve.KEY_LENGTH  # Evaluated element
-            + self.oprf.Curve.KEY_LENGTH  # Server public key
+            Ristretto255.KEY_LENGTH  # Evaluated element
+            + Ristretto255.KEY_LENGTH  # Server public key
         )
 
     @cached_property
@@ -87,7 +88,7 @@ class BaseOPAQUE:
         """
 
         return (
-            self.oprf.Curve.KEY_LENGTH  # Public key
+            Ristretto255.KEY_LENGTH  # Public key
             + self.kdf.digest_size  # Masking key
             # Envelope
             + self.NONCE_LENGTH  # Envelope nonce
@@ -102,10 +103,10 @@ class BaseOPAQUE:
 
         return (
             # Credential request
-            self.oprf.Curve.KEY_LENGTH  # Blinded element
+            Ristretto255.KEY_LENGTH  # Blinded element
             # Authentication request
             + self.NONCE_LENGTH  # Client nonce
-            + self.oprf.Curve.KEY_LENGTH  # Client public keyshare
+            + Ristretto255.KEY_LENGTH  # Client public keyshare
         )
 
     @cached_property
@@ -114,17 +115,17 @@ class BaseOPAQUE:
         :returns: size of the KE2 message in bytes
         """
 
-        masked_response_length = self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
+        masked_response_length = Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
 
         return (
             # Credential response
-            self.oprf.Curve.KEY_LENGTH  # Evaluated element
+            Ristretto255.KEY_LENGTH  # Evaluated element
             + self.NONCE_LENGTH  # Masking nonce
             + masked_response_length  # Masked response
             +
             # Authentication response
             self.NONCE_LENGTH
-            + self.oprf.Curve.KEY_LENGTH
+            + Ristretto255.KEY_LENGTH
             + self.kdf.digest_size
         )
 
@@ -323,7 +324,7 @@ class BaseOPAQUE:
         :return: the deserialized registration request
         """
 
-        return RegistrationRequest(blinded_element=self.oprf.Curve.from_bytes(registration_request_raw))
+        return RegistrationRequest(blinded_element=Ristretto255.from_bytes(registration_request_raw))
 
     def deserialize_registration_response(self, registration_response_raw: bytes) -> RegistrationResponse:
         """
@@ -333,12 +334,12 @@ class BaseOPAQUE:
         :return: the deserialized registration response
         """
 
-        evaluated_element_raw = registration_response_raw[: self.oprf.Curve.KEY_LENGTH]
-        server_public_key_raw = registration_response_raw[self.oprf.Curve.KEY_LENGTH : self.registration_response_size]
+        evaluated_element_raw = registration_response_raw[: Ristretto255.KEY_LENGTH]
+        server_public_key_raw = registration_response_raw[Ristretto255.KEY_LENGTH : self.registration_response_size]
 
         return RegistrationResponse(
-            evaluated_element=self.oprf.Curve.from_bytes(evaluated_element_raw),
-            server_public_key=self.oprf.Curve.from_bytes(server_public_key_raw),
+            evaluated_element=Ristretto255.from_bytes(evaluated_element_raw),
+            server_public_key=Ristretto255.from_bytes(server_public_key_raw),
         )
 
     def deserialize_registration_record(self, registration_record_raw: bytes) -> RegistrationRecord:
@@ -349,12 +350,10 @@ class BaseOPAQUE:
         :return: the deserialized registration record
         """
 
-        client_public_key = self.oprf.Curve.from_bytes(registration_record_raw[: self.oprf.Curve.KEY_LENGTH])
-        masking_key = registration_record_raw[
-            self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.kdf.digest_size
-        ]
+        client_public_key = Ristretto255.from_bytes(registration_record_raw[: Ristretto255.KEY_LENGTH])
+        masking_key = registration_record_raw[Ristretto255.KEY_LENGTH : Ristretto255.KEY_LENGTH + self.kdf.digest_size]
         envelope = Envelope.deserialize(
-            registration_record_raw[self.oprf.Curve.KEY_LENGTH + self.kdf.digest_size :], self.NONCE_LENGTH
+            registration_record_raw[Ristretto255.KEY_LENGTH + self.kdf.digest_size :], self.NONCE_LENGTH
         )
         return RegistrationRecord(client_public_key=client_public_key, masking_key=masking_key, envelope=envelope)
 
@@ -367,13 +366,13 @@ class BaseOPAQUE:
         """
 
         # The first part is the credential request, which consists of the OPRF blinded message
-        blinded_element = self.oprf.Curve.from_bytes(ke1_raw[: self.oprf.Curve.KEY_LENGTH])
+        blinded_element = Ristretto255.from_bytes(ke1_raw[: Ristretto255.KEY_LENGTH])
         credential_request = CredentialRequest(blinded_element=blinded_element)
 
         # Then we have the auth request, consisting of a client nonce and public keyshare
-        client_nonce = ke1_raw[self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
-        client_public_keyshare = self.oprf.Curve.from_bytes(
-            ke1_raw[self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH : self.ke1_size]
+        client_nonce = ke1_raw[Ristretto255.KEY_LENGTH : Ristretto255.KEY_LENGTH + self.NONCE_LENGTH]
+        client_public_keyshare = Ristretto255.from_bytes(
+            ke1_raw[Ristretto255.KEY_LENGTH + self.NONCE_LENGTH : self.ke1_size]
         )
         auth_request = AuthRequest(client_nonce=client_nonce, client_public_keyshare=client_public_keyshare)
 
@@ -388,12 +387,12 @@ class BaseOPAQUE:
         """
 
         # First part is the credential response
-        evaluated_element = self.oprf.Curve.from_bytes(ke2_raw[: self.oprf.Curve.KEY_LENGTH])
-        masking_nonce = ke2_raw[self.oprf.Curve.KEY_LENGTH : self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH]
+        evaluated_element = Ristretto255.from_bytes(ke2_raw[: Ristretto255.KEY_LENGTH])
+        masking_nonce = ke2_raw[Ristretto255.KEY_LENGTH : Ristretto255.KEY_LENGTH + self.NONCE_LENGTH]
 
-        masked_response_length = self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
+        masked_response_length = Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
         masked_response = ke2_raw[
-            self.oprf.Curve.KEY_LENGTH + self.NONCE_LENGTH : self.oprf.Curve.KEY_LENGTH
+            Ristretto255.KEY_LENGTH + self.NONCE_LENGTH : Ristretto255.KEY_LENGTH
             + self.NONCE_LENGTH
             + masked_response_length
         ]
@@ -405,16 +404,14 @@ class BaseOPAQUE:
 
         # Then we have the auth response, consisting of a server nonce, public keyshare, and server MAC
         server_nonce = ke2_raw[credential_response_length : credential_response_length + self.NONCE_LENGTH]
-        server_public_keyshare = self.oprf.Curve.from_bytes(
+        server_public_keyshare = Ristretto255.from_bytes(
             ke2_raw[
                 credential_response_length + self.NONCE_LENGTH : credential_response_length
                 + self.NONCE_LENGTH
-                + self.oprf.Curve.KEY_LENGTH
+                + Ristretto255.KEY_LENGTH
             ]
         )
-        server_mac = ke2_raw[
-            credential_response_length + self.NONCE_LENGTH + self.oprf.Curve.KEY_LENGTH : self.ke2_size
-        ]
+        server_mac = ke2_raw[credential_response_length + self.NONCE_LENGTH + Ristretto255.KEY_LENGTH : self.ke2_size]
         auth_response = AuthResponse(
             server_nonce=server_nonce, server_public_keyshare=server_public_keyshare, server_mac=server_mac
         )

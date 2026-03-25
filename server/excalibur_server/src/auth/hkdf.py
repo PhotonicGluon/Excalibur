@@ -1,5 +1,5 @@
 import hmac
-from hashlib import sha256, sha512, shake_256
+from hashlib import sha256, sha512
 from typing import Literal
 
 
@@ -9,14 +9,12 @@ class HKDF:
     [RFC5869](https://datatracker.ietf.org/doc/html/rfc5869).
     """
 
-    def __init__(self, algorithm: Literal["sha256", "sha512", "shake256"]):
+    def __init__(self, algorithm: Literal["sha256", "sha512"]):
         self.algorithm = algorithm
         if algorithm == "sha256":
             self.hash_function = sha256
         elif algorithm == "sha512":
             self.hash_function = sha512
-        elif algorithm == "shake256":
-            self.hash_function = shake_256
 
         self.digest_size = self.hash_function().digest_size
 

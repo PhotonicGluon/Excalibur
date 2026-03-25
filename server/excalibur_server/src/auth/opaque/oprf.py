@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from hashlib import sha512
 from math import ceil
 from typing import Any, Callable, Literal
@@ -7,18 +7,18 @@ from excalibur_server.src.auth.opaque.misc import i2osp, xor
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 
 
-class BaseOPRF(ABC):
+class BaseOPRFRistretto(ABC):
     """
-    Base class for an Oblivious Pseudo-Random Function (OPRF) implementation based on
-    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+    Base class for an Oblivious Pseudo-Random Function (OPRF) implementation using the Ristretto255
+    curve based on [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
     """
 
     # To be overridden by subclasses
-    Curve: type[Ristretto255] = None  # To be overridden by subclasses
     hashfunc: Callable[[bytes], Any] = None  # To be overridden by subclasses
     CONTEXT_STRING: bytes = b""
 
     # Helper methods
+
     @classmethod
     def _expand_message_xmd(cls, msg: bytes, dst: bytes, len_in_bytes: int) -> bytes:
         """
@@ -34,57 +34,63 @@ class BaseOPRF(ABC):
         """
 
         ell = ceil(len_in_bytes / 64)
-        DST_prime = dst + i2osp(len(dst), 1)
+        dst_prime = dst + i2osp(len(dst), 1)
 
-        Z_pad = i2osp(0, 128)
+        zero_pad = i2osp(0, 128)
         l_i_b_str = i2osp(len_in_bytes, 2)
-        msg_prime = Z_pad + msg + l_i_b_str + i2osp(0, 1) + DST_prime
+        msg_prime = zero_pad + msg + l_i_b_str + i2osp(0, 1) + dst_prime
 
         b_0 = cls.hashfunc(msg_prime).digest()
 
         b = [None] * (ell + 1)  # Preallocate array
-        b[1] = cls.hashfunc(b_0 + i2osp(1, 1) + DST_prime).digest()
+        b[1] = cls.hashfunc(b_0 + i2osp(1, 1) + dst_prime).digest()
 
         for i in range(2, ell + 1):
-            b[i] = cls.hashfunc(xor(b[i - 1], b_0) + i2osp(i, 1) + DST_prime).digest()
+            b[i] = cls.hashfunc(xor(b[i - 1], b_0) + i2osp(i, 1) + dst_prime).digest()
 
         uniform_bytes = b"".join(b[1 : ell + 1])
         return uniform_bytes[:len_in_bytes]
 
     @classmethod
-    @abstractmethod
+    def _hash_to_ristretto255(cls, msg: bytes, dst: bytes) -> Ristretto255:
+        """
+        Implements the `hash_to_ristretto255()` function described in RFC9380, appendix B.
+
+        :param msg: a byte string
+        :param dst: a byte string of at most 255 bytes
+        :return: a point on the Ristretto255 curve
+        """
+
+        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
+        pt = Ristretto255.derive(uniform_bytes)
+        return pt
+
+    @classmethod
     def _hash_to_scalar(cls, msg: bytes, dst: bytes | None = None) -> int:
         """
-        Hashes a message to a scalar.
+        Implements the `HashToScalar()` function described in RFC9497, section 4.1.
 
         :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes, or `None` if using the default
+        :param dst: an optional byte string of at most 255 bytes
         :return: a scalar
         """
-        raise NotImplementedError
+
+        dst = dst or b"HashToScalar-" + cls.CONTEXT_STRING
+        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
+        return int.from_bytes(uniform_bytes, byteorder="little") % Ristretto255.ORDER
 
     @classmethod
-    @abstractmethod
     def _hash_to_group(cls, msg: bytes, dst: bytes | None = None) -> Ristretto255:
         """
-        Hashes a message to a curve point.
+        Implements the `HashToGroup()` function described in RFC9497, section 4.1.
 
         :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes, or `None` if using the default
+        :param dst: an optional byte string of at most 255 bytes
         :return: a curve point
         """
-        raise NotImplementedError
 
-    @classmethod
-    @abstractmethod
-    def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
-        """
-        The final hash function used in the `finalize()` method.
-
-        :param hash_input: the input to the hash function
-        :return: a byte string
-        """
-        raise NotImplementedError
+        dst = dst or b"HashToGroup-" + cls.CONTEXT_STRING
+        return cls._hash_to_ristretto255(msg, dst)
 
     # Public methods
     @classmethod
@@ -103,25 +109,26 @@ class BaseOPRF(ABC):
 
         if not seed:
             # See RFC9497, section 3.2
-            private_key = cls.Curve.random_scalar()
+            private_key = Ristretto255.random_scalar()
         else:
             # See RFC9497, section 3.2.1
-            deriveInput = seed + i2osp(len(info), 2) + info
+            derive_input = seed + i2osp(len(info), 2) + info
             counter = 0
             private_key = 0
             while private_key == 0:
                 if counter > 255:
                     raise RuntimeError("unable to generate private key")
                 private_key = cls._hash_to_scalar(
-                    deriveInput + i2osp(counter, 1), dst=b"DeriveKeyPair" + cls.CONTEXT_STRING
+                    derive_input + i2osp(counter, 1), dst=b"DeriveKeyPair" + cls.CONTEXT_STRING
                 )
                 counter += 1
 
-        public_key: Ristretto255 = cls.Curve.GENERATOR * private_key
+        public_key = Ristretto255.GENERATOR * private_key
 
         if for_export:
-            private_key = private_key.to_bytes(cls.Curve.KEY_LENGTH, byteorder="little")
-            public_key = public_key.to_bytes()
+            private_key_bytes = private_key.to_bytes(Ristretto255.KEY_LENGTH, byteorder="little")
+            public_key_bytes = public_key.to_bytes()
+            return private_key_bytes, public_key_bytes
 
         return private_key, public_key
 
@@ -137,7 +144,7 @@ class BaseOPRF(ABC):
         :raises ValueError: if the input element is the identity
         """
 
-        blind = blind or cls.Curve.random_scalar()
+        blind = blind or Ristretto255.random_scalar()
         input_element = cls._hash_to_group(input)
 
         if input_element.is_identity():
@@ -169,7 +176,7 @@ class BaseOPRF(ABC):
         :return: a byte string
         """
 
-        unblinded_element = cls.Curve.scalar_inverse(blind) * evaluated_element
+        unblinded_element = Ristretto255.scalar_inverse(blind) * evaluated_element
         unblinded_element_bytes = unblinded_element.to_bytes()
 
         hash_input = (
@@ -179,56 +186,18 @@ class BaseOPRF(ABC):
             + unblinded_element_bytes
             + b"Finalize"
         )
-        return cls._finalize_final_hash(hash_input)
+
+        return cls.hashfunc(hash_input).digest()
 
 
-class OPRFRistretto(BaseOPRF):
+class OPRFRistrettoSHA512(BaseOPRFRistretto):
     """
     The `OPRF(ristretto255, SHA-512)` implementation based on
     [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
     """
 
-    Curve = Ristretto255
     hashfunc = sha512
     CONTEXT_STRING = b"OPRFV1-\x00-ristretto255-SHA512"  # See section 3.1 for main format and 4.1 for identifier
-
-    # Helper methods
-    @classmethod
-    def _hash_to_ristretto255(cls, msg: bytes, dst: bytes) -> Ristretto255:
-        """
-        Implements the `hash_to_ristretto255()` function described in RFC9380, appendix B.
-
-        :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes
-        :return: a point on the Ristretto255 curve
-        """
-
-        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
-        pt = cls.Curve.derive(uniform_bytes)
-        return pt
-
-    @classmethod
-    def _hash_to_scalar(cls, msg: bytes, dst: bytes | None = None) -> int:
-        dst = dst or b"HashToScalar-" + cls.CONTEXT_STRING
-        uniform_bytes = cls._expand_message_xmd(msg, dst, 64)
-        return int.from_bytes(uniform_bytes, byteorder="little") % cls.Curve.ORDER
-
-    @classmethod
-    def _hash_to_group(cls, msg: bytes, dst: bytes | None = None) -> Ristretto255:
-        """
-        Implements the `HashToGroup()` function described in RFC9497, section 4.1.
-
-        :param msg: a byte string
-        :param dst: a byte string of at most 255 bytes, or `None` if using the default
-        :return: a point on the Ristretto255 curve
-        """
-
-        dst = dst or b"HashToGroup-" + cls.CONTEXT_STRING
-        return cls._hash_to_ristretto255(msg, dst)
-
-    @classmethod
-    def _finalize_final_hash(cls, hash_input: bytes) -> bytes:
-        return cls.hashfunc(hash_input).digest()
 
 
 OPRFType = Literal["ristretto255-sha512"]

@@ -20,11 +20,11 @@ export class Ristretto255 {
     static readonly D_MINUS_ONE_SQ = 40440834346308536858101042469323190826248399146238708352240133220865137265952n;
 
     // Generator and identity points
+    static readonly IDENTITY = new Ristretto255(0n, 1n, 1n, 0n);
     static readonly GENERATOR = Ristretto255.fromBytes(
         // See section 4
         new Uint8Array(Buffer.from("e2f2ae0a6abc4e71a884a961c500515f58e30b6aa582dd8db6a65945e08d2d76", "hex")),
     );
-    static readonly IDENTITY = new Ristretto255(0n, 1n, 1n, 0n);
 
     // Instance attributes
     x: bigint;
@@ -51,11 +51,11 @@ export class Ristretto255 {
     /**
      * Checks if an element is "negative" according to section 3.1 of
      * [RFC8032](https://www.rfc-editor.org/rfc/inline-errata/rfc8032.html). That is,
-     * this function returns `True` if the least nonnegative integer representing `e` is odd,
-     * and `False` if it is even.
+     * this function returns `true` if the least nonnegative integer representing `e` is odd,
+     * and `false` if it is even.
      */
     static _isNegative(e: bigint): boolean {
-        return (modulo(e, Ristretto255.P) & 1n) == 1n;
+        return (modulo(e, Ristretto255.P) & 1n) === 1n;
     }
 
     /**
@@ -91,19 +91,19 @@ export class Ristretto255 {
         let r = modulo(u * vvv * powmod(u * vvvvvvv, (Ristretto255.P - 5n) / 8n, Ristretto255.P), Ristretto255.P); // Note: (p - 5) / 8 is an integer
         const check = modulo(v * powmod(r, 2n, Ristretto255.P), Ristretto255.P);
 
-        const correct_sign_sqrt = check == u;
-        const flipped_sign_sqrt = check == modulo(-u, Ristretto255.P);
-        const flipped_sign_sqrt_i = check == modulo(-u * Ristretto255.SQRT_M1, Ristretto255.P);
+        const checkSignSqrt = check === u;
+        const flippedSignSqrt = check === modulo(-u, Ristretto255.P);
+        const flippedSignSqrtI = check === modulo(-u * Ristretto255.SQRT_M1, Ristretto255.P);
 
         const r_prime = modulo(Ristretto255.SQRT_M1 * r, Ristretto255.P);
-        r = flipped_sign_sqrt || flipped_sign_sqrt_i ? r_prime : r;
+        r = flippedSignSqrt || flippedSignSqrtI ? r_prime : r;
 
         // Choose the non-negative square root
         r = this._ctAbs(r);
 
-        const was_square = correct_sign_sqrt || flipped_sign_sqrt;
+        const wasSquare = checkSignSqrt || flippedSignSqrt;
 
-        return [was_square, r];
+        return [wasSquare, r];
     }
 
     /**
@@ -125,17 +125,17 @@ export class Ristretto255 {
         const u = modulo((r + 1n) * Ristretto255.ONE_MINUS_D_SQ, Ristretto255.P);
         const v = modulo((-1n - r * Ristretto255.D) * (r + Ristretto255.D), Ristretto255.P);
 
-        const [was_square, s] = Ristretto255._sqrtRatioM1(u, v);
-        const s_prime = modulo(-Ristretto255._ctAbs(s * t), Ristretto255.P);
-        const s_final = was_square ? s : s_prime;
-        const c = was_square ? -1n : r;
+        const [wasSquare, s] = Ristretto255._sqrtRatioM1(u, v);
+        const sPrime = modulo(-Ristretto255._ctAbs(s * t), Ristretto255.P);
+        const sFinal = wasSquare ? s : sPrime;
+        const c = wasSquare ? -1n : r;
 
-        const N = modulo(c * (r - 1n) * Ristretto255.D_MINUS_ONE_SQ - v, Ristretto255.P);
+        const n = modulo(c * (r - 1n) * Ristretto255.D_MINUS_ONE_SQ - v, Ristretto255.P);
 
-        const w0 = modulo(2n * s_final * v, Ristretto255.P);
-        const w1 = modulo(N * Ristretto255.SQRT_AD_MINUS_ONE, Ristretto255.P);
-        const w2 = modulo(1n - powmod(s_final, 2n, Ristretto255.P), Ristretto255.P);
-        const w3 = modulo(1n + powmod(s_final, 2n, Ristretto255.P), Ristretto255.P);
+        const w0 = modulo(2n * sFinal * v, Ristretto255.P);
+        const w1 = modulo(n * Ristretto255.SQRT_AD_MINUS_ONE, Ristretto255.P);
+        const w2 = modulo(1n - powmod(sFinal, 2n, Ristretto255.P), Ristretto255.P);
+        const w3 = modulo(1n + powmod(sFinal, 2n, Ristretto255.P), Ristretto255.P);
 
         // Step 3
         return new Ristretto255(w0 * w3, w2 * w1, w1 * w3, w0 * w2);
@@ -198,12 +198,12 @@ export class Ristretto255 {
      * Checks equality between two points, as given by section 4.3.3.
      *
      * @param other the other point to compare with
-     * @returns `True` if the points are equal and `False` otherwise
+     * @returns `true` if the points are equal and `false` otherwise
      */
     eq(other: Ristretto255): boolean {
         return (
-            modulo(this.x * other.y, Ristretto255.P) == modulo(this.y * other.x, Ristretto255.P) ||
-            modulo(this.y * other.y, Ristretto255.P) == modulo(this.x * other.x, Ristretto255.P)
+            modulo(this.x * other.y, Ristretto255.P) === modulo(this.y * other.x, Ristretto255.P) ||
+            modulo(this.y * other.y, Ristretto255.P) === modulo(this.x * other.x, Ristretto255.P)
         );
     }
 
@@ -222,8 +222,7 @@ export class Ristretto255 {
      */
     static randomScalar(): bigint {
         // To ensure a uniform distribution we generate a random sequence and reduce it modulo the group order
-        const random_bytes = randomBytes(Ristretto255.KEY_LENGTH);
-        return modulo(bytesToBigInt(random_bytes, "little"), Ristretto255.ORDER);
+        return modulo(bytesToBigInt(randomBytes(Ristretto255.KEY_LENGTH), "little"), Ristretto255.ORDER);
     }
 
     /**
@@ -245,8 +244,8 @@ export class Ristretto255 {
      */
     static fromBytes(b: Uint8Array): Ristretto255 {
         // Step 1
-        if (b.length !== 32) {
-            throw new Error("data must be 32 bytes long");
+        if (b.length !== Ristretto255.KEY_LENGTH) {
+            throw new Error(`data must be exactly ${Ristretto255.KEY_LENGTH} bytes long`);
         }
 
         const s = bytesToBigInt(b, "little");
@@ -263,20 +262,20 @@ export class Ristretto255 {
         const ss = modulo(powmod(s, 2n, Ristretto255.P), Ristretto255.P);
         const u1 = modulo(1n - ss, Ristretto255.P);
         const u2 = modulo(1n + ss, Ristretto255.P);
-        const u2_sqr = modulo(powmod(u2, 2n, Ristretto255.P), Ristretto255.P);
+        const u2Squared = powmod(u2, 2n, Ristretto255.P);
 
-        const v = modulo(-Ristretto255.D * powmod(u1, 2n, Ristretto255.P) - u2_sqr, Ristretto255.P);
-        const [was_square, invsqrt] = Ristretto255._sqrtRatioM1(1n, modulo(v * u2_sqr, Ristretto255.P));
+        const v = modulo(-Ristretto255.D * powmod(u1, 2n, Ristretto255.P) - u2Squared, Ristretto255.P);
+        const [wasSquare, invSqrt] = Ristretto255._sqrtRatioM1(1n, modulo(v * u2Squared, Ristretto255.P));
 
-        const den_x = modulo(invsqrt * u2, Ristretto255.P);
-        const den_y = modulo(invsqrt * den_x * v, Ristretto255.P);
+        const denX = modulo(invSqrt * u2, Ristretto255.P);
+        const denY = modulo(invSqrt * denX * v, Ristretto255.P);
 
-        const x = Ristretto255._ctAbs(2n * s * den_x);
-        const y = modulo(u1 * den_y, Ristretto255.P);
+        const x = Ristretto255._ctAbs(2n * s * denX);
+        const y = modulo(u1 * denY, Ristretto255.P);
         const t = modulo(x * y, Ristretto255.P);
 
         // Step 4
-        if (!was_square || Ristretto255._isNegative(t) || y === 0n) {
+        if (!wasSquare || Ristretto255._isNegative(t) || y === 0n) {
             throw new Error("invalid encoding");
         }
 
@@ -298,25 +297,25 @@ export class Ristretto255 {
         const u1 = modulo((z0 + y0) * (z0 - y0), Ristretto255.P);
         const u2 = modulo(x0 * y0, Ristretto255.P);
 
-        const [, invsqrt] = Ristretto255._sqrtRatioM1(1n, modulo(u1 * u2 * u2, Ristretto255.P)); // Ignore `was_square` since this is always square
+        const [, invSqrt] = Ristretto255._sqrtRatioM1(1n, modulo(u1 * u2 * u2, Ristretto255.P)); // Ignore `was_square` since this is always square
 
-        const den1 = modulo(invsqrt * u1, Ristretto255.P);
-        const den2 = modulo(invsqrt * u2, Ristretto255.P);
-        const z_inv = modulo(den1 * den2 * t0, Ristretto255.P);
+        const den1 = modulo(invSqrt * u1, Ristretto255.P);
+        const den2 = modulo(invSqrt * u2, Ristretto255.P);
+        const zInv = modulo(den1 * den2 * t0, Ristretto255.P);
 
         const ix0 = modulo(x0 * Ristretto255.SQRT_M1, Ristretto255.P);
         const iy0 = modulo(y0 * Ristretto255.SQRT_M1, Ristretto255.P);
-        const enchanted_denominator = modulo(den1 * Ristretto255.INVSQRT_A_MINUS_D, Ristretto255.P);
+        const enchantedDenominator = modulo(den1 * Ristretto255.INVSQRT_A_MINUS_D, Ristretto255.P);
 
-        const rotate = Ristretto255._isNegative(t0 * z_inv);
+        const rotate = Ristretto255._isNegative(t0 * zInv);
 
         // Conditionally rotate x and y
         const x = rotate ? iy0 : x0;
         let y = rotate ? ix0 : y0;
         const z = z0;
-        const den_inv = rotate ? enchanted_denominator : den2;
+        const den_inv = rotate ? enchantedDenominator : den2;
 
-        y = Ristretto255._isNegative(x * z_inv) ? modulo(-y, Ristretto255.P) : y;
+        y = Ristretto255._isNegative(x * zInv) ? modulo(-y, Ristretto255.P) : y;
 
         const s = Ristretto255._ctAbs(den_inv * (z - y));
 
@@ -329,8 +328,12 @@ export class Ristretto255 {
      *
      * @param b a `2*KEY_LENGTH`-byte string
      * @returns a point on the curve
+     * @throws {Error} if input is not `2*KEY_LENGTH` bytes long
      */
     static derive(b: Uint8Array): Ristretto255 {
+        if (b.length !== 2 * Ristretto255.KEY_LENGTH) {
+            throw new Error(`input must be exactly ${2 * Ristretto255.KEY_LENGTH} bytes long`);
+        }
         const x = Ristretto255._mapFunction(b.slice(0, Ristretto255.KEY_LENGTH));
         const y = Ristretto255._mapFunction(b.slice(Ristretto255.KEY_LENGTH, 2 * Ristretto255.KEY_LENGTH));
         return x.add(y);

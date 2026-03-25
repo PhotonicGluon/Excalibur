@@ -2,7 +2,7 @@ import { expect } from "vitest";
 
 import { bytesToBigInt } from "@lib/util";
 
-import { OPRFRistretto } from "./oprf";
+import { OPRFRistrettoSHA512 } from "./oprf";
 
 const SK_SCALAR = bytesToBigInt(
     Buffer.from("5ebcea5ee37023ccb9fc2d2019f9d7737be85591ae8652ffa9ef0f4d37063b0e", "hex"),
@@ -38,16 +38,16 @@ describe("OPRFRistretto", () => {
             ];
 
             // Test `blind()`
-            const [outBlind, outBlindedElement] = OPRFRistretto.blind(input, blind);
+            const [outBlind, outBlindedElement] = OPRFRistrettoSHA512.blind(input, blind);
             expect(outBlind).toEqual(blind);
             expect(Buffer.from(outBlindedElement.toBytes())).toEqual(blindedElementBytes);
 
             // Test `blindEvaluate()`
-            const outEvaluatedElement = OPRFRistretto.blindEvaluate(SK_SCALAR, outBlindedElement);
+            const outEvaluatedElement = OPRFRistrettoSHA512.blindEvaluate(SK_SCALAR, outBlindedElement);
             expect(Buffer.from(outEvaluatedElement.toBytes())).toEqual(evaluatedElementBytes);
 
             // Test `finalize()`
-            const ourOutput = OPRFRistretto.finalize(input, blind, outEvaluatedElement);
+            const ourOutput = OPRFRistrettoSHA512.finalize(input, blind, outEvaluatedElement);
             expect(ourOutput).toEqual(output);
         });
     }

@@ -1,7 +1,7 @@
 # ruff: noqa: E501
 import pytest
 
-from excalibur_server.src.auth.opaque.oprf import OPRFRistretto
+from excalibur_server.src.auth.opaque.oprf import OPRFRistrettoSHA512
 
 
 class TestOPRFRistretto:
@@ -39,14 +39,14 @@ class TestOPRFRistretto:
         )
 
         # Test `blind()`
-        out_blind, out_blinded_element = OPRFRistretto.blind(input, blind=blind)
+        out_blind, out_blinded_element = OPRFRistrettoSHA512.blind(input, blind=blind)
         assert out_blind == blind
         assert out_blinded_element.to_bytes() == blinded_element_bytes
 
         # Test `blind_evaluate()`
-        out_evaluated_element = OPRFRistretto.blind_evaluate(self.SK_SCALAR, out_blinded_element)
+        out_evaluated_element = OPRFRistrettoSHA512.blind_evaluate(self.SK_SCALAR, out_blinded_element)
         assert out_evaluated_element.to_bytes() == evaluated_element_bytes
 
         # Test `finalize()`
-        our_output = OPRFRistretto.finalize(input, blind, out_evaluated_element)
+        our_output = OPRFRistrettoSHA512.finalize(input, blind, out_evaluated_element)
         assert our_output == expected_output

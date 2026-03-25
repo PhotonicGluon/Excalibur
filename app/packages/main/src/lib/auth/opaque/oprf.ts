@@ -5,7 +5,11 @@ import { bigIntToBytes, bytesToBigInt, modulo, xorBuffer } from "@lib/util";
 import { i2osp } from "./misc";
 import { Ristretto255 } from "./ristretto255";
 
-abstract class BaseOPRF {
+/**
+ * Base class for an Oblivious Pseudo-Random Function (OPRF) implementation using the Ristretto255
+ * curve based on [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+ */
+abstract class BaseOPRFRistretto {
     abstract hashfunc(msg: Uint8Array): { digest(): Uint8Array };
     protected abstract readonly CONTEXT_STRING: Uint8Array;
 
@@ -18,7 +22,7 @@ abstract class BaseOPRF {
      * @param msg a byte string
      * @param dst a byte string of at most 255 bytes
      * @param lenInBytes the length of the requested output in bytes
-     * @returns a byte string of length `len_in_bytes`
+     * @returns a byte string of length `lenInBytes`
      * @throws {Error} if the length or destination is too long
      */
     protected _expandMessageXMD(msg: Uint8Array, dst: Uint8Array, lenInBytes: number): Uint8Array {
@@ -31,7 +35,7 @@ abstract class BaseOPRF {
 
         const b0 = Buffer.from(this.hashfunc(msgPrime).digest());
 
-        const b: Buffer[] = new Array(ell + 1); // Preallocate array
+        const b: Buffer[] = new Array(ell + 1);
         b[1] = Buffer.from(this.hashfunc(Buffer.concat([b0, i2osp(1n, 1), dstPrime])).digest());
 
         for (let i = 2; i <= ell; i++) {
@@ -45,30 +49,41 @@ abstract class BaseOPRF {
     }
 
     /**
-     * Hashes a message to a scalar.
+     * Implements the `hash_to_ristretto255()` function described in RFC9380, appendix B.
+     * @param msg a byte string
+     * @param dst a byte string of at most 255 bytes
+     * @returns a point on the Ristretto255 curve
+     */
+    protected _hashToRistretto(msg: Uint8Array, dst: Uint8Array): Ristretto255 {
+        const uniformBytes = this._expandMessageXMD(msg, dst, 64);
+        const pt = Ristretto255.derive(uniformBytes);
+        return pt;
+    }
+
+    /**
+     * Implements the `HashToScalar()` function described in RFC9497, section 4.1.
      *
      * @param msg a byte array
-     * @param dst a byte string of at most 255 bytes, or `None` if using the default
+     * @param dst an optional byte string of at most 255 bytes
      * @returns a scalar
      */
-    protected abstract _hashToScalar(msg: Uint8Array, dst?: Uint8Array): bigint;
+    protected _hashToScalar(msg: Uint8Array, dst?: Uint8Array): bigint {
+        dst = dst || Buffer.from("HashToScalar-" + this.CONTEXT_STRING);
+        const uniformBytes = this._expandMessageXMD(msg, dst, 64);
+        return modulo(bytesToBigInt(uniformBytes, "little"), Ristretto255.ORDER);
+    }
 
     /**
-     * Hashes a message to a curve point.
+     * Implements the `HashToGroup()` function described in RFC9497, section 4.1.
      *
      * @param msg a byte array
-     * @param dst a byte string of at most 255 bytes, or `None` if using the default
+     * @param dst an optional byte string of at most 255 bytes
      * @returns a curve point
      */
-    protected abstract _hashToGroup(msg: Uint8Array, dst?: Uint8Array): Ristretto255;
-
-    /**
-     * The final hash function used in the `finalize()` method.
-     *
-     * @param hashInput the input to the hash function
-     * @returns a byte array
-     */
-    protected abstract _finalizeFinalHash(hashInput: Uint8Array): Uint8Array;
+    protected _hashToGroup(msg: Uint8Array, dst?: Uint8Array): Ristretto255 {
+        dst = dst || Buffer.from("HashToGroup-" + this.CONTEXT_STRING);
+        return this._hashToRistretto(msg, dst);
+    }
 
     // Public methods
     /**
@@ -120,7 +135,8 @@ abstract class BaseOPRF {
      * The client `Blind()` function as described in RFC9497, section 3.1.1.
      *
      * @param input a byte string
-     * @param blind a blinding factor from GF(P). If None, a random one will be generated
+     * @param blind an optional blinding factor from GF(P). If not provided, a random one will be
+     *      generated
      * @returns a tuple, where the first represents the "blinding scalar" and the second represents
      * the "blinded element"
      * @throws {Error} if the input element is the identity
@@ -168,7 +184,7 @@ abstract class BaseOPRF {
             Buffer.from("Finalize"),
         ]);
 
-        return this._finalizeFinalHash(hashInput);
+        return this.hashfunc(hashInput).digest();
     }
 }
 
@@ -176,45 +192,15 @@ abstract class BaseOPRF {
  * The `OPRF(ristretto255, SHA-512)` implementation based on
  * [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
  */
-class OPRFRistretto extends BaseOPRF {
-    protected readonly CONTEXT_STRING = Buffer.from("OPRFV1-\x00-ristretto255-SHA512");
-
+class OPRFRistrettoSHA512 extends BaseOPRFRistretto {
     hashfunc(msg: Uint8Array): { digest(): Uint8Array } {
         const hash = createHash("sha512").update(msg);
         return { digest: () => hash.digest() };
     }
-
-    // Helper methods
-    /**
-     * Implements the `hash_to_ristretto255()` function described in RFC9380, appendix B.
-     * @param msg a byte string
-     * @param dst a byte string of at most 255 bytes
-     * @returns a point on the Ristretto255 curve
-     */
-    protected _hashToRistretto(msg: Uint8Array, dst: Uint8Array): Ristretto255 {
-        const uniformBytes = this._expandMessageXMD(msg, dst, 64);
-        const pt = Ristretto255.derive(uniformBytes);
-        return pt;
-    }
-
-    _hashToScalar(msg: Uint8Array, dst?: Uint8Array): bigint {
-        dst = dst || Buffer.from("HashToScalar-" + this.CONTEXT_STRING);
-        const uniformBytes = this._expandMessageXMD(msg, dst, 64);
-        return modulo(bytesToBigInt(uniformBytes, "little"), Ristretto255.ORDER);
-    }
-
-    _hashToGroup(msg: Uint8Array, dst?: Uint8Array): Ristretto255 {
-        dst = dst || Buffer.from("HashToGroup-" + this.CONTEXT_STRING);
-        return this._hashToRistretto(msg, dst);
-    }
-
-    _finalizeFinalHash(hashInput: Uint8Array): Uint8Array {
-        return this.hashfunc(hashInput).digest();
-    }
+    protected readonly CONTEXT_STRING = Buffer.from("OPRFV1-\x00-ristretto255-SHA512");
 }
 
-const oprfRistretto = new OPRFRistretto();
+const oprfRistrettoSHA512 = new OPRFRistrettoSHA512();
 
 export type OPRFType = "ristretto255-sha512";
-export type OPRFRistrettoType = typeof oprfRistretto;
-export { oprfRistretto as OPRFRistretto };
+export { oprfRistrettoSHA512 as OPRFRistrettoSHA512 };

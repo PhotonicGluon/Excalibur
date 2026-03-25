@@ -18,7 +18,7 @@ import {
 import { xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";
-import { OPRFRistretto, OPRFRistrettoType, OPRFType } from "./oprf";
+import { OPRFRistrettoSHA512, OPRFType } from "./oprf";
 import { Ristretto255 } from "./ristretto255";
 
 export class OPAQUEAuthError extends Error {
@@ -34,6 +34,7 @@ export class OPAQUEClientAuthError extends OPAQUEAuthError {
         this.name = "OPAQUEClientAuthError";
     }
 }
+
 export class OPAQUEServerAuthError extends OPAQUEAuthError {
     constructor(message: string) {
         super(message);
@@ -47,7 +48,7 @@ export class OPAQUEClient {
     readonly SEED_LENGTH = 32;
 
     // Main OPAQUE attributes
-    oprf: OPRFRistrettoType;
+    oprf: typeof OPRFRistrettoSHA512;
     kdf: HKDF;
     private _ksf: (input: Uint8Array) => Uint8Array;
     context: Uint8Array;
@@ -66,7 +67,7 @@ export class OPAQUEClient {
         this.context = context || new TextEncoder().encode("Excalibur");
 
         if (oprfType === "ristretto255-sha512") {
-            this.oprf = OPRFRistretto;
+            this.oprf = OPRFRistrettoSHA512;
             this.kdf = new HKDF("sha512");
         } else {
             throw new Error("Unsupported OPRF type");
@@ -154,10 +155,10 @@ export class OPAQUEClient {
 
     /**
      * Computes an envelope, following section 4.1.2.
-     * 
+     *
      * We differ from the official implementation by returning the client private key and cleartext
      * credentials as well. This is to promote code reuse.
-
+     *
      * @param randomizedPassword a randomized password
      * @param serverPublicKey the encoded server public key for the AKE protocol
      * @param serverIdentity the optional encoded server identity
@@ -176,24 +177,20 @@ export class OPAQUEClient {
         envelopeNonce = envelopeNonce || randomBytes(this.NONCE_LENGTH);
         const randomizedPasswordBuffer = Buffer.from(randomizedPassword);
 
-        const maskingKey = this.kdf.expand(
-            randomizedPasswordBuffer,
-            Buffer.from(new TextEncoder().encode("MaskingKey")),
-            this.kdf.digestSize,
-        );
+        const maskingKey = this.kdf.expand(randomizedPasswordBuffer, Buffer.from("MaskingKey"), this.kdf.digestSize);
         const authKey = this.kdf.expand(
             randomizedPasswordBuffer,
-            Buffer.concat([envelopeNonce, new TextEncoder().encode("AuthKey")]),
+            Buffer.concat([envelopeNonce, Buffer.from("AuthKey")]),
             this.kdf.digestSize,
         );
         const exportKey = this.kdf.expand(
             randomizedPasswordBuffer,
-            Buffer.concat([envelopeNonce, new TextEncoder().encode("ExportKey")]),
+            Buffer.concat([envelopeNonce, Buffer.from("ExportKey")]),
             this.kdf.digestSize,
         );
         const seed = this.kdf.expand(
             randomizedPasswordBuffer,
-            Buffer.concat([envelopeNonce, new TextEncoder().encode("PrivateKey")]),
+            Buffer.concat([envelopeNonce, Buffer.from("PrivateKey")]),
             this.SEED_LENGTH,
         );
         const [clientPrivateKey, clientPublicKey] = this._deriveDiffieHellmanKeyPair(seed);
@@ -282,7 +279,7 @@ export class OPAQUEClient {
      * @returns a tuple of the credential request and the blind
      */
     private _createCredentialRequest(password: Uint8Array, blind?: bigint): [CredentialRequest, bigint] {
-        // It turns out this function is exactly the same as the `create_registration_request()` function, so we just
+        // It turns out this function is exactly the same as the `createRegistrationRequest()` function, so we just
         // reuse it
         const [registration_request, blindValue] = this.createRegistrationRequest(password, blind);
         return [new CredentialRequest(registration_request.blindedElement), blindValue];
@@ -407,7 +404,7 @@ export class OPAQUEClient {
     }
 
     /**
-     *  Generates the preamble string for the key scheduling, following section 6.4.2.1's
+     * Generates the preamble string for the key scheduling, following section 6.4.2.1's
      * `Preamble()` function.
      *
      * @param clientIdentity the client's identity
@@ -592,7 +589,7 @@ export class OPAQUEClient {
     }
 
     /**
-     * Generate the KE3 message to send to the client.
+     * Generate the KE3 message to send to the server.
      *
      * @param clientIdentity the client's identity
      * @param serverIdentity the server's identity
