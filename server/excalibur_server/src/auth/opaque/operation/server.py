@@ -1,9 +1,9 @@
 from Crypto.Random import get_random_bytes
 
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.misc import xor
 from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.oprf import OPRFType
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
     KE2,
@@ -24,7 +24,7 @@ class OPAQUEServer(BaseOPAQUE):
     [RFC9807](https://www.rfc-editor.org/rfc/rfc9807).
     """
 
-    def __init__(self, oprf_type: OPRFType = "decaf448-shake256"):
+    def __init__(self, oprf_type: OPRFType = "ristretto255-sha512"):
         super().__init__(oprf_type)
 
         self._expected_client_mac = None
@@ -34,7 +34,7 @@ class OPAQUEServer(BaseOPAQUE):
     def _create_credential_response(
         self,
         request: CredentialRequest,
-        server_public_key: BaseCurve,
+        server_public_key: Ristretto255,
         record: RegistrationRecord,
         credential_identifier: bytes,  # TODO: Do we need this?
         oprf_seed: bytes,
@@ -81,7 +81,7 @@ class OPAQUEServer(BaseOPAQUE):
         self,
         cleartext_credentials: CleartextCredentials,
         server_private_key: int,
-        client_public_key: BaseCurve,
+        client_public_key: Ristretto255,
         ke1: KE1,
         credential_response: CredentialResponse,
         nonce: bytes | None = None,
@@ -144,7 +144,11 @@ class OPAQUEServer(BaseOPAQUE):
 
     # Main functions
     def create_registration_response(
-        self, request: RegistrationRequest, server_public_key: BaseCurve, credential_identifier: bytes, oprf_seed: bytes
+        self,
+        request: RegistrationRequest,
+        server_public_key: Ristretto255,
+        credential_identifier: bytes,
+        oprf_seed: bytes,
     ) -> RegistrationResponse:
         """
         Create a registration response for the given registration request, following section 5.2.2.
@@ -168,7 +172,7 @@ class OPAQUEServer(BaseOPAQUE):
         self,
         server_identity: bytes,
         server_private_key: int,
-        server_public_key: BaseCurve,
+        server_public_key: Ristretto255,
         record: RegistrationRecord,
         credential_identifier: bytes,
         oprf_seed: bytes,

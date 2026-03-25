@@ -1,6 +1,5 @@
 from Crypto.Random import get_random_bytes
 
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque.misc import xor
 from excalibur_server.src.auth.opaque.operation.base import (
     BaseOPAQUE,
@@ -9,6 +8,7 @@ from excalibur_server.src.auth.opaque.operation.base import (
     OPAQUEServerAuthError,
 )
 from excalibur_server.src.auth.opaque.oprf import OPRFType
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
     KE2,
@@ -30,7 +30,7 @@ class OPAQUEClient(BaseOPAQUE):
     [RFC9807](https://www.rfc-editor.org/rfc/rfc9807).
     """
 
-    def __init__(self, oprf_type: OPRFType = "decaf448-shake256"):
+    def __init__(self, oprf_type: OPRFType = "ristretto255-sha512"):
         super().__init__(oprf_type)
 
         self._password = None
@@ -42,11 +42,11 @@ class OPAQUEClient(BaseOPAQUE):
     def _envelope_computation(
         self,
         randomized_password: bytes,
-        server_public_key: BaseCurve,
+        server_public_key: Ristretto255,
         server_identity: bytes,
         client_identity: bytes,
         envelope_nonce: bytes | None = None,
-    ) -> tuple[Envelope, CleartextCredentials, int, BaseCurve, bytes, bytes]:
+    ) -> tuple[Envelope, CleartextCredentials, int, Ristretto255, bytes, bytes]:
         """
         Computes an envelope, following section 4.1.2.
 
@@ -82,11 +82,11 @@ class OPAQUEClient(BaseOPAQUE):
     def _store(
         self,
         randomized_password: bytes,
-        server_public_key: BaseCurve,
+        server_public_key: Ristretto255,
         server_identity: bytes,
         client_identity: bytes,
         envelope_nonce: bytes | None = None,
-    ) -> tuple[Envelope, BaseCurve, bytes, bytes]:
+    ) -> tuple[Envelope, Ristretto255, bytes, bytes]:
         """
         Creates an envelope at registration, following section 4.1.2.
 
@@ -107,7 +107,7 @@ class OPAQUEClient(BaseOPAQUE):
     def _recover(
         self,
         randomized_password: bytes,
-        server_public_key: BaseCurve,
+        server_public_key: Ristretto255,
         envelope: Envelope,
         server_identity: bytes,
         client_identity: bytes,

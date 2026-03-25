@@ -1,9 +1,9 @@
 from typing import Self
 
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
+from Crypto.Random import get_random_bytes
 
 
-class Ristretto255(BaseCurve):
+class Ristretto255:
     """
     Implementation of the Ristretto255 group from [RFC9496](https://www.rfc-editor.org/rfc/rfc9496),
     section 4.
@@ -22,7 +22,72 @@ class Ristretto255(BaseCurve):
     ONE_MINUS_D_SQ = 1159843021668779879193775521855586647937357759715417654439879720876111806838
     D_MINUS_ONE_SQ = 40440834346308536858101042469323190826248399146238708352240133220865137265952
 
+    def __init__(self, x: int, y: int, z: int, t: int):
+        """
+        Initializes a point with the given coordinates.
+
+        :param x: The x-coordinate of the point
+        :param y: The y-coordinate of the point
+        :param z: The z-coordinate of the point
+        :param t: The t-coordinate of the point
+        """
+
+        self.x = x % self.P
+        self.y = y % self.P
+        self.z = z % self.P
+        self.t = t % self.P
+
+    @property
+    def IDENTITY(self) -> Self:
+        return self.__class__(0, 1, 1, 0)
+
     # Magic methods
+    def __neg__(self) -> Self:
+        return self.__class__(((-self.x) % self.P, self.y, self.z, (-self.t) % self.P))
+
+    def __add__(self, other: Self) -> Self:
+        if self.P != other.P or self.D != other.D:
+            raise ValueError("Points must be on the same curve")
+
+        x1, y1, z1, t1 = self.x, self.y, self.z, self.t
+        x2, y2, z2, t2 = other.x, other.y, other.z, other.t
+
+        a = (x1 * x2) % self.P
+        b = (y1 * y2) % self.P
+        c = (self.D * t1 * t2) % self.P
+        d = (z1 * z2) % self.P
+
+        e = ((x1 + y1) * (x2 + y2) - a - b) % self.P
+        f = (d - c) % self.P
+        g = (d + c) % self.P
+        h = (b + a) % self.P
+
+        x3 = (e * f) % self.P
+        y3 = (g * h) % self.P
+        t3 = (e * h) % self.P
+        z3 = (f * g) % self.P
+
+        return self.__class__(x3, y3, z3, t3)
+
+    def __sub__(self, other: Self) -> Self:
+        return self + (-other)
+
+    def __mul__(self, scalar: int) -> Self:
+        scalar = scalar % self.ORDER  # See section 4.4
+
+        result = self.IDENTITY
+        current = self
+        while scalar > 0:
+            if scalar & 1:
+                result = result + current
+            current = current + current
+            scalar >>= 1
+
+        return result
+
+    def __rmul__(self, scalar: int) -> Self:
+        return self.__mul__(scalar)
+
     def __eq__(self, other: Self) -> bool:
         """
         Checks equality between two points, as given by section 4.3.3.
@@ -36,11 +101,28 @@ class Ristretto255(BaseCurve):
         )
 
     # Helper methods
-    def _add_h(self, a: int, b: int) -> int:
+    @classmethod
+    def _is_negative(cls, e: int) -> bool:
         """
-        The `h` value calculation during addition.
+        Checks if an element is "negative" according to section 3.1 of
+        [RFC8032](https://www.rfc-editor.org/rfc/inline-errata/rfc8032.html). That is,
+        this function returns `True` if the least nonnegative integer representing `e` is odd,
+        and `False` if it is even.
         """
-        return b + a
+
+        return ((e % cls.P) & 1) == 1
+
+    @classmethod
+    def _ct_abs(cls, u: int) -> int:
+        """
+        Constant-time absolute value of an element in GF(P), as suggested in section 2.2.
+
+        :param u: an element to take the absolute value of
+        :returns: the absolute value of u in GF(P)
+        """
+
+        u = u % cls.P
+        return (-u) % cls.P if cls._is_negative(u) else u
 
     @classmethod
     def _sqrt_ratio_m1(cls, u: int, v: int) -> tuple[bool, int]:
@@ -116,6 +198,36 @@ class Ristretto255(BaseCurve):
         return cls(w0 * w3, w2 * w1, w1 * w3, w0 * w2)
 
     # Public methods
+    def is_identity(self) -> bool:
+        """
+        :returns: whether the current point is the identity point
+        """
+
+        return self == self.IDENTITY
+
+    @classmethod
+    def random_scalar(cls) -> int:
+        """
+        Generates a random scalar for the curve, using RFC9497 section 4.7.2.
+
+        :returns: a random scalar in GF(P)
+        """
+
+        # To ensure a uniform distribution we generate a random sequence and reduce it modulo the group order
+        random_bytes = get_random_bytes(cls.KEY_LENGTH)
+        return int.from_bytes(random_bytes, byteorder="little") % cls.ORDER
+
+    @classmethod
+    def scalar_inverse(cls, scalar: int) -> int:
+        """
+        Computes the multiplicative inverse of a scalar in the finite field GF(P).
+
+        :param scalar: the scalar to invert
+        :returns: the multiplicative inverse of the scalar
+        """
+
+        return pow(scalar, -1, cls.ORDER)
+
     @classmethod
     def from_bytes(cls, b: bytes) -> Self:
         """
@@ -200,6 +312,17 @@ class Ristretto255(BaseCurve):
 
         # Step 2
         return s.to_bytes(32, "little")
+
+    @classmethod
+    def derive(cls, b: bytes) -> Self:
+        """
+        Derives a point on the curve from a `KEY_LENGTH`-byte string.
+
+        :param b: a `KEY_LENGTH`-byte string
+        :returns: a point on the curve
+        """
+
+        return cls._map_function(b[0 : cls.KEY_LENGTH]) + cls._map_function(b[cls.KEY_LENGTH : 2 * cls.KEY_LENGTH])
 
 
 Ristretto255.GENERATOR = Ristretto255.from_bytes(

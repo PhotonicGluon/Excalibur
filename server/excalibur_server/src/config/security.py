@@ -4,8 +4,8 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
-from excalibur_server.src.auth.elliptic.abc import BaseCurve
 from excalibur_server.src.auth.opaque import OPAQUE
+from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.srp.group import SRPGroup
 from excalibur_server.src.exef.crypto import KeyStrength
 
@@ -25,7 +25,7 @@ class Security(BaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
         oprf_seed: bytes
-        public_key: BaseCurve
+        public_key: Ristretto255
         private_key: int
 
         @field_validator("oprf_seed", mode="before")
