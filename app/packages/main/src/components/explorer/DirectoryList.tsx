@@ -38,6 +38,14 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             <IonIcon className="ml-1 size-6" icon={sortAsc ? arrowUp : arrowDown} />
                         </div>
                     </IonCol>
+                    {props.directory && props.directory.items && (
+                        <IonCol className="flex items-center justify-end pr-2">
+                            <IonLabel color="medium" className="text-sm">
+                                {props.directory.items.length} Item
+                                {props.directory.items.length !== 1 ? "s" : ""}
+                            </IonLabel>
+                        </IonCol>
+                    )}
                 </IonRow>
             </IonGrid>
 
