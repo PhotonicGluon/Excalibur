@@ -87,6 +87,9 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").should("exist");
         cy.get("#directory-list ion-list").get("ion-item").should("have.length", items.length);
 
+        // Item count should be correct
+        cy.get("#directory-list ion-grid ion-label").get("ion-label").contains(`${items.length} Items`);
+
         // Items should be in the correct order
         cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "Sample Directory"); // First item is the directory
         cy.get("#directory-list ion-list").get("ion-item").eq(1).should("contain.text", "Sample File"); // Second item is the file
@@ -105,6 +108,7 @@ describe("<DirectoryList />", () => {
 
         cy.get("#directory-list ion-list").should("exist");
         cy.get("#directory-list ion-label").should("contain.text", "No items");
+        cy.get("#directory-list ion-grid ion-label").get("ion-label").contains("0 Items");
     });
 
     it("renders correctly if has parent directory", () => {
@@ -129,6 +133,7 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").should("exist");
         cy.get("#directory-list ion-list").get("ion-item").should("have.length", NUM_PENDING_ITEMS);
         cy.get("#directory-list ion-skeleton-text").should("exist");
+        cy.get("#directory-list ion-grid ion-label").get("ion-label").contains("Items").should("not.exist");
     });
 
     it("renders row alternating colours", () => {

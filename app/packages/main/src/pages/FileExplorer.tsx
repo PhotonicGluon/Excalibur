@@ -25,6 +25,7 @@ import {
     useIonAlert,
     useIonRouter,
     useIonToast,
+    useIonViewWillEnter,
 } from "@ionic/react";
 import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline, searchOutline } from "ionicons/icons";
 
@@ -109,6 +110,9 @@ const FileExplorer: React.FC = () => {
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // References
+    const topBarRef = useRef<HTMLDivElement>(null);
 
     // Helper functions
     /**
@@ -312,6 +316,12 @@ const FileExplorer: React.FC = () => {
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
+    // Lifecycle events
+    useIonViewWillEnter(() => {
+        // Make the top bar scroll to the end
+        topBarRef.current!.scrollLeft = topBarRef.current!.scrollWidth;
+    });
+
     // Render
     return (
         <>
@@ -441,8 +451,10 @@ const FileExplorer: React.FC = () => {
                                 onDidDismiss={() => setShowVaultKeyDialog(false)}
                             />
 
-                            {/* Breadcrumb */}
-                            <DirectoryBreadcrumbs className="ml-1 pt-1" path={requestedPath} />
+                            {/* Breadcrumbs */}
+                            <div ref={topBarRef} className="ml-1 w-full overflow-x-scroll pt-1">
+                                <DirectoryBreadcrumbs className="flex-nowrap" path={requestedPath} />
+                            </div>
 
                             {/* Fab button */}
                             <FabButton onCreateFolder={onCreateFolder} />

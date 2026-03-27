@@ -14,7 +14,7 @@ const DirectoryBreadcrumbs: React.FC<ContainerProps> = (props) => {
     const breadcrumbPaths = [""].concat(props.path.split("/").filter((p) => p !== "."));
 
     return (
-        <IonBreadcrumbs {...props} maxItems={6} itemsBeforeCollapse={3} itemsAfterCollapse={3}>
+        <IonBreadcrumbs {...props}>
             {breadcrumbPaths.map((fragment, idx) => {
                 const routerLink = idx === 0 ? "/files/" : `/files/${breadcrumbPaths.slice(1, idx + 1).join("/")}`;
                 return (
