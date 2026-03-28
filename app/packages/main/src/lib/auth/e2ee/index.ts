@@ -1,3 +1,5 @@
+import { AlertButton } from "@ionic/core";
+
 import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
 import generateKey from "@lib/auth/keygen";
@@ -12,6 +14,7 @@ import { handshakeSRP } from "./srp";
  * @param apiURL The HTTP(S) URL of the API server to query
  * @param username The username to log in as
  * @param password The password for logging in
+ * @param startLoading A function to call to start any loading indicators
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -21,12 +24,18 @@ async function e2ee(
     apiURL: string,
     username: string,
     password: string,
+    startLoading?: () => void,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
-    showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
+    showAlert?: (
+        header: string,
+        subheader: string | undefined,
+        message: string | undefined,
+        buttons?: AlertButton[],
+    ) => void,
 ): Promise<E2EEData | undefined> {
     // Get security details
-    setLoadingState?.("Loading security details...");
+    setLoadingState?.("Getting user security details...");
     const securityDetailsResponse = await getSecurityDetails(apiURL, username);
     if (!securityDetailsResponse.success) {
         stopLoading?.();
@@ -38,6 +47,37 @@ async function e2ee(
     console.debug(
         `Loaded security details with salt '${aukSalt.toString("hex")}' and authentication protocol '${authProtocol}'`,
     );
+
+    // If currently on SRP, prompt user whether to upgrade to OPAQUE
+    let upgradeToOPAQUE: boolean | null = null;
+    if (authProtocol === AuthProtocol.SRP) {
+        stopLoading?.();
+        upgradeToOPAQUE = await new Promise<boolean>((resolve) => {
+            showAlert?.(
+                "Upgrade to OPAQUE",
+                undefined,
+                "You are currently using Secure Remote Password (SRP) to authenticate. Would you like to upgrade to OPAQUE for better security?",
+                [
+                    {
+                        text: "No",
+                        role: "cancel",
+                        handler: () => {
+                            resolve(false);
+                            startLoading?.();
+                        },
+                    },
+                    {
+                        text: "Yes",
+                        role: "confirm",
+                        handler: () => {
+                            resolve(true);
+                            startLoading?.();
+                        },
+                    },
+                ],
+            );
+        });
+    }
 
     // Generate keys
     setLoadingState?.("Generating keys...");
@@ -66,6 +106,9 @@ async function e2ee(
         default:
             throw new Error(`Unknown auth protocol: ${authProtocol}`);
     }
+
+    // TODO: Handle OPAQUE upgrade if needed
+    console.debug("upgradeToOPAQUE:", upgradeToOPAQUE);
 
     // Return E2EE data
     return {

@@ -79,7 +79,9 @@ async def comms_endpoint(websocket: WebSocket):
         # Send server's M2 for client to check
         m2 = srp_handler.generate_m2(a_pub, m1_server, master_server)
         await ws_manager.send(WebSocketMsg(m2, "OK"))
-        if (await ws_manager.receive()).status != "OK":
+
+        returned_msg = await ws_manager.receive()  # TODO: Piggyback off this to 'upgrade' auth protocol to OPAQUE
+        if returned_msg.status != "OK":
             await ws_manager.close()
             return
 
