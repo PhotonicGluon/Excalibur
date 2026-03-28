@@ -12,8 +12,7 @@ def _get_session() -> Session:
     """
 
     engine = create_engine("duckdb:///" + (ROOT_FOLDER / CONFIG.storage.database.file).as_posix())
-    Session = sessionmaker(bind=engine)
-    return Session()
+    return sessionmaker(bind=engine)()
 
 
 def add_user(user: User):
@@ -22,7 +21,7 @@ def add_user(user: User):
 
     Assumes that the user does not already exist in the database.
 
-    :param user: The user to add
+    :param user: the user to add
     """
 
     with _get_session() as session:
@@ -34,8 +33,8 @@ def get_user(username: str) -> User | None:
     """
     Gets a user from the database.
 
-    :param username: The username of the user to get
-    :return: The user
+    :param username: the username of the user to get
+    :return: the user, or None if the user does not exist
     """
 
     with _get_session() as session:
@@ -50,8 +49,8 @@ def remove_user(username: str):
     """
     Removes a user from the database.
 
-    :param username: The username of the user to remove
-    :raises ValueError: If the user does not exist
+    :param username: the username of the user to remove
+    :raises ValueError: if the user does not exist
     """
 
     with _get_session() as session:

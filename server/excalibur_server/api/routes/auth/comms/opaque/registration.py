@@ -1,5 +1,8 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from typing import Annotated
 
+from fastapi import Query, WebSocket, WebSocketDisconnect
+
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE
@@ -7,12 +10,18 @@ from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.tables import User
-from excalibur_server.src.users import add_user, get_user
+from excalibur_server.src.users import add_user, get_user, remove_user
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
 
 
 @router.websocket("/opaque/register")
-async def registration_endpoint(websocket: WebSocket):
+async def registration_endpoint(
+    websocket: WebSocket,
+    comms_uuid: Annotated[
+        str | None,
+        Query(description="Communication UUID. Used for upgrading an existing user to OPAQUE from SRP authentication."),
+    ] = None,
+):
     """
     Endpoint that handles the registration communication of incoming requests.
 
@@ -20,7 +29,11 @@ async def registration_endpoint(websocket: WebSocket):
     """
 
     OPAQUE = _get_opaque()
-    ws_manager = EncryptedWebSocketManager(websocket, CONFIG.security.account_creation_key)
+
+    key = CONFIG.security.account_creation_key
+    if comms_uuid and comms_uuid in MASTER_KEYS_CACHE:
+        key = MASTER_KEYS_CACHE[comms_uuid]
+    ws_manager = EncryptedWebSocketManager(websocket, key)
 
     await ws_manager.accept()
     try:
@@ -31,7 +44,9 @@ async def registration_endpoint(websocket: WebSocket):
 
         # Check username
         user = get_user(username)
-        if user is not None:
+        if (
+            user is not None and key == CONFIG.security.account_creation_key
+        ):  # We'll allow overwriting if using an actual session key
             await ws_manager.send(WebSocketMsg("User already exists", "ERR"))
             await ws_manager.close()
             return
@@ -51,6 +66,15 @@ async def registration_endpoint(websocket: WebSocket):
         registration_record_raw = upload_data[: OPAQUE.registration_record_size]
         auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
+
+        # If a valid communications UUID was given, we get existing user's credentials
+        if key != CONFIG.security.account_creation_key:
+            # Get existing user's AUK salt and encrypted vault key
+            auk_salt = user.auk_salt
+            key_enc = user.key_enc
+
+            # Delete the old user (which presumably uses SRP)
+            remove_user(username)
 
         # Add new user
         user = User(
