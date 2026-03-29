@@ -3,7 +3,9 @@ import { AlertButton } from "@ionic/core";
 import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
 import generateKey from "@lib/auth/keygen";
+import { decodeJWT } from "@lib/auth/token";
 import { getSecurityDetails } from "@lib/users/api";
+import { registerUserOPAQUE } from "@lib/users/api/registration/opaque";
 
 import { handshakeOPAQUE } from "./opaque";
 import { handshakeSRP } from "./srp";
@@ -107,8 +109,24 @@ async function e2ee(
             throw new Error(`Unknown auth protocol: ${authProtocol}`);
     }
 
-    // TODO: Handle OPAQUE upgrade if needed
-    console.debug("upgradeToOPAQUE:", upgradeToOPAQUE);
+    // Handle OPAQUE upgrade if needed
+    if (upgradeToOPAQUE) {
+        const reregisterResponse = await registerUserOPAQUE(
+            apiURL,
+            username,
+            password,
+            handshakeData!.key, // Use the established session key to communicate
+            Buffer.alloc(32), // We don't care about the AUK salt; the server will retrieve it for us
+            Buffer.alloc(0), // We also don't care about the encrypted vault key
+            decodeJWT<Record<string, string>>(handshakeData!.token).uuid,
+            stopLoading,
+            setLoadingState,
+            showAlert,
+        );
+        if (!reregisterResponse.success) {
+            throw new Error("Failed to upgrade to OPAQUE");
+        }
+    }
 
     // Return E2EE data
     return {

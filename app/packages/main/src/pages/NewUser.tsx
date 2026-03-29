@@ -128,6 +128,7 @@ const NewUser: React.FC = () => {
             ack,
             aukSalt,
             encryptedVaultKey,
+            undefined, // No comms UUID (we're registering, not upgrading)
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg) => {
