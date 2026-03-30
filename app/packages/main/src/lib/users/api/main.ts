@@ -26,9 +26,9 @@ export async function checkUser(apiURL: string, username: string): Promise<boole
  *
  * @param apiURL The URL of the API server to query
  * @param username The username to retrieve security details for
- * @returns A promise which resolves to an object containing the success status, optional AUK and
- *      SRP salts as `Buffer`s, and an optional error message. If the security details file is not
- *      found, success is `false` and an error message is provided
+ * @returns A promise which resolves to an object representing the security details of the user. If
+ *      the user does not exist, the promise resolves to an object with `success` set to `false` and
+ *      an error message
  */
 export async function getSecurityDetails(
     apiURL: string,

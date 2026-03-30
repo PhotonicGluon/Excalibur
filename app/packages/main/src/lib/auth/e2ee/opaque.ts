@@ -1,10 +1,8 @@
 import { createDecipheriv } from "crypto";
 
 import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
-import generateKey from "@lib/auth/keygen";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEClientAuthError } from "@lib/auth/opaque/client";
-import { getSecurityDetails } from "@lib/users/api";
 import { b64decode } from "@lib/util";
 
 import { HandshakeData } from "./structures";
@@ -40,24 +38,6 @@ export async function handshakeOPAQUE(
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
 ): Promise<HandshakeData | undefined> {
-    // Get security details
-    setLoadingState?.("Loading security details...");
-    const securityDetailsResponse = await getSecurityDetails(apiURL, username);
-    if (!securityDetailsResponse.success) {
-        stopLoading?.();
-        showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);
-        return;
-    }
-    const aukSalt = securityDetailsResponse.aukSalt!;
-    const authProtocol = securityDetailsResponse.authProtocol!;
-    console.debug(`Loaded security details with salt '${aukSalt.toString("hex")}' and auth protocol '${authProtocol}'`);
-
-    // Generate keys
-    setLoadingState?.("Generating keys...");
-    const additionalInfo = { username };
-    const auk = await generateKey(password, additionalInfo, aukSalt);
-    console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
-
     // Perform OPAQUE-3DH handshake
     const wsURL = apiURL.replace("http", "ws");
     const ws = new WebSocket(`${wsURL}/auth/opaque`);
