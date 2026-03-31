@@ -60,8 +60,8 @@ class FSItem(SQLModel, table=True):
     "Item name"
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
-    parent_id: uuid.UUID = Field(foreign_key="fsitem.id", nullable=True)
-    "Parent directory ID"
+    parent_id: uuid.UUID | None = Field(foreign_key="fsitem.id", nullable=True)
+    "Parent directory ID, or None for a user's root folder"
 
     # Metadata
     size: int | None = Field(nullable=True)

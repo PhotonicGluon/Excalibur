@@ -6,9 +6,24 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations import get_item_by_path
 from excalibur_server.src.files.structures import Directory
-from excalibur_server.src.files.utils import listdir
+from excalibur_server.src.files.utils import listdir, listdir_old
 from excalibur_server.src.path import check_path_subdir
+from excalibur_server.src.users import get_user
+
+
+def _old_listdir(username: str, path: str, include_exef_size: bool):
+    # Check for any attempts at path traversal
+    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
+
+    contents = listdir_old(username, user_path, include_exef_size=include_exef_size)
+    if contents is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
+
+    return contents
 
 
 @encrypted_router.get(
@@ -37,13 +52,17 @@ def listdir_endpoint(
     path = processed_path
     username = credentials.username
 
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
+    # Handle legacy users without flattened filesystem
+    root_id = get_user(username).fsitem_id
+    if root_id is None:
+        return _old_listdir(username, path, include_exef_size)
 
-    contents = listdir(username, user_path, include_exef_size=include_exef_size)
-    if contents is None:
+    # Get folder's ID
+    folder = get_item_by_path(root_id, path)
+    if folder is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    return contents
+    folder_id = folder.id
+
+    # List the directory
+    return listdir(folder_id)

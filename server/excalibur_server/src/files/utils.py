@@ -1,7 +1,10 @@
 import mimetypes
+import uuid
 from pathlib import Path
 
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder
+from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
 
@@ -19,7 +22,7 @@ def get_vault_path(username: str, path: Path):
     return path.resolve().relative_to(CONFIG.storage.vault_folder / username).as_posix()
 
 
-def construct_file_or_directory(
+def construct_file_or_directory_old(
     username: str, abs_path: Path, include_exef_size: bool = False
 ) -> File | Directory | None:
     """
@@ -47,7 +50,21 @@ def construct_file_or_directory(
     return File(name=abs_path.name, fullpath=vault_path, size=size, mimetype=mimetype)
 
 
-def listdir(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:
+def construct_file_or_directory(fsitem: FSItem) -> File | Directory | None:
+    """
+    Constructs a `File` or `Directory` object from an FSItem.
+
+    :param fsitem: the FSItem to construct from
+    :return: a `File` or `Directory` object, or `None` if the FSItem is not a file or directory
+    """
+
+    if fsitem.is_folder:
+        return Directory(name=fsitem.name, fullpath=get_item_fullpath(fsitem.id))
+
+    # TODO: Handle other cases
+
+
+def listdir_old(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:
     """
     Lists the contents of a directory.
 
@@ -65,10 +82,36 @@ def listdir(username: str, path: Path, include_exef_size: bool = False) -> Direc
 
     items = []
     for item in path.iterdir():
-        item = construct_file_or_directory(username, path / item, include_exef_size)
+        item = construct_file_or_directory_old(username, path / item, include_exef_size)
         if item is None:
             continue
 
         items.append(item)
 
     return Directory(name=path.name, fullpath=get_vault_path(username, path), items=items)
+
+
+def listdir(folder_id: uuid.UUID) -> Directory | None:
+    """
+    Lists the contents of a directory.
+
+    :param folder_id: the ID of the folder to list
+    :return: a `Directory` object with a list of `File` and `Directory` objects, or `None` if the
+        folder does not exist or is not a directory
+    """
+
+    folder = get_item(folder_id)
+    if folder is None or not folder.is_folder:
+        return None
+
+    fsitems = get_items_in_folder(folder_id)
+
+    items = []
+    for fsitem in fsitems:
+        item = construct_file_or_directory(fsitem)
+        if item is None:
+            continue
+
+        items.append(item)
+
+    return Directory(name=folder.name, fullpath=get_item_fullpath(folder_id), items=items)

@@ -8,7 +8,7 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.searching import file_index
 from excalibur_server.src.files.structures import File
-from excalibur_server.src.files.utils import construct_file_or_directory
+from excalibur_server.src.files.utils import construct_file_or_directory_old
 
 
 @encrypted_router.post(
@@ -62,7 +62,7 @@ def search_endpoint(
     output = []
     for rel_path, score in results:
         abs_path = CONFIG.storage.vault_folder / credentials.username / rel_path
-        item = construct_file_or_directory(credentials.username, abs_path, include_exef_size=include_exef_size)
+        item = construct_file_or_directory_old(credentials.username, abs_path, include_exef_size=include_exef_size)
         if item is None:
             continue
         output.append((item, score))
