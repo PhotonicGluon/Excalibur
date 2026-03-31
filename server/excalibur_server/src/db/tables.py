@@ -1,4 +1,6 @@
-from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel
+import uuid
+
+from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.srp.group import SRPGroup
@@ -15,6 +17,12 @@ class User(SQLModel, table=True):
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )
     "Authentication protocol to use"
+    fsitem_id: uuid.UUID = Field(foreign_key="fsitem.id", nullable=True)
+    """
+    ID of the user's root filesystem item.
+
+    A `None` means that the user does not use a database-based filesystem.
+    """
 
     # Secure Remote Password (SRP)
     # TODO: Deprecate SRP fields in next version
@@ -37,3 +45,29 @@ class User(SQLModel, table=True):
     Encrypted vault key as an ExEF stream.
     The vault key should have been encrypted using the Account Unlock Key (AUK).
     """
+
+
+class FSItem(SQLModel, table=True):
+    """
+    A filesystem item (i.e., a file or directory) in the database.
+    """
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    "Unique identifier for the filesystem item"
+
+    # Basic information
+    name: str = Field(nullable=False)
+    "Item name"
+    is_folder: bool = Field(default=False, nullable=False)
+    "Whether the item is a folder"
+    parent_id: uuid.UUID = Field(foreign_key="fsitem.id", nullable=True)
+    "Parent directory ID"
+
+    # Metadata
+    size: int | None = Field(nullable=True)
+    "File size in bytes, or None for folders"
+    mime_type: str | None = Field(nullable=True)
+    "MIME type of the file, or None for folders"
+
+    # Ensure no two items have the same name in the same folder
+    __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
