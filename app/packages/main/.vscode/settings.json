@@ -15,10 +15,12 @@
         "keysize",
         "listdir",
         "mimetypes",
+        "oprf",
         "popover",
         "powmod",
         "priv",
         "randbits",
+        "ristretto",
         "trustless",
         "updaters"
     ],

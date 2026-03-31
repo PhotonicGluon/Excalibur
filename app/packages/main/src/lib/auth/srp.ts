@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { sha3_256 } from "js-sha3";
 
-import { randbits } from "@lib/security/util";
+import { randbits } from "@lib/auth/util";
 import { bufferToNumber, modulo, numberToBuffer, padBuffer, powmod } from "@lib/util";
 
 /**

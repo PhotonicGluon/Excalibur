@@ -4,6 +4,8 @@ from typing import Annotated
 
 import typer
 
+from excalibur_server.src.auth.enums import AuthProtocol
+
 user_app = typer.Typer(no_args_is_help=True, help="User operations.")
 
 
@@ -35,6 +37,13 @@ def add_user(
             callback=_vault_key_callback,
         ),
     ],
+    auth_protocol: Annotated[
+        AuthProtocol,
+        typer.Option(
+            help="Authentication protocol to use.",
+            case_sensitive=False,
+        ),
+    ] = AuthProtocol.OPAQUE_3DH,
 ):
     """
     Adds a user to the API server.
@@ -49,38 +58,75 @@ def add_user(
     from Crypto.Util.number import bytes_to_long, long_to_bytes
 
     from excalibur_server.src.auth.keygen import generate_key
-    from excalibur_server.src.auth.srp import SRP
     from excalibur_server.src.config import CONFIG
-    from excalibur_server.src.exef.exef import ExEF
+    from excalibur_server.src.exef import ExEF
     from excalibur_server.src.users import User, add_user
 
-    srp_handler = SRP(CONFIG.security.srp.group)
-
-    # Generate salts and keys
+    # Generate account unlock key (AUK) values
     auk_salt = get_random_bytes(16)
     auk_key = generate_key(password, {"username": username}, auk_salt)
-
-    srp_salt = get_random_bytes(16)
-    srp_key = generate_key(password, {"username": username}, srp_salt)
-
-    # Generate SRP verifier
-    verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))
 
     # Encrypt vault key
     vault_key: bytes = b64decode(vault_key)
     vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
 
-    # Create user
-    add_user(
-        User(
-            username=username,
-            auk_salt=auk_salt,
-            srp_group=CONFIG.security.srp.group,
-            srp_salt=srp_salt,
-            srp_verifier=verifier,
-            key_enc=vault_key_enc,
+    if auth_protocol == AuthProtocol.SRP:
+        from excalibur_server.src.auth.srp import SRP
+
+        # Generate SRP data
+        srp_handler = SRP(CONFIG.security.srp.group)
+
+        srp_salt = get_random_bytes(16)
+        srp_key = generate_key(password, {"username": username}, srp_salt)
+        verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))
+
+        # Create user
+        add_user(
+            User(
+                username=username,
+                auth_protocol=auth_protocol,
+                srp_group=CONFIG.security.srp.group,
+                srp_salt=srp_salt,
+                srp_verifier=verifier,
+                auk_salt=auk_salt,
+                key_enc=vault_key_enc,
+            )
         )
-    )
+    else:
+        from excalibur_server.src.auth.opaque import OPAQUE as opaque_server
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
+        from excalibur_server.src.auth.opaque.operation import OPAQUEClient
+
+        # Perform OPAQUE registration
+        password = password.encode("utf-8")
+        opaque_client = OPAQUEClient(oprf_type=OPAQUE_OPRF_TYPE)
+
+        registration_request, blind = opaque_client.create_registration_request(password)
+        registration_response = opaque_server.create_registration_response(
+            registration_request,
+            CONFIG.security.opaque.public_key,
+            username.encode("utf-8"),
+            CONFIG.security.opaque.oprf_seed,
+        )
+        registration_record, _ = opaque_client.finalize_registration_request(
+            password,
+            blind,
+            registration_response,
+            SERVER_IDENTITY,
+            username.encode("utf-8"),
+        )
+
+        # Create user
+        add_user(
+            User(
+                username=username,
+                auth_protocol=auth_protocol,
+                srp_group=CONFIG.security.srp.group,
+                registration_record=registration_record.serialize(),
+                auk_salt=auk_salt,
+                key_enc=vault_key_enc,
+            )
+        )
 
     typer.secho(f"Added '{username}' to the database.", fg="green")
 

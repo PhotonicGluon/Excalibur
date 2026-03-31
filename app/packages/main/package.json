@@ -20,14 +20,14 @@
         "@capacitor/app": "^8.0.1",
         "@capacitor/core": "^8.2.0",
         "@capacitor/filesystem": "^8.1.2",
-        "@capacitor/keyboard": "^8.0.1",
+        "@capacitor/keyboard": "^8.0.2",
         "@capacitor/preferences": "^8.0.1",
         "@capacitor/privacy-screen": "^2.0.1",
         "@capacitor/screen-orientation": "^8.0.1",
         "@capawesome/capacitor-file-picker": "^8.0.2",
-        "@ionic/core": "^8.8.1",
-        "@ionic/react": "^8.8.1",
-        "@ionic/react-router": "^8.8.1",
+        "@ionic/core": "^8.8.2",
+        "@ionic/react": "^8.8.2",
+        "@ionic/react-router": "^8.8.2",
         "capacitor-blob-writer": "^1.1.20",
         "comlink": "^4.4.2",
         "immer": "^11.1.4",
@@ -41,13 +41,13 @@
         "react-router": "^5.3.4",
         "react-router-dom": "^5.3.4",
         "semver-parser": "^4.1.8",
-        "tailwindcss": "^4.2.1",
+        "tailwindcss": "^4.2.2",
         "use-immer": "^0.11.0"
     },
     "devDependencies": {
         "@capacitor/assets": "^3.0.5",
         "@capacitor/cli": "^8.2.0",
-        "@tailwindcss/vite": "^4.2.1",
+        "@tailwindcss/vite": "^4.2.2",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/natural-compare": "^1.4.3",
         "@types/node": "^25.5.0",
@@ -57,7 +57,7 @@
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-legacy": "^8.0.0",
         "@vitejs/plugin-react": "^6.0.1",
-        "baseline-browser-mapping": "^2.10.8",
+        "baseline-browser-mapping": "^2.10.11",
         "cypress": "^15.11.0",
         "globals": "^17.4.0",
         "lint-staged": "^16.3.3",
@@ -65,7 +65,7 @@
         "prettier-plugin-tailwindcss": "^0.7.2",
         "vite": "~8.0.0",
         "vite-plugin-node-polyfills": "^0.25.0",
-        "vitest": "^4.1.0"
+        "vitest": "^4.1.2"
     },
     "private": true
 }

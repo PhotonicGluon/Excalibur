@@ -1,5 +1,5 @@
 """
-Version 0.2.0
+Initial database schema
 
 Revision ID: 24ec4622b630
 Revises:

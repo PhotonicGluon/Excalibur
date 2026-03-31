@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { modulo, powmod } from "./math";
+import { modInv, modulo, powmod } from "./math";
 
 test("modulo", () => {
     // Well-defined
@@ -16,4 +16,10 @@ test("powmod", () => {
     expect(powmod(2n, 3n, 5n)).toEqual(3n);
     expect(powmod(2n, 4n, 5n)).toEqual(1n);
     expect(powmod(2n, 5n, 7n)).toEqual(4n);
+});
+
+test("modInv", () => {
+    expect(modInv(3n, 7n)).toEqual(5n);
+    expect(modInv(2n, 5n)).toEqual(3n);
+    expect(modInv(3n, 11n)).toEqual(4n);
 });

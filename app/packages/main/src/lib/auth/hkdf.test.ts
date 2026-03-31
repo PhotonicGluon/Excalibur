@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import hkdf from "./hkdf";
+import HKDF from "./hkdf";
 
 // Test cases from RFC5869, Appendix A:
 //    https://datatracker.ietf.org/doc/html/rfc5869#appendix-A
@@ -16,7 +16,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 2", () => {
@@ -39,7 +39,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 3", () => {
@@ -53,7 +53,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 4", () => {
@@ -67,7 +67,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 5", () => {
@@ -90,7 +90,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 6", () => {
@@ -104,7 +104,7 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 
     it("Test Case 7", () => {
@@ -118,6 +118,6 @@ describe("HKDF", () => {
             "hex",
         );
 
-        expect(hkdf(alg, ikm, salt, info, l)).toEqual(okm);
+        expect(new HKDF(alg).hkdf(ikm, salt, info, l)).toEqual(okm);
     });
 });

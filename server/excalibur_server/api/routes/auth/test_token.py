@@ -35,8 +35,7 @@ def test_get_token():
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
     token = generate_auth_token("test-user", uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
 
-    for i in range(5):  # Make sure that the new token is actually valid by refreshing it
-        print(f"Round {i + 1}: {uuid}, {token}")
+    for _ in range(5):  # Make sure that the new token is actually valid by refreshing it
         client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
         # Get a new token

@@ -1,4 +1,4 @@
-import { generatePoPHeader } from "@lib/security/pop";
+import { generatePoPHeader } from "@lib/auth/pop";
 import { getURLEncodedPath } from "@lib/url";
 
 /**

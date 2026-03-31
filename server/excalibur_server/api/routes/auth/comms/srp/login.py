@@ -1,17 +1,12 @@
-import json
-from base64 import b64encode
-from datetime import datetime, timezone
 from uuid import uuid4
 
-from Crypto.Cipher import AES
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.credentials import generate_auth_token
+from excalibur_server.api.routes.auth.comms.opaque.login import _send_auth_token
 from excalibur_server.src.auth.srp import SRP
-from excalibur_server.src.config import CONFIG
 from excalibur_server.src.users import User, get_user
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 
@@ -84,7 +79,9 @@ async def comms_endpoint(websocket: WebSocket):
         # Send server's M2 for client to check
         m2 = srp_handler.generate_m2(a_pub, m1_server, master_server)
         await ws_manager.send(WebSocketMsg(m2, "OK"))
-        if (await ws_manager.receive()).status != "OK":
+
+        returned_msg = await ws_manager.receive()  # TODO: Piggyback off this to 'upgrade' auth protocol to OPAQUE
+        if returned_msg.status != "OK":
             await ws_manager.close()
             return
 
@@ -185,33 +182,3 @@ async def _negotiate_ephemeral_values(
         response = await ws_manager.receive()
 
     return a_pub, b_pub, b_priv
-
-
-async def _send_auth_token(ws_manager: WebSocketManager, username: str, comm_uuid: str) -> None:
-    """
-    Send the authentication token to the client.
-
-    Encrypts the authentication token using the master value and sends it to the client.
-
-    :param ws_manager: the WebSocket manager
-    :param username: the username
-    :param comm_uuid: the UUID of the communication session
-    """
-
-    auth_token = generate_auth_token(
-        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
-    )
-
-    cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)
-    auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))
-    tag = cipher.digest()
-
-    auth_token_data = json.dumps(
-        {
-            "nonce": b64encode(cipher.nonce).decode("utf-8"),
-            "token": b64encode(auth_token_enc).decode("utf-8"),
-            "tag": b64encode(tag).decode("utf-8"),
-        }
-    )
-
-    await ws_manager.send(WebSocketMsg(auth_token_data))

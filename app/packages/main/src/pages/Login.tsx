@@ -20,8 +20,8 @@ import {
     useIonToast,
 } from "@ionic/react";
 
+import { e2ee } from "@lib/auth/e2ee";
 import Preferences from "@lib/preferences";
-import { e2ee } from "@lib/security/e2ee";
 import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
@@ -105,8 +105,8 @@ const Login: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify(values)}`);
         setIsLoading(true);
 
-        // Check whether security details have been set up
-        setLoadingState("Finding security details...");
+        // Check whether user exists
+        setLoadingState("Finding user...");
         try {
             if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
                 setIsLoading(false);
@@ -138,10 +138,11 @@ const Login: React.FC = () => {
             auth.serverInfo!.apiURL!,
             values.username,
             values.password,
+            () => setIsLoading(true),
             () => setIsLoading(false),
             setLoadingState,
-            (header, subheader, msg) => {
-                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
+            (header, subheader, msg, buttons) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: buttons ?? ["OK"] });
             },
         );
         if (!e2eeData) {
