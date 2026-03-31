@@ -15,6 +15,12 @@ module.exports = {
             return false;
         }
 
+        // Prohibit Vite v8 updates
+        // (We're working on updates on a separate branch)
+        if (packageName == "vite" && upgradedMajor >= 8) {
+            return false;
+        }
+
         return true;
     },
 };
