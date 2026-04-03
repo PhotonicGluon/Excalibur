@@ -7,7 +7,7 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations.fsitem import add_item, get_item_by_path
+from excalibur_server.src.db.operations import add_item, get_item_by_path
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.path import check_path_length, check_path_subdir
 from excalibur_server.src.users import get_user
@@ -94,6 +94,6 @@ async def create_directory_endpoint(
 
     # Create the directory in the database
     new_folder = FSItem(name=name, is_folder=True, parent_id=parent_id)
-    print(new_folder)
     add_item(new_folder)
+    background_tasks.add_task(add_folder_change, credentials, path)
     return "Directory created"

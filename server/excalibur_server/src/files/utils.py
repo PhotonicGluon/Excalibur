@@ -1,9 +1,11 @@
 import mimetypes
+import shutil
 import uuid
 from pathlib import Path
 
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder
+from excalibur_server.src.db.operations.fsitem import remove_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
@@ -59,7 +61,7 @@ def construct_file_or_directory(fsitem: FSItem) -> File | Directory | None:
     """
 
     if fsitem.is_folder:
-        return Directory(name=fsitem.name, fullpath=get_item_fullpath(fsitem.id))
+        return Directory(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)))
 
     # TODO: Handle other cases
 
@@ -114,4 +116,37 @@ def listdir(folder_id: uuid.UUID) -> Directory | None:
 
         items.append(item)
 
-    return Directory(name=folder.name, fullpath=get_item_fullpath(folder_id), items=items)
+    return Directory(name=folder.name, fullpath=str(get_item_fullpath(folder_id)), items=items)
+
+
+def rmitem_old(path: Path):
+    """
+    Removes a file or directory.
+
+    :param path: the path to remove
+    """
+
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def rmitem(item: FSItem):
+    """
+    Removes a file or directory.
+
+    :param item: the item to remove
+    """
+
+    if not item.is_folder:
+        # Just need to remove the item from the database
+        remove_item(item.id)
+        return
+
+    # For folder, first need to remove its children before removing itself
+    children = get_items_in_folder(item.id)
+    for child in children:
+        rmitem(child)
+
+    remove_item(item.id)

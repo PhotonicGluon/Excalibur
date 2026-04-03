@@ -5,7 +5,7 @@ from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.config import CONFIG
 
 
-def _get_session() -> Session:
+def get_session() -> Session:
     """
     Creates and returns a new SQLAlchemy Session.
     """
