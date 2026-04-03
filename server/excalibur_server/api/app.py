@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
+from fastapi_offline import FastAPIOffline
 
 from excalibur_server.api.middlewares import add_middleware
 from excalibur_server.env import has_cors, has_encryption, has_pop_checking, is_debug
@@ -36,7 +37,7 @@ async def lifespan(_app: FastAPI):
 
 
 # Define app
-app = FastAPI(
+app = FastAPIOffline(
     title=TITLE,
     summary=SUMMARY,
     version=VERSION,
