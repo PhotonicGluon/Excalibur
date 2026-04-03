@@ -37,10 +37,15 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
     """
     Gets a filesystem item from the database by its path.
 
+    Can specify the root directory with ".".
+
     :param path: the path of the filesystem item to get
     :return: the filesystem item, or None if the item does not exist
     :raises ValueError: if the path is empty or root
     """
+
+    if path == ".":
+        path = ""
 
     parts = [p for p in path.split("/") if p]
     current_parent_id = root_id

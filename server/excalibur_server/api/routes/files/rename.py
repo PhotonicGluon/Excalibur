@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
+from sqlalchemy.exc import IntegrityError
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
@@ -59,12 +60,19 @@ async def rename_path_endpoint(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
+    # Prohibit renaming the root directory
+    if item.id == root_id:
+        raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot rename root directory")
+
     # Rename the item
     with get_session() as session:
-        with session.begin():
-            db_item = session.query(FSItem).filter_by(id=item.id).first()
-            db_item.name = new_name
-            session.add(db_item)
+        try:
+            with session.begin():
+                db_item = session.query(FSItem).filter_by(id=item.id).first()
+                db_item.name = new_name
+                session.add(db_item)
+        except IntegrityError:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
 
     background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
     return "Item renamed"

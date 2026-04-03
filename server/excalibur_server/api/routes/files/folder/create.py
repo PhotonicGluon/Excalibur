@@ -84,8 +84,6 @@ async def create_directory_endpoint(
         return _old_mkdir(username, path, name, background_tasks, credentials)
 
     # Get parent ID
-    if path == ".":
-        path = ""
     parent = get_item_by_path(root_id, path)
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")

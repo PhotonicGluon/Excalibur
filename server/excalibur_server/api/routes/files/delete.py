@@ -95,7 +95,7 @@ def delete_endpoint(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
-    # Stop deletion of the root directory
+    # Prohibit deletion of the root directory
     if item.id == root_id:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
