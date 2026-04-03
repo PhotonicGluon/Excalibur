@@ -30,7 +30,9 @@ def add_user(user: User):
     """
 
     # Create new root folder for the user
-    root_item = FSItem(name=user.username, is_folder=True, parent_id=None)
+    root_item = FSItem(name=user.username, parent_id=None, root_id=None, is_folder=True)
+    root_item.root_id = root_item.id
+
     user.fsitem_id = root_item.id
     add_item(root_item)
 

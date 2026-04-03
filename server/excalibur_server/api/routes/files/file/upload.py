@@ -175,11 +175,12 @@ async def upload_file_endpoint(
     # Create the file in the database
     new_file = FSItem(
         id=new_file_id,
+        parent_id=parent.id,
+        root_id=parent.root_id,
         name=name,
         is_folder=False,
-        parent_id=parent.id,
         size=size,
-        mime_type=mimetype,
+        mimetype=mimetype,
     )
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)

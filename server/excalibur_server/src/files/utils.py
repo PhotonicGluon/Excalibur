@@ -67,7 +67,7 @@ def construct_file_or_directory(fsitem: FSItem, include_exef_size: bool = False)
     if not include_exef_size:
         size -= ExEF.header_size + ExEF.footer_size
 
-    return File(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)), size=size, mimetype=fsitem.mime_type)
+    return File(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)), size=size, mimetype=fsitem.mimetype)
 
 
 def listdir_old(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:

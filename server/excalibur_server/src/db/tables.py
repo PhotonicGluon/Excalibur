@@ -57,10 +57,18 @@ class FSItem(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     "Unique identifier for the filesystem item"
-
     parent_id: uuid.UUID | None = Field(nullable=True)
     """
     Parent directory ID, or None for a user's root folder.
+
+    This is supposed to be a foreign key to the `id` column, but DuckDB doesn't support creating
+    foreign keys.
+    """
+    root_id: uuid.UUID = Field(nullable=False)
+    """
+    Root directory ID.
+
+    Will be itself for a user's root folder.
 
     This is supposed to be a foreign key to the `id` column, but DuckDB doesn't support creating
     foreign keys.
@@ -75,7 +83,7 @@ class FSItem(SQLModel, table=True):
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    mime_type: str | None = Field(nullable=True)
+    mimetype: str | None = Field(nullable=True)
     "MIME type of the file, or None for folders"
 
     # Ensure no two items have the same name in the same folder
