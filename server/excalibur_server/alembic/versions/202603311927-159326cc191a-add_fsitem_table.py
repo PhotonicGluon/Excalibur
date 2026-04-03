@@ -32,18 +32,11 @@ def upgrade() -> None:
         sa.Column("parent_id", sa.Uuid(), nullable=True),
         sa.Column("size", sa.Integer(), nullable=True),
         sa.Column("mime_type", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["parent_id"],
-            ["fsitem.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("parent_id", "name", name="unique_parent_name"),
     )
     op.add_column("user", sa.Column("fsitem_id", sa.Uuid()))
     op.alter_column("user", "fsitem_id", existing_type=sa.Uuid(), nullable=True)
-
-    # DuckDB doesn't support creating foreign keys
-    # op.create_foreign_key("fk_user_fsitem_id", "user", "fsitem", ["fsitem_id"], ["id"])
 
 
 def downgrade() -> None:
@@ -51,6 +44,5 @@ def downgrade() -> None:
     Downgrade schema.
     """
 
-    # op.drop_constraint("fk_user_fsitem_id", "user", type_="foreignkey")
     op.drop_column("user", "fsitem_id")
     op.drop_table("fsitem")

@@ -17,11 +17,14 @@ class User(SQLModel, table=True):
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )
     "Authentication protocol to use"
-    fsitem_id: uuid.UUID = Field(foreign_key="fsitem.id", nullable=True)
+    fsitem_id: uuid.UUID = Field(nullable=True)
     """
     ID of the user's root filesystem item.
 
     A `None` means that the user does not use a database-based filesystem.
+
+    This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
+    foreign keys.
     """
 
     # Secure Remote Password (SRP)
@@ -55,13 +58,19 @@ class FSItem(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     "Unique identifier for the filesystem item"
 
+    parent_id: uuid.UUID | None = Field(nullable=True)
+    """
+    Parent directory ID, or None for a user's root folder.
+
+    This is supposed to be a foreign key to the `id` column, but DuckDB doesn't support creating
+    foreign keys.
+    """
+
     # Basic information
     name: str = Field(nullable=False)
     "Item name"
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
-    parent_id: uuid.UUID | None = Field(foreign_key="fsitem.id", nullable=True)
-    "Parent directory ID, or None for a user's root folder"
 
     # Metadata
     size: int | None = Field(nullable=True)
