@@ -4,8 +4,7 @@ import uuid
 from pathlib import Path
 
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder
-from excalibur_server.src.db.operations.fsitem import remove_item
+from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder, remove_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
@@ -52,18 +51,23 @@ def construct_file_or_directory_old(
     return File(name=abs_path.name, fullpath=vault_path, size=size, mimetype=mimetype)
 
 
-def construct_file_or_directory(fsitem: FSItem) -> File | Directory | None:
+def construct_file_or_directory(fsitem: FSItem, include_exef_size: bool = False) -> File | Directory | None:
     """
     Constructs a `File` or `Directory` object from an FSItem.
 
     :param fsitem: the FSItem to construct from
+    :param include_exef_size: whether to include the additional ExEF size in file sizes
     :return: a `File` or `Directory` object, or `None` if the FSItem is not a file or directory
     """
 
     if fsitem.is_folder:
         return Directory(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)))
 
-    # TODO: Handle other cases
+    size = fsitem.size
+    if not include_exef_size:
+        size -= ExEF.header_size + ExEF.footer_size
+
+    return File(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)), size=size, mimetype=fsitem.mime_type)
 
 
 def listdir_old(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:

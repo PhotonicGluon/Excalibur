@@ -88,10 +88,8 @@ async def create_directory_endpoint(
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    parent_id = parent.id if parent else None
-
     # Create the directory in the database
-    new_folder = FSItem(name=name, is_folder=True, parent_id=parent_id)
+    new_folder = FSItem(name=name, is_folder=True, parent_id=parent.id)
     add_item(new_folder)
     background_tasks.add_task(add_folder_change, credentials, path)
     return "Directory created"

@@ -9,6 +9,25 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.files.searching import file_index
 from excalibur_server.src.files.structures import File
 from excalibur_server.src.files.utils import construct_file_or_directory_old
+from excalibur_server.src.users import get_user
+
+
+def _old_search(credentials: Credentials, query: str, limit: int, score_threshold: float, include_exef_size: bool):
+    choices = [file.as_posix() for file in file_index.get(credentials.username)]
+    results = process.extract(
+        query, choices, scorer=fuzz.WRatio, limit=limit if limit > 0 else None, score_cutoff=score_threshold * 100
+    )
+    results = [(result[0], result[1] / 100) for result in results]  # 0 = relative path, 1 = similarity score
+
+    output = []
+    for rel_path, score in results:
+        abs_path = CONFIG.storage.vault_folder / credentials.username / rel_path
+        item = construct_file_or_directory_old(credentials.username, abs_path, include_exef_size=include_exef_size)
+        if item is None:
+            continue
+        output.append((item, score))
+
+    return output
 
 
 @encrypted_router.post(
@@ -53,18 +72,12 @@ def search_endpoint(
     Returns a list of tuples containing the file data and similarity score.
     """
 
-    choices = [file.as_posix() for file in file_index.get(credentials.username)]
-    results = process.extract(
-        query, choices, scorer=fuzz.WRatio, limit=limit if limit > 0 else None, score_cutoff=score_threshold * 100
-    )
-    results = [(result[0], result[1] / 100) for result in results]  # 0 = relative path, 1 = similarity score
+    username = credentials.username
 
-    output = []
-    for rel_path, score in results:
-        abs_path = CONFIG.storage.vault_folder / credentials.username / rel_path
-        item = construct_file_or_directory_old(credentials.username, abs_path, include_exef_size=include_exef_size)
-        if item is None:
-            continue
-        output.append((item, score))
+    # Handle legacy users without flattened filesystem
+    root_id = get_user(username).fsitem_id
+    if root_id is None:
+        return _old_search(credentials, query, limit, score_threshold, include_exef_size)
 
-    return output
+    # TODO: Fix up file indexing and implement new search
+    return _old_search(credentials, query, limit, score_threshold, include_exef_size)
