@@ -10,11 +10,6 @@ module.exports = {
             return true;
         }
 
-        // Prohibit Electron v40 updates
-        if (packageName == "electron" && upgradedMajor >= 40) {
-            return false;
-        }
-
         // Prohibit Vite v8 updates
         // (We're working on updates on a separate branch)
         if (packageName == "vite" && upgradedMajor >= 8) {
