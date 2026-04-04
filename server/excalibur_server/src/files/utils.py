@@ -51,13 +51,13 @@ def construct_file_or_directory_old(
     return File(name=abs_path.name, fullpath=vault_path, size=size, mimetype=mimetype)
 
 
-def construct_file_or_directory(fsitem: FSItem, include_exef_size: bool = False) -> File | Directory | None:
+def construct_file_or_directory(fsitem: FSItem, include_exef_size: bool = False) -> File | Directory:
     """
     Constructs a `File` or `Directory` object from an FSItem.
 
     :param fsitem: the FSItem to construct from
     :param include_exef_size: whether to include the additional ExEF size in file sizes
-    :return: a `File` or `Directory` object, or `None` if the FSItem is not a file or directory
+    :return: a `File` or `Directory` object
     """
 
     if fsitem.is_folder:

@@ -6,9 +6,10 @@ from rapidfuzz import fuzz, process
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations import get_items_in_root
 from excalibur_server.src.files.searching import file_index
 from excalibur_server.src.files.structures import File
-from excalibur_server.src.files.utils import construct_file_or_directory_old
+from excalibur_server.src.files.utils import construct_file_or_directory, construct_file_or_directory_old
 from excalibur_server.src.users import get_user
 
 
@@ -79,5 +80,19 @@ def search_endpoint(
     if root_id is None:
         return _old_search(credentials, query, limit, score_threshold, include_exef_size)
 
-    # TODO: Fix up file indexing and implement new search
-    return _old_search(credentials, query, limit, score_threshold, include_exef_size)
+    # Get all files in the user's filesystem
+    files = get_items_in_root(root_id)
+    choices = [file.name for file in files]
+
+    # Filter files by similarity score
+    results = process.extract(
+        query, choices, scorer=fuzz.WRatio, limit=limit if limit > 0 else None, score_cutoff=score_threshold * 100
+    )
+    results = [(files[result[2]], result[1] / 100) for result in results]  # 2 = index, 1 = similarity score
+
+    output = []
+    for fsitem, score in results:
+        item = construct_file_or_directory(fsitem, include_exef_size=include_exef_size)
+        output.append((item, score))
+
+    return output

@@ -77,6 +77,20 @@ def get_items_in_folder(folder_id: str) -> list[FSItem]:
             return [item.model_copy() for item in items]
 
 
+def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
+    """
+    Gets all items in a user's root directory.
+
+    :param root_id: the ID of the root directory
+    :return: a list of filesystem items
+    """
+
+    with get_session() as session:
+        with session.begin():
+            items = session.query(FSItem).filter_by(root_id=root_id).all()
+            return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
+
+
 def get_item_fullpath(item_id: uuid.UUID) -> Path:
     """
     Gets the full path of a filesystem item, relative to the user's root directory.
