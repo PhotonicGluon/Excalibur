@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
+from sqlalchemy.exc import IntegrityError
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
@@ -90,6 +91,10 @@ async def create_directory_endpoint(
 
     # Create the directory in the database
     new_folder = FSItem(name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True)
-    add_item(new_folder)
+    try:
+        add_item(new_folder)
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
+
     background_tasks.add_task(add_folder_change, credentials, path)
     return "Directory created"

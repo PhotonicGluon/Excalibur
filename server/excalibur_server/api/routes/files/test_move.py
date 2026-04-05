@@ -121,8 +121,8 @@ class TestMove:
         assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
         assert get_item_fullpath(file.id).as_posix() == "move-folder/move-into/m-file-enc"
 
-    def test_move_nonexistent(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/move/does-not-exist", json="move-folder/move-into")
+    def test_move_nonexistent(self, auth_client_db: TestClient):
+        response = auth_client_db.post("/api/files/move/does-not-exist", json="move-folder/move-into")
         assert response.status_code == 404
 
     def test_dest_same_as_current(
