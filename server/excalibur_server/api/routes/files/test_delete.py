@@ -192,7 +192,9 @@ class TestDeletePath:
     ):
         from base64 import b64encode
 
-        path_encrypted = ExEF(b"one demo 16B key").encrypt(str(get_item_fullpath(deletable_file.id)).encode("UTF-8"))
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(
+            get_item_fullpath(deletable_file.id).as_posix().encode("UTF-8")
+        )
         response = auth_client_db.delete(
             f"/api/files/delete/{b64encode(path_encrypted).decode('UTF-8')}", headers={"X-Encrypted": "true"}
         )

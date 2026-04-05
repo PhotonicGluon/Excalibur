@@ -140,6 +140,11 @@ async def move_path_endpoint(
     if not dest_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Destination not found")
 
+    # For consistency with the old approach, if the new location is the same as the current location, we raise
+    # a conflict
+    if item.parent_id == dest_folder.id:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
+
     # Move the item
     with get_session() as session:
         try:

@@ -42,7 +42,7 @@ def _old_download(path: str, username: str):
     },
     response_class=FileResponse,
 )
-async def download_file_endpoint(
+def download_file_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The file to download")],
     processed_path: str = Depends(process_path_param("path")),
@@ -59,7 +59,7 @@ async def download_file_endpoint(
     # Handle legacy users without flattened filesystem
     root_id = get_user(username).fsitem_id
     if root_id is None:
-        return await _old_download(path, username)
+        return _old_download(path, username)
 
     # Get item to be downloaded
     item = get_item_by_path(root_id, path)

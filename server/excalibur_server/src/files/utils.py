@@ -61,13 +61,13 @@ def construct_file_or_directory(fsitem: FSItem, include_exef_size: bool = False)
     """
 
     if fsitem.is_folder:
-        return Directory(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)))
+        return Directory(name=fsitem.name, fullpath=get_item_fullpath(fsitem.id).as_posix())
 
     size = fsitem.size
     if not include_exef_size:
         size -= ExEF.header_size + ExEF.footer_size
 
-    return File(name=fsitem.name, fullpath=str(get_item_fullpath(fsitem.id)), size=size, mimetype=fsitem.mimetype)
+    return File(name=fsitem.name, fullpath=get_item_fullpath(fsitem.id).as_posix(), size=size, mimetype=fsitem.mimetype)
 
 
 def listdir_old(username: str, path: Path, include_exef_size: bool = False) -> Directory | None:
@@ -120,7 +120,7 @@ def listdir(folder_id: uuid.UUID) -> Directory | None:
 
         items.append(item)
 
-    return Directory(name=folder.name, fullpath=str(get_item_fullpath(folder_id)), items=items)
+    return Directory(name=folder.name, fullpath=get_item_fullpath(folder_id).as_posix(), items=items)
 
 
 def rmitem_old(path: Path):

@@ -50,14 +50,12 @@ def test_database():
 
 @pytest.fixture(scope="session")
 def db_session(test_database: Engine):
-    """Provide a database session for tests."""
     with Session(test_database) as session:
         yield session
 
 
 @pytest.fixture(scope="session")
 def test_user(db_session: Session):
-    """Create a test user with database-based filesystem."""
     # Check if user already exists
     from excalibur_server.src.db.operations import get_user
 
