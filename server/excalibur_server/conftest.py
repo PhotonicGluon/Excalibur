@@ -1,15 +1,21 @@
 import os
 import shutil
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine, create_engine
+from sqlmodel import Session, SQLModel
 
 from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.credentials import generate_auth_token
+from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.tables import FSItem, User
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -19,14 +25,96 @@ def disable_proof_checks():
     os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "1"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def test_database():
+    # Use a test database file
+    ROOT_FOLDER.mkdir(parents=True, exist_ok=True)
+    CONFIG.storage.database.file = Path("test.duckdb")
+    db_path = ROOT_FOLDER / CONFIG.storage.database.file
+
+    # Create all tables in the test database
+    engine = create_engine(f"duckdb:///{db_path}")
+    SQLModel.metadata.create_all(engine)
+
+    try:
+        yield engine
+    finally:
+        engine.dispose()
+        try:
+            if db_path.exists():
+                db_path.unlink()
+        except PermissionError:
+            # File might be locked, that's okay for tests
+            pass
+
+
+@pytest.fixture(scope="session")
+def db_session(test_database: Engine):
+    """Provide a database session for tests."""
+    with Session(test_database) as session:
+        yield session
+
+
+@pytest.fixture(scope="session")
+def test_user(db_session: Session):
+    """Create a test user with database-based filesystem."""
+    # Check if user already exists
+    from excalibur_server.src.db.operations import get_user
+
+    if existing_user := get_user("test-user-db"):
+        return {"user": existing_user, "root_id": existing_user.fsitem_id}
+
+    # Create legacy test user (i.e., using traditional file system) for existing tests
+    legacy_test_user = User(
+        username="test-user",
+        auth_protocol=AuthProtocol.OPAQUE_3DH,
+        fsitem_id=None,  # No database filesystem for legacy user
+        auk_salt=b"test_auk_salt_16_bytes",
+        key_enc=b"test_encrypted_vault_key",
+    )
+    db_session.add(legacy_test_user)
+
+    # Create root folder for user
+    root_id = uuid.uuid4()
+    root_folder = FSItem(id=root_id, parent_id=None, root_id=root_id, name="test-user-db", is_folder=True)
+    db_session.add(root_folder)
+
+    # Create test user with database filesystem
+    db_test_user = User(
+        username="test-user-db",
+        auth_protocol=AuthProtocol.OPAQUE_3DH,
+        fsitem_id=root_id,
+        auk_salt=b"test_auk_salt_16_bytes",
+        key_enc=b"test_encrypted_vault_key",
+    )
+    db_session.add(db_test_user)
+
+    # Commit all items
+    db_session.commit()
+
+    return {"user": db_test_user, "root_id": root_id}
+
+
 @pytest.fixture(scope="class")
-def auth_client() -> TestClient:
+def auth_client(test_user) -> TestClient:
     """
     An authenticated client for testing.
     """
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
     token = generate_auth_token("test-user", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
+    with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
+        yield client
+
+
+@pytest.fixture(scope="class")
+def auth_client_db(test_user) -> TestClient:
+    """
+    An authenticated client for testing with database filesystem.
+    """
+
+    MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
+    token = generate_auth_token("test-user-db", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
 
@@ -43,6 +131,14 @@ def test_user_vault_folder(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.fixture(scope="session", autouse=True)
+def test_user_db_vault_folder(test_user_vault_folder: Path):
+    test_user_db_folder = test_user_vault_folder.parent / "test-user-db"
+    test_user_db_folder.mkdir()
+    yield test_user_db_folder
+    shutil.rmtree(test_user_db_folder)
+
+
+@pytest.fixture(scope="session", autouse=True)
 def setup_test_vault_files(test_user_vault_folder: Path):
     folder = test_user_vault_folder / "folder"
     folder.mkdir()
@@ -53,4 +149,39 @@ def setup_test_vault_files(test_user_vault_folder: Path):
     (test_user_vault_folder / "file").touch()
     (folder / "subfile").touch()
 
+    yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_db_fs_items(test_user, db_session: Session):
+    root_id = test_user["root_id"]
+
+    # Check if items already exist by looking for the folder
+    from excalibur_server.src.db.operations import get_item_by_path
+
+    existing_folder = get_item_by_path(root_id, "folder")
+    if existing_folder:
+        yield
+        return
+
+    # Create folder
+    folder = FSItem(parent_id=root_id, root_id=root_id, name="folder", is_folder=True)
+    db_session.add(folder)
+
+    # Create an empty folder
+    empty_folder = FSItem(parent_id=root_id, root_id=root_id, name="empty-folder", is_folder=True)
+    db_session.add(empty_folder)
+
+    # Create file
+    file = FSItem(parent_id=root_id, root_id=root_id, name="file", is_folder=False, size=0, mimetype="text/plain")
+    db_session.add(file)
+
+    # Create subfile in folder
+    subfile = FSItem(
+        parent_id=folder.id, root_id=root_id, name="subfile", is_folder=False, size=0, mimetype="text/plain"
+    )
+    db_session.add(subfile)
+
+    # Commit all items
+    db_session.commit()
     yield

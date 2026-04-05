@@ -158,10 +158,6 @@ async def upload_file_endpoint(
             )
 
         rmitem(existing_file)
-        try:
-            os.remove(base_path / (str(existing_file.id) + ".exef"))
-        except FileNotFoundError:
-            pass
 
     # Save the file
     new_file_id = uuid.uuid4()

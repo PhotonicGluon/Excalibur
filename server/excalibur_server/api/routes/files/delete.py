@@ -39,7 +39,8 @@ def _old_delete(
     background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
 
     # Handle deletion
-    if user_path.is_dir():
+    is_dir = user_path.is_dir()
+    if is_dir:
         if not as_dir:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete directory if `as_dir` is not set"
@@ -48,7 +49,7 @@ def _old_delete(
             raise HTTPException(status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Directory is not empty")
 
     rmitem_old(user_path)
-    response.status_code = status.HTTP_202_ACCEPTED if user_path.is_dir() else status.HTTP_200_OK
+    response.status_code = status.HTTP_202_ACCEPTED if is_dir else status.HTTP_200_OK
 
 
 @encrypted_router.delete(
