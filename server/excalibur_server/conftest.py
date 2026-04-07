@@ -32,6 +32,9 @@ def test_database():
     CONFIG.storage.database.file = Path("test.duckdb")
     db_path = ROOT_FOLDER / CONFIG.storage.database.file
 
+    if db_path.exists():
+        db_path.unlink()
+
     # Create all tables in the test database
     engine = create_engine(f"duckdb:///{db_path}")
     SQLModel.metadata.create_all(engine)
@@ -147,39 +150,4 @@ def setup_test_vault_files(test_user_vault_folder: Path):
     (test_user_vault_folder / "file").touch()
     (folder / "subfile").touch()
 
-    yield
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_db_fs_items(test_user, db_session: Session):
-    root_id = test_user["root_id"]
-
-    # Check if items already exist by looking for the folder
-    from excalibur_server.src.db.operations import get_item_by_path
-
-    existing_folder = get_item_by_path(root_id, "folder")
-    if existing_folder:
-        yield
-        return
-
-    # Create folder
-    folder = FSItem(parent_id=root_id, root_id=root_id, name="folder", is_folder=True)
-    db_session.add(folder)
-
-    # Create an empty folder
-    empty_folder = FSItem(parent_id=root_id, root_id=root_id, name="empty-folder", is_folder=True)
-    db_session.add(empty_folder)
-
-    # Create file
-    file = FSItem(parent_id=root_id, root_id=root_id, name="file", is_folder=False, size=0, mimetype="text/plain")
-    db_session.add(file)
-
-    # Create subfile in folder
-    subfile = FSItem(
-        parent_id=folder.id, root_id=root_id, name="subfile", is_folder=False, size=0, mimetype="text/plain"
-    )
-    db_session.add(subfile)
-
-    # Commit all items
-    db_session.commit()
     yield

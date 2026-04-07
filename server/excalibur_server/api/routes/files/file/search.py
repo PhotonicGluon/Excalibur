@@ -81,8 +81,8 @@ def search_endpoint(
         return _old_search(credentials, query, limit, score_threshold, include_exef_size)
 
     # Get all files in the user's filesystem
-    files = get_items_in_root(root_id)
-    choices = [file.name for file in files]
+    files = [item for item in get_items_in_root(root_id) if not item.is_folder]
+    choices = [item.name for item in files]
 
     # Filter files by similarity score
     results = process.extract(
