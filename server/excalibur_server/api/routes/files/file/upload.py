@@ -121,17 +121,13 @@ async def upload_file_endpoint(
     Uploads a file to a directory.
     """
 
-    path = processed_path
+    path = PathlibPath(processed_path).relative_to(".")
     username = credentials.username
 
     base_path = CONFIG.storage.vault_folder / username
 
     # Split path into directory and file name
     dir_path, name = os.path.split(path)
-    if dir_path == ".":
-        dir_path = ""
-
-    path = str(PathlibPath(dir_path) / name)
 
     # Check file extension
     if not name.endswith(".exef"):
@@ -150,7 +146,7 @@ async def upload_file_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
     # Check if file already exists
-    existing_file = get_item_by_path(root_id, path)
+    existing_file = get_item_by_path(root_id, str(path))
     if existing_file:
         if not force:
             raise HTTPException(
