@@ -185,12 +185,12 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipython" },
-    { name = "pytest-timeout" },
     { name = "ruff" },
 ]
 test = [
     { name = "httpx" },
     { name = "pytest" },
+    { name = "pytest-timeout" },
 ]
 
 [package.metadata]
@@ -221,12 +221,12 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipython", specifier = "~=9.10.1" },
-    { name = "pytest-timeout", specifier = ">=2.4.0" },
     { name = "ruff", specifier = ">=0.15.8" },
 ]
 test = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-timeout", specifier = ">=2.4.0" },
 ]
 
 [[package]]
