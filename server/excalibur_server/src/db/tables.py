@@ -17,7 +17,7 @@ class User(SQLModel, table=True):
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )
     "Authentication protocol to use"
-    fsitem_id: uuid.UUID = Field(nullable=True)
+    fsitem_id: uuid.UUID | None = Field(nullable=True)
     """
     ID of the user's root filesystem item.
 
