@@ -164,6 +164,7 @@ dependencies = [
     { name = "duckdb" },
     { name = "duckdb-engine" },
     { name = "fastapi" },
+    { name = "fastapi-offline" },
     { name = "gitpython" },
     { name = "packaging" },
     { name = "pycryptodome" },
@@ -200,6 +201,7 @@ requires-dist = [
     { name = "duckdb", specifier = "~=1.4.4" },
     { name = "duckdb-engine", specifier = ">=0.17.0" },
     { name = "fastapi", specifier = ">=0.135.2" },
+    { name = "fastapi-offline", specifier = ">=1.7.6" },
     { name = "gitpython", specifier = ">=3.1.46" },
     { name = "packaging", specifier = ">=25.0" },
     { name = "pycryptodome", specifier = ">=3.23.0" },
@@ -252,6 +254,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c4/73/5903c4b13beae98618d64eb9870c3fac4f605523dd0312ca5c80dadbd5b9/fastapi-0.135.2.tar.gz", hash = "sha256:88a832095359755527b7f63bb4c6bc9edb8329a026189eed83d6c1afcf419d56", size = 395833, upload-time = "2026-03-23T14:12:41.697Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/ea/18f6d0457f9efb2fc6fa594857f92810cadb03024975726db6546b3d6fcf/fastapi-0.135.2-py3-none-any.whl", hash = "sha256:0af0447d541867e8db2a6a25c23a8c4bd80e2394ac5529bd87501bbb9e240ca5", size = 117407, upload-time = "2026-03-23T14:12:43.284Z" },
+]
+
+[[package]]
+name = "fastapi-offline"
+version = "1.7.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/00/8e/6f1d86982f09ecf9d326c7313d2e6be0a96d979130a87f61022c807a7414/fastapi_offline-1.7.6.tar.gz", hash = "sha256:c84d08584faa646932951b493106992caa79b838e454f14dd410cef9a1a5e07d", size = 745483, upload-time = "2026-01-15T04:29:43.593Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/56/10bd6900c99d9ecb3d803583b3736e8d741f19f04dd39e36aa7ad776c638/fastapi_offline-1.7.6-py3-none-any.whl", hash = "sha256:24d6851b5a94c50f669594b7ab9d1bbe3a4c0a53c4f4e9ce47798ff4591790d2", size = 744654, upload-time = "2026-01-15T04:29:41.943Z" },
 ]
 
 [[package]]
