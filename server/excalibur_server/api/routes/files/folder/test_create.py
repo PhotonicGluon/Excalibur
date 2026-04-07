@@ -117,7 +117,7 @@ class TestCreateDirOld:
         assert response.status_code == 404
 
     def test_path_too_long(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/mkdir/.", json="test-" + "a" * 1000)
+        response = auth_client.post("/api/files/mkdir/.", json="test-" + "a" * 10000)
         assert response.status_code == 414
 
     def test_path_traversal(self, auth_client: TestClient):

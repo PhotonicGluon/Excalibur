@@ -184,7 +184,7 @@ class TestMove:
         response = auth_client_db.post(f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json="fake-folder")
         assert response.status_code == 404  # Destination not found
 
-    def test_rename_root(self, auth_client_db: TestClient):
+    def test_move_root(self, auth_client_db: TestClient):
         response = auth_client_db.post("/api/files/move/.", json="new-name")
         assert response.status_code == 412  # Cannot move root
 
@@ -277,11 +277,11 @@ class TestMoveOld:
         response = auth_client.post("/api/files/move/move-folder/m-file", json="fake-folder")
         assert response.status_code == 404  # Destination not found
 
-    def test_rename_root(self, auth_client: TestClient):
+    def test_move_root(self, auth_client: TestClient):
         response = auth_client.post("/api/files/move/.", json="new-name")
         assert response.status_code == 412  # Cannot move root
 
-    def test_rename_too_long(self, auth_client: TestClient, move_folder: Path):
+    def test_move_too_long(self, auth_client: TestClient, move_folder: Path):
         (move_folder / "m-file").touch()
-        response = auth_client.post("/api/files/move/move-folder/m-file", json="" + "a" * 1000)
+        response = auth_client.post("/api/files/move/move-folder/m-file", json="" + "a" * 10000)
         assert response.status_code == 414  # Path too long

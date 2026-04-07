@@ -201,5 +201,5 @@ class TestRenameOld:
 
     def test_rename_too_long(self, auth_client: TestClient, rename_folder: Path):
         (rename_folder / "r-file").touch()
-        response = auth_client.post("/api/files/rename/rename-folder/r-file", json="" + "a" * 1000)
+        response = auth_client.post("/api/files/rename/rename-folder/r-file", json="" + "a" * 10000)
         assert response.status_code == 414  # Path too long

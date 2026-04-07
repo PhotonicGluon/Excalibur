@@ -152,7 +152,7 @@ class TestCheckPathOld:
         assert response.status_code == 404
 
     def test_path_too_long(self, auth_client: TestClient):
-        response = auth_client.head("/api/files/check/path/" + "a" * 1000)
+        response = auth_client.head("/api/files/check/path/" + "a" * 10000)
         assert response.status_code == 414
 
     def test_path_traversal(self, auth_client: TestClient):
