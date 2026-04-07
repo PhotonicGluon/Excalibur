@@ -138,6 +138,7 @@ def migrate_files():
     # Code proper
     import mimetypes
     from pathlib import Path
+    from shutil import rmtree
 
     from excalibur_server.src.config import CONFIG
     from excalibur_server.src.db.operations import add_item, get_session
@@ -206,6 +207,6 @@ def migrate_files():
             if rel_dir_path == ".":
                 continue
 
-            (user_folder / rel_dir_path).rmdir()
+            rmtree(user_folder / rel_dir_path, ignore_errors=True)
 
     typer.secho("Migration complete.", fg=typer.colors.GREEN)
