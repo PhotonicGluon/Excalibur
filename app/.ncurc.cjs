@@ -10,11 +10,6 @@ module.exports = {
             return true;
         }
 
-        // Prohibit Electron v40 updates
-        if (packageName == "electron" && upgradedMajor >= 40) {
-            return false;
-        }
-
         return true;
     },
 };
