@@ -1,4 +1,3 @@
-import mimetypes
 import os
 import tempfile
 import uuid
@@ -162,8 +161,6 @@ async def upload_file_endpoint(
         while content := file.read(CONFIG.storage.write_chunk_size):
             size += await out_file.write(content)
 
-    mimetype, _ = mimetypes.guess_type(name.removesuffix(".exef"), strict=True)
-
     # Create the file in the database
     new_file = FSItem(
         id=new_file_id,
@@ -172,7 +169,6 @@ async def upload_file_endpoint(
         name=name,
         is_folder=False,
         size=size,
-        mimetype=mimetype,
     )
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)

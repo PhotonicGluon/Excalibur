@@ -68,7 +68,6 @@ class TestDirectoryChangesListener:
             name="test",
             is_folder=False,
             size=size,
-            mimetype="text/plain",
         )
         db_session.add(file)
         db_session.commit()

@@ -46,25 +46,46 @@ class TestSearch:
 
         # Make test files
         file1 = FSItem(
-            parent_id=folder.id, root_id=root_id, name="apple-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=folder.id,
+            root_id=root_id,
+            name="apple-fruit-file.exef",
+            size=1234,
         )
         file2 = FSItem(
-            parent_id=folder.id, root_id=root_id, name="banana-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=folder.id,
+            root_id=root_id,
+            name="banana-fruit-file.exef",
+            size=1234,
         )
         file3 = FSItem(
-            parent_id=folder.id, root_id=root_id, name="snapple-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=folder.id,
+            root_id=root_id,
+            name="snapple-fruit-file.exef",
+            size=1234,
         )
         file4 = FSItem(
-            parent_id=folder.id, root_id=root_id, name="cherry-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=folder.id,
+            root_id=root_id,
+            name="cherry-fruit-file.exef",
+            size=1234,
         )
         file5 = FSItem(
-            parent_id=subfolder.id, root_id=root_id, name="dragon-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=subfolder.id,
+            root_id=root_id,
+            name="dragon-fruit-file.exef",
+            size=1234,
         )
         file6 = FSItem(
-            parent_id=subfolder.id, root_id=root_id, name="elderberry-fruit-file.exef", size=1234, mimetype="text/plain"
+            parent_id=subfolder.id,
+            root_id=root_id,
+            name="elderberry-fruit-file.exef",
+            size=1234,
         )
         file7 = FSItem(
-            parent_id=root_id, root_id=root_id, name="some-random-file.exef", size=1234, mimetype="text/plain"
+            parent_id=root_id,
+            root_id=root_id,
+            name="some-random-file.exef",
+            size=1234,
         )
 
         db_session.add(file1)

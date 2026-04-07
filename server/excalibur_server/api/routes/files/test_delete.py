@@ -29,7 +29,6 @@ class TestDeletePath:
             name="test-delete.txt.exef",
             is_folder=False,
             size=size,
-            mimetype="text/plain",
         )
         db_session.add(file)
         db_session.commit()
@@ -89,7 +88,6 @@ class TestDeletePath:
             name="test-delete.txt.exef",
             is_folder=False,
             size=size,
-            mimetype="text/plain",
         )
         db_session.add(file1)
 
@@ -104,7 +102,6 @@ class TestDeletePath:
             name="test-delete2.txt.exef",
             is_folder=False,
             size=size,
-            mimetype="text/plain",
         )
         db_session.add(file2)
 

@@ -136,7 +136,6 @@ def migrate_files():
         return
 
     # Code proper
-    import mimetypes
     from pathlib import Path
     from shutil import rmtree
 
@@ -179,14 +178,13 @@ def migrate_files():
                 continue
 
             # Create new FSItem for the file
-            mimetype, _ = mimetypes.guess_type(abs_path.name.removesuffix(".exef"), strict=True)
             file_item = FSItem(
                 parent_id=directories[str(path.parent)],
                 root_id=root_id,
                 name=path.name,
                 is_folder=False,
                 size=abs_path.stat().st_size,
-                mimetype=mimetype,
+                timestamp=int(abs_path.stat().st_mtime),
             )
             file_renaming_map[abs_path] = f"{file_item.id}.exef"
             add_item(file_item)

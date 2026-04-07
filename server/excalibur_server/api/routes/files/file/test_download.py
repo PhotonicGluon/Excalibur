@@ -38,7 +38,6 @@ class TestDownload:
             name="test-file.txt.exef",
             is_folder=False,
             size=size,
-            mimetype="text/plain",
         )
         db_session.add(file)
 

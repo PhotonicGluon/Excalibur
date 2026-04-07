@@ -1,4 +1,6 @@
+import mimetypes
 import uuid
+from time import time
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
@@ -83,8 +85,20 @@ class FSItem(SQLModel, table=True):
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    mimetype: str | None = Field(nullable=True)
-    "MIME type of the file, or None for folders"
+    timestamp: int = Field(nullable=False, default_factory=lambda: int(time()))
+    "Creation timestamp of the item"
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
+
+    @property
+    def mimetype(self) -> str | None:
+        """
+        :returns: MIME type of the file, or None for folders
+        """
+
+        if self.is_folder:
+            return None
+
+        mimetype, _ = mimetypes.guess_type(self.name.removesuffix(".exef"), strict=True)
+        return mimetype

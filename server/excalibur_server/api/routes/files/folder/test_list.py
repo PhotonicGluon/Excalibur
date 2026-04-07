@@ -33,14 +33,12 @@ class TestListdir:
             root_id=root_id,
             name="test-file.txt.exef",
             size=100,
-            mimetype="text/plain",
         )
         file2 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="test-file2.txt.exef",
             size=100,
-            mimetype="text/plain",
         )
         db_session.add(file1)
         db_session.add(file2)
