@@ -1,5 +1,4 @@
-# ruff: noqa: E402
-# isort: skip_file
+# ruff: noqa: E402, I001
 from pathlib import Path
 from typing import Annotated
 
@@ -64,6 +63,7 @@ app.add_typer(logging_app, name="logs")
 app.add_typer(user_app, name="user")
 
 # Expose other commands
+from .backup import create_backup as create_backup
 from .init_server import init_server as init_server
 from .start_server import start_server as start_server
 from .reset_server import reset_server as reset_server
