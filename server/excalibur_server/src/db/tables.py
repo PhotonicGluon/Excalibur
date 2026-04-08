@@ -30,6 +30,8 @@ class User(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
+    obfuscated_names: bool = Field(default=True)
+    "Whether the file and folder names are obfuscated"
 
     # Secure Remote Password (SRP)
     # TODO: Deprecate SRP fields in next version

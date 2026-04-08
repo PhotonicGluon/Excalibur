@@ -8,4 +8,6 @@ export interface HandshakeData {
 export interface E2EEData extends HandshakeData {
     /** Account unlock key (AUK) */
     auk: Buffer;
+    /** Whether file names are obfuscated */
+    obfuscatedNames: boolean;
 }

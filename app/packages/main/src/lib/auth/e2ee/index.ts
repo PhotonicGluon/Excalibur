@@ -46,8 +46,9 @@ async function e2ee(
     }
     const aukSalt = securityDetailsResponse.aukSalt!;
     const authProtocol = securityDetailsResponse.authProtocol!;
+    const obfuscatedNames = securityDetailsResponse.obfuscatedNames!;
     console.debug(
-        `Loaded security details with salt '${aukSalt.toString("hex")}' and authentication protocol '${authProtocol}'`,
+        `Obtained security details: salt '${aukSalt.toString("hex")}', authentication protocol '${authProtocol}', and obfuscated names '${obfuscatedNames}'`,
     );
 
     // If currently on SRP, prompt user whether to upgrade to OPAQUE
@@ -131,6 +132,7 @@ async function e2ee(
     // Return E2EE data
     return {
         auk,
+        obfuscatedNames,
         ...handshakeData!,
     };
 }

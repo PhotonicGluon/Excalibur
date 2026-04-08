@@ -1,5 +1,5 @@
 """
-Add 'timestamp' field to FSItem
+Add `timestamp` field to 'FSItem' table
 
 Revision ID: 361c367ebe1e
 Revises: b8f3c0bbad87

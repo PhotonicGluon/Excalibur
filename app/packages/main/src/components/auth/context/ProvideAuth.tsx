@@ -147,19 +147,21 @@ function useProvideAuth(): AuthProvider {
 
 function serializeAuthInfo(data: AuthInfo) {
     return JSON.stringify({
-        username: data.username,
         key: data.key.toString("hex"),
-        auk: data.auk.toString("hex"),
         token: data.token,
+        auk: data.auk.toString("hex"),
+        obfuscatedNames: data.obfuscatedNames,
+        username: data.username,
     });
 }
 
 function deserializeAuthInfo(data: string): AuthInfo {
     const parsed = JSON.parse(data);
     return {
-        username: parsed.username,
         key: Buffer.from(parsed.key, "hex"),
-        auk: Buffer.from(parsed.auk, "hex"),
         token: parsed.token,
+        auk: Buffer.from(parsed.auk, "hex"),
+        obfuscatedNames: parsed.obfuscatedNames,
+        username: parsed.username,
     };
 }
