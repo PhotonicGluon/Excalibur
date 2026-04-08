@@ -7,7 +7,6 @@ from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_items_in_root
 from excalibur_server.src.files.structures import File
-from excalibur_server.src.files.utils import construct_file_or_directory
 from excalibur_server.src.users import get_user
 
 
@@ -68,7 +67,7 @@ def search_endpoint(
 
     output = []
     for fsitem, score in results:
-        item = construct_file_or_directory(fsitem, include_exef_size=include_exef_size)
+        item = File.from_fsitem(fsitem, include_exef_size=include_exef_size)
         output.append((item, score))
 
     return output

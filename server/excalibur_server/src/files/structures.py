@@ -1,6 +1,11 @@
-from typing import Literal, Union
+from pathlib import Path
+from typing import Literal, Self, Union
 
 from pydantic import BaseModel
+
+from excalibur_server.src.db.operations import get_item_fullpath
+from excalibur_server.src.db.tables import FSItem
+from excalibur_server.src.exef import ExEF
 
 
 class Filelike(BaseModel):
@@ -9,6 +14,38 @@ class Filelike(BaseModel):
 
     fullpath: str
     "Path to the item from the root directory"
+
+    @classmethod
+    def _get_base_fields(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> dict:
+        """
+        Get common fields for Filelike objects
+
+        :param fsitem: `FSItem` to get fields from
+        :param parent_dir_path: parent directory path, defaults to None
+        :return: dictionary of common fields
+        """
+
+        if parent_dir_path:
+            fullpath = parent_dir_path / fsitem.name
+        else:
+            fullpath = get_item_fullpath(fsitem.id)
+
+        return {
+            "name": fsitem.name,
+            "fullpath": fullpath.as_posix(),
+        }
+
+    @classmethod
+    def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
+        """
+        Create a Filelike instance from an FSItem.
+
+        :param fsitem: `FSItem` to create instance from
+        :param parent_dir_path: parent directory path, defaults to None
+        :return: Filelike instance
+        """
+
+        return cls(**cls._get_base_fields(fsitem, parent_dir_path))
 
 
 class File(Filelike):
@@ -20,9 +57,44 @@ class File(Filelike):
     mimetype: str | None
     "MIME type of the file, or None if unknown"
 
+    @classmethod
+    def from_fsitem(cls, fsitem: FSItem, include_exef_size: bool = False, parent_dir_path: Path | None = None) -> Self:
+        """
+        Create a File instance from an FSItem.
+
+        :param fsitem: `FSItem` to create instance from
+        :param include_exef_size: whether to include ExEF size in the file size, defaults to False
+        :param parent_dir_path: parent directory path, defaults to None
+        :return: File instance
+        """
+
+        size = fsitem.size
+        if not include_exef_size:
+            size -= ExEF.header_size + ExEF.footer_size
+
+        base_fields = cls._get_base_fields(fsitem, parent_dir_path)
+        return cls(
+            **base_fields,
+            size=size,
+            mimetype=fsitem.mimetype,
+        )
+
 
 class Directory(Filelike):
     type: Literal["directory"] = "directory"
 
     items: list[Union[File, "Directory"]] | None = None
     "List of filelike instances in the directory"
+
+    @classmethod
+    def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
+        """
+        Create a Directory instance from an FSItem.
+
+        :param fsitem: `FSItem` to create instance from
+        :param parent_dir_path: parent directory path, defaults to None
+        :return: Directory instance
+        """
+
+        base_fields = cls._get_base_fields(fsitem, parent_dir_path)
+        return cls(**base_fields)
