@@ -32,7 +32,7 @@ def ui():
         typer.secho("Stopping DuckDB UI server...", fg="yellow")
         sql("CALL stop_ui_server();")
         typer.secho("DuckDB UI server stopped.", fg="green")
-        typer.Exit(0)
+        raise typer.Exit(0)
 
 
 @db_app.command()
