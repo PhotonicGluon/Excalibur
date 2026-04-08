@@ -19,11 +19,13 @@ class User(SQLModel, table=True):
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )
     "Authentication protocol to use"
-    fsitem_id: uuid.UUID | None = Field(nullable=True)
+    fsitem_id: uuid.UUID = Field(nullable=True)  # TODO: Remove nullable in next version
     """
     ID of the user's root filesystem item.
 
-    A `None` means that the user does not use a database-based filesystem.
+    A `None` means that the user does not use a database-based filesystem. This is for legacy users
+    who were created before the database-based filesystem was implemented, and meant for migration
+    purposes.
 
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.

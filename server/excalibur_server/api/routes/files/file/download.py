@@ -8,7 +8,6 @@ from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item_by_path
-from excalibur_server.src.path import check_path_subdir
 from excalibur_server.src.users import get_user
 
 
@@ -16,18 +15,6 @@ class FileResponse(FastAPIFileResponse):
     # For some reason, the file response chunk size is configured as a class variable.
     # So, if we want to change it, we need to update the class variable directly, which is a bit weird but works
     chunk_size = CONFIG.storage.send_chunk_size
-
-
-def _old_download(path: str, username: str):
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not (user_path.exists() and user_path.is_file()):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
-
-    return FileResponse(user_path, media_type="application/octet-stream")
 
 
 @encrypted_router.get(
@@ -56,12 +43,8 @@ def download_file_endpoint(
     path = processed_path
     username = credentials.username
 
-    # Handle legacy users without flattened filesystem
-    root_id = get_user(username).fsitem_id
-    if root_id is None:
-        return _old_download(path, username)
-
     # Get item to be downloaded
+    root_id = get_user(username).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item or item.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")

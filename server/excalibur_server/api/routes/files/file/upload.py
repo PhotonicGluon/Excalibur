@@ -15,7 +15,6 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import add_item, get_item_by_path
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.utils import rmitem
-from excalibur_server.src.path import check_path_length, check_path_subdir
 from excalibur_server.src.users import get_user
 
 
@@ -35,48 +34,6 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
         yield spooled_file
     finally:
         spooled_file.close()
-
-
-async def _old_upload(
-    base_path: PathlibPath,
-    dir_path: str,
-    name: str,
-    background_tasks: BackgroundTasks,
-    credentials: Credentials,
-    force: bool,
-    file: tempfile.SpooledTemporaryFile,
-):
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(dir_path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not (user_path.exists() and user_path.is_dir()):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
-
-    # Check file path length
-    file_path = user_path / name
-    if not check_path_length(file_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
-
-    # Check for any attempts at path traversal again
-    _, valid = check_path_subdir(file_path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    # Check if file already exists
-    if not force and file_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
-        )
-
-    # Save the file
-    async with aiofiles.open(file_path, "wb") as out_file:
-        while content := file.read(CONFIG.storage.write_chunk_size):
-            await out_file.write(content)
-
-    background_tasks.add_task(add_folder_change, credentials, dir_path)
-    return "File uploaded"
 
 
 @encrypted_router.post(
@@ -134,12 +91,8 @@ async def upload_file_endpoint(
             status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Uploaded file needs to end with `.exef`"
         )
 
-    # Handle legacy users without flattened filesystem
-    root_id = get_user(username).fsitem_id
-    if root_id is None:
-        return await _old_upload(base_path, dir_path, name, background_tasks, credentials, force, file)
-
     # Get parent ID
+    root_id = get_user(username).fsitem_id
     parent = get_item_by_path(root_id, dir_path)
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")

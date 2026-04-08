@@ -1,6 +1,4 @@
-import os
-from pathlib import Path as PathlibPath
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
@@ -9,84 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, get_session
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.path import check_path_length, check_path_subdir
 from excalibur_server.src.users import get_user
-
-
-def _move_helper(
-    background_tasks: BackgroundTasks,
-    credentials: Credentials,
-    modification_type: Literal["move", "rename"],
-    path: str,
-    new_folder: PathlibPath | None,
-    new_name: str,
-):
-    """
-    Helper method for moving or renaming a file or directory.
-
-    :param background_tasks: The background tasks to add the folder change to
-    :param credentials: The credentials of the user
-    :param modification_type: The type of modification to perform
-    :param path: The path of the file or directory to move or rename
-    :param new_folder: The new location of the file or directory, or None to keep in current
-        location
-    :param new_name: The new name of the file or directory
-    :raises HTTPException: If the given path leads to a path traversal
-    :raises HTTPException: If the given path does not exist
-    :raises HTTPException: If the given path refers to the root directory
-    :raises HTTPException: If the new path leads to a path traversal
-    :raises HTTPException: If the new path is too long
-    :raises HTTPException: If the new path already exists
-    """
-
-    username = credentials.username
-    base_path = CONFIG.storage.vault_folder / username
-
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not user_path.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
-
-    # Check if user is trying to rename root directory
-    if user_path == CONFIG.storage.vault_folder / PathlibPath(username):
-        raise HTTPException(
-            status_code=status.HTTP_412_PRECONDITION_FAILED, detail=f"Cannot {modification_type} root directory"
-        )
-
-    # Check if new folder exists
-    if new_folder is None:
-        new_folder = user_path.parent
-
-    # Check for any attempts at path traversal again
-    new_path, valid = check_path_subdir(new_folder / new_name, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    # Check new file path length
-    if not check_path_length(new_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
-
-    # Check if file already exists
-    if new_path.exists():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
-
-    # Rename the file
-    try:
-        user_path.rename(new_path)
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Destination not found")
-    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
-
-
-def _old_move(background_tasks: BackgroundTasks, credentials: Credentials, path: str, new_location: str):
-    _move_helper(background_tasks, credentials, "move", path, PathlibPath(new_location), os.path.basename(path))
-    return "Item moved"
 
 
 @encrypted_router.post(
@@ -121,12 +44,8 @@ async def move_path_endpoint(
     path = processed_path
     username = credentials.username
 
-    # Handle legacy users without flattened filesystem
-    root_id = get_user(username).fsitem_id
-    if root_id is None:
-        return _old_move(background_tasks, credentials, path, new_location)
-
     # Get the item to move
+    root_id = get_user(username).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")

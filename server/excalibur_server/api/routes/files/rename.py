@@ -6,16 +6,10 @@ from sqlalchemy.exc import IntegrityError
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
-from excalibur_server.api.routes.files.move import _move_helper
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, get_session
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.users import get_user
-
-
-def _old_rename(background_tasks: BackgroundTasks, credentials: Credentials, path: str, new_name: str):
-    _move_helper(background_tasks, credentials, "rename", path, None, new_name)
-    return "Item renamed"
 
 
 @encrypted_router.post(
@@ -50,12 +44,8 @@ async def rename_path_endpoint(
     path = processed_path
     username = credentials.username
 
-    # Handle legacy users without flattened filesystem
-    root_id = get_user(username).fsitem_id
-    if root_id is None:
-        return _old_rename(background_tasks, credentials, path, new_name)
-
     # Get the item to rename
+    root_id = get_user(username).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
