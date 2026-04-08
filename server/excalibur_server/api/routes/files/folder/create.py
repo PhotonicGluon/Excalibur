@@ -2,12 +2,14 @@ from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
+from sqlalchemy.exc import IntegrityError
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.config import CONFIG
-from excalibur_server.src.path import check_path_length, check_path_subdir
+from excalibur_server.src.db.operations import add_item, get_item_by_path
+from excalibur_server.src.db.tables import FSItem
+from excalibur_server.src.users import get_user
 
 
 @encrypted_router.post(
@@ -42,32 +44,19 @@ async def create_directory_endpoint(
 
     path = processed_path
     username = credentials.username
-    base_path = CONFIG.storage.vault_folder / username
 
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not (user_path.exists() and user_path.is_dir()):
+    # Get parent ID
+    root_id = get_user(username).fsitem_id
+    parent = get_item_by_path(root_id, path)
+    if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    # Check for any attempts at path traversal, again
-    dir_path, valid = check_path_subdir(name, user_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    # Check directory path length
-    dir_path = user_path / name
-    if not check_path_length(dir_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="Directory path too long")
-
-    # Check if directory already exists
-    if dir_path.exists():
+    # Create the directory in the database
+    new_folder = FSItem(name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True)
+    try:
+        add_item(new_folder)
+    except IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
-
-    # Create the directory
-    dir_path.mkdir(parents=True)
 
     background_tasks.add_task(add_folder_change, credentials, path)
     return "Directory created"

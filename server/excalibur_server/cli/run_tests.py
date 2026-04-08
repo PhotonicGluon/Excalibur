@@ -23,7 +23,7 @@ def run_tests(
 
     if not importlib.util.find_spec("pytest"):
         typer.secho("Error: `pytest` not found. Please install the developer dependencies.", fg="red")
-        typer.Exit(1)
+        raise typer.Exit(1)
 
     import os
     import subprocess
@@ -39,4 +39,4 @@ def run_tests(
         args += [str(file) for file in files]
 
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1"
-    typer.Exit(subprocess.call(["pytest", *args]))
+    raise typer.Exit(subprocess.call(["pytest", *args]))

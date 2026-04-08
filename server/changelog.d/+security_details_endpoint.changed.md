@@ -1,1 +1,1 @@
-🗃️ Added authentication protocol information to the security details endpoint
+🗃️ Added authentication protocol information (`auth_protocol`) to be returned by the security details endpoint (`/api/users/security/{username}`)

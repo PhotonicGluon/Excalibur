@@ -1,112 +1,187 @@
-import shutil
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 
 
-@pytest.fixture(scope="class")
-def move_folder(test_user_vault_folder: Path):
-    # Create a folder that contains the test items
-    containing_folder = test_user_vault_folder / "move-folder"
-    containing_folder.mkdir()
+class TestMove:
+    @pytest.fixture()
+    def move_folder(self, test_user, db_session: Session) -> FSItem:
+        root_id = test_user["root_id"]
 
-    # Create a folder that we can move items into
-    move_folder = containing_folder / "move-into"
-    move_folder.mkdir()
+        # Create a folder that contains the test items
+        containing_folder = FSItem(
+            parent_id=root_id,
+            root_id=root_id,
+            name="move-folder",
+            is_folder=True,
+        )
+        db_session.add(containing_folder)
 
-    # Yield only the containing folder
-    yield containing_folder
-    shutil.rmtree(move_folder)
-    shutil.rmtree(containing_folder)
+        # Create a folder that we can move items into
+        move_folder = FSItem(
+            parent_id=containing_folder.id,
+            root_id=root_id,
+            name="move-into",
+            is_folder=True,
+        )
+        db_session.add(move_folder)
 
+        # Commit and yield only the containing folder
+        db_session.commit()
+        yield containing_folder
 
-def test_no_auth():
-    response = TestClient(app).post("/api/files/move/m-file", json="move-folder/move-into")
-    assert response.status_code == 401
+        # Clean up
+        if get_item(containing_folder.id) is not None:
+            db_session.delete(move_folder)
+            db_session.delete(containing_folder)
+            db_session.commit()
 
+    def test_no_auth(self):
+        response = TestClient(app).post("/api/files/move/m-file", json="move-folder/move-into")
+        assert response.status_code == 401
 
-def test_move(auth_client: TestClient, test_user_vault_folder: Path, move_folder: Path):
-    # Move file should work
-    (move_folder / "m-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-file", json="move-folder/move-into")
-    assert response.status_code == 200
-    assert not (move_folder / "m-file").exists()
-    assert (move_folder / "move-into" / "m-file").exists()
+    def test_move(self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem):
+        root_id = test_user["root_id"]
 
-    # Move folder should work
-    (move_folder / "m-folder").mkdir()
-    response = auth_client.post("/api/files/move/move-folder/m-folder", json="move-folder/move-into")
-    assert response.status_code == 200
-    assert not (move_folder / "m-folder").exists()
-    assert (move_folder / "move-into" / "m-folder").exists()
+        # Create test file
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
 
-    # Root folder moving should work
-    (move_folder / "m-root-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-root-file", json=".")  # Move into root
-    assert response.status_code == 200
-    assert not (move_folder / "m-root-file").exists()
-    assert (test_user_vault_folder / "m-root-file").exists()
+        # Move item into folder
+        response = auth_client_db.post(
+            f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json="move-folder/move-into"
+        )
+        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
+        assert get_item_fullpath(file.id).as_posix() == "move-folder/move-into/m-file"
 
-    response = auth_client.post("/api/files/move/does-not-exist", json="move-folder/move-into")
-    assert response.status_code == 404
+    def test_move_into_root(self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem):
+        root_id = test_user["root_id"]
 
+        # Create test file
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file-root",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
 
-def test_move_with_encrypted_path(auth_client: TestClient, move_folder: Path):
-    from base64 import b64encode
+        # Move item into root
+        response = auth_client_db.post(f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json=".")
+        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
+        assert get_item_fullpath(file.id).as_posix() == "m-file-root"
 
-    (move_folder / "m-file").touch()
+    def test_move_with_encrypted_path(
+        self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem
+    ):
+        from base64 import b64encode
 
-    headers = {
-        "Content-Type": "application/octet-stream",
-        "X-Encrypted": "true",
-        "X-Content-Type": "text/plain",
-    }
-    path_encrypted = ExEF(b"one demo 16B key").encrypt(b"move-folder/m-file")
-    destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"move-folder/move-into")
-    response = auth_client.post(
-        f"/api/files/move/{b64encode(path_encrypted, altchars=b'-_').decode('utf-8')}",
-        headers=headers,
-        content=destination_encrypted,
-    )
+        root_id = test_user["root_id"]
 
-    assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
-    assert not (move_folder / "m-file").exists()
-    assert (move_folder / "move-into" / "m-file").exists()
+        # Create test file
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file-enc",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
 
+        # Prepare request
+        headers = {
+            "Content-Type": "application/octet-stream",
+            "X-Encrypted": "true",
+            "X-Content-Type": "text/plain",
+        }
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(get_item_fullpath(file.id).as_posix().encode("utf-8"))
+        destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"move-folder/move-into")
 
-def test_path_traversal(auth_client: TestClient, move_folder: Path):
-    # Initial access path traversal should fail
-    response = auth_client.post("/api/files/move/%2E%2E/oh-no", json="new-name")  # %2E%2E = ..
-    assert response.status_code == 406
+        # Make request
+        response = auth_client_db.post(
+            f"/api/files/move/{b64encode(path_encrypted, altchars=b'-_').decode('utf-8')}",
+            headers=headers,
+            content=destination_encrypted,
+        )
+        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content).decode("UTF-8")
+        assert get_item_fullpath(file.id).as_posix() == "move-folder/move-into/m-file-enc"
 
-    # Renamed path traversal should fail
-    (move_folder / "m-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-file", json="../../oh-no")
-    assert response.status_code == 406
+    def test_move_nonexistent(self, auth_client_db: TestClient):
+        response = auth_client_db.post("/api/files/move/does-not-exist", json="move-folder/move-into")
+        assert response.status_code == 404
 
+    def test_dest_same_as_current(
+        self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem
+    ):
+        root_id = test_user["root_id"]
 
-def test_already_exists(auth_client: TestClient, move_folder: Path):
-    (move_folder / "m-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-file", json="move-folder")
-    assert response.status_code == 409  # Item already exists
+        # Create test file
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file-same-as-current",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
 
+        response = auth_client_db.post(f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json="move-folder")
+        assert response.status_code == 409  # Item already exists
 
-def test_destination_nonexistent(auth_client: TestClient, move_folder: Path):
-    (move_folder / "m-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-file", json="fake-folder")
-    assert response.status_code == 404  # Destination not found
+    def test_already_exists(self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem):
+        root_id = test_user["root_id"]
 
+        # Create test files
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file-already-exists",
+            is_folder=False,
+        )
+        existing_file = FSItem(
+            parent_id=root_id,
+            root_id=root_id,
+            name="m-file-already-exists",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.add(existing_file)
+        db_session.commit()
 
-def test_rename_root(auth_client: TestClient):
-    response = auth_client.post("/api/files/move/.", json="new-name")
-    assert response.status_code == 412  # Cannot move root
+        response = auth_client_db.post(f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json=".")
+        assert response.status_code == 409  # Item already exists
 
+    def test_destination_nonexistent(
+        self, auth_client_db: TestClient, test_user, db_session: Session, move_folder: FSItem
+    ):
+        root_id = test_user["root_id"]
 
-def test_rename_too_long(auth_client: TestClient, move_folder: Path):
-    (move_folder / "m-file").touch()
-    response = auth_client.post("/api/files/move/move-folder/m-file", json="" + "a" * 1000)
-    assert response.status_code == 414  # Path too long
+        # Create test file
+        file = FSItem(
+            parent_id=move_folder.id,
+            root_id=root_id,
+            name="m-file-dest-dne",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
+
+        response = auth_client_db.post(f"/api/files/move/{get_item_fullpath(file.id).as_posix()}", json="fake-folder")
+        assert response.status_code == 404  # Destination not found
+
+    def test_move_root(self, auth_client_db: TestClient):
+        response = auth_client_db.post("/api/files/move/.", json="new-name")
+        assert response.status_code == 412  # Cannot move root

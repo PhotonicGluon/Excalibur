@@ -7,7 +7,8 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.path import check_path_subdir
+from excalibur_server.src.db.operations import get_item_by_path
+from excalibur_server.src.users import get_user
 
 
 class FileResponse(FastAPIFileResponse):
@@ -28,7 +29,7 @@ class FileResponse(FastAPIFileResponse):
     },
     response_class=FileResponse,
 )
-async def download_file_endpoint(
+def download_file_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The file to download")],
     processed_path: str = Depends(process_path_param("path")),
@@ -42,12 +43,14 @@ async def download_file_endpoint(
     path = processed_path
     username = credentials.username
 
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, CONFIG.storage.vault_folder / username)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not (user_path.exists() and user_path.is_file()):
+    # Get item to be downloaded
+    root_id = get_user(username).fsitem_id
+    item = get_item_by_path(root_id, path)
+    if not item or item.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
 
-    return FileResponse(user_path, media_type="application/octet-stream")
+    return FileResponse(
+        CONFIG.storage.vault_folder / username / (str(item.id) + ".exef"),
+        media_type="application/octet-stream",
+        filename=item.name,
+    )

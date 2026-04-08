@@ -1,4 +1,3 @@
-import shutil
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, status
@@ -7,8 +6,9 @@ from fastapi.responses import Response
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.config import CONFIG
-from excalibur_server.src.path import check_path_subdir
+from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, is_dir_empty
+from excalibur_server.src.files.utils import rmitem
+from excalibur_server.src.users import get_user
 
 
 @encrypted_router.delete(
@@ -44,34 +44,26 @@ def delete_endpoint(
 
     path = processed_path
     username = credentials.username
-    base_path = CONFIG.storage.vault_folder / username
 
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not user_path.exists():
+    # Get item to delete
+    root_id = get_user(username).fsitem_id
+    item = get_item_by_path(root_id, path)
+    if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
 
-    # Check if user is trying to delete root directory
-    if user_path == base_path:
+    # Prohibit deletion of the root directory
+    if item.id == root_id:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
-    background_tasks.add_task(add_folder_change, credentials, str(user_path.relative_to(base_path).parent))
-
     # Handle deletion
-    if user_path.is_dir():
+    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
+    if item.is_folder:
         if not as_dir:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete directory if `as_dir` is not set"
             )
-        if not force and any(user_path.iterdir()):
+        if not force and not is_dir_empty(item.id):
             raise HTTPException(status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Directory is not empty")
 
-        shutil.rmtree(user_path)
-        response.status_code = status.HTTP_202_ACCEPTED
-        return
-
-    user_path.unlink()
-    response.status_code = status.HTTP_200_OK
+    rmitem(item)
+    response.status_code = status.HTTP_202_ACCEPTED if item.is_folder else status.HTTP_200_OK

@@ -1,5 +1,7 @@
 import os
 import tempfile
+import uuid
+from pathlib import Path as PathlibPath
 from typing import Annotated, Generator
 
 import aiofiles
@@ -10,15 +12,18 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.path import check_path_length, check_path_subdir
+from excalibur_server.src.db.operations import add_item, get_item_by_path
+from excalibur_server.src.db.tables import FSItem
+from excalibur_server.src.files.utils import rmitem
+from excalibur_server.src.users import get_user
 
 
-async def get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
+async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
     """
     A dependency that creates a spooled temporary file from the request body.
 
-    :param request: The request object
-    :yield: The spooled temporary file
+    :param request: the request object
+    :yield: the spooled temporary file
     """
 
     spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)
@@ -65,18 +70,20 @@ async def upload_file_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path where the file will be placed (must end with `.exef`)")],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
-    file: tempfile.SpooledTemporaryFile = Depends(get_spooled_file),
+    file: tempfile.SpooledTemporaryFile = Depends(_get_spooled_file),
     processed_path: str = Depends(process_path_param("path")),
 ):
     """
     Uploads a file to a directory.
     """
 
+    path = PathlibPath(processed_path).relative_to(".")
     username = credentials.username
+
     base_path = CONFIG.storage.vault_folder / username
 
     # Split path into directory and file name
-    path, name = os.path.split(processed_path)
+    dir_path, name = os.path.split(path)
 
     # Check file extension
     if not name.endswith(".exef"):
@@ -84,34 +91,38 @@ async def upload_file_endpoint(
             status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Uploaded file needs to end with `.exef`"
         )
 
-    # Check for any attempts at path traversal
-    user_path, valid = check_path_subdir(path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
-    if not (user_path.exists() and user_path.is_dir()):
+    # Get parent ID
+    root_id = get_user(username).fsitem_id
+    parent = get_item_by_path(root_id, dir_path)
+    if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
-    # Check file path length
-    file_path = user_path / name
-    if not check_path_length(file_path):
-        raise HTTPException(status_code=status.HTTP_414_URI_TOO_LONG, detail="File path too long")
-
-    # Check for any attempts at path traversal again
-    _, valid = check_path_subdir(file_path, base_path)
-    if not valid:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Illegal or invalid path")
-
     # Check if file already exists
-    if not force and file_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
-        )
+    existing_file = get_item_by_path(root_id, str(path))
+    if existing_file:
+        if not force:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
+            )
+
+        rmitem(existing_file)
 
     # Save the file
-    async with aiofiles.open(file_path, "wb") as out_file:
+    new_file_id = uuid.uuid4()
+    size = 0
+    async with aiofiles.open(base_path / (str(new_file_id) + ".exef"), "wb") as out_file:
         while content := file.read(CONFIG.storage.write_chunk_size):
-            await out_file.write(content)
+            size += await out_file.write(content)
 
-    background_tasks.add_task(add_folder_change, credentials, path)
+    # Create the file in the database
+    new_file = FSItem(
+        id=new_file_id,
+        parent_id=parent.id,
+        root_id=parent.root_id,
+        name=name,
+        is_folder=False,
+        size=size,
+    )
+    add_item(new_file)
+    background_tasks.add_task(add_folder_change, credentials, dir_path)
     return "File uploaded"

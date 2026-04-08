@@ -7,7 +7,7 @@ from . import CLI_DIR, get_alembic_config
 
 ALEMBIC_DIR = CLI_DIR.parent / "alembic"
 
-db_app = typer.Typer(no_args_is_help=True, help="Wrappers for Alembic commands.")
+db_app = typer.Typer(no_args_is_help=True, help="Wrappers for database-related or Alembic commands.")
 
 
 # Add commands
@@ -32,7 +32,7 @@ def ui():
         typer.secho("Stopping DuckDB UI server...", fg="yellow")
         sql("CALL stop_ui_server();")
         typer.secho("DuckDB UI server stopped.", fg="green")
-        typer.Exit(0)
+        raise typer.Exit(0)
 
 
 @db_app.command()
@@ -113,3 +113,98 @@ def current(
 
     alembic_cfg = get_alembic_config()
     command.current(alembic_cfg, verbose=verbose)
+
+
+@db_app.command()
+def migrate_files():
+    """
+    Migrate files from the old operating-system dependent system to the new database-backed system.
+
+    Will be removed in a future release.
+    """
+
+    # Warn about migration
+    typer.echo(
+        "This will migrate files from the old operating-system dependent system to the new database-backed system."
+    )
+    typer.secho("Please ensure that the database revision is up-to-date.", fg=typer.colors.YELLOW)
+    typer.echo("Press Enter to continue...")
+    try:
+        input()
+    except KeyboardInterrupt:
+        typer.secho("Aborted.", fg=typer.colors.YELLOW)
+        return
+
+    # Code proper
+    from pathlib import Path
+    from shutil import rmtree
+
+    from excalibur_server.src.config import CONFIG
+    from excalibur_server.src.db.operations import add_item, get_session
+    from excalibur_server.src.db.tables import FSItem, User
+
+    vault_folder = CONFIG.storage.vault_folder
+
+    # Get users that need to be migrated
+    with get_session() as session:
+        with session.begin():
+            users = session.query(User).all()
+            users = [user.model_copy() for user in users if user.fsitem_id is None]
+
+    typer.echo(f"Found {len(users)} user(s) to migrate.")
+
+    for user in users:
+        user_folder = vault_folder / user.username
+        typer.secho(f"==> Migrating user '{user.username}'...")
+
+        # Create root item for user
+        root_item = FSItem(parent_id=None, root_id="", name=user.username, is_folder=True)
+        root_item.root_id = root_item.id
+        root_id = root_item.id
+        add_item(root_item)
+
+        # Add database entries
+        directories = {".": root_id}
+        file_renaming_map: dict[Path, str] = {}
+        for abs_path in user_folder.rglob("*"):
+            path = abs_path.relative_to(user_folder)
+            if abs_path.is_dir():
+                # Create new FSItem for the directory
+                dir_item = FSItem(
+                    parent_id=directories[str(path.parent)], root_id=root_id, name=path.name, is_folder=True
+                )
+                directories[str(path)] = dir_item.id
+                add_item(dir_item)
+                continue
+
+            # Create new FSItem for the file
+            file_item = FSItem(
+                parent_id=directories[str(path.parent)],
+                root_id=root_id,
+                name=path.name,
+                is_folder=False,
+                size=abs_path.stat().st_size,
+                timestamp=int(abs_path.stat().st_mtime),
+            )
+            file_renaming_map[abs_path] = f"{file_item.id}.exef"
+            add_item(file_item)
+
+        # Finally, update user's root FSItem ID
+        with get_session() as session:
+            with session.begin():
+                current_user = session.query(User).filter_by(username=user.username).first()
+                current_user.fsitem_id = root_id
+                session.add(current_user)
+
+        # Move files to new locations
+        for old_path, new_name in file_renaming_map.items():
+            old_path.rename(user_folder / new_name)  # All files are now in the user's folder
+
+        # Delete all directories, except root
+        for rel_dir_path in sorted(directories.keys(), key=lambda x: len(x.split("/")), reverse=True):
+            if rel_dir_path == ".":
+                continue
+
+            rmtree(user_folder / rel_dir_path, ignore_errors=True)
+
+    typer.secho("Migration complete.", fg=typer.colors.GREEN)

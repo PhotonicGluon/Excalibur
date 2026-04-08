@@ -8,9 +8,9 @@ Create Date: ${create_date}
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 import sqlmodel
+from alembic import op
 ${imports if imports else ""}
 
 # Revision identifiers used by Alembic

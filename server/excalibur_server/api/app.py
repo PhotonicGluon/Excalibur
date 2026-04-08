@@ -1,13 +1,10 @@
 import logging
-from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
-from fastapi_offline import FastAPIOffline
 
 from excalibur_server.api.middlewares import add_middleware
 from excalibur_server.env import has_cors, has_encryption, has_pop_checking, is_debug
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
-from excalibur_server.src.files.searching import build_file_index
 
 from .logging import logger
 from .meta import TAGS
@@ -28,16 +25,8 @@ if not has_pop_checking():
     logger.warning("Proof of Possession (PoP) checking is disabled. This is not recommended for production.")
 
 
-# Set up app lifespan
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    logger.info("> Building file index.")
-    build_file_index()
-    yield
-
-
 # Define app
-app = FastAPIOffline(
+app = FastAPI(
     title=TITLE,
     summary=SUMMARY,
     version=VERSION,
@@ -45,7 +34,6 @@ app = FastAPIOffline(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    lifespan=lifespan,
 )
 
 # Add middlewares
