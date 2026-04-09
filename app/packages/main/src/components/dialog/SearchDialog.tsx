@@ -118,7 +118,6 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                                     name={file.name}
                                     fullpath={file.fullpath}
                                     type={file.type}
-                                    mimetype={file.type === "file" ? file.mimetype : undefined}
                                     size={file.type === "file" ? file.size : undefined}
                                 />
                             );

@@ -16,7 +16,6 @@ for (let i = 0; i < 10; i++) {
         fullpath: `/some/path/Sample File ${i}.txt.exef`,
         size: 100000 * (i + 1) + 23456,
         type: "file",
-        mimetype: "audio/mpeg",
     });
 }
 const directory: Directory = {

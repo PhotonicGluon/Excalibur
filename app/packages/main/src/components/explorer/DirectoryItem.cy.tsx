@@ -115,12 +115,12 @@ describe("<DirectoryItem />", () => {
     });
 
     it("has correct icon for defined MIME type", () => {
-        renderComponent({ mimetype: "audio/mpeg" });
+        renderComponent({ name: "Sample File.mp3.exef" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", musicalNotesOutline);
     });
 
     it("has correct default icon for undefined MIME type", () => {
-        renderComponent({ mimetype: "fake/fake" });
+        renderComponent({ name: "Sample File.fake-extension.exef" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", documentOutline);
     });
 

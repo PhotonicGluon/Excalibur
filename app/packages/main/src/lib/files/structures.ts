@@ -13,8 +13,6 @@ export interface File extends FileLike {
     type: "file";
     /** Size of the file in bytes */
     size: number;
-    /** MIME type of the file */
-    mimetype: string;
 }
 
 export interface Directory extends FileLike {

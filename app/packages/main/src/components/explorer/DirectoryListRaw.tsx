@@ -56,7 +56,6 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
                 name={item.name}
                 fullpath={item.fullpath}
                 type={item.type}
-                mimetype={item.type === "file" ? item.mimetype : undefined}
                 size={item.type === "file" ? item.size : undefined}
                 {...(props.directoryItemPropsOverride ? props.directoryItemPropsOverride(item) : {})}
             />

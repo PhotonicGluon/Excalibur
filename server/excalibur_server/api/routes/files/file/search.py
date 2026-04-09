@@ -25,7 +25,6 @@ from excalibur_server.src.users import get_user
                                 "fullpath": "example.txt",
                                 "type": "file",
                                 "size": 1024,
-                                "mimetype": "text/plain",
                             },
                             0.9,
                         ],

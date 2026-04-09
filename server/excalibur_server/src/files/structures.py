@@ -54,9 +54,6 @@ class File(Filelike):
     size: int
     "Size of the file in bytes"
 
-    mimetype: str | None
-    "MIME type of the file, or None if unknown"
-
     @classmethod
     def from_fsitem(cls, fsitem: FSItem, include_exef_size: bool = False, parent_dir_path: Path | None = None) -> Self:
         """
@@ -76,7 +73,6 @@ class File(Filelike):
         return cls(
             **base_fields,
             size=size,
-            mimetype=fsitem.mimetype,
         )
 
 

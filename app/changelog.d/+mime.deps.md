@@ -1,0 +1,1 @@
+➕ Added `mime` dependency
