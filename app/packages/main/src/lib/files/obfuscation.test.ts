@@ -11,7 +11,7 @@ describe("SubstitutionCipher", () => {
         expect(pt2).toEqual(pt);
     });
 
-    it("should produce same ciphertext given same seed", () => {
+    it("should produce same ciphertext given same key", () => {
         const cipher1 = new SubstitutionCipher(Buffer.from("test"));
         const cipher2 = new SubstitutionCipher(Buffer.from("test"));
         const pt = Buffer.from("hello");

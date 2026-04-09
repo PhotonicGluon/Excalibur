@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import HKDF from "@lib/auth/hkdf";
+import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import { checkAPIUrl, getServerInfo } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
@@ -39,6 +41,10 @@ function useProvideAuth(): AuthProvider {
     });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
     const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
+
+    const noc = vaultKey
+        ? new SubstitutionCipher(new HKDF("sha256").hkdf(vaultKey, null, Buffer.from("Name Obfuscation Cipher"), 32))
+        : null;
 
     // Handlers
     function getToken(): string | null {
@@ -136,6 +142,7 @@ function useProvideAuth(): AuthProvider {
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
         origVaultKey: origVaultKey!,
+        noc: noc!,
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,

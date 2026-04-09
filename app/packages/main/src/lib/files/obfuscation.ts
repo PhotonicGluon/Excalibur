@@ -9,12 +9,12 @@ export class SubstitutionCipher {
     private _backwardCipher: number[];
 
     /**
-     * Creates a new substitution cipher with the given seed.
+     * Creates a new substitution cipher with the given key.
      *
-     * @param seed seed to use for the cipher
+     * @param key key to use for the cipher
      */
-    constructor(seed: Buffer) {
-        this._prng = seedrandom(seed.toString());
+    constructor(key: Buffer) {
+        this._prng = seedrandom(key.toString("hex"));
 
         // Create the substitution maps
         this._forwardCipher = Array.from({ length: 256 }, (_, i) => i);
@@ -44,10 +44,12 @@ export class SubstitutionCipher {
      * Enciphers a buffer using substitution cipher.
      *
      * @param pt plaintext to encipher
+     * @param asRaw whether to return the ciphertext as a raw buffer or as a base64-encoded string
      * @returns ciphertext
      */
-    encipher(pt: Buffer): Buffer {
-        return Buffer.from(pt.map((b) => this._forwardCipher[b]));
+    encipher(pt: Buffer, asRaw: boolean = false): Buffer | string {
+        const ct = Buffer.from(pt.map((b) => this._forwardCipher[b]));
+        return asRaw ? ct : ct.toString("hex");
     }
 
     /**
@@ -56,7 +58,10 @@ export class SubstitutionCipher {
      * @param ct ciphertext to decipher
      * @returns plaintext
      */
-    decipher(ct: Buffer): Buffer {
+    decipher(ct: Buffer | string): Buffer {
+        if (typeof ct === "string") {
+            ct = Buffer.from(ct, "hex");
+        }
         return Buffer.from(ct.map((b) => this._backwardCipher[b]));
     }
 }

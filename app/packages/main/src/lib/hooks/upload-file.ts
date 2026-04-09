@@ -134,10 +134,15 @@ export function useUploadFile() {
 
                 if (signal.aborted) throw new Error("Cancelled");
 
+                // Obfuscate the file name if necessary
+                const name = auth.authInfo!.obfuscatedNames
+                    ? auth.noc!.encipher(Buffer.from(rawFile.name, "utf-8"))
+                    : rawFile.name;
+
                 // Upload the file
-                console.debug(`Uploading file ${rawFile.name}...`);
+                console.debug(`Uploading file '${rawFile.name}' ('${name}.exef')...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
-                const file = new File([blob], rawFile.name + ".exef");
+                const file = new File([blob], name + ".exef");
                 const uploadResponse = await uploadFile(
                     auth,
                     explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
