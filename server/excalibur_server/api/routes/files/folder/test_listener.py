@@ -67,6 +67,7 @@ class TestDirectoryChangesListener:
             root_id=root_id,
             name="test",
             is_folder=False,
+            fullpath="test",
             size=size,
         )
         db_session.add(file)

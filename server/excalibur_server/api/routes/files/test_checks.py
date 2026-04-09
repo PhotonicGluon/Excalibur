@@ -13,19 +13,23 @@ def dir_with_items(test_user, db_session: Session):
     root_id = test_user["root_id"]
 
     # Create folder
-    folder = FSItem(parent_id=root_id, root_id=root_id, name="folder", is_folder=True)
+    folder = FSItem(parent_id=root_id, root_id=root_id, name="folder", is_folder=True, fullpath="folder")
     db_session.add(folder)
 
     # Create an empty folder
-    empty_folder = FSItem(parent_id=root_id, root_id=root_id, name="empty-folder", is_folder=True)
+    empty_folder = FSItem(
+        parent_id=root_id, root_id=root_id, name="empty-folder", is_folder=True, fullpath="empty-folder"
+    )
     db_session.add(empty_folder)
 
     # Create file
-    file = FSItem(parent_id=root_id, root_id=root_id, name="file", is_folder=False, size=0)
+    file = FSItem(parent_id=root_id, root_id=root_id, name="file", is_folder=False, size=0, fullpath="file")
     db_session.add(file)
 
     # Create subfile in folder
-    subfile = FSItem(parent_id=folder.id, root_id=root_id, name="subfile", is_folder=False, size=0)
+    subfile = FSItem(
+        parent_id=folder.id, root_id=root_id, name="subfile", is_folder=False, size=0, fullpath="folder/subfile"
+    )
     db_session.add(subfile)
 
     # Commit all items

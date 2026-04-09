@@ -1,3 +1,5 @@
+import time
+from pathlib import Path as PathlibPath
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
@@ -70,6 +72,8 @@ async def move_path_endpoint(
             with session.begin():
                 db_item = session.query(FSItem).filter_by(id=item.id).first()
                 db_item.parent_id = dest_folder.id
+                db_item.fullpath = str(PathlibPath(dest_folder.fullpath) / db_item.name)
+                db_item.last_modified = int(time.time())
                 session.add(db_item)
         except IntegrityError:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
