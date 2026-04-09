@@ -32,12 +32,14 @@ class TestSearch:
             root_id=root_id,
             name="search-folder",
             is_folder=True,
+            fullpath="search-folder",
         )
         subfolder = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="subfolder",
             is_folder=True,
+            fullpath="search-folder/subfolder",
         )
         db_session.add(folder)
         db_session.add(subfolder)
@@ -47,42 +49,49 @@ class TestSearch:
             parent_id=folder.id,
             root_id=root_id,
             name="apple-fruit-file.exef",
+            fullpath="search-folder/apple-fruit-file.exef",
             size=1234,
         )
         file2 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="banana-fruit-file.exef",
+            fullpath="search-folder/banana-fruit-file.exef",
             size=1234,
         )
         file3 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="snapple-fruit-file.exef",
+            fullpath="search-folder/snapple-fruit-file.exef",
             size=1234,
         )
         file4 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="cherry-fruit-file.exef",
+            fullpath="search-folder/cherry-fruit-file.exef",
             size=1234,
         )
         file5 = FSItem(
             parent_id=subfolder.id,
             root_id=root_id,
             name="dragon-fruit-file.exef",
+            fullpath="search-folder/subfolder/dragon-fruit-file.exef",
             size=1234,
         )
         file6 = FSItem(
             parent_id=subfolder.id,
             root_id=root_id,
             name="elderberry-fruit-file.exef",
+            fullpath="search-folder/subfolder/elderberry-fruit-file.exef",
             size=1234,
         )
         file7 = FSItem(
             parent_id=root_id,
             root_id=root_id,
             name="some-random-file.exef",
+            fullpath="some-random-file.exef",
             size=1234,
         )
 

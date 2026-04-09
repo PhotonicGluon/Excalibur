@@ -121,6 +121,7 @@ async def upload_file_endpoint(
         root_id=parent.root_id,
         name=name,
         is_folder=False,
+        fullpath=str(path),
         size=size,
     )
     add_item(new_file)

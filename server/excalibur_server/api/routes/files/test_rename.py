@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -20,6 +19,7 @@ class TestRename:
             root_id=root_id,
             name="rename-folder",
             is_folder=True,
+            fullpath="rename-folder",
         )
         db_session.add(rename_folder)
 
@@ -45,6 +45,7 @@ class TestRename:
             root_id=root_id,
             name="r-file",
             is_folder=False,
+            fullpath="rename-folder/r-file",
         )
         db_session.add(file)
         db_session.commit()
@@ -67,6 +68,7 @@ class TestRename:
             root_id=root_id,
             name="r-file-enc",
             is_folder=False,
+            fullpath="rename-folder/r-file-enc",
         )
         db_session.add(file)
         db_session.commit()
@@ -103,12 +105,14 @@ class TestRename:
             root_id=root_id,
             name="r-file-already-exists",
             is_folder=False,
+            fullpath="rename-folder/r-file-already-exists",
         )
         existing_file = FSItem(
             parent_id=rename_folder.id,
             root_id=root_id,
             name="already-existent",
             is_folder=False,
+            fullpath="rename-folder/already-existent",
         )
         db_session.add(file)
         db_session.add(existing_file)

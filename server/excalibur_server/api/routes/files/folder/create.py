@@ -1,3 +1,4 @@
+from pathlib import Path as PathlibPath
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
@@ -52,7 +53,9 @@ async def create_directory_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
     # Create the directory in the database
-    new_folder = FSItem(name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True)
+    new_folder = FSItem(
+        name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True, fullpath=str(PathlibPath(path) / name)
+    )
     try:
         add_item(new_folder)
     except IntegrityError:
