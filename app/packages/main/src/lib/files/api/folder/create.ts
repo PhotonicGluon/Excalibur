@@ -10,6 +10,7 @@ import { AuthProvider } from "@components/auth/context";
  * @param auth The current authentication provider
  * @param path The path to create the new directory at
  * @param name The name of the new directory
+ * @param obfuscateName Whether to obfuscate the directory name
  * @returns A promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
@@ -17,8 +18,10 @@ export async function mkdir(
     auth: AuthProvider,
     path: string,
     name: string,
+    obfuscateName: boolean = true,
 ): Promise<{ success: boolean; error?: string }> {
-    const rawName = auth.authInfo!.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
+    const rawName =
+        obfuscateName && auth.authInfo!.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
 
     const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(

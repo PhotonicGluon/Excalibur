@@ -135,14 +135,13 @@ export function useUploadFile() {
                 if (signal.aborted) throw new Error("Cancelled");
 
                 // Obfuscate the file name if necessary
-                const name = auth.authInfo!.obfuscatedNames
-                    ? auth.noc!.encipher(Buffer.from(rawFile.name, "utf-8"))
-                    : rawFile.name;
+                const name = rawFile.name;
 
                 // Upload the file
                 console.debug(`Uploading file '${rawFile.name}' ('${name}.exef')...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
                 const file = new File([blob], name + ".exef");
+                console.log("Upload path:", explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""));
                 const uploadResponse = await uploadFile(
                     auth,
                     explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
@@ -174,6 +173,12 @@ export function useUploadFile() {
             // Get file picker to let user choose the files
             try {
                 files = (await FilePicker.pickFiles()).files;
+                files = files.map((item) => {
+                    const name = auth.authInfo!.obfuscatedNames
+                        ? auth.noc!.encipher(Buffer.from(item.name, "utf-8"))
+                        : item.name;
+                    return { ...item, name };
+                });
             } catch (e: unknown) {
                 const message = (e as Error).message;
                 if (message.includes("pickFiles canceled")) {
@@ -198,7 +203,7 @@ export function useUploadFile() {
 
             // Check if containing directories exist
             if (file.directory) {
-                let dirs = getParents(explorerContext.path + "/" + file.directory + "/redundant"); // So that the target directory is included
+                let dirs = getParents(explorerContext.path + "/" + file.directory + "/x"); // "/x" to include target dir
                 dirs = dirs.toReversed().slice(1);
 
                 for (const dir of dirs) {
@@ -207,7 +212,7 @@ export function useUploadFile() {
                         // Directory exists, continue
                     } else if (checkDirResponse.error === "Path not found") {
                         // Make directory
-                        const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir));
+                        const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir), false);
                         if (!createDirResponse.success) {
                             explorerContext.presentSnackbar(
                                 `Failed to create containing directory: ${createDirResponse.error}`,
@@ -323,12 +328,21 @@ export function useUploadFile() {
         // Call upload file method
         onUploadFile(
             files.map((item) => {
+                // Handle name obfuscation as necessary
+                let fileName = item.file.name;
+                let fileDirectory = item.path ? getParent(item.path.replace(/^\//, "")) : undefined;
+                if (auth.authInfo!.obfuscatedNames) {
+                    fileName = auth.noc!.encipher(Buffer.from(fileName, "utf-8"));
+                    fileDirectory = fileDirectory ? auth.noc!.encipher(Buffer.from(fileDirectory, "utf-8")) : undefined;
+                }
+
+                // Create instance
                 return {
-                    name: item.file.name,
+                    name: fileName,
                     size: item.file.size,
                     mimeType: item.file.type,
                     blob: item.file,
-                    directory: item.path ? getParent(item.path.replace(/^\//, "")) : undefined,
+                    directory: fileDirectory,
                 } as UploadFile;
             }),
         );
