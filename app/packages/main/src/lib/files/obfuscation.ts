@@ -44,12 +44,11 @@ export class SubstitutionCipher {
      * Enciphers a buffer using substitution cipher.
      *
      * @param pt plaintext to encipher
-     * @param asRaw whether to return the ciphertext as a raw buffer or as a base64-encoded string
      * @returns ciphertext
      */
-    encipher(pt: Buffer, asRaw: boolean = false): Buffer | string {
+    encipher(pt: Buffer): string {
         const ct = Buffer.from(pt.map((b) => this._forwardCipher[b]));
-        return asRaw ? ct : ct.toString("hex");
+        return ct.toString("hex");
     }
 
     /**
@@ -58,10 +57,8 @@ export class SubstitutionCipher {
      * @param ct ciphertext to decipher
      * @returns plaintext
      */
-    decipher(ct: Buffer | string): Buffer {
-        if (typeof ct === "string") {
-            ct = Buffer.from(ct, "hex");
-        }
-        return Buffer.from(ct.map((b) => this._backwardCipher[b]));
+    decipher(ct: string): Buffer {
+        const ctBuffer = Buffer.from(ct, "hex");
+        return Buffer.from(ctBuffer.map((b) => this._backwardCipher[b]));
     }
 }

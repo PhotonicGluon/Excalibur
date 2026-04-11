@@ -225,7 +225,9 @@ const FileExplorer: React.FC = () => {
      * @param isDir If true, the item is a directory. If false, the item is a file
      */
     async function onRenameItem(path: string, isDir: boolean) {
-        const baseName = path.split("/").pop();
+        const rawName = path.split("/").pop();
+        const baseName = !isDir ? rawName?.replace(/\.exef$/, "") : rawName;
+        const displayName = auth.authInfo!.obfuscatedNames ? auth.noc!.decipher(baseName!).toString("utf-8") : baseName;
 
         // Ask for user input
         presentAlert({
@@ -233,21 +235,25 @@ const FileExplorer: React.FC = () => {
             inputs: [
                 {
                     type: "text",
-                    name: "newName",
+                    name: "newDisplayName",
                     placeholder: "New Name",
-                    value: !isDir ? baseName?.replace(/\.exef$/, "") : baseName,
+                    value: displayName,
                 },
             ],
             buttons: [
                 "Cancel",
                 {
                     text: "Rename",
-                    handler: async (data: { newName: string }) => {
-                        let newName = data.newName;
-                        if (newName === "") {
+                    handler: async (data: { newDisplayName: string }) => {
+                        const newDisplayName = data.newDisplayName;
+                        if (newDisplayName === "") {
                             presentSnackbar("New name cannot be empty", "danger");
                             return;
                         }
+
+                        let newName = auth.authInfo!.obfuscatedNames
+                            ? (auth.noc!.encipher(Buffer.from(newDisplayName, "utf-8")) as string)
+                            : newDisplayName;
                         if (!isDir) {
                             newName += ".exef";
                         }
@@ -453,7 +459,11 @@ const FileExplorer: React.FC = () => {
 
                             {/* Breadcrumbs */}
                             <div ref={topBarRef} className="ml-1 w-full overflow-x-scroll pt-1">
-                                <DirectoryBreadcrumbs className="flex-nowrap" path={requestedPath} />
+                                <DirectoryBreadcrumbs
+                                    className="flex-nowrap"
+                                    path={requestedPath}
+                                    noc={auth.noc ?? undefined}
+                                />
                             </div>
 
                             {/* Fab button */}
