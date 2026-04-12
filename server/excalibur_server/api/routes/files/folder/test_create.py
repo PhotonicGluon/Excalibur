@@ -46,6 +46,10 @@ class TestCreateDir:
         assert response.status_code == 201
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
+    def test_illegal_name(self, auth_client_db: TestClient):
+        response = auth_client_db.post("/api/files/mkdir/.", json="illegal/dir/name")
+        assert response.status_code == 400
+
     def test_path_not_found(self, auth_client_db: TestClient):
         response = auth_client_db.post("/api/files/mkdir/fake/path", json="test-dir")
         assert response.status_code == 404

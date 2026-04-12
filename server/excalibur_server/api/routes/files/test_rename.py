@@ -92,6 +92,21 @@ class TestRename:
         assert response.status_code == 200
         assert get_item(file.id).name == "new-name-enc"
 
+    def test_illegal_name(self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem):
+        # Create test file
+        file = FSItem(
+            parent_id=rename_folder.id,
+            root_id=test_user["root_id"],
+            name="r-file-illegal-name",
+            is_folder=False,
+            fullpath="rename-folder/r-file-illegal-name",
+        )
+        db_session.add(file)
+        db_session.commit()
+
+        response = auth_client_db.post("/api/files/rename/rename-folder/r-file-illegal-name", json="illegal/item/name")
+        assert response.status_code == 400
+
     def test_rename_nonexistent(self, auth_client_db: TestClient):
         response = auth_client_db.post("/api/files/rename/does-not-exist", json="new-name")
         assert response.status_code == 404

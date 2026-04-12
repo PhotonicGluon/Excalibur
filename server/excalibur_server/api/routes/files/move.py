@@ -20,10 +20,8 @@ from excalibur_server.src.users import get_user
     responses={
         status.HTTP_200_OK: {"description": "Item moved", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Item/destination not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists at destination"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot move root directory"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
     response_class=PlainTextResponse,
 )
