@@ -19,7 +19,6 @@ from excalibur_server.src.users import get_user
         status.HTTP_202_ACCEPTED: {"description": "Deleted directory"},
         status.HTTP_400_BAD_REQUEST: {"description": "Cannot delete directory if `as_dir` is not set"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot delete root directory"},
         status.HTTP_417_EXPECTATION_FAILED: {
             "description": "Cannot delete directory if it is not empty (and `force` is not set)"

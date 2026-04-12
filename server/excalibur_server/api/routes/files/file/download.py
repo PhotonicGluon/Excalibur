@@ -25,7 +25,6 @@ class FileResponse(FastAPIFileResponse):
             "content": {"application/octet-stream": {"example": "Some file content. Can be binary."}},
         },
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a file"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
     },
     response_class=FileResponse,
 )

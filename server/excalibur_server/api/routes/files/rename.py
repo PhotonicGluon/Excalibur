@@ -17,15 +17,11 @@ from excalibur_server.src.users import get_user
     "/rename/{path:path}",
     name="Rename Item",
     responses={
-        status.HTTP_200_OK: {
-            "description": "Item renamed",
-            "content": {"text/plain": {"example": "Item renamed", "schema": None}},
-        },
+        status.HTTP_200_OK: {"description": "Item renamed", "content": None},
+        status.HTTP_400_BAD_REQUEST: {"description": "Illegal or invalid name"},
         status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot rename root directory"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
     response_class=PlainTextResponse,
 )
@@ -51,6 +47,10 @@ async def rename_path_endpoint(
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
+    # Check new item name
+    if "/" in new_name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Illegal or invalid name")
+
     # Prohibit renaming the root directory
     if item.id == root_id:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot rename root directory")
@@ -69,4 +69,3 @@ async def rename_path_endpoint(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
 
     background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
-    return "Item renamed"
