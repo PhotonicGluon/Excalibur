@@ -19,10 +19,7 @@ class TestUpload:
 
         uuid = uuid4().hex
         response = auth_client_db.post(f"/api/files/upload/test-{uuid}.txt.exef", content=content)
-
         assert response.status_code == 201
-        assert ExEF.validate(response.content), "Did not return an encrypted response"
-        assert ExEF(b"one demo 16B key").decrypt(response.content) == b"File uploaded"
 
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
         assert item is not None
@@ -51,10 +48,7 @@ class TestUpload:
             headers=headers,
             content=transit_encrypted_data,
         )
-
         assert response.status_code == 201
-        assert ExEF.validate(response.content), "Did not return an encrypted response"
-        assert ExEF(b"one demo 16B key").decrypt(response.content) == b"File uploaded"
 
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
         assert item is not None

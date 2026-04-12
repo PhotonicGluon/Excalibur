@@ -17,10 +17,7 @@ from excalibur_server.src.users import get_user
     "/rename/{path:path}",
     name="Rename Item",
     responses={
-        status.HTTP_200_OK: {
-            "description": "Item renamed",
-            "content": {"text/plain": {"example": "Item renamed", "schema": None}},
-        },
+        status.HTTP_200_OK: {"description": "Item renamed", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists"},
@@ -69,4 +66,3 @@ async def rename_path_endpoint(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
 
     background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
-    return "Item renamed"

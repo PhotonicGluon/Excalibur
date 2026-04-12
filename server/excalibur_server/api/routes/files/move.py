@@ -18,10 +18,7 @@ from excalibur_server.src.users import get_user
     "/move/{path:path}",
     name="Move Item",
     responses={
-        status.HTTP_200_OK: {
-            "description": "Item moved",
-            "content": {"text/plain": {"example": "Item moved", "schema": None}},
-        },
+        status.HTTP_200_OK: {"description": "Item moved", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Item/destination not found"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists at destination"},
@@ -79,4 +76,3 @@ async def move_path_endpoint(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
 
     background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
-    return "Item moved"

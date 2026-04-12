@@ -17,10 +17,7 @@ from excalibur_server.src.users import get_user
     "/mkdir/{path:path}",
     name="Create Directory",
     responses={
-        status.HTTP_201_CREATED: {
-            "description": "Directory created",
-            "content": {"text/plain": {"example": "Directory created", "schema": None}},
-        },
+        status.HTTP_201_CREATED: {"description": "Directory created", "content": None},
         status.HTTP_400_BAD_REQUEST: {"description": "Illegal or invalid directory name"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
@@ -62,4 +59,3 @@ async def create_directory_endpoint(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
 
     background_tasks.add_task(add_folder_change, credentials, path)
-    return "Directory created"

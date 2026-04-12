@@ -40,10 +40,7 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
     "/upload/{path:path}",
     name="Upload File",
     responses={
-        status.HTTP_201_CREATED: {
-            "description": "File uploaded",
-            "content": {"text/plain": {"example": "File uploaded", "schema": None}},
-        },
+        status.HTTP_201_CREATED: {"description": "File uploaded", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
@@ -126,4 +123,3 @@ async def upload_file_endpoint(
     )
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)
-    return "File uploaded"
