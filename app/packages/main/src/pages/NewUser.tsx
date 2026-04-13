@@ -21,6 +21,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { e2ee } from "@lib/auth/e2ee";
 import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
 import { registerUser } from "@lib/users/api";
@@ -88,9 +89,9 @@ const NewUser: React.FC = () => {
     }
 
     /**
-     * Handles the confirmation of the ACK.
+     * Handles the confirmation of the registration values.
      */
-    async function onACKConfirm(ack: Buffer) {
+    async function onConfirm(ack: Buffer) {
         // Check values
         const values = getAllValues();
         console.log(values);
@@ -142,11 +143,45 @@ const NewUser: React.FC = () => {
 
         console.debug("Added user");
 
+        // Set up End-to-End Encryption (E2EE)
+        const e2eeData = await e2ee(
+            auth.serverInfo!.apiURL!,
+            values.username,
+            values.password,
+            () => setIsLoading(true),
+            () => setIsLoading(false),
+            setLoadingState,
+            (header, subheader, msg, buttons) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: buttons ?? ["OK"] });
+            },
+        );
+        if (!e2eeData) {
+            // Errors already handled in `e2ee()`
+            return;
+        }
+
+        // Log into the server using the UUID and master key
+        console.debug("Logging in...");
+        const authInfo = { username: values.username, ...e2eeData };
+        try {
+            await auth.login(authInfo);
+        } catch (error) {
+            console.error(`Could not log in: ${error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Login Failure",
+                message: `Could not log in: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.log(`Logged in; using token: ${authInfo.token}`);
+
         // Show vault key
         setIsLoading(false);
         setShowVaultKeyDialog(true);
         presentToast({
-            message: "User created. Please save the vault key in a secure location and log in again.",
+            message: "User created. Please save the vault key in a secure location.",
             duration: 5000,
             color: "success",
         });
@@ -176,7 +211,8 @@ const NewUser: React.FC = () => {
                     inputDisabled={true}
                     onDidDismiss={() => {
                         setShowVaultKeyDialog(false);
-                        router.goBack();
+                        router.push("/files/", "forward", "replace");
+                        window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
                     }}
                 />
 
@@ -215,7 +251,7 @@ const NewUser: React.FC = () => {
                                     numWords={24}
                                     maxSuggestions={5}
                                     onEntropy={(ack) => {
-                                        onACKConfirm(ack);
+                                        onConfirm(ack); // Triggers the registration process
                                     }}
                                     onError={() => {
                                         setACKState(false);
