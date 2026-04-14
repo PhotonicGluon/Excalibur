@@ -2,6 +2,10 @@ version = 1
 revision = 3
 requires-python = ">=3.11"
 
+[options]
+exclude-newer = "2026-04-09T10:44:03.913269Z"
+exclude-newer-span = "P5D"
+
 [[package]]
 name = "aiofiles"
 version = "25.1.0"
