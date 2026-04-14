@@ -6,5 +6,5 @@
 - CVE-2026-33937, CVE-2026-33938, CVE-2026-33941, CVE-2026-33940, CVE-2026-33939, CVE-2026-33916: `handlebars` to `4.7.9`
 - CVE-2026-4800, CVE-2026-2950: `lodash` to `4.18.0` and `lodash-es` to `4.18.0`
 - CVE-2026-33671, CVE-2026-33672: `picomatch@<2.3.2` to `2.3.2` and `picomatch@>=4.0.0 <4.0.4` to `4.0.4`
-- GHSA-v2wj-q39q-566r, CVE-2026-39363, GHSA-4w7w-66w2-5vf9: `vite` to `7.3.2`
+- CVE-2026-39364, CVE-2026-39363, CVE-2026-39365: `vite` to `7.3.2`
 - CVE-2026-33532: `yaml` to `2.8.3`
