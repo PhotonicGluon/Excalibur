@@ -177,6 +177,9 @@ const NewUser: React.FC = () => {
         }
         console.log(`Logged in; using token: ${authInfo.token}`);
 
+        // Set vault key for auth
+        auth.setVaultKey(vaultKey);
+
         // Show vault key
         setIsLoading(false);
         setShowVaultKeyDialog(true);
