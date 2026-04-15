@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.11"
 
 [options]
-exclude-newer = "2026-04-09T11:23:23.553217Z"
+exclude-newer = "2026-04-10T07:27:45.0295622Z"
 exclude-newer-span = "P5D"
 
 [[package]]
@@ -184,7 +184,7 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typer" },
     { name = "uvicorn" },
-    { name = "uvloop" },
+    { name = "uvloop", marker = "platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'" },
     { name = "websockets" },
 ]
 
@@ -223,7 +223,7 @@ requires-dist = [
     { name = "tomlkit", specifier = ">=0.14.0" },
     { name = "typer", specifier = ">=0.24.1" },
     { name = "uvicorn", specifier = ">=0.44.0" },
-    { name = "uvloop", specifier = ">=0.22.1" },
+    { name = "uvloop", marker = "platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'", specifier = ">=0.22.1" },
     { name = "websockets", specifier = ">=16.0" },
 ]
 

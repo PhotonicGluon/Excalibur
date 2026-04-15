@@ -21,13 +21,14 @@ dependencies = [
     "pyjwt>=2.12.1",
     "rapidfuzz>=3.14.5",
     "semver>=3.0.4",
-    "sqlalchemy<=2.0.44",                        # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
+    # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
+    "sqlalchemy<=2.0.44",
     "sqlmodel>=0.0.37",
     "toml>=0.10.2",
     "tomlkit>=0.14.0",
     "typer>=0.24.1",
     "uvicorn>=0.44.0",
-    "uvloop>=0.22.1",
+    "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
     "websockets>=16.0",
 ]
 requires-python = ">=3.11"
