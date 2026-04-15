@@ -14,7 +14,7 @@ from excalibur_server.src.url import get_url_encoded_path
 
 from .jwt import decode_token, generate_token
 
-API_TOKEN_HEADER = HTTPBearer(scheme_name="SRP-Identity", auto_error=False)
+API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
 def generate_auth_token(username: str, comm_uuid: str, expiry_timestamp: float) -> str:
