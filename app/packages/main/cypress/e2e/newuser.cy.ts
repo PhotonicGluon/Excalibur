@@ -34,16 +34,12 @@ describe("New User Page", () => {
         cy.get("#new-username-input").find("input").type(username);
         cy.get("#new-password-input").find("input").type("Password123");
 
-        // Fill in Account Creation Key (ACK)
+        // Fill in Account Creation Key (ACK) by pasting into the first input box
         cy.get("#ack-input")
             .find("input")
-            .each(($el, index) => {
-                const el = cy.wrap($el);
-                el.type(ack[index]);
-                if (index === ack.length - 1) {
-                    // Only need to blur on last one to update the internal state of the component
-                    el.blur();
-                }
+            .eq(0)
+            .trigger("paste", {
+                clipboardData: { getData: () => ack.join(" ") },
             });
 
         cy.contains("ion-button", "Confirm").click();
@@ -52,10 +48,10 @@ describe("New User Page", () => {
         cy.get("#vault-key-modal").should("be.visible");
         cy.get("#vault-key-modal-close").click();
 
-        // We should have been redirected to the login page
-        cy.url().should("include", "/login");
+        // We should have been redirected to the files page (i.e., logged in successfully)
+        cy.url().should("include", "/files/");
 
-        // Now try to log in again
+        // Try to log in with the new username
         cy.login(SERVER_URL, username, "Password123"); // This checks if login was successful too
     });
 });

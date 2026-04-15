@@ -4,7 +4,7 @@
     "scripts": {
         "preinstall": "npx only-allow pnpm",
         "prepare": "husky",
-        "update": "pnpx npm-check-updates --peer -u -w --configFilePath app/.ncurc.cjs && pnpm i --lockfile-only && cd server && uv lock --upgrade",
+        "update": "uv run scripts/update_deps.py && pnpm i --lockfile-only && cd server && uv lock",
         "sync": "pnpm i && cd server && uv sync --all-groups",
         "app:start": "cd app/packages/main && pnpm exec vite dev --port 5173",
         "server:setup-for-test": "cd server && cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"uv run excalibur init -r && uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=\"",
@@ -23,7 +23,7 @@
     "devDependencies": {
         "cross-env": "^10.1.0",
         "husky": "^9.1.7",
-        "start-server-and-test": "^3.0.0"
+        "start-server-and-test": "^3.0.2"
     },
     "engines": {
         "node": ">=22.0.0",
