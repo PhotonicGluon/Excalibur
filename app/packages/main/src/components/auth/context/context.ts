@@ -6,6 +6,8 @@ import { SubstitutionCipher } from "@lib/files/obfuscation";
 export interface AuthInfo extends E2EEData {
     /** Username */
     username?: string;
+    /** Whether file names are obfuscated */
+    obfuscatedNames: boolean | null;
 }
 
 export interface ServerInfo {

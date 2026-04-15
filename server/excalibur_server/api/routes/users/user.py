@@ -19,7 +19,6 @@ from excalibur_server.src.users import User, add_user, get_user, is_user, remove
 class SecurityDetails(BaseModel):
     auk_salt: bytes
     auth_protocol: AuthProtocol
-    obfuscated_names: bool
     srp_salt: bytes | None = None
 
     @field_serializer("auk_salt", "srp_salt")

@@ -26,7 +26,7 @@ import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
-import { useAuth } from "@components/auth/context";
+import { AuthInfo, useAuth } from "@components/auth/context";
 
 import logo from "@assets/icon.png";
 
@@ -151,8 +151,13 @@ const Login: React.FC = () => {
         }
 
         // Log into the server using the UUID and master key
+        // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
         console.debug("Logging in...");
-        const authInfo = { username: values.username, ...e2eeData };
+        const authInfo: AuthInfo = {
+            username: values.username,
+            obfuscatedNames: null, // We'll get the actual value after login
+            ...e2eeData,
+        };
         try {
             await auth.login(authInfo);
         } catch (error) {
@@ -204,7 +209,6 @@ const Login: React.FC = () => {
         // Continue with files retrieval
         setIsLoading(false);
         router.push("/files/", "forward", "replace");
-        return;
     }
 
     // Effects

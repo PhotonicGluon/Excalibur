@@ -30,6 +30,7 @@ import {
 import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline, searchOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
+import { getObfuscationFlag } from "@lib/files/obfuscation";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
@@ -92,7 +93,7 @@ const FileExplorer: React.FC = () => {
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
 
-    // Get contexts
+    // Contexts
     const auth = useAuth();
     const router = useIonRouter();
 
@@ -326,6 +327,15 @@ const FileExplorer: React.FC = () => {
     useIonViewWillEnter(() => {
         // Make the top bar scroll to the end
         topBarRef.current!.scrollLeft = topBarRef.current!.scrollWidth;
+
+        // Set obfuscation state if not already set
+        if (auth.authInfo!.obfuscatedNames === null) {
+            getObfuscationFlag(auth).then((obfuscatedNames) => {
+                console.debug(`Item names ${obfuscatedNames ? "ARE" : "are NOT"} obfuscated`);
+                const authInfo = { ...auth.authInfo!, token: auth.getToken()!, obfuscatedNames };
+                auth.setAuthInfo(authInfo);
+            });
+        }
     });
 
     // Render

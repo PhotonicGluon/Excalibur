@@ -152,7 +152,7 @@ function useProvideAuth(): AuthProvider {
     };
 }
 
-function serializeAuthInfo(data: AuthInfo) {
+function serializeAuthInfo(data: AuthInfo): string {
     return JSON.stringify({
         key: data.key.toString("hex"),
         token: data.token,

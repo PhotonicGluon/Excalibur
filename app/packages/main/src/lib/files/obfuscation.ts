@@ -1,5 +1,12 @@
 import seedrandom from "seedrandom";
 
+import ExEF from "@lib/exef";
+import { checkPath, deleteItem, uploadFile } from "@lib/files/api";
+
+import { AuthProvider } from "@components/auth/context";
+
+const OBFUSCATION_FEATURE_FLAG_FILE = ".obfuscated-names.exef";
+
 /**
  * Substitution cipher for obfuscation.
  */
@@ -61,4 +68,43 @@ export class SubstitutionCipher {
         const ctBuffer = Buffer.from(ct, "hex");
         return Buffer.from(ctBuffer.map((b) => this._backwardCipher[b]));
     }
+}
+
+/**
+ * Gets the obfuscation flag for the current user.
+ *
+ * @param auth the current authentication provider
+ * @returns whether obfuscation is enabled
+ */
+export async function getObfuscationFlag(auth: AuthProvider): Promise<boolean> {
+    // We check for the existence of the feature flag file
+    const result = await checkPath(auth, OBFUSCATION_FEATURE_FLAG_FILE);
+    return result.success;
+}
+
+/**
+ * Sets the obfuscation flag for the current user.
+ *
+ * @param auth the current authentication provider
+ * @param value whether to enable or disable obfuscation
+ */
+export async function setObfuscationFlag(auth: AuthProvider, value: boolean) {
+    // Delete the feature flag file if we're turning off obfuscation
+    if (!value) {
+        await deleteItem(auth, OBFUSCATION_FEATURE_FLAG_FILE);
+        return;
+    }
+
+    // If flag exists, do nothing
+    const currentValue = await getObfuscationFlag(auth);
+    if (currentValue) {
+        return;
+    }
+
+    // Create the feature flag file
+    const file = new File(
+        [new ExEF(auth.authInfo!.key).encrypt(Buffer.from("Obfuscated Names Feature Flag File", "utf-8")) as BlobPart],
+        OBFUSCATION_FEATURE_FLAG_FILE,
+    );
+    await uploadFile(auth, ".", file, new AbortController().signal, () => {});
 }

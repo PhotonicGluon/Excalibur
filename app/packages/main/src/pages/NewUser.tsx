@@ -24,9 +24,10 @@ import { arrowBack } from "ionicons/icons";
 import { e2ee } from "@lib/auth/e2ee";
 import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
+import { setObfuscationFlag } from "@lib/files/obfuscation";
 import { registerUser } from "@lib/users/api";
 
-import { useAuth } from "@components/auth/context";
+import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 
@@ -161,8 +162,13 @@ const NewUser: React.FC = () => {
         }
 
         // Log into the server using the UUID and master key
+        // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
         console.debug("Logging in...");
-        const authInfo = { username: values.username, ...e2eeData };
+        const authInfo: AuthInfo = {
+            username: values.username,
+            obfuscatedNames: null, // We'll get the actual value after login
+            ...e2eeData,
+        };
         try {
             await auth.login(authInfo);
         } catch (error) {
@@ -212,8 +218,13 @@ const NewUser: React.FC = () => {
                     vaultKey={localVaultKey}
                     isOpen={showVaultKeyDialog}
                     inputDisabled={true}
-                    onDidDismiss={() => {
+                    onDidDismiss={async () => {
                         setShowVaultKeyDialog(false);
+
+                        // Set the obfuscation flag
+                        await setObfuscationFlag(auth, true);
+
+                        // Move to files
                         router.push("/files/", "forward", "replace");
                         window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
                     }}
