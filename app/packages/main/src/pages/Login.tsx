@@ -22,7 +22,8 @@ import {
 
 import { e2ee } from "@lib/auth/e2ee";
 import Preferences from "@lib/preferences";
-import { checkUser } from "@lib/users/api";
+import { checkUser, getAdditionalUserInfo } from "@lib/users/api";
+import { AdditionalUserInfo } from "@lib/users/structures";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
@@ -150,39 +151,24 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Log into the server using the UUID and master key
-        // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
-        console.debug("Logging in...");
-        const authInfo: AuthInfo = {
-            username: values.username,
-            obfuscatedNames: null, // We'll get the actual value after login
-            ...e2eeData,
-        };
+        // Retrieve the vault key
         try {
-            await auth.login(authInfo);
-        } catch (error) {
-            console.error(`Could not log in: ${error}`);
-            setIsLoading(false);
-            presentAlert({
-                header: "Login Failure",
-                message: `Could not log in: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.log(`Logged in; using token: ${authInfo.token}`);
-
-        // Handle vault key
-        try {
-            const vaultKey = await retrieveVaultKey(auth.serverInfo!.apiURL!, authInfo, (error) => {
-                console.error(error);
-                setIsLoading(false);
-                presentAlert({
-                    header: "Vault Key Failure",
-                    message: error,
-                    buttons: ["OK"],
-                });
-            });
+            const vaultKey = await retrieveVaultKey(
+                auth.serverInfo!.apiURL!,
+                values.username,
+                e2eeData.token,
+                e2eeData.key,
+                e2eeData.auk,
+                (error) => {
+                    console.error(error);
+                    setIsLoading(false);
+                    presentAlert({
+                        header: "Vault Key Failure",
+                        message: error,
+                        buttons: ["OK"],
+                    });
+                },
+            );
             if (!vaultKey) {
                 // Errors already handled in `retrieveVaultKey()`
                 return;
@@ -198,6 +184,53 @@ const Login: React.FC = () => {
             });
             return;
         }
+
+        // Obtain any additional information
+        let additionalInfo: AdditionalUserInfo;
+        try {
+            const additionalInfoResponse = await getAdditionalUserInfo(
+                auth.serverInfo!.apiURL!,
+                values.username,
+                e2eeData.token,
+                e2eeData.key,
+            );
+            if (!additionalInfoResponse.success) {
+                throw new Error(additionalInfoResponse.error);
+            }
+            additionalInfo = additionalInfoResponse.info!;
+        } catch (error: unknown) {
+            console.error(error);
+            setIsLoading(false);
+            presentAlert({
+                header: "Additional Info Failure",
+                message: `Could not retrieve additional info: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.debug(`Got additional info: ${JSON.stringify(additionalInfo)}`);
+
+        // Log into the server using the UUID and master key
+        // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
+        console.debug("Logging in...");
+        const authInfo: AuthInfo = {
+            username: values.username,
+            obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
+            ...e2eeData,
+        };
+        try {
+            await auth.login(authInfo);
+        } catch (error) {
+            console.error(`Could not log in: ${error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Login Failure",
+                message: `Could not log in: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.log(`Logged in; using token: ${authInfo.token}`);
 
         // Update preferences
         Preferences.set({

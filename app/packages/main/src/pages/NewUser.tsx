@@ -24,8 +24,8 @@ import { arrowBack } from "ionicons/icons";
 import { e2ee } from "@lib/auth/e2ee";
 import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
-import { setObfuscationFlag } from "@lib/files/obfuscation";
-import { registerUser } from "@lib/users/api";
+import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
+import { AdditionalUserInfo } from "@lib/users/structures";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
@@ -109,10 +109,10 @@ const NewUser: React.FC = () => {
 
         // Set up account unlock key (AUK) and vault key
         setLoadingState("Creating new AUK and vault key...");
-        const additionalInfo = { username: values.username };
+        const keygenAdditionalInfo = { username: values.username };
 
         const aukSalt = randomBytes(32);
-        const auk = await generateKey(values.password, additionalInfo, aukSalt);
+        const auk = await generateKey(values.password, keygenAdditionalInfo, aukSalt);
         console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
 
         const vaultKey = randomBytes(32);
@@ -161,12 +161,39 @@ const NewUser: React.FC = () => {
             return;
         }
 
+        // Set vault key for auth
+        auth.setVaultKey(vaultKey);
+
+        // Update user additional info
+        const additionalInfo: AdditionalUserInfo = {
+            obfuscatedNames: true,
+        };
+
+        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+            auth.serverInfo!.apiURL!,
+            values.username,
+            e2eeData.token,
+            e2eeData.key,
+            additionalInfo,
+        );
+        if (!setAdditionalInfoResponse.success) {
+            console.error(`Could not update user additional info: ${setAdditionalInfoResponse.error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Update Failure",
+                message: `Could not update user additional info: ${setAdditionalInfoResponse.error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
+
         // Log into the server using the UUID and master key
         // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
         console.debug("Logging in...");
         const authInfo: AuthInfo = {
             username: values.username,
-            obfuscatedNames: null, // We'll get the actual value after login
+            obfuscatedNames: true, // New users will always have obfuscated names enabled
             ...e2eeData,
         };
         try {
@@ -182,9 +209,6 @@ const NewUser: React.FC = () => {
             return;
         }
         console.log(`Logged in; using token: ${authInfo.token}`);
-
-        // Set vault key for auth
-        auth.setVaultKey(vaultKey);
 
         // Show vault key
         setIsLoading(false);
@@ -220,11 +244,6 @@ const NewUser: React.FC = () => {
                     inputDisabled={true}
                     onDidDismiss={async () => {
                         setShowVaultKeyDialog(false);
-
-                        // Set the obfuscation flag
-                        await setObfuscationFlag(auth, true);
-
-                        // Move to files
                         router.push("/files/", "forward", "replace");
                         window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
                     }}

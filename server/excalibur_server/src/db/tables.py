@@ -30,6 +30,8 @@ class User(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
+    additional_info: str = Field(default="", nullable=False)
+    "Additional information about the user, accessible only after authentication"
 
     # Secure Remote Password (SRP)
     # TODO: Deprecate SRP fields in next version

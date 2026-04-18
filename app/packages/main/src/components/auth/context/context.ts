@@ -7,7 +7,7 @@ export interface AuthInfo extends E2EEData {
     /** Username */
     username?: string;
     /** Whether file names are obfuscated */
-    obfuscatedNames: boolean | null;
+    obfuscatedNames: boolean;
 }
 
 export interface ServerInfo {

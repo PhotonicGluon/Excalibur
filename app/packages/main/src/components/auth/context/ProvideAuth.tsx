@@ -124,9 +124,16 @@ function useProvideAuth(): AuthProvider {
         }
 
         // Get vault key
-        retrieveVaultKey(serverInfo.apiURL!, authInfo, (error) => {
-            console.error(error);
-        }).then((resp) => {
+        retrieveVaultKey(
+            serverInfo.apiURL!,
+            authInfo.username!,
+            authInfo.token,
+            authInfo.key,
+            authInfo.auk,
+            (error) => {
+                console.error(error);
+            },
+        ).then((resp) => {
             if (!resp) {
                 console.error("Failed to retrieve vault key");
                 return;

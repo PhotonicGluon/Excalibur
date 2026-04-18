@@ -94,5 +94,5 @@ export async function getVaultKey(
     }
 
     const data = await ExEF.decryptResponse<{ key_enc: string }>(e2eeKey, response);
-    return { success: true, encryptedKey: Buffer.from(data.key_enc, "base64") };
+    return { success: true, encryptedKey: Buffer.from(data!.key_enc, "base64") };
 }

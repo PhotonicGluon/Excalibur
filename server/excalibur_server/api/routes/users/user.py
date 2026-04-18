@@ -13,6 +13,7 @@ from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import get_credentials
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.users import User, add_user, get_user, is_user, remove_user
 
 
@@ -100,6 +101,52 @@ def get_user_vault_key_endpoint(username: Annotated[str, Path()]):
 
     user = get_user(username)
     return EncryptedVaultKey(key_enc=user.key_enc)
+
+
+@router.get(
+    "/info/{username}",
+    summary="Get Additional User Info",
+    dependencies=[Depends(get_credentials)],
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+    },
+    tags=["encrypted"],
+    response_class=PlainTextResponse,
+)
+def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
+    """
+    Returns the additional user info of a user with the specified username.
+    """
+
+    if not is_user(username):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user = get_user(username)
+    return user.additional_info
+
+
+@router.post(
+    "/edit-info/{username}",
+    summary="Edit Additional User Info",
+    dependencies=[Depends(get_credentials)],
+    responses={
+        status.HTTP_200_OK: {"description": "User info updated", "content": None},
+        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+    },
+    tags=["encrypted"],
+)
+def edit_additional_user_info_endpoint(username: Annotated[str, Path()], info: Annotated[str, Body()]):
+    """
+    Edits the additional user info of a user with the specified username.
+    """
+
+    with get_session() as session:
+        curr_user = session.query(User).filter(User.username == username).first()
+        if curr_user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        curr_user.additional_info = info
+        session.commit()
 
 
 @router.post(
