@@ -70,7 +70,6 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
             </div>
         );
     }
-
     return (
         <IonList
             lines="none"
@@ -82,7 +81,7 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
                 <DirectoryItem
                     oddRow={true}
                     name="(Go Back)"
-                    fullpath={getParent("./" + props.path)}
+                    fullpath={getParent(props.path)}
                     type="parent"
                     onClickItemOverride={props.onParentClickOverride}
                 ></DirectoryItem>
