@@ -61,6 +61,8 @@ async def move_path_endpoint(
     if item.parent_id == dest_folder.id:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
 
+    src_folder_path = get_item_fullpath(item.parent_id)
+
     # Move the item
     with get_session() as session:
         try:
@@ -73,4 +75,6 @@ async def move_path_endpoint(
         except IntegrityError:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
 
-    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
+    # Notify folder changes
+    background_tasks.add_task(add_folder_change, credentials, src_folder_path)  # Source
+    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)  # Destination
