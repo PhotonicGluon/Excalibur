@@ -1,5 +1,7 @@
 import seedrandom from "seedrandom";
 
+import { Directory } from "@lib/files/structures";
+
 /**
  * Substitution cipher for obfuscation.
  */
@@ -61,4 +63,25 @@ export class SubstitutionCipher {
         const ctBuffer = Buffer.from(ct, "hex");
         return Buffer.from(ctBuffer.map((b) => this._backwardCipher[b]));
     }
+}
+
+/**
+ * Deobfuscates the names of the items in a directory using the given cipher.
+ *
+ * @param directory directory to deobfuscate
+ * @param noc name obfuscation cipher to use
+ * @returns deobfuscated directory
+ */
+export function deobfuscateDirectoryItems(directory: Directory, noc: SubstitutionCipher): Directory {
+    if (directory.items) {
+        directory.items = directory.items.map((item) => {
+            return {
+                ...item,
+                name:
+                    noc.decipher(item.name.replace(/\.exef$/g, "")).toString("utf-8") +
+                    (item.type === "file" ? ".exef" : ""),
+            };
+        });
+    }
+    return directory;
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
+import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
 
 import { useAuth } from "@components/auth/context";
@@ -59,7 +60,7 @@ export function useDirectory(): {
                 return;
             }
 
-            const directory = response.directory!;
+            let directory = response.directory!;
 
             // If this request is not the latest, ignore it
             if (requestNum < latestRequestRef.current) {
@@ -68,15 +69,8 @@ export function useDirectory(): {
             }
 
             // Deobfuscate the names, if necessary
-            if (auth.authInfo!.obfuscatedNames && directory.items) {
-                directory.items = directory.items.map((item) => {
-                    return {
-                        ...item,
-                        name:
-                            auth.noc!.decipher(item.name.replace(/\.exef$/g, "")).toString("utf-8") +
-                            (item.type === "file" ? ".exef" : ""),
-                    };
-                });
+            if (auth.authInfo!.obfuscatedNames && directory.items && auth.noc) {
+                directory = deobfuscateDirectoryItems(directory, auth.noc);
             }
 
             // Set the deobfuscated directory contents
