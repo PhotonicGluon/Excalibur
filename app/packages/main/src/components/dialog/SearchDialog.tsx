@@ -48,15 +48,19 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
      */
     async function handleInputChange(e: CustomEvent) {
         // Update search text
-        const newSearchText = e.detail.value || "";
+        const newSearchText: string = e.detail.value || "";
         setSearchText(newSearchText);
 
         // Get query
-        const query = newSearchText.trim();
-        if (query === "") {
+        const rawQuery = newSearchText.trim();
+        if (rawQuery === "") {
             setSearchResults([]);
             return;
         }
+
+        // Obfuscate the query, if necessary
+        const query = auth.authInfo!.obfuscatedNames ? auth.noc!.encipher(Buffer.from(rawQuery, "utf-8")) : rawQuery;
+        console.debug(`Searching for '${rawQuery}'${auth.authInfo!.obfuscatedNames ? ` ('${query}')` : ""}`);
 
         // Search for files
         setSearchResults(null);
@@ -110,12 +114,19 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                     {searchResults &&
                         searchResults.length > 0 &&
                         searchResults.map(({ file, similarity: _similarity }, idx) => {
+                            // Deobfuscate name if needed
+                            const rawName = file.name;
+                            const name = auth.authInfo!.obfuscatedNames
+                                ? auth.noc!.decipher(rawName).toString("utf-8")
+                                : rawName;
+
+                            // Create the directory item
                             return (
                                 <DirectoryItem
                                     key={idx}
                                     ellipsisMenuEnabled={false}
                                     oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
-                                    name={file.name}
+                                    name={name}
                                     fullpath={file.fullpath}
                                     type={file.type}
                                     size={file.type === "file" ? file.size : undefined}
