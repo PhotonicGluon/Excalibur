@@ -107,7 +107,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             jobsManager.addJob(jobID, {
                 direction: "download",
-                filename: fileName,
+                name: fileName, // This is the deobfuscated name
                 description: "Downloading...",
                 progress: null,
                 controller: controller,

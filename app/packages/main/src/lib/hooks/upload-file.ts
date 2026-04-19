@@ -15,7 +15,7 @@ import { useExplorerContext } from "@components/explorer/context";
 import { useJobsManager } from "@components/explorer/jobs/context";
 import { useSettings } from "@components/settings/context";
 
-type UploadFile = PickedFile & { directory?: string };
+type UploadFile = PickedFile & { rawName: string; directory?: string };
 
 export function useUploadFile() {
     // Contexts
@@ -47,12 +47,12 @@ export function useUploadFile() {
 
             jobsManager.addJob(jobID, {
                 direction: "upload",
-                filename: rawFile.name,
+                name: rawFile.rawName,
                 description: "Setting up data stream...",
                 progress: null,
                 controller: controller,
             });
-            console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
+            console.debug(`Created new job for '${rawFile.rawName}' with id '${jobID}'`);
 
             try {
                 // Set up file data stream
@@ -172,12 +172,12 @@ export function useUploadFile() {
         if (!files) {
             // Get file picker to let user choose the files
             try {
-                files = (await FilePicker.pickFiles()).files;
-                files = files.map((item) => {
+                const pickedFiles = (await FilePicker.pickFiles()).files;
+                files = pickedFiles.map((item) => {
                     const name = auth.authInfo!.obfuscatedNames
                         ? auth.noc!.encipher(Buffer.from(item.name, "utf-8"))
                         : item.name;
-                    return { ...item, name };
+                    return { ...item, name, rawName: item.name };
                 });
             } catch (e: unknown) {
                 const message = (e as Error).message;
@@ -257,7 +257,7 @@ export function useUploadFile() {
                 let haltUploads = false;
                 await new Promise<void>((resolve) => {
                     explorerContext.presentAlert({
-                        header: `${file.name} already exists`,
+                        header: `${file.rawName} already exists`,
                         message: "Do you want to override the existing file?",
                         onDidDismiss: () => {
                             resolve();
@@ -339,6 +339,7 @@ export function useUploadFile() {
                 // Create instance
                 return {
                     name: fileName,
+                    rawName: item.file.name,
                     size: item.file.size,
                     mimeType: item.file.type,
                     blob: item.file,

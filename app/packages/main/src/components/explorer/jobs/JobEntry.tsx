@@ -10,7 +10,7 @@ interface JobDetails {
     /** Direction of the job */
     direction: "upload" | "download";
     /** Name of the file handled by the job */
-    filename: string;
+    name: string;
     /** Description of the job */
     description: string;
     /**
@@ -38,8 +38,8 @@ const JobEntry: React.FC<ContainerProps> = (props) => {
         <div className="grid h-6 grid-cols-2">
             <div className="flex items-center gap-1">
                 <IonIcon icon={props.direction === "upload" ? arrowUp : arrowDown} className="size-4"></IonIcon>
-                <IonLabel className="max-w-36 truncate font-mono font-bold" title={props.filename}>
-                    {props.filename}
+                <IonLabel className="max-w-36 truncate font-mono font-bold" title={props.name}>
+                    {props.name}
                 </IonLabel>
             </div>
             <div className="flex items-center">

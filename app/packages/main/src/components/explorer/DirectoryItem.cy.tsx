@@ -52,7 +52,7 @@ describe("<DirectoryItem />", () => {
                             jobs: new Map(),
                             addJob: (_id: string, _job: Job) => {},
                             getJob: (_id: string) => {
-                                return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
+                                return { id: _id, name: "", description: "", progress: 0, direction: "upload" };
                             },
                             updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
                             updateProgress: (_id: string, _newProgress: number | null) => {},
