@@ -15,6 +15,14 @@ describe("Moving Operations", () => {
         folderName = createFolder();
     });
 
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     it("should handle simple moving", () => {
         // Clicking on move button should bring up move dialog
         cy.get(`div[data-name='${fileName}']`).scrollIntoView(); // Make sure its visible

@@ -17,6 +17,14 @@ describe("Nested Operations", () => {
         cy.url().should("include", `/files/${encodeURIComponent(superFolderName)}`);
     });
 
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     it("should have a working back to parent folder button", () => {
         cy.get("#files-area").contains("(Go Back)").click();
         cy.url().should("equal", `${Cypress.config().baseUrl}/files/`);

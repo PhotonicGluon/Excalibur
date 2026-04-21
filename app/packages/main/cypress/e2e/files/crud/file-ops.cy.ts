@@ -8,6 +8,14 @@ describe("Upload and Download Operations", () => {
         cy.url().should("include", "/files");
     });
 
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     describe("single-file upload and download", () => {
         it("should handle small file", () => {
             createFile(SMALL_SIZE);

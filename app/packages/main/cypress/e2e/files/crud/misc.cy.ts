@@ -7,6 +7,14 @@ describe("Miscellaneous Operations", () => {
         cy.url().should("include", "/files");
     });
 
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     it("should handle folder creation", () => {
         createFolder();
     });
