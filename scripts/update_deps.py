@@ -7,6 +7,8 @@ import os
 import re
 import json
 import subprocess
+
+from rich import print
 from rich.status import Status
 
 APP_FOLDER = "app"
@@ -29,7 +31,7 @@ def update_app() -> dict[str, tuple[str, str]]:
         with open(package_json_file, "r") as f:
             package_json_contents[package_json_file] = json.load(f)
 
-    # Run the `npm-check-updates` command
+    # Run the `pnpm update` command
     with Status("Updating application dependencies"):
         subprocess.run(
             APP_DEP_UPDATE_COMMAND,
@@ -85,8 +87,8 @@ def update_server() -> dict[str, tuple[str, str]]:
     # Get the lines which indicate updated dependencies
     raw_updates = []
     for line in output.splitlines():
-        if line.startswith("Update "):
-            raw_updates.append(line.removeprefix("Update "))
+        if line.startswith("Update ") or line.startswith("Updated "):
+            raw_updates.append(line.removeprefix("Update ").removeprefix("Updated "))
 
     # Process the updates
     updates = {}
@@ -121,11 +123,13 @@ def main() -> None:
             file_mode = "w"
             if os.path.exists(log_file):
                 file_mode = "a"
-            with open(log_file, file_mode) as f:
+            with open(log_file, file_mode, encoding="utf-8", newline="\n") as f:
                 if file_mode == "a":
                     f.write("\n==========\n")
 
                 f.write(f"⬆️ Updated `{dep_name}` from `{old_version}` to `{new_version}`\n")
+
+    print("[green]Dependency updates complete![/green]")
 
 
 if __name__ == "__main__":

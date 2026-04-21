@@ -1,0 +1,1 @@
+⬆️ Updated `pydantic` from `2.12.5` to `2.13.1`
