@@ -16,7 +16,7 @@ APP_PACKAGE_JSON_FILES = [
     "app/packages/electron/package.json",
     "app/packages/main/package.json",
 ]
-APP_DEP_UPDATE_COMMAND = "pnpm dlx npm-check-updates --peer --workspaces --cooldown 5d --configFilePath app/.ncurc.cjs --jsonUpgraded"
+APP_DEP_UPDATE_COMMAND = "pnpm --recursive update"
 
 SERVER_FOLDER = "server"
 SERVER_DEP_UPDATE_COMMAND = "uv lock --upgrade"
@@ -31,32 +31,36 @@ def update_app() -> dict[str, tuple[str, str]]:
 
     # Run the `npm-check-updates` command
     with Status("Updating application dependencies"):
-        output = subprocess.run(
+        subprocess.run(
             APP_DEP_UPDATE_COMMAND,
             shell=True,
             capture_output=True,
             text=True,
             check=True,
         )
-        output = output.stdout
 
-    # Get dependencies that got updated and their versions
-    upgrade_report = json.loads(output)
-    upgraded_deps = {}
-    for _, deps in upgrade_report.items():
-        for dep, version in deps.items():
-            upgraded_deps[dep] = version
+    # Get new `package.json` contents
+    new_package_json_contents = {}
+    for package_json_file in APP_PACKAGE_JSON_FILES:
+        with open(package_json_file, "r") as f:
+            new_package_json_contents[package_json_file] = json.load(f)
 
     # Retrieve old dependencies and determine the delta between versions
     deps_version_deltas = {}
-    for package_json_file, deps in package_json_contents.items():
-        for dependency_group in {"dependencies", "devDependencies"}:
-            for dep, version in deps.get(dependency_group, {}).items():
-                if dep in upgraded_deps:
+
+    for package_json_file in APP_PACKAGE_JSON_FILES:
+        old_contents = package_json_contents[package_json_file]
+        new_contents = new_package_json_contents[package_json_file]
+
+        for dep_group in {"dependencies", "devDependencies"}:
+            old_deps = old_contents.get(dep_group, {})
+            new_deps = new_contents.get(dep_group, {})
+
+            for dep, version in old_deps.items():
+                if (updated_version := new_deps.get(dep)) != version:
                     if not version[0].isdigit():
                         version = version[1:]
 
-                    updated_version = upgraded_deps[dep]
                     if not updated_version[0].isdigit():
                         updated_version = updated_version[1:]
 
@@ -104,9 +108,7 @@ def main() -> None:
     server_dep_updates = update_server()
 
     # Write update logs
-    for folder, dep_updates in zip(
-        [APP_FOLDER, SERVER_FOLDER], [app_dep_updates, server_dep_updates]
-    ):
+    for folder, dep_updates in zip([APP_FOLDER, SERVER_FOLDER], [app_dep_updates, server_dep_updates]):
         for dep_name, (old_version, new_version) in dep_updates.items():
             # Properly format dependency name
             processed_dep_name = re.sub(r"[^\w\s\/\-]", "", dep_name)
@@ -123,9 +125,7 @@ def main() -> None:
                 if file_mode == "a":
                     f.write("\n==========\n")
 
-                f.write(
-                    f"⬆️ Updated `{dep_name}` from `{old_version}` to `{new_version}`\n"
-                )
+                f.write(f"⬆️ Updated `{dep_name}` from `{old_version}` to `{new_version}`\n")
 
 
 if __name__ == "__main__":
