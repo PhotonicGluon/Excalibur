@@ -462,7 +462,7 @@ const FileExplorer: React.FC = () => {
                                 <DirectoryBreadcrumbs
                                     className="flex-nowrap"
                                     path={requestedPath}
-                                    noc={auth.noc ?? undefined}
+                                    noc={auth.authInfo!.obfuscatedNames ? auth.noc! : undefined}
                                 />
                             </div>
 
