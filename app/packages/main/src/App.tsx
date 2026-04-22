@@ -35,7 +35,10 @@ import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
 import ServerChoice from "@pages/ServerChoice";
-import Settings from "@pages/Settings";
+import CryptoSettings from "@pages/Settings/CryptoSettings";
+import InterfaceSettings from "@pages/Settings/InterfaceSettings";
+import SettingsMenu from "@pages/Settings/SettingsMenu";
+import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
 
 import "@theme";
@@ -134,7 +137,12 @@ const App: React.FC = () => {
                     {/* Main */}
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
-                    <Route path="/settings" component={Settings} />
+
+                    {/* Settings */}
+                    <Route exact path="/settings" component={SettingsMenu} />
+                    <Route exact path="/settings/interface" component={InterfaceSettings} />
+                    <Route exact path="/settings/crypto" component={CryptoSettings} />
+                    <Route exact path="/settings/update" component={UpdateSettings} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

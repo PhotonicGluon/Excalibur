@@ -37,18 +37,18 @@ function useProvideSettings(): SettingsProvider {
     const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
     const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
 
-    function changeFunc(settings: SettingsPreferenceValues) {
-        setTheme(settings.theme);
-        setIconStyle(settings.iconStyle);
-        setRowAlternatingColours(settings.rowAlternatingColours);
-        setFileSizeUnits(settings.fileSizeUnits);
-        setCryptoKeyStrength(settings.cryptoKeyStrength);
-        setCryptoChunkSize(settings.cryptoChunkSize);
-        setCheckUpdate(settings.checkUpdate);
-        setCheckUpdateInterval(settings.checkUpdateInterval);
+    function changeFunc(settings: Partial<SettingsPreferenceValues>) {
+        if (settings.theme !== undefined) setTheme(settings.theme);
+        if (settings.iconStyle !== undefined) setIconStyle(settings.iconStyle);
+        if (settings.rowAlternatingColours !== undefined) setRowAlternatingColours(settings.rowAlternatingColours);
+        if (settings.fileSizeUnits !== undefined) setFileSizeUnits(settings.fileSizeUnits);
+        if (settings.cryptoKeyStrength !== undefined) setCryptoKeyStrength(settings.cryptoKeyStrength);
+        if (settings.cryptoChunkSize !== undefined) setCryptoChunkSize(settings.cryptoChunkSize);
+        if (settings.checkUpdate !== undefined) setCheckUpdate(settings.checkUpdate);
+        if (settings.checkUpdateInterval !== undefined) setCheckUpdateInterval(settings.checkUpdateInterval);
     }
 
-    async function saveFunc(settings: SettingsPreferenceValues) {
+    async function saveFunc(settings: Partial<SettingsPreferenceValues>) {
         console.debug("Saving settings...");
         changeFunc(settings);
         await Preferences.set(settings);
