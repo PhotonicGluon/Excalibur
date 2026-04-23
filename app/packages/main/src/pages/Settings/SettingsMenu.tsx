@@ -39,29 +39,34 @@ const SettingsMenu: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 <IonList className="mt-2 rounded-lg bg-transparent pt-0 *:[--background:var(--ion-background-color)]">
-                    <IonItem routerLink="/settings/interface" routerDirection="forward">
+                    <IonItem id="settings-interface" routerLink="/settings/interface" routerDirection="forward">
                         <IonLabel>
                             <h2>Interface</h2>
-                            <p>Affects the interface of Excalibur.</p>
+                            <p>Change how the interface of Excalibur looks and behaves.</p>
                         </IonLabel>
                     </IonItem>
-                    <IonItem routerLink="/settings/crypto" routerDirection="forward">
+                    <IonItem id="settings-crypto" routerLink="/settings/crypto" routerDirection="forward">
                         <IonLabel>
                             <h2>Crypto</h2>
                             <p>Affects the cryptographic operations of Excalibur.</p>
                         </IonLabel>
                     </IonItem>
-                    <IonItem routerLink="/settings/update" routerDirection="forward">
+                    <IonItem id="settings-update" routerLink="/settings/update" routerDirection="forward">
                         <IonLabel>
                             <h2>Update</h2>
-                            <p>Affects the update functionality of Excalibur.</p>
+                            <p>Modify how Excalibur checks for updates.</p>
                         </IonLabel>
                     </IonItem>
 
-                    <IonItem routerLink="/settings/server" routerDirection="forward" disabled={!auth.getToken()}>
+                    <IonItem
+                        id="settings-server"
+                        routerLink="/settings/server"
+                        routerDirection="forward"
+                        disabled={!auth.getToken()}
+                    >
                         <IonLabel>
                             <h2>Server</h2>
-                            <p>Affects the server functionality of Excalibur.</p>
+                            <p>Configure the settings for the current server.</p>
                         </IonLabel>
                     </IonItem>
                 </IonList>
