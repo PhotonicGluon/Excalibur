@@ -2,7 +2,7 @@
     "name": "excalibur-monorepo",
     "private": true,
     "scripts": {
-        "update": "cd website && pnpm run update",
+        "update": "pnpm --recursive update",
         "sync": "cd website && pnpm i"
     }
 }

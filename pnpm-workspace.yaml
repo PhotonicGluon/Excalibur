@@ -1,6 +1,10 @@
 packages:
   - website
 
+minimumReleaseAge: 7200 # 5 days, expressed in minutes
+minimumReleaseAgeExclude:
+  - uuid@14.0.0
+
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - core-js
@@ -8,11 +12,8 @@ onlyBuiltDependencies:
   - sharp
 
 overrides:
-  lodash-es@>=4.0.0 <=4.17.22: '>=4.17.23'
-  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
-  minimatch@<9.0.7: '>=9.0.7'
-  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
-  serialize-javascript@<=7.0.2: '>=7.0.3'
+  serialize-javascript@<7.0.5: ">=7.0.5"
+  uuid@<14.0.0: ">=14.0.0"
 
 sideEffectsCache: false
 
