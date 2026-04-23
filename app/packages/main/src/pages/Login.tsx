@@ -21,6 +21,7 @@ import {
 } from "@ionic/react";
 
 import { e2ee } from "@lib/auth/e2ee";
+import { useEffectOnce } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 import { checkUser } from "@lib/users/api";
 import { retrieveVaultKey } from "@lib/users/vault";
@@ -208,6 +209,13 @@ const Login: React.FC = () => {
     }
 
     // Effects
+    useEffectOnce(() => {
+        // Log out user if they're still logged in (e.g., if got kicked back due to network issues)
+        if (auth.getToken()) {
+            auth.logout();
+        }
+    });
+
     useEffect(() => {
         // Get existing values from preferences
         Preferences.get("username").then((result) => {
