@@ -37,6 +37,7 @@ import NewUser from "@pages/NewUser";
 import ServerChoice from "@pages/ServerChoice";
 import CryptoSettings from "@pages/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Settings/InterfaceSettings";
+import ServerSettings from "@pages/Settings/ServerSettings";
 import SettingsMenu from "@pages/Settings/SettingsMenu";
 import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
@@ -143,6 +144,7 @@ const App: React.FC = () => {
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
                     <Route exact path="/settings/crypto" component={CryptoSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
+                    <PrivateRoute exact path="/settings/server" component={ServerSettings} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

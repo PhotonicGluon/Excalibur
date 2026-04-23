@@ -14,9 +14,12 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { useAuth } from "@components/auth/context";
+
 const SettingsMenu: React.FC = () => {
     // Contexts
     const router = useIonRouter();
+    const auth = useAuth();
 
     // Render
     return (
@@ -52,6 +55,13 @@ const SettingsMenu: React.FC = () => {
                         <IonLabel>
                             <h2>Update</h2>
                             <p>Affects the update functionality of Excalibur.</p>
+                        </IonLabel>
+                    </IonItem>
+
+                    <IonItem routerLink="/settings/server" routerDirection="forward" disabled={!auth.getToken()}>
+                        <IonLabel>
+                            <h2>Server</h2>
+                            <p>Affects the server functionality of Excalibur.</p>
                         </IonLabel>
                     </IonItem>
                 </IonList>
