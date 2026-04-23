@@ -104,19 +104,19 @@ def get_item_fullpath(item_id: uuid.UUID) -> Path:
     if item.parent_id is None:
         return Path("")
 
-    fullpath = item.fullpath
+    fullpath = Path(item.fullpath)
     parent_item = get_item(item.parent_id)
     if parent_item.last_modified > item.last_modified:
         # The parent was modified more recently than this item, so we need to update the fullpath
-        fullpath = parent_item.fullpath / item.name
+        fullpath = Path(parent_item.fullpath) / item.name
         with get_session() as session:
             with session.begin():
                 current_item = session.query(FSItem).filter_by(id=item_id).first()
-                current_item.fullpath = parent_item.fullpath / item.name
+                current_item.fullpath = (Path(parent_item.fullpath) / item.name).as_posix()
                 current_item.last_modified = time_ns()
                 session.add(current_item)
 
-    return Path(fullpath)
+    return fullpath
 
 
 def is_dir_empty(folder_id: uuid.UUID) -> bool:

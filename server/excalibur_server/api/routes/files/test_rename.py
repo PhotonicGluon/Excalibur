@@ -92,6 +92,43 @@ class TestRename:
         assert response.status_code == 200
         assert get_item(file.id).name == "new-name-enc"
 
+    def test_rename_nested_item(
+        self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem
+    ):
+        root_id = test_user["root_id"]
+
+        folder = FSItem(
+            parent_id=rename_folder.id,
+            root_id=root_id,
+            name="nested-folder",
+            is_folder=True,
+            fullpath="rename-folder/nested-folder",
+        )
+        file = FSItem(
+            parent_id=folder.id,
+            root_id=root_id,
+            name="file",
+            is_folder=False,
+            fullpath="rename-folder/nested-folder/file",
+        )
+        db_session.add(folder)
+        db_session.add(file)
+        db_session.commit()
+
+        # Rename the folder
+        response = auth_client_db.post(
+            f"/api/files/rename/{get_item_fullpath(folder.id).as_posix()}", json="changed-folder-name"
+        )
+        assert response.status_code == 200
+        assert get_item(folder.id).fullpath == "rename-folder/changed-folder-name"
+
+        # Check the processing of the fullpath of the file
+        assert get_item(file.id).fullpath == "rename-folder/nested-folder/file"  # Should not have changed
+
+        new_fullpath = get_item_fullpath(file.id)  # Forces refresh of fullpath
+        assert new_fullpath.as_posix() == "rename-folder/changed-folder-name/file"
+        assert get_item(file.id).fullpath == "rename-folder/changed-folder-name/file"
+
     def test_illegal_name(self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem):
         # Create test file
         file = FSItem(
