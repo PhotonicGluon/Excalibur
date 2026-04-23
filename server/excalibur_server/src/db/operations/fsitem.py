@@ -118,12 +118,15 @@ def get_item_fullpath(item_id: uuid.UUID) -> Path:
     #             session.add(current_item)
 
     fullpath = get_item_fullpath(item.parent_id) / item.name
-    with get_session() as session:
-        with session.begin():
-            current_item = session.query(FSItem).filter_by(id=item_id).first()
-            current_item.fullpath = fullpath.as_posix()
-            current_item.last_modified = time_ns()
-            session.add(current_item)
+    if item.fullpath != fullpath.as_posix():
+        # Update the database records
+        with get_session() as session:
+            with session.begin():
+                current_item = session.query(FSItem).filter_by(id=item_id).first()
+                current_item.fullpath = fullpath.as_posix()
+                current_item.last_modified = time_ns()
+                session.add(current_item)
+
     return fullpath
 
 
