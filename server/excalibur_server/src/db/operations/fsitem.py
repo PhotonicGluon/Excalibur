@@ -1,6 +1,6 @@
-import time
 import uuid
 from pathlib import Path
+from time import time_ns
 
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
@@ -113,7 +113,7 @@ def get_item_fullpath(item_id: uuid.UUID) -> Path:
             with session.begin():
                 current_item = session.query(FSItem).filter_by(id=item_id).first()
                 current_item.fullpath = parent_item.fullpath / item.name
-                current_item.last_modified = int(time.time())
+                current_item.last_modified = time_ns()
                 session.add(current_item)
 
     return Path(fullpath)

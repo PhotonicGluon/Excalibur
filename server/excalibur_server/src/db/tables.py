@@ -1,8 +1,8 @@
 import mimetypes
 import uuid
-from time import time
+from time import time, time_ns
 
-from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
+from sqlmodel import BigInteger, Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.srp.group import SRPGroup
@@ -96,10 +96,10 @@ class FSItem(SQLModel, table=True):
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
     timestamp: int = Field(nullable=False, default_factory=lambda: int(time()))
-    "Creation timestamp of the item"
-    last_modified: int = Field(nullable=False, default_factory=lambda: int(time()))
+    "Creation timestamp of the item as _seconds_ since the Unix epoch"
+    last_modified: int = Field(sa_column=Column(BigInteger(), nullable=False), default_factory=time_ns)
     """
-    Last modified timestamp of the item.
+    Last modified timestamp of the item as _nanoseconds_ since the Unix epoch.
     
     Used internally to check whether the fullpath needs to be updated.
     """
