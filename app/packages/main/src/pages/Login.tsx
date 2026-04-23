@@ -362,7 +362,7 @@ const Login: React.FC = () => {
                                 </IonButton>
                             </form>
 
-                            <hr className="mt-4 mb-2 h-px w-full bg-neutral-200 dark:bg-neutral-700"></hr>
+                            <hr />
                             <IonText className="mt-2 text-center">
                                 No account?{" "}
                                 <IonText

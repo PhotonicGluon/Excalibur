@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
+    IonCheckbox,
     IonContent,
     IonHeader,
     IonIcon,
@@ -36,6 +37,8 @@ interface NewUserValues {
     username: string;
     /** Password for the user */
     password: string;
+    /** Whether to use obfuscated names */
+    obfuscatedNames: boolean;
 }
 
 const NewUser: React.FC = () => {
@@ -65,13 +68,16 @@ const NewUser: React.FC = () => {
         // Get raw inputs
         const rawUsername = (document.querySelector("#new-username-input")! as HTMLIonInputElement).value! as string;
         const rawPassword = (document.querySelector("#new-password-input")! as HTMLIonInputElement).value! as string;
+        const rawObfuscatedNames = (document.querySelector("#use-obfuscated-names")! as HTMLIonCheckboxElement)
+            .checked! as boolean;
 
         // Preprocess
         const username = rawUsername.trim();
         const password = rawPassword.trim();
+        const obfuscatedNames = rawObfuscatedNames;
 
         // Form values
-        return { username: username, password: password };
+        return { username: username, password: password, obfuscatedNames: obfuscatedNames };
     }
 
     /**
@@ -165,7 +171,7 @@ const NewUser: React.FC = () => {
 
         // Update user additional info
         const additionalInfo: AdditionalUserInfo = {
-            obfuscatedNames: true,
+            obfuscatedNames: values.obfuscatedNames,
         };
 
         const setAdditionalInfoResponse = await editAdditionalUserInfo(
@@ -190,7 +196,7 @@ const NewUser: React.FC = () => {
         // Set authentication info
         const authInfo: AuthInfo = {
             username: values.username,
-            obfuscatedNames: true, // New users will always have obfuscated names enabled
+            obfuscatedNames: values.obfuscatedNames,
             ...e2eeData,
         };
         auth.setAuthInfo(authInfo);
@@ -240,6 +246,7 @@ const NewUser: React.FC = () => {
                     {/* Signup Form */}
                     <form>
                         <div className="flex flex-col gap-3">
+                            {/* Basic Info */}
                             <div className="h-18">
                                 <IonInput
                                     id="new-username-input"
@@ -262,6 +269,19 @@ const NewUser: React.FC = () => {
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
                             </div>
+                            <hr />
+
+                            {/* Server Settings */}
+                            <IonCheckbox id="use-obfuscated-names" labelPlacement="end" checked={true}>
+                                <div className="w-full *:block *:leading-none">
+                                    <IonLabel className="text-base">Use Obfuscated Names</IonLabel>
+                                    <IonLabel color="medium" className="text-xs text-wrap">
+                                        Names will appear to be obfuscated from the perspective of the server, further
+                                        improving privacy.
+                                    </IonLabel>
+                                </div>
+                            </IonCheckbox>
+                            <hr className="mt-2" />
 
                             {/* Account creation key & signup button */}
                             <div id="ack-input">
