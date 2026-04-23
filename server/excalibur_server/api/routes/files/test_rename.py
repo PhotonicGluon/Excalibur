@@ -51,7 +51,7 @@ class TestRename:
         db_session.commit()
 
         # Rename the item
-        response = auth_client_db.post(f"/api/files/rename/{get_item_fullpath(file.id).as_posix()}", json="new-name")
+        response = auth_client_db.post(f"/api/files/rename/{file.fullpath}", json="new-name")
         assert response.status_code == 200
         assert get_item(file.id).name == "new-name"
 
@@ -116,9 +116,7 @@ class TestRename:
         db_session.commit()
 
         # Rename the folder
-        response = auth_client_db.post(
-            f"/api/files/rename/{get_item_fullpath(folder.id).as_posix()}", json="changed-folder-name"
-        )
+        response = auth_client_db.post(f"/api/files/rename/{folder.fullpath}", json="changed-folder-name")
         assert response.status_code == 200
         assert get_item(folder.id).fullpath == "rename-folder/changed-folder-name"
 
@@ -128,6 +126,56 @@ class TestRename:
         new_fullpath = get_item_fullpath(file.id)  # Forces refresh of fullpath
         assert new_fullpath.as_posix() == "rename-folder/changed-folder-name/file"
         assert get_item(file.id).fullpath == "rename-folder/changed-folder-name/file"
+
+    def test_rename_deeply_nested_item(
+        self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem
+    ):
+        root_id = test_user["root_id"]
+
+        folder_1 = FSItem(
+            parent_id=rename_folder.id,
+            root_id=root_id,
+            name="deep-folder-1",
+            is_folder=True,
+            fullpath="rename-folder/deep-folder-1",
+        )
+        folder_2 = FSItem(
+            parent_id=folder_1.id,
+            root_id=root_id,
+            name="deep-folder-2",
+            is_folder=True,
+            fullpath="rename-folder/deep-folder-1/deep-folder-2",
+        )
+        folder_3 = FSItem(
+            parent_id=folder_2.id,
+            root_id=root_id,
+            name="deep-folder-3",
+            is_folder=True,
+            fullpath="rename-folder/deep-folder-1/deep-folder-2/deep-folder-3",
+        )
+        file = FSItem(
+            parent_id=folder_3.id,
+            root_id=root_id,
+            name="file",
+            is_folder=False,
+            fullpath="rename-folder/deep-folder-1/deep-folder-2/deep-folder-3/file",
+        )
+        db_session.add(folder_1)
+        db_session.add(folder_2)
+        db_session.add(folder_3)
+        db_session.add(file)
+        db_session.commit()
+
+        # Rename only folders 3 and 1
+        assert auth_client_db.post(f"/api/files/rename/{folder_3.fullpath}", json="changed-3").status_code == 200
+        assert auth_client_db.post(f"/api/files/rename/{folder_1.fullpath}", json="changed-1").status_code == 200
+
+        # Check the processing of the fullpath of the file
+        assert get_item(file.id).fullpath == "rename-folder/deep-folder-1/deep-folder-2/deep-folder-3/file"
+
+        new_fullpath = get_item_fullpath(file.id)  # Forces refresh of fullpath of file and all directories
+        assert new_fullpath.as_posix() == "rename-folder/changed-1/deep-folder-2/changed-3/file"
+        assert get_item(file.id).fullpath == "rename-folder/changed-1/deep-folder-2/changed-3/file"
 
     def test_illegal_name(self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem):
         # Create test file
@@ -171,9 +219,7 @@ class TestRename:
         db_session.commit()
 
         # Try to rename file to existing name
-        response = auth_client_db.post(
-            f"/api/files/rename/{get_item_fullpath(file.id).as_posix()}", json="already-existent"
-        )
+        response = auth_client_db.post(f"/api/files/rename/{file.fullpath}", json="already-existent")
         assert response.status_code == 409  # Item already exists
 
     def test_rename_root(self, auth_client_db: TestClient):
