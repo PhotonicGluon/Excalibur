@@ -40,7 +40,6 @@ function useProvideAuth(): AuthProvider {
         return JSON.parse(storedServerInfo);
     });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
-    const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
 
     const noc = vaultKey
         ? new SubstitutionCipher(new HKDF("sha256").hkdf(vaultKey, null, Buffer.from("Name Obfuscation Cipher"), 32))
@@ -67,12 +66,7 @@ function useProvideAuth(): AuthProvider {
     }
 
     async function loginFunc(authInfo: AuthInfo) {
-        // Update state
         setAuthInfo(authInfo);
-        setVaultKey(vaultKey);
-        setOrigVaultKey(vaultKey);
-
-        // Save to local storage
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
     }
 
@@ -86,7 +80,6 @@ function useProvideAuth(): AuthProvider {
         localStorage.removeItem("authInfo");
 
         setVaultKey(null);
-        setOrigVaultKey(null);
     }
 
     // Effects
@@ -139,7 +132,6 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
             setVaultKey(resp);
-            setOrigVaultKey(resp);
         });
     });
 
@@ -148,7 +140,6 @@ function useProvideAuth(): AuthProvider {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
-        origVaultKey: origVaultKey!,
         noc: noc!,
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,

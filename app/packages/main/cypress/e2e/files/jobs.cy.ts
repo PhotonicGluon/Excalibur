@@ -2,7 +2,7 @@ import * as path from "path";
 
 import { DOWNLOADS_FOLDER, createFile } from "./helpers";
 
-describe("cancellations", () => {
+describe("Check Job Cancellations", () => {
     beforeEach(() => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
         cy.visit("/files/");

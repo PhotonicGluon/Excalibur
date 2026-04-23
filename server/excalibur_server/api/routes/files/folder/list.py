@@ -20,15 +20,12 @@ from excalibur_server.src.users import get_user
             "content": {
                 "application/json": {
                     "example": [
-                        [
-                            {
-                                "name": "example.txt",
-                                "fullpath": "example.txt",
-                                "type": "file",
-                                "size": 1024,
-                            },
-                            0.9,
-                        ],
+                        {
+                            "name": "example.txt",
+                            "fullpath": "example.txt",
+                            "type": "file",
+                            "size": 1024,
+                        },
                     ],
                 }
             },
@@ -48,7 +45,7 @@ def listdir_endpoint(
     """
     Lists the contents of a directory.
 
-    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be sent as `null`).
+    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be set as `null`).
     """
 
     path = processed_path

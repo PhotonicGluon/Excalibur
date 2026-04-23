@@ -1,6 +1,6 @@
 import { createFolder } from "./helpers";
 
-describe("breadcrumbs", () => {
+describe("Check Breadcrumbs", () => {
     beforeEach(() => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
         cy.visit("/files/");

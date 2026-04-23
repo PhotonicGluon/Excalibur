@@ -95,7 +95,6 @@ const NewUser: React.FC = () => {
     async function onConfirm(ack: Buffer) {
         // Check values
         const values = getAllValues();
-        console.log(values);
         if (!validateValues(values)) {
             presentAlert({
                 header: "Invalid Values",

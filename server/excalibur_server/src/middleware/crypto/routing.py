@@ -62,6 +62,12 @@ FILES_ROUTING_TREE = RoutingTree(
             },
         ),
         # In the root
+        "all": RoutingTree(
+            segment="all",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
         "move": RoutingTree(
             segment="move",
             has_path_param=True,
