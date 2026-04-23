@@ -138,7 +138,7 @@ def migrate_files():
     # Code proper
     from pathlib import Path
     from shutil import rmtree
-    from time import time
+    from time import time_ns
 
     from excalibur_server.src.config import CONFIG
     from excalibur_server.src.db.operations import add_item, get_session
@@ -184,7 +184,7 @@ def migrate_files():
                     name=path.name,
                     is_folder=True,
                     fullpath=path.as_posix(),
-                    last_modified=int(time()),
+                    last_modified=time_ns(),
                 )
                 directories[str(path)] = dir_item.id
                 add_item(dir_item)
@@ -199,7 +199,7 @@ def migrate_files():
                 fullpath=path.as_posix(),
                 size=abs_path.stat().st_size,
                 timestamp=int(abs_path.stat().st_mtime),
-                last_modified=int(time()),
+                last_modified=time_ns(),
             )
             file_renaming_map[abs_path] = f"{file_item.id}.exef"
             add_item(file_item)
