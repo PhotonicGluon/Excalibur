@@ -38,8 +38,6 @@ export interface AuthProvider {
     setAuthInfo: (authInfo: AuthInfo) => void;
     /** Set the server info */
     setServerInfo: (serverInfo: ServerInfo) => void;
-    /** Function to log into the server */
-    login: (authInfo: AuthInfo) => Promise<void>;
     /**
      * Function to log out of the server.
      *

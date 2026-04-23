@@ -211,27 +211,14 @@ const Login: React.FC = () => {
         }
         console.debug(`Got additional info: ${JSON.stringify(additionalInfo)}`);
 
-        // Log into the server using the UUID and master key
-        // TODO: We should really rename `auth.login()` to something else... since `login()` doesn't really "log in"
-        console.debug("Logging in...");
+        // Set authentication info
         const authInfo: AuthInfo = {
             username: values.username,
             obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
             ...e2eeData,
         };
-        try {
-            await auth.login(authInfo);
-        } catch (error) {
-            console.error(`Could not log in: ${error}`);
-            setIsLoading(false);
-            presentAlert({
-                header: "Login Failure",
-                message: `Could not log in: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.log(`Logged in; using token: ${authInfo.token}`);
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update preferences
         Preferences.set({

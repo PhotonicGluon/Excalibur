@@ -65,11 +65,6 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
-    async function loginFunc(authInfo: AuthInfo) {
-        setAuthInfo(authInfo);
-        localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
-    }
-
     async function logoutFunc(full: boolean = false) {
         if (full) {
             setServerInfo(null);
@@ -144,7 +139,6 @@ function useProvideAuth(): AuthProvider {
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,
-        login: loginFunc,
         logout: logoutFunc,
         setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),
     };

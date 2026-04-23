@@ -23,7 +23,6 @@ describe("<Versions />", () => {
                         setAuthInfo: () => {},
                         setServerInfo: () => {},
                         setVaultKey: () => {},
-                        login: () => Promise.resolve(),
                         logout: () => Promise.resolve(),
                     }}
                 >
