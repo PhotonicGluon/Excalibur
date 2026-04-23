@@ -8,7 +8,7 @@ beforeEach(() => {
     cy.url().should("include", "/files");
 });
 
-describe("cancellations", () => {
+describe("Check Job Cancellations", () => {
     it("should handle upload cancellations", () => {
         // Create a file upload task
         const fileName = createFile(1e6, true)[0];

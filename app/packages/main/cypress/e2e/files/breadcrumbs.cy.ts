@@ -6,7 +6,7 @@ beforeEach(() => {
     cy.url().should("include", "/files");
 });
 
-describe("breadcrumbs", () => {
+describe("Check Breadcrumbs", () => {
     it("should handle single-nested folder", () => {
         // Create super folder
         const superFolderName = createFolder();

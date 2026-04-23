@@ -38,7 +38,6 @@ function useProvideAuth(): AuthProvider {
         return JSON.parse(storedServerInfo);
     });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
-    const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
 
     // Handlers
     function getToken(): string | null {
@@ -64,7 +63,6 @@ function useProvideAuth(): AuthProvider {
         // Update state
         setAuthInfo(authInfo);
         setVaultKey(vaultKey);
-        setOrigVaultKey(vaultKey);
 
         // Save to local storage
         localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
@@ -80,7 +78,6 @@ function useProvideAuth(): AuthProvider {
         localStorage.removeItem("authInfo");
 
         setVaultKey(null);
-        setOrigVaultKey(null);
     }
 
     // Effects
@@ -126,7 +123,6 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
             setVaultKey(resp);
-            setOrigVaultKey(resp);
         });
     });
 
@@ -135,7 +131,6 @@ function useProvideAuth(): AuthProvider {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
-        origVaultKey: origVaultKey!,
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,

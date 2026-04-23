@@ -8,7 +8,7 @@ describe("Upload and Download Operations", () => {
         cy.url().should("include", "/files");
     });
 
-    describe("single-file upload and download", () => {
+    describe("Single-file Upload and Download", () => {
         it("should handle small file", () => {
             createFile(SMALL_SIZE);
         });
@@ -18,7 +18,7 @@ describe("Upload and Download Operations", () => {
         });
     });
 
-    describe("multi-file upload and download", () => {
+    describe("Multi-file Upload and Download", () => {
         it("should handle small files", () => {
             createFile(Array.from({ length: 5 }, () => SMALL_SIZE));
         });
