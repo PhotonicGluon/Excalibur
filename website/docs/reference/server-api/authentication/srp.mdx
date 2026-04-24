@@ -1,10 +1,14 @@
-# Authentication
+---
+sidebar_label: Initial Authentication via SRP
+---
 
-Excalibur uses Secure Remote Password (SRP) protocol combined with Proof-of-Possession (PoP) to ensure secure authentication.
+# Initial Authentication via Secure Remote Password (SRP)
 
-## Initial Authentication
+:::warning
 
-Although some of the endpoints of the server is available without authentication, any client who wishes to access their files need to authenticate themselves with the server.
+Initial authentication via the SRP protocol will be deprecated in a future release. Existing users are advised to migrate to the new [OPAQUE-3DH](./opaque) aPAKE protocol.
+
+:::
 
 The initial authentication process uses a [WebSocket](https://en.wikipedia.org/wiki/WebSocket) connection to the `/api/auth` endpoint. The rough process is as follows:
 
@@ -131,73 +135,3 @@ The full code that implements the server-side checking can be found in the [`com
 :::
 
 </details>
-
-## Authenticating Subsequent Requests
-
-Once this initial authentication process is complete, future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted. Read more in [Encrypted Requests and Responses](./encrypted-requests-and-responses.mdx).
-
-### Authentication Token
-
-The authentication token is a JSON Web Token (JWT) that contains the following claims:
-
-- `sub`: The subject of the token, which is the username.
-- `iat`: The issued at time of the token, which is the current time.
-- `exp`: The expiration time of the token.
-    - Currently the token expires after one hour.
-- `uuid`: Comms UUID used in the [Proof-of-Possession (PoP)](#proof-of-possession-pop) process.
-
-An example of JWT (which has an invalid JWT signature) is as follows:
-
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInN1YiI6ICJNeUNvb2xVc2VybmFtZSIsCiAgICAiaWF0IjogMTUxNjIzOTAyMiwKICAgICJleHAiOiAxNTE2MjQyNjIyLAogICAgInV1aWQiOiAiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIgp9.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
-```
-
-which has the following data (expressed in JSON):
-
-```json
-{
-    "sub": "MyCoolUsername",
-    "iat": 1516239022,
-    "exp": 1516242622,
-    "uuid": "123e4567-e89b-12d3-a456-426614174000"
-}
-```
-
-### Proof-of-Possession (PoP)
-
-A proof-of-possession (PoP) value needs to be computed in addition to providing the authentication token. This value is computed using a HMAC of the message `<METHOD> <PATH> <TIMESTAMP> <NONCE>`, where
-
-- `<METHOD>` is the HTTP method (e.g., `GET`, `POST`, `PUT`, `DELETE`) in ALL CAPS;
-- `<PATH>` is the path of the request (e.g., `/some/path/here`);
-- `<TIMESTAMP>` is the current time _in seconds_ since the Unix epoch; and
-- `<NONCE>` is a random 16 byte value.
-
-:::note[For WebSockets]
-
-Some WebSocket endpoints require a proof-of-possession as well. In this case, the only change is that the `<METHOD>` is the string `WEBSOCKET`.
-
-:::
-
-:::note[Why Not Include the Body?]
-
-The body of the message need not be included in the HMAC calculation since it is already verified by the encryption:
-
-- If the request does not include a body, then there is already nothing to check;
-- If the request does include a body, the body _should_ be encrypted using AES-GCM, which authenticates the data sent. Since the data sent uses the secret master key, no malicious actor can spoof the data; thus no need to check.
-
-:::
-
-The HMAC's key is the SRP master key $K$ and the hash algorithm used is SHA-256. The output PoP value is encoded using Base64 for ease of transmission.
-
-A CyberChef demonstration of the PoP generation process can be found [here](<https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF>).
-
-### Proving Possession
-
-Requests to secure endpoints need _both_ the authentication token and a PoP header, and the request/response body will be encrypted using the SRP master key.
-
-To prove that the user is who they claim to be, their request will need to include two headers:
-
-- **`Authorization`**: The format of the header is `Bearer <JWT>` where `<JWT>` is the authentication token.
-- **`X-SRP-PoP`**: The format of the header is `<TIMESTAMP> <NONCE> <PoP>` where `<PoP>` is the Base64 encoded PoP value computed as described above and `<TIMESTAMP>` and `<NONCE>` are the timestamp and nonce used to compute the PoP value, respectively.
-
-Failing to provide both headers will result in a `401 Unauthorized` response.
