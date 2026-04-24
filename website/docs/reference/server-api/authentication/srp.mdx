@@ -43,7 +43,7 @@ sequenceDiagram
 
 Let us examine the process in more detail.
 
-### Message Format
+## Message Format
 
 Each message is a JSON object containing the following fields:
 
@@ -69,12 +69,9 @@ Here are two examples of messages:
 }
 ```
 
-### Specification
+## Specification
 
 The specification of how the authentication process works is very technical and is described below.
-
-<details>
-<summary>Authentication Process Specification</summary>
 
 Let
 
@@ -133,5 +130,3 @@ The initial authentication process is as follows:
 The full code that implements the server-side checking can be found in the [`comms.py` file](https://github.com/PhotonicGluon/Excalibur/blob/main/server/excalibur_server/api/routes/auth/comms.py).
 
 :::
-
-</details>
