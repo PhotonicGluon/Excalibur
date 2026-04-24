@@ -5,11 +5,20 @@ minimumReleaseAge: 7200 # 5 days, expressed in minutes
 minimumReleaseAgeExclude:
   - uuid@14.0.0
 
-onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
-  - core-js
-  - core-js-pure
-  - sharp
+blockExoticSubdeps: true
+
+strictDepBuilds: true
+allowBuilds:
+  "@swc/core": true
+  "@tailwindcss/oxide": true
+  core-js-pure: true
+  core-js: true
+  sharp: true
+
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - "detect-port@1.6.1"
+  - "semver@6.3.1"
 
 overrides:
   serialize-javascript@<7.0.5: ">=7.0.5"

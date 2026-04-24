@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Website",
+            "request": "launch",
+            "type": "node-terminal",
+            "command": "pnpm run start",
+            "cwd": "${workspaceFolder}/website"
+        }
+    ]
+}
