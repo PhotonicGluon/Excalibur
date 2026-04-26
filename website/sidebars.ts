@@ -61,6 +61,7 @@ const sidebars: SidebarsConfig = {
                 },
                 "reference/server-api/encrypted-requests-and-responses",
                 "reference/server-api/files",
+                "reference/server-api/additional-user-info",
             ],
         },
     ],
