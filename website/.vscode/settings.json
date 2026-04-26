@@ -12,7 +12,7 @@
         "build": true,
         "changelog": true
     },
-    "cSpell.words": ["aPAKE", "appimage", "closeable", "ExEF", "HKDF", "HMAC", "katex", "ristretto255", "trivago"],
+    "cSpell.words": ["aPAKE", "appimage", "closeable", "ExEF", "HKDF", "HMAC", "katex", "OPRF", "ristretto255", "trivago"],
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
