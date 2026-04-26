@@ -50,6 +50,7 @@ You should see `Config is valid!` appear in the terminal.
 The database schema has been updated, with the following changes:
 - Added fields needed for the OPAQUE-3DH protocol
 - Modified existing SRP fields to be nullable
+- Implemented new database-backed filesystem (explained [below](#new-filesystem))
 
 As such, existing databases need to be upgraded. This can be done by running
 
@@ -58,6 +59,26 @@ excalibur db upgrade
 ```
 
 on the server.
+
+## New Filesystem {/* #new-filesystem */}
+
+In previous versions of Excalibur, the filesystem is based on the operating system's filesystem. That means that whatever quirks that the operating system has, will be reflected in Excalibur. For example, on Windows, the filesystem is case-insensitive, while on Linux, it is case-sensitive.
+
+In Excalibur 0.6, we have migrated the filesystem to be based on the database. This makes the filesystem more consistent across platforms. This, however, means that a migration is needed to use the new filesystem.
+
+First, it is recommended to create a backup of the server files by running:
+
+```bash
+excalibur backup
+```
+
+You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created.
+
+Now, begin the migration to the new filesystem by running:
+
+```bash
+excalibur db migrate-files
+```
 
 ## Conclusion
 
