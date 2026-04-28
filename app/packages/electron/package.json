@@ -19,7 +19,6 @@
     "devDependencies": {
         "@electron-toolkit/tsconfig": "^2.0.0",
         "@tailwindcss/vite": "^4.2.2",
-        "@vitejs/plugin-legacy": "^7.2.1",
         "@vitejs/plugin-react": "^5.2.0",
         "dmg-builder": "^26.8.1",
         "electron": "^41.2.1",

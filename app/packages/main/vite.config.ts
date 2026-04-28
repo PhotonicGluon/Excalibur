@@ -1,6 +1,5 @@
 /// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
-import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
@@ -31,7 +30,6 @@ function getAliasesFromTSConfig() {
 export const viteConfig = {
     plugins: [
         react({}),
-        legacy({}),
         tailwindcss(),
         nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
         syncTheme(),
