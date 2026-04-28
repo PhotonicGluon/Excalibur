@@ -1,1 +1,1 @@
-🧹 Updated GitHub action `pnpm/action-setup` to v5
+🧹 Updated GitHub action `pnpm/action-setup` to `v5`
