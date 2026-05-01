@@ -6,16 +6,16 @@ Revises: 31b8326dd3f5
 Create Date: 2026-03-20 13:38:50.404594
 """
 
-from typing import Sequence, Union
+from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
 # Revision identifiers used by Alembic
 revision: str = "3395faa787c3"
-down_revision: Union[str, Sequence[str], None] = "31b8326dd3f5"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "31b8326dd3f5"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 authprotocol = sa.Enum("SRP", "OPAQUE_3DH", name="authprotocol")
 
