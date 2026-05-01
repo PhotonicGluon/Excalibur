@@ -51,19 +51,25 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
         path = ""
 
     parts = [p for p in path.split("/") if p]
-    current_parent_id = root_id
-    current_item = get_item(root_id)
+    if not parts:
+        return get_item(root_id)
 
+    num_parts = len(parts)
     with get_session() as session:
-        with session.begin():
-            for part in parts:
-                current_item = session.query(FSItem).filter_by(name=part, parent_id=current_parent_id).first()
+        aliases = [aliased(FSItem, name=f"part_{i}") for i in range(num_parts)]
 
-                if not current_item:
-                    return None
-                current_parent_id = current_item.id
+        stmt = (
+            select(aliases[-1])
+            .select_from(aliases[0])
+            .where(aliases[0].parent_id == root_id, aliases[0].name == parts[0])  # First item must be child of the root
+        )
+        for i in range(1, num_parts):
+            stmt = stmt.join(aliases[i], aliases[i].parent_id == aliases[i - 1].id).where(aliases[i].name == parts[i])
 
-            return current_item.model_copy()
+        stmt = stmt.where(aliases[-1].root_id == root_id)  # Remove results where the target is not in the correct root
+
+        result = session.execute(stmt).first()
+        return result[0].model_copy() if result else None
 
 
 def get_items_in_folder(folder_id: str) -> list[FSItem]:
