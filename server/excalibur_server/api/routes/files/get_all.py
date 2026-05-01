@@ -39,7 +39,7 @@ def get_all_items_endpoint(credentials: Annotated[Credentials, Depends(get_crede
     """
     Lists all the items owned by the authenticated user.
 
-    Any directories will *not* have their items returned (i.e. items will be set as `null`).
+    Any directories will *not* have their items returned.
     """
 
     username = credentials.username
@@ -51,7 +51,6 @@ def get_all_items_endpoint(credentials: Annotated[Credentials, Depends(get_crede
     # Convert to appropriate filelike instances
     items = []
     for fsitem in fsitems:
-        item = None
         if fsitem.is_folder:
             item = Directory.from_fsitem(fsitem)
         else:

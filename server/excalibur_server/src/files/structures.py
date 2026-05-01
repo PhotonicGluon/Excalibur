@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal, Self, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from excalibur_server.src.db.operations import get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
@@ -79,7 +79,7 @@ class File(Filelike):
 class Directory(Filelike):
     type: Literal["directory"] = "directory"
 
-    items: list[Union[File, "Directory"]] | None = None
+    items: list[Union[File, "Directory"]] | None = Field(default=None, exclude_if=lambda v: v is None)
     "List of filelike instances in the directory"
 
     @classmethod

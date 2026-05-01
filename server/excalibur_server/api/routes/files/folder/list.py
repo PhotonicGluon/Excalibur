@@ -45,7 +45,7 @@ def listdir_endpoint(
     """
     Lists the contents of a directory.
 
-    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be set as `null`).
+    Any subdirectories in the main directory will *not* have their items returned.
     """
 
     path = processed_path
