@@ -1,3 +1,5 @@
+from pathlib import Path as PathlibPath
+from time import time_ns
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
@@ -16,15 +18,10 @@ from excalibur_server.src.users import get_user
     "/move/{path:path}",
     name="Move Item",
     responses={
-        status.HTTP_200_OK: {
-            "description": "Item moved",
-            "content": {"text/plain": {"example": "Item moved", "schema": None}},
-        },
+        status.HTTP_200_OK: {"description": "Item moved", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Item/destination not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists at destination"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot move root directory"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
     response_class=PlainTextResponse,
 )
@@ -64,15 +61,20 @@ async def move_path_endpoint(
     if item.parent_id == dest_folder.id:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
 
+    src_folder_path = get_item_fullpath(item.parent_id)
+
     # Move the item
     with get_session() as session:
         try:
             with session.begin():
                 db_item = session.query(FSItem).filter_by(id=item.id).first()
                 db_item.parent_id = dest_folder.id
+                db_item.fullpath = str(PathlibPath(dest_folder.fullpath) / db_item.name)
+                db_item.last_modified = time_ns()
                 session.add(db_item)
         except IntegrityError:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists at destination")
 
-    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
-    return "Item moved"
+    # Notify folder changes
+    background_tasks.add_task(add_folder_change, credentials, src_folder_path)  # Source
+    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)  # Destination

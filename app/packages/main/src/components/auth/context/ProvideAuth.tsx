@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import HKDF from "@lib/auth/hkdf";
+import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import { checkAPIUrl, getServerInfo } from "@lib/network";
 import { retrieveVaultKey } from "@lib/users/vault";
@@ -38,7 +40,10 @@ function useProvideAuth(): AuthProvider {
         return JSON.parse(storedServerInfo);
     });
     const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
-    const [origVaultKey, setOrigVaultKey] = useState<Buffer | null>(null);
+
+    const noc = vaultKey
+        ? new SubstitutionCipher(new HKDF("sha256").hkdf(vaultKey, null, Buffer.from("Name Obfuscation Cipher"), 32))
+        : null;
 
     // Handlers
     function getToken(): string | null {
@@ -60,16 +65,6 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
-    async function loginFunc(authInfo: AuthInfo) {
-        // Update state
-        setAuthInfo(authInfo);
-        setVaultKey(vaultKey);
-        setOrigVaultKey(vaultKey);
-
-        // Save to local storage
-        localStorage.setItem("authInfo", serializeAuthInfo(authInfo));
-    }
-
     async function logoutFunc(full: boolean = false) {
         if (full) {
             setServerInfo(null);
@@ -80,7 +75,6 @@ function useProvideAuth(): AuthProvider {
         localStorage.removeItem("authInfo");
 
         setVaultKey(null);
-        setOrigVaultKey(null);
     }
 
     // Effects
@@ -118,15 +112,21 @@ function useProvideAuth(): AuthProvider {
         }
 
         // Get vault key
-        retrieveVaultKey(serverInfo.apiURL!, authInfo, (error) => {
-            console.error(error);
-        }).then((resp) => {
+        retrieveVaultKey(
+            serverInfo.apiURL!,
+            authInfo.username!,
+            authInfo.token,
+            authInfo.key,
+            authInfo.auk,
+            (error) => {
+                console.error(error);
+            },
+        ).then((resp) => {
             if (!resp) {
                 console.error("Failed to retrieve vault key");
                 return;
             }
             setVaultKey(resp);
-            setOrigVaultKey(resp);
         });
     });
 
@@ -135,31 +135,32 @@ function useProvideAuth(): AuthProvider {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
         vaultKey: vaultKey!,
-        origVaultKey: origVaultKey!,
+        noc: noc!,
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,
-        login: loginFunc,
         logout: logoutFunc,
         setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),
     };
 }
 
-function serializeAuthInfo(data: AuthInfo) {
+function serializeAuthInfo(data: AuthInfo): string {
     return JSON.stringify({
-        username: data.username,
         key: data.key.toString("hex"),
-        auk: data.auk.toString("hex"),
         token: data.token,
+        auk: data.auk.toString("hex"),
+        obfuscatedNames: data.obfuscatedNames,
+        username: data.username,
     });
 }
 
 function deserializeAuthInfo(data: string): AuthInfo {
     const parsed = JSON.parse(data);
     return {
-        username: parsed.username,
         key: Buffer.from(parsed.key, "hex"),
-        auk: Buffer.from(parsed.auk, "hex"),
         token: parsed.token,
+        auk: Buffer.from(parsed.auk, "hex"),
+        obfuscatedNames: parsed.obfuscatedNames,
+        username: parsed.username,
     };
 }

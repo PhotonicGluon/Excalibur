@@ -224,12 +224,8 @@ class EncryptionHandler:
             return
 
         if message_type == "http.response.body":
-            if message.get("body", b"") == b"":
-                await self._send(message)
-                return
-
             # Encrypt body
-            plaintext_body = message["body"]
+            plaintext_body = message.get("body", b"")
             self._exef.encryptor.update(plaintext_body)
 
             # Determine what we need to send

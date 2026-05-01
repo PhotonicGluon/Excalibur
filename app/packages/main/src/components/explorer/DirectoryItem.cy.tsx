@@ -52,7 +52,7 @@ describe("<DirectoryItem />", () => {
                             jobs: new Map(),
                             addJob: (_id: string, _job: Job) => {},
                             getJob: (_id: string) => {
-                                return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
+                                return { id: _id, name: "", description: "", progress: 0, direction: "upload" };
                             },
                             updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
                             updateProgress: (_id: string, _newProgress: number | null) => {},
@@ -115,12 +115,12 @@ describe("<DirectoryItem />", () => {
     });
 
     it("has correct icon for defined MIME type", () => {
-        renderComponent({ mimetype: "audio/mpeg" });
+        renderComponent({ name: "Sample File.mp3.exef" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", musicalNotesOutline);
     });
 
     it("has correct default icon for undefined MIME type", () => {
-        renderComponent({ mimetype: "fake/fake" });
+        renderComponent({ name: "Sample File.fake-extension.exef" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", documentOutline);
     });
 

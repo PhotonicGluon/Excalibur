@@ -2,13 +2,21 @@ import * as path from "path";
 
 import { DOWNLOADS_FOLDER, createFile } from "./helpers";
 
-beforeEach(() => {
-    cy.login("http://127.0.0.1:8989", "test-user", "Password");
-    cy.visit("/files/");
-    cy.url().should("include", "/files");
-});
+describe("Check Job Cancellations", () => {
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
 
-describe("cancellations", () => {
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     it("should handle upload cancellations", () => {
         // Create a file upload task
         const fileName = createFile(1e6, true)[0];

@@ -1,12 +1,20 @@
 import { createFolder } from "./helpers";
 
-beforeEach(() => {
-    cy.login("http://127.0.0.1:8989", "test-user", "Password");
-    cy.visit("/files/");
-    cy.url().should("include", "/files");
-});
+describe("Check Breadcrumbs", () => {
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
 
-describe("breadcrumbs", () => {
+    afterEach(function () {
+        // Stop other tests if any test fails
+        if (this.currentTest.state === "failed") {
+            Cypress.stop();
+            return;
+        }
+    });
+
     it("should handle single-nested folder", () => {
         // Create super folder
         const superFolderName = createFolder();

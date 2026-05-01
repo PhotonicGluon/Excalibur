@@ -6,11 +6,11 @@ export interface SettingsProvider extends SettingsPreferenceValues {
     /**
      * Changes the current settings.
      */
-    change: (settings: SettingsPreferenceValues) => void;
+    change: (settings: Partial<SettingsPreferenceValues>) => void;
     /**
      * Saves the current settings to storage.
      */
-    save: (settings: SettingsPreferenceValues) => Promise<void>;
+    save: (settings: Partial<SettingsPreferenceValues>) => Promise<void>;
 }
 
 export const settingsContext = createContext<SettingsProvider>(null!);

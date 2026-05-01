@@ -15,7 +15,7 @@ describe("<JobsList />", () => {
                         jobs: props.jobs ?? new Map(),
                         addJob: (_id: string, _job: Job) => {},
                         getJob: (_id: string) => {
-                            return { id: _id, filename: "", description: "", progress: 0, direction: "upload" };
+                            return { id: _id, name: "", description: "", progress: 0, direction: "upload" };
                         },
                         updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
                         updateProgress: (_id: string, _newProgress: number | null) => {},
@@ -38,7 +38,7 @@ describe("<JobsList />", () => {
 
     it("does not render the 'No active jobs' message when there are jobs", () => {
         const jobs = new Map<string, Job>([
-            ["job1", { filename: "file1.txt", direction: "upload", description: "Uploading", progress: 0.25 }],
+            ["job1", { name: "file1.txt", direction: "upload", description: "Uploading", progress: 0.25 }],
         ]);
         mountComponent({ jobs });
 
@@ -47,25 +47,22 @@ describe("<JobsList />", () => {
 
     it("renders a list of JobEntry components when jobs are provided", () => {
         const jobs = new Map<string, Job>([
-            ["job1", { filename: "file1.txt", direction: "upload", description: "Uploading", progress: 0.25 }],
-            ["job2", { filename: "image.png", direction: "upload", description: "Processing", progress: 0.8 }],
-            ["job3", { filename: "archive.zip", direction: "upload", description: "Complete", progress: 1 }],
+            ["job1", { name: "file1.txt", direction: "upload", description: "Uploading", progress: 0.25 }],
+            ["job2", { name: "image.png", direction: "upload", description: "Processing", progress: 0.8 }],
+            ["job3", { name: "archive.zip", direction: "upload", description: "Complete", progress: 1 }],
         ]);
 
         mountComponent({ jobs });
 
-        cy.contains(jobs.get("job1")!.filename).should("be.visible");
-        cy.contains(jobs.get("job2")!.filename).should("be.visible");
-        cy.contains(jobs.get("job3")!.filename).should("be.visible");
+        cy.contains(jobs.get("job1")!.name).should("be.visible");
+        cy.contains(jobs.get("job2")!.name).should("be.visible");
+        cy.contains(jobs.get("job3")!.name).should("be.visible");
         cy.get("div.flex-col").children().should("have.length", 3);
     });
 
     it("renders a single job entry correctly", () => {
         const jobs = new Map<string, Job>([
-            [
-                "single-job",
-                { filename: "document.pdf", direction: "download", description: "Downloading", progress: 0.6 },
-            ],
+            ["single-job", { name: "document.pdf", direction: "download", description: "Downloading", progress: 0.6 }],
         ]);
         mountComponent({ jobs });
 

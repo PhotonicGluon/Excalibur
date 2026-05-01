@@ -16,7 +16,7 @@ describe("<JobEntry />", () => {
 
     const baseJob: Job = {
         direction: "upload",
-        filename: "my-file.zip",
+        name: "my-file.zip",
         description: "Uploading",
         progress: 0.5,
     };
@@ -24,7 +24,7 @@ describe("<JobEntry />", () => {
     it("renders the filename, status, and progress bar", () => {
         mountComponent(baseJob);
 
-        cy.get("ion-label").contains(baseJob.filename).should("be.visible");
+        cy.get("ion-label").contains(baseJob.name).should("be.visible");
         cy.get("ion-label").contains(baseJob.description).should("be.visible");
         cy.get(".circular-progress-bar").should("be.visible");
     });
@@ -64,7 +64,7 @@ describe("<JobEntry />", () => {
 
     it("truncates a long filename", () => {
         const longFilename = "this-is-a-very-long-filename-that-should-be-truncated.zip";
-        const job: Job = { ...baseJob, filename: longFilename };
+        const job: Job = { ...baseJob, name: longFilename };
         mountComponent(job);
 
         cy.get("ion-label.truncate").should("have.text", longFilename);

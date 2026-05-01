@@ -2,6 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import writeBlob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
+import mime from "mime";
 import React from "react";
 
 import {
@@ -66,6 +67,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
     const nameNoExEF = props.name?.replace(/\.exef$/, "");
     const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
+    const mimetype = mime.getType(nameNoExEF || "");
 
     // Contexts
     const auth = useAuth();
@@ -105,7 +107,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             jobsManager.addJob(jobID, {
                 direction: "download",
-                filename: fileName,
+                name: fileName, // This is the deobfuscated name
                 description: "Downloading...",
                 progress: null,
                 controller: controller,
@@ -295,7 +297,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     let icon;
     switch (props.type) {
         case "file":
-            icon = mimetypeToIcon(props.mimetype, settings.iconStyle);
+            icon = mimetypeToIcon(mimetype ? mimetype : "unknown/unknown", settings.iconStyle);
             break;
         case "directory":
             icon = getIcon("folder", settings.iconStyle);

@@ -40,15 +40,10 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
     "/upload/{path:path}",
     name="Upload File",
     responses={
-        status.HTTP_201_CREATED: {
-            "description": "File uploaded",
-            "content": {"text/plain": {"example": "File uploaded", "schema": None}},
-        },
+        status.HTTP_201_CREATED: {"description": "File uploaded", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
-        status.HTTP_413_CONTENT_TOO_LARGE: {"description": "File too large"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "File path too long"},
+        status.HTTP_413_CONTENT_TOO_LARGE: {"description": "File too large"},  # Returned in LimitUploadSizeMiddleware
         status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,
@@ -121,8 +116,8 @@ async def upload_file_endpoint(
         root_id=parent.root_id,
         name=name,
         is_folder=False,
+        fullpath=str(path),
         size=size,
     )
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)
-    return "File uploaded"

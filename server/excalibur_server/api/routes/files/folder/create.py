@@ -1,3 +1,4 @@
+from pathlib import Path as PathlibPath
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
@@ -16,15 +17,10 @@ from excalibur_server.src.users import get_user
     "/mkdir/{path:path}",
     name="Create Directory",
     responses={
-        status.HTTP_201_CREATED: {
-            "description": "Directory created",
-            "content": {"text/plain": {"example": "Directory created", "schema": None}},
-        },
+        status.HTTP_201_CREATED: {"description": "Directory created", "content": None},
         status.HTTP_400_BAD_REQUEST: {"description": "Illegal or invalid directory name"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
         status.HTTP_409_CONFLICT: {"description": "Directory already exists"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "Directory path too long"},
     },
     status_code=status.HTTP_201_CREATED,
     response_class=PlainTextResponse,
@@ -51,12 +47,17 @@ async def create_directory_endpoint(
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
 
+    # Check directory name
+    if "/" in name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Illegal or invalid directory name")
+
     # Create the directory in the database
-    new_folder = FSItem(name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True)
+    new_folder = FSItem(
+        name=name, parent_id=parent.id, root_id=parent.root_id, is_folder=True, fullpath=str(PathlibPath(path) / name)
+    )
     try:
         add_item(new_folder)
     except IntegrityError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Directory already exists")
 
     background_tasks.add_task(add_folder_change, credentials, path)
-    return "Directory created"

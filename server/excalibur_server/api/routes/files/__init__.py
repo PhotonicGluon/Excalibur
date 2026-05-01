@@ -32,6 +32,7 @@ from .file import upload_file_endpoint as upload_file_endpoint
 from .folder import create_directory_endpoint as create_directory_endpoint
 from .folder import directory_changes_listener_endpoint as directory_changes_listener_endpoint
 from .folder import listdir_endpoint as listdir_endpoint
+from .get_all import get_all_items_endpoint as get_all_items_endpoint
 from .move import move_path_endpoint as move_path_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
 

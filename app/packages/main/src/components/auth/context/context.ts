@@ -1,10 +1,13 @@
 import { createContext, useContext } from "react";
 
 import { E2EEData } from "@lib/auth/e2ee";
+import { SubstitutionCipher } from "@lib/files/obfuscation";
 
 export interface AuthInfo extends E2EEData {
     /** Username */
     username?: string;
+    /** Whether file names are obfuscated */
+    obfuscatedNames: boolean;
 }
 
 export interface ServerInfo {
@@ -27,16 +30,14 @@ export interface AuthProvider {
     serverInfo: ServerInfo | null;
     /** Vault key, retrieved upon login */
     vaultKey: Buffer | null;
-    /** Original vault key, retrieved upon login */
-    origVaultKey: Buffer | null;
+    /** Name Obfuscation Cipher (NOC), which is derived from the vault key */
+    noc: SubstitutionCipher | null;
     /** Retrieves the authentication token */
     getToken(): string | null;
     /** Set the authentication info */
     setAuthInfo: (authInfo: AuthInfo) => void;
     /** Set the server info */
     setServerInfo: (serverInfo: ServerInfo) => void;
-    /** Function to log into the server */
-    login: (authInfo: AuthInfo) => Promise<void>;
     /**
      * Function to log out of the server.
      *

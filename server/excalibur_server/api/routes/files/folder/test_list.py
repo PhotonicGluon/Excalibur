@@ -23,6 +23,7 @@ class TestListdir:
             root_id=root_id,
             name="test-dir",
             is_folder=True,
+            fullpath="test-dir",
         )
         db_session.add(folder)
 
@@ -31,12 +32,14 @@ class TestListdir:
             parent_id=folder.id,
             root_id=root_id,
             name="test-file.txt.exef",
+            fullpath="test-file.txt.exef",
             size=100,
         )
         file2 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="test-file2.txt.exef",
+            fullpath="test-file2.txt.exef",
             size=100,
         )
         db_session.add(file1)
@@ -74,12 +77,10 @@ class TestListdir:
         assert items[0].fullpath == "test-dir/test-file.txt.exef"
         assert items[0].type == "file"
         assert items[0].size == 100 - ExEF.additional_size
-        assert items[0].mimetype == "text/plain"
         assert items[1].name == "test-file2.txt.exef"
         assert items[1].fullpath == "test-dir/test-file2.txt.exef"
         assert items[1].type == "file"
         assert items[1].size == 100 - ExEF.additional_size
-        assert items[1].mimetype == "text/plain"
 
     def test_listdir_encrypted_path(self, auth_client_db: TestClient, dir_with_items: FSItem):
         from base64 import b64encode

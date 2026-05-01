@@ -21,12 +21,14 @@ import {
 } from "@ionic/react";
 
 import { e2ee } from "@lib/auth/e2ee";
+import { useEffectOnce } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { checkUser } from "@lib/users/api";
+import { checkUser, getAdditionalUserInfo } from "@lib/users/api";
+import { AdditionalUserInfo } from "@lib/users/structures";
 import { retrieveVaultKey } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
-import { useAuth } from "@components/auth/context";
+import { AuthInfo, useAuth } from "@components/auth/context";
 
 import logo from "@assets/icon.png";
 
@@ -150,34 +152,24 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Log into the server using the UUID and master key
-        console.debug("Logging in...");
-        const authInfo = { username: values.username, ...e2eeData };
+        // Retrieve the vault key
         try {
-            await auth.login(authInfo);
-        } catch (error) {
-            console.error(`Could not log in: ${error}`);
-            setIsLoading(false);
-            presentAlert({
-                header: "Login Failure",
-                message: `Could not log in: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.log(`Logged in; using token: ${authInfo.token}`);
-
-        // Handle vault key
-        try {
-            const vaultKey = await retrieveVaultKey(auth.serverInfo!.apiURL!, authInfo, (error) => {
-                console.error(error);
-                setIsLoading(false);
-                presentAlert({
-                    header: "Vault Key Failure",
-                    message: error,
-                    buttons: ["OK"],
-                });
-            });
+            const vaultKey = await retrieveVaultKey(
+                auth.serverInfo!.apiURL!,
+                values.username,
+                e2eeData.token,
+                e2eeData.key,
+                e2eeData.auk,
+                (error) => {
+                    console.error(error);
+                    setIsLoading(false);
+                    presentAlert({
+                        header: "Vault Key Failure",
+                        message: error,
+                        buttons: ["OK"],
+                    });
+                },
+            );
             if (!vaultKey) {
                 // Errors already handled in `retrieveVaultKey()`
                 return;
@@ -194,6 +186,40 @@ const Login: React.FC = () => {
             return;
         }
 
+        // Obtain any additional information
+        let additionalInfo: AdditionalUserInfo;
+        try {
+            const additionalInfoResponse = await getAdditionalUserInfo(
+                auth.serverInfo!.apiURL!,
+                values.username,
+                e2eeData.token,
+                e2eeData.key,
+            );
+            if (!additionalInfoResponse.success) {
+                throw new Error(additionalInfoResponse.error);
+            }
+            additionalInfo = additionalInfoResponse.info!;
+        } catch (error: unknown) {
+            console.error(error);
+            setIsLoading(false);
+            presentAlert({
+                header: "Additional Info Failure",
+                message: `Could not retrieve additional info: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.debug(`Got additional info: ${JSON.stringify(additionalInfo)}`);
+
+        // Set authentication info
+        const authInfo: AuthInfo = {
+            username: values.username,
+            obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
+            ...e2eeData,
+        };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
+
         // Update preferences
         Preferences.set({
             username: values.username,
@@ -204,10 +230,16 @@ const Login: React.FC = () => {
         // Continue with files retrieval
         setIsLoading(false);
         router.push("/files/", "forward", "replace");
-        return;
     }
 
     // Effects
+    useEffectOnce(() => {
+        // Log out user if they're still logged in (e.g., if got kicked back due to network issues)
+        if (auth.getToken()) {
+            auth.logout();
+        }
+    });
+
     useEffect(() => {
         // Get existing values from preferences
         Preferences.get("username").then((result) => {
@@ -330,7 +362,7 @@ const Login: React.FC = () => {
                                 </IonButton>
                             </form>
 
-                            <hr className="mt-4 mb-2 h-px w-full bg-neutral-200 dark:bg-neutral-700"></hr>
+                            <hr />
                             <IonText className="mt-2 text-center">
                                 No account?{" "}
                                 <IonText

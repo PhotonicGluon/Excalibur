@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { directoryChangesListener, listdir } from "@lib/files/api";
+import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
-
-const LISTDIR_RETRY_COUNT = 3;
 
 /**
  * React hook that provides access to directory listing functionality.
@@ -54,24 +53,14 @@ export function useDirectory(): {
             setDirectoryContents(null);
             latestRequestRef.current = requestNum;
 
-            // Try to get the directory contents
-            let directory: Directory | undefined;
-            for (let i = 0; i < LISTDIR_RETRY_COUNT; i++) {
-                const response = await listdir(auth, path);
-                if (response.success) {
-                    directory = response.directory;
-                    break;
-                } else {
-                    console.warn(
-                        `Failed to refresh contents (attempt ${i + 1} of ${LISTDIR_RETRY_COUNT}): ${response.error}`,
-                    );
-                }
-            }
-
-            if (!directory) {
+            // Get the directory contents
+            const response = await listdir(auth, path);
+            if (!response.success) {
                 presentSnackbar("Failed to refresh contents", "danger");
                 return;
             }
+
+            let directory = response.directory!;
 
             // If this request is not the latest, ignore it
             if (requestNum < latestRequestRef.current) {
@@ -79,6 +68,12 @@ export function useDirectory(): {
                 return;
             }
 
+            // Deobfuscate the names, if necessary
+            if (auth.authInfo!.obfuscatedNames && directory.items && auth.noc) {
+                directory = deobfuscateDirectoryItems(directory, auth.noc);
+            }
+
+            // Set the deobfuscated directory contents
             setDirectoryContents(directory);
         },
         [auth, path, presentSnackbar],

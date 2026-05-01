@@ -9,8 +9,9 @@ from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
-from excalibur_server.src.users import add_user, get_user, remove_user
+from excalibur_server.src.users import add_user, get_user
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
 
 
@@ -67,24 +68,27 @@ async def registration_endpoint(
         auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
-        # If a valid communications UUID was given, we get existing user's credentials
+        # If a valid communications UUID was given, we update the authentication protocol
         if key != CONFIG.security.account_creation_key:
-            # Get existing user's AUK salt and encrypted vault key
-            auk_salt = user.auk_salt
-            key_enc = user.key_enc
-
-            # Delete the old user (which presumably uses SRP)
-            remove_user(username)
-
-        # Add new user
-        user = User(
-            username=username,
-            auth_protocol=AuthProtocol.OPAQUE_3DH,
-            registration_record=registration_record_raw,
-            auk_salt=auk_salt,
-            key_enc=key_enc,
-        )
-        add_user(user)
+            with get_session() as session:
+                with session.begin():
+                    current_user = session.query(User).filter_by(username=username).first()
+                    current_user.auth_protocol = AuthProtocol.OPAQUE_3DH
+                    current_user.srp_group = None
+                    current_user.srp_salt = None
+                    current_user.srp_verifier = None
+                    current_user.registration_record = registration_record_raw
+                    session.add(current_user)
+        else:
+            # Add new user
+            user = User(
+                username=username,
+                auth_protocol=AuthProtocol.OPAQUE_3DH,
+                registration_record=registration_record_raw,
+                auk_salt=auk_salt,
+                key_enc=key_enc,
+            )
+            add_user(user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))

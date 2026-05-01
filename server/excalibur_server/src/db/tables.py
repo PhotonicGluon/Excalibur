@@ -1,11 +1,11 @@
-import mimetypes
 import uuid
-from time import time
+from time import time, time_ns
 
-from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
+from sqlmodel import BigInteger, Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.srp.group import SRPGroup
+from excalibur_server.src.exef import ExEF
 
 
 class User(SQLModel, table=True):
@@ -30,6 +30,8 @@ class User(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
+    additional_info: str = Field(default="", nullable=False)
+    "Additional information about the user, accessible only after authentication"
 
     # Secure Remote Password (SRP)
     # TODO: Deprecate SRP fields in next version
@@ -47,7 +49,12 @@ class User(SQLModel, table=True):
     # Vault key
     auk_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=False))
     "Salt for the Account Unlock Key (AUK)"
-    key_enc: bytes = Field(nullable=False)  # TODO: Set maximum length
+    key_enc: bytes = Field(
+        sa_column=Column(
+            LargeBinary(length=ExEF.header_size + ExEF.footer_size + 32),  # 32 is actual key size
+            nullable=False,
+        )
+    )
     """
     Encrypted vault key as an ExEF stream.
     The vault key should have been encrypted using the Account Unlock Key (AUK).
@@ -83,24 +90,20 @@ class FSItem(SQLModel, table=True):
     "Item name"
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
+    fullpath: str = Field(nullable=False)
+    "Full path to the item from the root directory"
 
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
     timestamp: int = Field(nullable=False, default_factory=lambda: int(time()))
-    "Creation timestamp of the item"
+    "Creation timestamp of the item as _seconds_ since the Unix epoch"
+    last_modified: int = Field(sa_column=Column(BigInteger(), nullable=False), default_factory=time_ns)
+    """
+    Last modified timestamp of the item as _nanoseconds_ since the Unix epoch.
+    
+    Used internally to check whether the fullpath needs to be updated.
+    """
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
-
-    @property
-    def mimetype(self) -> str | None:
-        """
-        :returns: MIME type of the file, or None for folders
-        """
-
-        if self.is_folder:
-            return None
-
-        mimetype, _ = mimetypes.guess_type(self.name.removesuffix(".exef"), strict=True)
-        return mimetype

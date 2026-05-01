@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, FastAPI
 
 from excalibur_server.api.middlewares import add_middleware
-from excalibur_server.env import has_cors, has_encryption, has_pop_checking, is_debug
+from excalibur_server.env import has_cors_validation, has_encryption, has_pop_checking, is_debug
 from excalibur_server.meta import SUMMARY, TITLE, VERSION
 
 from .logging import logger
@@ -18,8 +18,8 @@ if is_debug():
 if not has_encryption():
     logger.warning("Encryption is disabled.")
 
-if not has_cors():
-    logger.warning("CORS is disabled. This is not recommended for production.")
+if not has_cors_validation():
+    logger.warning("CORS validation is disabled. This is not recommended for production.")
 
 if not has_pop_checking():
     logger.warning("Proof of Possession (PoP) checking is disabled. This is not recommended for production.")

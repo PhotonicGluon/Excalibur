@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
+    IonCheckbox,
     IonContent,
     IonHeader,
     IonIcon,
@@ -21,11 +22,13 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { e2ee } from "@lib/auth/e2ee";
 import generateKey from "@lib/auth/keygen";
 import ExEF from "@lib/exef";
-import { registerUser } from "@lib/users/api";
+import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
+import { AdditionalUserInfo } from "@lib/users/structures";
 
-import { useAuth } from "@components/auth/context";
+import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 
@@ -34,6 +37,8 @@ interface NewUserValues {
     username: string;
     /** Password for the user */
     password: string;
+    /** Whether to use obfuscated names */
+    obfuscatedNames: boolean;
 }
 
 const NewUser: React.FC = () => {
@@ -63,13 +68,16 @@ const NewUser: React.FC = () => {
         // Get raw inputs
         const rawUsername = (document.querySelector("#new-username-input")! as HTMLIonInputElement).value! as string;
         const rawPassword = (document.querySelector("#new-password-input")! as HTMLIonInputElement).value! as string;
+        const rawObfuscatedNames = (document.querySelector("#use-obfuscated-names")! as HTMLIonCheckboxElement)
+            .checked! as boolean;
 
         // Preprocess
         const username = rawUsername.trim();
         const password = rawPassword.trim();
+        const obfuscatedNames = rawObfuscatedNames;
 
         // Form values
-        return { username: username, password: password };
+        return { username: username, password: password, obfuscatedNames: obfuscatedNames };
     }
 
     /**
@@ -88,12 +96,11 @@ const NewUser: React.FC = () => {
     }
 
     /**
-     * Handles the confirmation of the ACK.
+     * Handles the confirmation of the registration values.
      */
-    async function onACKConfirm(ack: Buffer) {
+    async function onConfirm(ack: Buffer) {
         // Check values
         const values = getAllValues();
-        console.log(values);
         if (!validateValues(values)) {
             presentAlert({
                 header: "Invalid Values",
@@ -107,10 +114,10 @@ const NewUser: React.FC = () => {
 
         // Set up account unlock key (AUK) and vault key
         setLoadingState("Creating new AUK and vault key...");
-        const additionalInfo = { username: values.username };
+        const keygenAdditionalInfo = { username: values.username };
 
         const aukSalt = randomBytes(32);
-        const auk = await generateKey(values.password, additionalInfo, aukSalt);
+        const auk = await generateKey(values.password, keygenAdditionalInfo, aukSalt);
         console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
 
         const vaultKey = randomBytes(32);
@@ -142,11 +149,64 @@ const NewUser: React.FC = () => {
 
         console.debug("Added user");
 
+        // Set up End-to-End Encryption (E2EE)
+        const e2eeData = await e2ee(
+            auth.serverInfo!.apiURL!,
+            values.username,
+            values.password,
+            () => setIsLoading(true),
+            () => setIsLoading(false),
+            setLoadingState,
+            (header, subheader, msg, buttons) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: buttons ?? ["OK"] });
+            },
+        );
+        if (!e2eeData) {
+            // Errors already handled in `e2ee()`
+            return;
+        }
+
+        // Set vault key for auth
+        auth.setVaultKey(vaultKey);
+
+        // Update user additional info
+        const additionalInfo: AdditionalUserInfo = {
+            obfuscatedNames: values.obfuscatedNames,
+        };
+
+        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+            auth.serverInfo!.apiURL!,
+            values.username,
+            e2eeData.token,
+            e2eeData.key,
+            additionalInfo,
+        );
+        if (!setAdditionalInfoResponse.success) {
+            console.error(`Could not update user additional info: ${setAdditionalInfoResponse.error}`);
+            setIsLoading(false);
+            presentAlert({
+                header: "Update Failure",
+                message: `Could not update user additional info: ${setAdditionalInfoResponse.error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+        console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
+
+        // Set authentication info
+        const authInfo: AuthInfo = {
+            username: values.username,
+            obfuscatedNames: values.obfuscatedNames,
+            ...e2eeData,
+        };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
+
         // Show vault key
         setIsLoading(false);
         setShowVaultKeyDialog(true);
         presentToast({
-            message: "User created. Please save the vault key in a secure location and log in again.",
+            message: "User created. Please save the vault key in a secure location.",
             duration: 5000,
             color: "success",
         });
@@ -174,9 +234,10 @@ const NewUser: React.FC = () => {
                     vaultKey={localVaultKey}
                     isOpen={showVaultKeyDialog}
                     inputDisabled={true}
-                    onDidDismiss={() => {
+                    onDidDismiss={async () => {
                         setShowVaultKeyDialog(false);
-                        router.goBack();
+                        router.push("/files/", "forward", "replace");
+                        window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
                     }}
                 />
 
@@ -185,6 +246,7 @@ const NewUser: React.FC = () => {
                     {/* Signup Form */}
                     <form>
                         <div className="flex flex-col gap-3">
+                            {/* Basic Info */}
                             <div className="h-18">
                                 <IonInput
                                     id="new-username-input"
@@ -207,6 +269,19 @@ const NewUser: React.FC = () => {
                                     <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
                                 </IonInput>
                             </div>
+                            <hr />
+
+                            {/* Server Settings */}
+                            <IonCheckbox id="use-obfuscated-names" labelPlacement="end" checked={true}>
+                                <div className="w-full *:block *:leading-none">
+                                    <IonLabel className="text-base">Use Obfuscated Names</IonLabel>
+                                    <IonLabel color="medium" className="text-xs text-wrap">
+                                        Names will appear to be obfuscated from the perspective of the server, further
+                                        improving privacy.
+                                    </IonLabel>
+                                </div>
+                            </IonCheckbox>
+                            <hr className="mt-2" />
 
                             {/* Account creation key & signup button */}
                             <div id="ack-input">
@@ -215,7 +290,7 @@ const NewUser: React.FC = () => {
                                     numWords={24}
                                     maxSuggestions={5}
                                     onEntropy={(ack) => {
-                                        onACKConfirm(ack);
+                                        onConfirm(ack); // Triggers the registration process
                                     }}
                                     onError={() => {
                                         setACKState(false);

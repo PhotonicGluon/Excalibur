@@ -1,4 +1,3 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -20,6 +19,7 @@ class TestMove:
             root_id=root_id,
             name="move-folder",
             is_folder=True,
+            fullpath="move-folder",
         )
         db_session.add(containing_folder)
 
@@ -29,6 +29,7 @@ class TestMove:
             root_id=root_id,
             name="move-into",
             is_folder=True,
+            fullpath="move-folder/move-into",
         )
         db_session.add(move_folder)
 
@@ -55,6 +56,7 @@ class TestMove:
             root_id=root_id,
             name="m-file",
             is_folder=False,
+            fullpath="move-folder/m-file",
         )
         db_session.add(file)
         db_session.commit()
@@ -75,6 +77,7 @@ class TestMove:
             root_id=root_id,
             name="m-file-root",
             is_folder=False,
+            fullpath="move-folder/m-file-root",
         )
         db_session.add(file)
         db_session.commit()
@@ -97,6 +100,7 @@ class TestMove:
             root_id=root_id,
             name="m-file-enc",
             is_folder=False,
+            fullpath="move-folder/m-file-enc",
         )
         db_session.add(file)
         db_session.commit()
@@ -134,6 +138,7 @@ class TestMove:
             root_id=root_id,
             name="m-file-same-as-current",
             is_folder=False,
+            fullpath="move-folder/m-file-same-as-current",
         )
         db_session.add(file)
         db_session.commit()
@@ -150,12 +155,14 @@ class TestMove:
             root_id=root_id,
             name="m-file-already-exists",
             is_folder=False,
+            fullpath="move-folder/m-file-already-exists",
         )
         existing_file = FSItem(
             parent_id=root_id,
             root_id=root_id,
             name="m-file-already-exists",
             is_folder=False,
+            fullpath="m-file-already-exists",
         )
         db_session.add(file)
         db_session.add(existing_file)
@@ -175,6 +182,7 @@ class TestMove:
             root_id=root_id,
             name="m-file-dest-dne",
             is_folder=False,
+            fullpath="move-folder/m-file-dest-dne",
         )
         db_session.add(file)
         db_session.commit()

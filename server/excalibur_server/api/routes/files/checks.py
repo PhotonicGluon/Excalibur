@@ -16,8 +16,6 @@ from excalibur_server.src.users import get_user
         status.HTTP_200_OK: {"description": "File exists", "content": None},
         status.HTTP_202_ACCEPTED: {"description": "Directory exists"},
         status.HTTP_404_NOT_FOUND: {"description": "Path not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
-        status.HTTP_414_URI_TOO_LONG: {"description": "Path too long"},
     },
 )
 async def check_path_endpoint(
@@ -54,7 +52,6 @@ async def check_path_endpoint(
         status.HTTP_200_OK: {"description": "Directory exists and is empty", "content": None},
         status.HTTP_202_ACCEPTED: {"description": "Directory exists and is not empty"},
         status.HTTP_404_NOT_FOUND: {"description": "Directory not found"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
     },
 )
 async def check_dir_endpoint(

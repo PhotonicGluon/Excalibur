@@ -427,14 +427,18 @@ export default class ExEF {
      * @param key Key to use for decryption
      * @param exefData Data to decrypt
      * @param parse Whether to parse the decrypted data as JSON
-     * @returns The decrypted JSON data
+     * @returns The decrypted JSON data, or null if the decrypted data is empty
      * @throws {Error} If the keysize does not match
      * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch)
      */
-    static decryptJSON<T>(key: Buffer, exefData: Buffer, parse: boolean = true): T {
+    static decryptJSON<T>(key: Buffer, exefData: Buffer, parse: boolean = true): T | null {
         const decrypted = ExEF.decrypt(key, exefData);
         if (parse) {
-            return JSON.parse(decrypted.toString("utf-8")) as T;
+            const decryptedStr = decrypted.toString("utf-8");
+            if (decryptedStr.length === 0) {
+                return null as T;
+            }
+            return JSON.parse(decryptedStr) as T;
         }
         return decrypted as T;
     }
@@ -449,8 +453,8 @@ export default class ExEF {
      * @throws {Error} If the keysize does not match
      * @throws {Error} If the response data cannot be decrypted (e.g., tag mismatch)
      */
-    static async decryptResponse<T>(key: Buffer, response: Response, parse: boolean = true): Promise<T> {
-        let data: T;
+    static async decryptResponse<T>(key: Buffer, response: Response, parse: boolean = true): Promise<T | null> {
+        let data: T | null;
         if (response.headers.get("X-Encrypted") === "true") {
             const arrayBuffer = await response.arrayBuffer();
             const responseData = Buffer.from(arrayBuffer);

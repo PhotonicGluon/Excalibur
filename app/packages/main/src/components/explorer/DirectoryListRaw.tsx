@@ -56,7 +56,6 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
                 name={item.name}
                 fullpath={item.fullpath}
                 type={item.type}
-                mimetype={item.type === "file" ? item.mimetype : undefined}
                 size={item.type === "file" ? item.size : undefined}
                 {...(props.directoryItemPropsOverride ? props.directoryItemPropsOverride(item) : {})}
             />
@@ -71,7 +70,6 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
             </div>
         );
     }
-
     return (
         <IonList
             lines="none"
@@ -83,7 +81,7 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
                 <DirectoryItem
                     oddRow={true}
                     name="(Go Back)"
-                    fullpath={getParent("./" + props.path)}
+                    fullpath={getParent(props.path)}
                     type="parent"
                     onClickItemOverride={props.onParentClickOverride}
                 ></DirectoryItem>

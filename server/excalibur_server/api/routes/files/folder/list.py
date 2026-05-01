@@ -15,8 +15,22 @@ from excalibur_server.src.users import get_user
     "/list/{path:path}",
     name="List Directory Contents",
     responses={
+        status.HTTP_200_OK: {
+            "description": "Search results",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "name": "example.txt",
+                            "fullpath": "example.txt",
+                            "type": "file",
+                            "size": 1024,
+                        },
+                    ],
+                }
+            },
+        },
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
-        status.HTTP_406_NOT_ACCEPTABLE: {"description": "Illegal or invalid path"},
     },
     response_model=Directory,
 )
@@ -31,7 +45,7 @@ def listdir_endpoint(
     """
     Lists the contents of a directory.
 
-    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be sent as `null`).
+    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be set as `null`).
     """
 
     path = processed_path
@@ -46,4 +60,4 @@ def listdir_endpoint(
     folder_id = folder.id
 
     # List the directory
-    return listdir(folder_id)
+    return listdir(folder_id, include_exef_size=include_exef_size)

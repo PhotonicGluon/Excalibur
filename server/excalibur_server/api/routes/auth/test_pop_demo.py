@@ -54,6 +54,19 @@ class TestHTTPPoPChecks:
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid timestamp"
 
+    def test_invalid_future_timestamp(self, auth_client: TestClient):
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={
+                "X-SRP-PoP": "9999999999 "
+                + b64encode(_gen_nonce()).decode("UTF-8")
+                + " "
+                + b64encode(b"\x00" * 32).decode("UTF-8")
+            },
+        )
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid timestamp"
+
     def test_incorrect_method(self, auth_client: TestClient):
         import time
 

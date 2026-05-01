@@ -14,6 +14,7 @@ import {
 import { close } from "ionicons/icons";
 
 import { listdir, moveItem } from "@lib/files/api";
+import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
 
 import { useAuth } from "@components/auth/context";
@@ -45,9 +46,19 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     function refreshDestFolderContents() {
         console.debug("Refreshing destination folder contents: " + destFolder);
         listdir(auth, destFolder).then((response) => {
-            if (response.success) {
-                setDestFolderContents(response.directory!);
+            if (!response.success) {
+                return;
             }
+
+            let directory = response.directory!;
+
+            // Deobfuscate the names, if necessary
+            if (auth.authInfo!.obfuscatedNames && directory.items && auth.noc) {
+                directory = deobfuscateDirectoryItems(directory, auth.noc);
+            }
+
+            // Set the deobfuscated directory contents
+            setDestFolderContents(directory);
         });
     }
 
@@ -68,7 +79,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     function onClickFolder(fullpath: string) {
         setDestFolderContents(null);
-        setDestFolder(fullpath);
+        setDestFolder(fullpath ? fullpath : "."); // Root folder is "."
     }
 
     /**

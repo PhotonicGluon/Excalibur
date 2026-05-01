@@ -33,7 +33,13 @@ export async function checkUser(apiURL: string, username: string): Promise<boole
 export async function getSecurityDetails(
     apiURL: string,
     username: string,
-): Promise<{ success: boolean; aukSalt?: Buffer; authProtocol?: AuthProtocol; srpSalt?: Buffer; error?: string }> {
+): Promise<{
+    success: boolean;
+    aukSalt?: Buffer;
+    authProtocol?: AuthProtocol;
+    srpSalt?: Buffer;
+    error?: string;
+}> {
     const response = await timedFetch(`${apiURL}/users/security/${username}`, {
         method: "GET",
     });
@@ -88,5 +94,5 @@ export async function getVaultKey(
     }
 
     const data = await ExEF.decryptResponse<{ key_enc: string }>(e2eeKey, response);
-    return { success: true, encryptedKey: Buffer.from(data.key_enc, "base64") };
+    return { success: true, encryptedKey: Buffer.from(data!.key_enc, "base64") };
 }

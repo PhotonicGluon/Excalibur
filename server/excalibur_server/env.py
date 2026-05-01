@@ -9,8 +9,8 @@ def has_encryption():
     return os.getenv("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0"
 
 
-def has_cors():
-    return os.getenv("EXCALIBUR_SERVER_ENABLE_CORS", "1") != "0"
+def has_cors_validation():
+    return os.getenv("EXCALIBUR_SERVER_ENABLE_CORS_VALIDATION", "1") != "0"
 
 
 def has_pop_checking():

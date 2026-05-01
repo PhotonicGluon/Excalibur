@@ -14,7 +14,7 @@ from excalibur_server.src.url import get_url_encoded_path
 
 from .jwt import decode_token, generate_token
 
-API_TOKEN_HEADER = HTTPBearer(scheme_name="SRP-Identity", auto_error=False)
+API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
 def generate_auth_token(username: str, comm_uuid: str, expiry_timestamp: float) -> str:
@@ -104,7 +104,7 @@ async def _verify_and_extract_credentials(
     timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
     # Check if timestamp is within acceptable range
-    if timestamp < datetime.now(tz=timezone.utc).timestamp() - CONFIG.security.pop.timestamp_validity:
+    if not abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) < CONFIG.security.pop.timestamp_validity:
         raise raise_exception("Invalid timestamp")
 
     # Check if nonce is fresh

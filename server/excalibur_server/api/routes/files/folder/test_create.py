@@ -21,8 +21,6 @@ class TestCreateDir:
         uuid = uuid4().hex
         response = auth_client_db.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
         assert response.status_code == 201
-        assert ExEF.validate(response.content), "Did not return an encrypted response"
-        assert ExEF(b"one demo 16B key").decrypt(response.content) == b"Directory created"
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
     def test_create_directory_transit_encryption(self, auth_client_db: TestClient, test_user):
@@ -46,9 +44,11 @@ class TestCreateDir:
         )
 
         assert response.status_code == 201
-        assert ExEF.validate(response.content), "Did not return an encrypted response"
-        assert ExEF(b"one demo 16B key").decrypt(response.content) == b"Directory created"
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
+
+    def test_illegal_name(self, auth_client_db: TestClient):
+        response = auth_client_db.post("/api/files/mkdir/.", json="illegal/dir/name")
+        assert response.status_code == 400
 
     def test_path_not_found(self, auth_client_db: TestClient):
         response = auth_client_db.post("/api/files/mkdir/fake/path", json="test-dir")
@@ -64,6 +64,7 @@ class TestCreateDir:
             root_id=root_id,
             name=f"test-dir-{uuid}",
             is_folder=True,
+            fullpath=f"test-dir-{uuid}",
         )
         db_session.add(move_folder)
         db_session.commit()

@@ -36,12 +36,12 @@ def start_server(
             ),
         ),
     ] = (0, 0),
-    enable_cors: Annotated[
+    enable_cors_validation: Annotated[
         bool,
         typer.Option(
-            "--enable-cors/--disable-cors",
-            help="Whether to enable CORS. It is recommended to only disable CORS for debugging purposes "
-            "(e.g., when using an Android emulator).",
+            "--enable-cors-validation/--disable-cors-validation",
+            help="Whether to enable CORS validation. It is recommended to only disable CORS validation for debugging "
+            "purposes (e.g., when using an Android emulator).",
         ),
     ] = True,
     log_to_console: Annotated[
@@ -87,7 +87,7 @@ def start_server(
     # Set environment variables
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1" if debug else "0"
     os.environ["EXCALIBUR_SERVER_ENCRYPT_RESPONSES"] = "0" if not encrypt_responses else "1"
-    os.environ["EXCALIBUR_SERVER_ENABLE_CORS"] = "1" if enable_cors else "0"
+    os.environ["EXCALIBUR_SERVER_ENABLE_CORS_VALIDATION"] = "1" if enable_cors_validation else "0"
     os.environ["EXCALIBUR_SERVER_ENABLE_POP"] = "1" if enable_proof_of_possession else "0"
     os.environ["EXCALIBUR_SERVER_DELAY_RESPONSES"] = f"{delay[0]},{delay[1]}"
     os.environ["EXCALIBUR_SERVER_LOG_TO_CONSOLE"] = "1" if log_to_console else "0"

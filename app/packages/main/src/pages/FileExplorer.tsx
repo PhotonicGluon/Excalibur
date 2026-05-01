@@ -27,7 +27,7 @@ import {
     useIonToast,
     useIonViewWillEnter,
 } from "@ionic/react";
-import { add, documentOutline, ellipsisVertical, folderOutline, keyOutline, searchOutline } from "ionicons/icons";
+import { add, documentOutline, ellipsisVertical, folderOutline, searchOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
@@ -38,7 +38,6 @@ import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
 import SearchDialog from "@components/dialog/SearchDialog";
-import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
@@ -92,7 +91,7 @@ const FileExplorer: React.FC = () => {
     const params = useParams<{ [idx: number]: string }>();
     const requestedPath = params[0] ? params[0] : "."; // "." means root folder
 
-    // Get contexts
+    // Contexts
     const auth = useAuth();
     const router = useIonRouter();
 
@@ -107,7 +106,6 @@ const FileExplorer: React.FC = () => {
     const [moveOrigPath, setMoveOrigPath] = useState<string>("");
 
     const [showSearchDialog, setShowSearchDialog] = useState(false);
-    const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -225,7 +223,9 @@ const FileExplorer: React.FC = () => {
      * @param isDir If true, the item is a directory. If false, the item is a file
      */
     async function onRenameItem(path: string, isDir: boolean) {
-        const baseName = path.split("/").pop();
+        const rawName = path.split("/").pop();
+        const baseName = !isDir ? rawName?.replace(/\.exef$/, "") : rawName;
+        const displayName = auth.authInfo!.obfuscatedNames ? auth.noc!.decipher(baseName!).toString("utf-8") : baseName;
 
         // Ask for user input
         presentAlert({
@@ -233,21 +233,25 @@ const FileExplorer: React.FC = () => {
             inputs: [
                 {
                     type: "text",
-                    name: "newName",
+                    name: "newDisplayName",
                     placeholder: "New Name",
-                    value: !isDir ? baseName?.replace(/\.exef$/, "") : baseName,
+                    value: displayName,
                 },
             ],
             buttons: [
                 "Cancel",
                 {
                     text: "Rename",
-                    handler: async (data: { newName: string }) => {
-                        let newName = data.newName;
-                        if (newName === "") {
+                    handler: async (data: { newDisplayName: string }) => {
+                        const newDisplayName = data.newDisplayName;
+                        if (newDisplayName === "") {
                             presentSnackbar("New name cannot be empty", "danger");
                             return;
                         }
+
+                        let newName = auth.authInfo!.obfuscatedNames
+                            ? (auth.noc!.encipher(Buffer.from(newDisplayName, "utf-8")) as string)
+                            : newDisplayName;
                         if (!isDir) {
                             newName += ".exef";
                         }
@@ -341,12 +345,6 @@ const FileExplorer: React.FC = () => {
                             <IonLabel>
                                 <IonIcon icon={searchOutline} size="large" />
                                 <IonText className="pl-2">Search</IonText>
-                            </IonLabel>
-                        </IonItem>
-                        <IonItem button={true} onClick={() => setShowVaultKeyDialog(true)}>
-                            <IonLabel>
-                                <IonIcon icon={keyOutline} size="large" />
-                                <IonText className="pl-2">View Vault Key</IonText>
                             </IonLabel>
                         </IonItem>
                         <IonItem
@@ -446,14 +444,14 @@ const FileExplorer: React.FC = () => {
                                 path={moveOrigPath}
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
-                            <VaultKeyDialog
-                                isOpen={showVaultKeyDialog}
-                                onDidDismiss={() => setShowVaultKeyDialog(false)}
-                            />
 
                             {/* Breadcrumbs */}
                             <div ref={topBarRef} className="ml-1 w-full overflow-x-scroll pt-1">
-                                <DirectoryBreadcrumbs className="flex-nowrap" path={requestedPath} />
+                                <DirectoryBreadcrumbs
+                                    className="flex-nowrap"
+                                    path={requestedPath}
+                                    noc={auth.authInfo!.obfuscatedNames ? auth.noc! : undefined}
+                                />
                             </div>
 
                             {/* Fab button */}
@@ -461,15 +459,6 @@ const FileExplorer: React.FC = () => {
 
                             {/* Files */}
                             <FilesArea refreshTrigger={refreshTrigger} />
-
-                            {/* Changed vault key notice */}
-                            {auth.origVaultKey && auth.origVaultKey !== auth.vaultKey && (
-                                <div className="fixed bottom-6 w-full">
-                                    <IonText color="warning" className="block w-full text-center text-sm">
-                                        Vault key was changed
-                                    </IonText>
-                                </div>
-                            )}
                         </explorerContext.Provider>
                     </IonContent>
                 </ProvideJobs>
