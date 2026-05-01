@@ -1,6 +1,9 @@
 import uuid
 from pathlib import PurePosixPath
 
+from sqlalchemy.orm import aliased
+from sqlmodel import select
+
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
 
@@ -96,16 +99,35 @@ def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     Gets the full path of a filesystem item, relative to the user's root directory.
 
     :param item_id: the ID of the filesystem item
-    :return: the full path of the filesystem item
+    :return: a PurePosixPath object representing the full path of the filesystem item
     """
 
-    item = get_item(item_id)
-    if item.parent_id is None:
-        return PurePosixPath("")
+    # Base case: Select the target item
+    base_query = (
+        select(FSItem.id, FSItem.parent_id, FSItem.name)
+        .where(FSItem.id == item_id)
+        .cte(name="fullpath_cte", recursive=True)
+    )
 
-    # FIXME: This approach needs fixing. For now, we'll just recurse up the tree
-    fullpath = get_item_fullpath(item.parent_id) / item.name
-    return PurePosixPath(fullpath.as_posix())  # To avoid Windows path issues
+    # Recursive case: Join parents to the current item
+    parent_alias = aliased(FSItem)
+    recursive_query = (
+        select(parent_alias.id, parent_alias.parent_id, parent_alias.name)
+        .join(base_query, base_query.c.parent_id == parent_alias.id)
+        .where(parent_alias.parent_id.is_not(None))  # Exclude user's root folder from path
+    )
+
+    # Execute combined CTE query to get all parts of the path
+    fullpath_cte = base_query.union_all(recursive_query)
+    with get_session() as session:
+        with session.begin():
+            results = session.execute(select(fullpath_cte.c.name)).fetchall()
+
+    # Reverse and join them (since results are child -> root)
+    fullpath = PurePosixPath("")
+    for row in reversed(results):
+        fullpath /= row[0]
+    return fullpath
 
 
 def is_dir_empty(folder_id: uuid.UUID) -> bool:
