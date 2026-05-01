@@ -1,6 +1,5 @@
 import uuid
-from pathlib import Path
-from time import time_ns
+from pathlib import PurePosixPath
 
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
@@ -92,7 +91,7 @@ def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
             return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
 
 
-def get_item_fullpath(item_id: uuid.UUID) -> Path:
+def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     """
     Gets the full path of a filesystem item, relative to the user's root directory.
 
@@ -102,32 +101,11 @@ def get_item_fullpath(item_id: uuid.UUID) -> Path:
 
     item = get_item(item_id)
     if item.parent_id is None:
-        return Path("")
+        return PurePosixPath("")
 
     # FIXME: This approach needs fixing. For now, we'll just recurse up the tree
-    # fullpath = Path(item.fullpath)
-    # parent_item = get_item(item.parent_id)
-    # if parent_item.last_modified > item.last_modified:
-    #     # The parent was modified more recently than this item, so we need to update the fullpath
-    #     fullpath = get_item_fullpath(parent_item.id) / item.name
-    #     with get_session() as session:
-    #         with session.begin():
-    #             current_item = session.query(FSItem).filter_by(id=item_id).first()
-    #             current_item.fullpath = fullpath.as_posix()
-    #             current_item.last_modified = time_ns()
-    #             session.add(current_item)
-
     fullpath = get_item_fullpath(item.parent_id) / item.name
-    if item.fullpath != fullpath.as_posix():
-        # Update the database records
-        with get_session() as session:
-            with session.begin():
-                current_item = session.query(FSItem).filter_by(id=item_id).first()
-                current_item.fullpath = fullpath.as_posix()
-                current_item.last_modified = time_ns()
-                session.add(current_item)
-
-    return fullpath
+    return PurePosixPath(fullpath.as_posix())  # To avoid Windows path issues
 
 
 def is_dir_empty(folder_id: uuid.UUID) -> bool:

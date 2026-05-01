@@ -78,9 +78,7 @@ def test_user(db_session: Session):
 
     # Create root folder for user
     root_id = uuid.uuid4()
-    root_folder = FSItem(
-        id=root_id, parent_id=None, root_id=root_id, name="test-user-db", is_folder=True, fullpath="", last_modified=0
-    )
+    root_folder = FSItem(id=root_id, parent_id=None, root_id=root_id, name="test-user-db", is_folder=True)
     db_session.add(root_folder)
 
     # Create test user with database filesystem

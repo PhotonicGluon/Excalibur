@@ -20,7 +20,7 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
     if folder is None or not folder.is_folder:
         return None
 
-    parent_dir_path = get_item_fullpath(folder_id)  # TODO: Could we perhaps cache this to improve performance?
+    parent_dir_path = get_item_fullpath(folder_id)
     fsitems = get_items_in_folder(folder_id)
 
     items = []

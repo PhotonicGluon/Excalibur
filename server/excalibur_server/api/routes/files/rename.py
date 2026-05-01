@@ -1,4 +1,3 @@
-from time import time_ns
 from typing import Annotated
 
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
@@ -60,10 +59,7 @@ async def rename_path_endpoint(
         try:
             with session.begin():
                 db_item = session.query(FSItem).filter_by(id=item.id).first()
-                old_name = db_item.name
                 db_item.name = new_name
-                db_item.fullpath = str(db_item.fullpath).removesuffix(old_name) + new_name
-                db_item.last_modified = time_ns()
                 session.add(db_item)
         except IntegrityError:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")

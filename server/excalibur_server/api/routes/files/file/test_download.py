@@ -22,7 +22,6 @@ class TestDownload:
             root_id=root_id,
             name="test-dir",
             is_folder=True,
-            fullpath="test-dir",
         )
         db_session.add(folder)
 
@@ -37,7 +36,6 @@ class TestDownload:
             root_id=root_id,
             name="test-file.txt.exef",
             is_folder=False,
-            fullpath="test-dir/test-file.txt.exef",
             size=size,
         )
         db_session.add(file)

@@ -90,8 +90,6 @@ class FSItem(SQLModel, table=True):
     "Item name"
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
-    fullpath: str = Field(nullable=False)
-    "Full path to the item from the root directory"
 
     # Metadata
     size: int | None = Field(nullable=True)

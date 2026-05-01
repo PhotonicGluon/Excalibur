@@ -27,7 +27,6 @@ class TestDeletePath:
             root_id=root_id,
             name="test-delete.txt.exef",
             is_folder=False,
-            fullpath="test-delete.txt.exef",
             size=size,
         )
         db_session.add(file)
@@ -51,7 +50,6 @@ class TestDeletePath:
             root_id=root_id,
             name="test-delete",
             is_folder=True,
-            fullpath="test-delete",
         )
         db_session.add(folder)
         db_session.commit()
@@ -74,7 +72,6 @@ class TestDeletePath:
             root_id=root_id,
             name="test-delete-2",
             is_folder=True,
-            fullpath="test-delete-2",
         )
         db_session.add(folder)
 
@@ -89,7 +86,6 @@ class TestDeletePath:
             root_id=root_id,
             name="test-delete.txt.exef",
             is_folder=False,
-            fullpath="test-delete-2/test-delete.txt.exef",
             size=size,
         )
         db_session.add(file1)
@@ -104,7 +100,6 @@ class TestDeletePath:
             root_id=root_id,
             name="test-delete2.txt.exef",
             is_folder=False,
-            fullpath="test-delete-2/test-delete2.txt.exef",
             size=size,
         )
         db_session.add(file2)
