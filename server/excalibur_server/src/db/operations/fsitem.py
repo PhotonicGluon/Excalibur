@@ -106,6 +106,7 @@ def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     base_query = (
         select(FSItem.id, FSItem.parent_id, FSItem.name)
         .where(FSItem.id == item_id)
+        .where(FSItem.parent_id.is_not(None))  # Root folder should not be included in path
         .cte(name="fullpath_cte", recursive=True)
     )
 
@@ -114,7 +115,7 @@ def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     recursive_query = (
         select(parent_alias.id, parent_alias.parent_id, parent_alias.name)
         .join(base_query, base_query.c.parent_id == parent_alias.id)
-        .where(parent_alias.parent_id.is_not(None))  # Exclude user's root folder from path
+        .where(parent_alias.parent_id.is_not(None))  # Stop when we reach the root folder
     )
 
     # Execute combined CTE query to get all parts of the path
