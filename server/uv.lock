@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.11"
 
 [options]
-exclude-newer = "2026-04-18T04:54:25.443942Z"
+exclude-newer = "2026-04-26T03:49:25.776635Z"
 exclude-newer-span = "P5D"
 
 [[package]]
@@ -160,7 +160,7 @@ wheels = [
 
 [[package]]
 name = "excalibur-server"
-version = "0.6.0a9"
+version = "0.6.0a10"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },

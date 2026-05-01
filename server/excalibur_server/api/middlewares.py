@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from excalibur_server.env import get_artificial_delay, has_cors, is_debug
+from excalibur_server.env import get_artificial_delay, has_cors_validation, is_debug
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.middleware.delayer import DelayMiddleware
 from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
@@ -13,7 +13,7 @@ from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
 def add_middleware(app: FastAPI, logger: logging.Logger):
     # Add CORS middleware
     allow_origins = CONFIG.server.allow_origins
-    if not has_cors():
+    if not has_cors_validation():
         allow_origins = ["*"]
 
     app.add_middleware(

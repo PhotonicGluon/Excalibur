@@ -85,7 +85,7 @@ You can change the `host` IP to restrict access.
 
 First, [start the app's PWA server](#pwa).
 
-Next, start the [Excalibur Server](../server/README.md) _with CORS disabled_.
+Next, start the [Excalibur Server](../server/README.md) _with CORS validation disabled_.
 
 Now find your android device using
 

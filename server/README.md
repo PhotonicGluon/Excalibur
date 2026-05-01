@@ -31,7 +31,7 @@ excalibur start --debug
 To disable CORS, run
 
 ```bash
-excalibur start --disable-cors
+excalibur start --disable-cors-validation
 ```
 
 ## Changelog
