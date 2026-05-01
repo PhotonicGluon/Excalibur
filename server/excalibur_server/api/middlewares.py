@@ -6,8 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from excalibur_server.env import get_artificial_delay, has_cors_validation, is_debug
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.middleware.delayer import DelayMiddleware
-from excalibur_server.src.middleware.rate_limit import RateLimitMiddleware
+from excalibur_server.src.middleware import (
+    DelayMiddleware,
+    LimitUploadSizeMiddleware,
+    RateLimitMiddleware,
+    RouteEncryptionMiddleware,
+    SecurityHeadersMiddleware,
+)
 
 
 def add_middleware(app: FastAPI, logger: logging.Logger):
@@ -32,20 +37,17 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
             refill_rate=CONFIG.server.rate_limit.refill_rate,
         )
 
-    # Add artificial delay
+    # Add artificial delay when specified
     artificial_delay = get_artificial_delay()
     if artificial_delay != (0, 0):
         logger.warning(f"Artificial delay enabled (in {artificial_delay[0]} ms, out {artificial_delay[1]} ms).")
         app.add_middleware(DelayMiddleware, delay_in=artificial_delay[0], delay_out=artificial_delay[1])
 
     # Encrypt responses for specific routes
-    from excalibur_server.src.middleware.crypto.middleware import RouteEncryptionMiddleware
-
     app.add_middleware(
         RouteEncryptionMiddleware, encrypt_response=os.environ.get("EXCALIBUR_SERVER_ENCRYPT_RESPONSES", "1") != "0"
     )
 
-    # Add a file size limit middleware
-    from excalibur_server.src.middleware import LimitUploadSizeMiddleware
-
+    # Add other middlewares that work on the post-encrypted response
     app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=CONFIG.storage.max_upload_size)
+    app.add_middleware(SecurityHeadersMiddleware)
