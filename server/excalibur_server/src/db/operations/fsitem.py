@@ -29,11 +29,10 @@ def get_item(item_id: str) -> FSItem | None:
     """
 
     with get_session() as session:
-        with session.begin():
-            item = session.get(FSItem, item_id)
-            if item is not None:
-                item = item.model_copy()  # So that we can avoid session issues
-            return item
+        item = session.get(FSItem, item_id)
+        if item is not None:
+            item = item.model_copy()  # So that we can avoid session issues
+        return item
 
 
 def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
@@ -68,8 +67,8 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
 
         stmt = stmt.where(aliases[-1].root_id == root_id)  # Remove results where the target is not in the correct root
 
-        result = session.execute(stmt).first()
-        return result[0].model_copy() if result else None
+        result = session.execute(stmt).scalar()
+        return result.model_copy() if result else None
 
 
 def get_items_in_folder(folder_id: str) -> list[FSItem]:
@@ -81,9 +80,8 @@ def get_items_in_folder(folder_id: str) -> list[FSItem]:
     """
 
     with get_session() as session:
-        with session.begin():
-            items = session.query(FSItem).filter_by(parent_id=folder_id).all()
-            return [item.model_copy() for item in items]
+        items = session.execute(select(FSItem).where(FSItem.parent_id == folder_id)).scalars().all()
+        return [item.model_copy() for item in items]
 
 
 def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
@@ -95,9 +93,8 @@ def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
     """
 
     with get_session() as session:
-        with session.begin():
-            items = session.query(FSItem).filter_by(root_id=root_id).all()
-            return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
+        items = session.execute(select(FSItem).where(FSItem.root_id == root_id)).scalars().all()
+        return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
 
 
 def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
@@ -127,13 +124,12 @@ def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     # Execute combined CTE query to get all parts of the path
     fullpath_cte = base_query.union_all(recursive_query)
     with get_session() as session:
-        with session.begin():
-            results = session.execute(select(fullpath_cte.c.name)).fetchall()
+        parts = session.execute(select(fullpath_cte.c.name)).scalars().all()
 
     # Reverse and join them (since results are child -> root)
     fullpath = PurePosixPath("")
-    for row in reversed(results):
-        fullpath /= row[0]
+    for part in reversed(parts):
+        fullpath /= part
     return fullpath
 
 
@@ -146,8 +142,7 @@ def is_dir_empty(folder_id: uuid.UUID) -> bool:
     """
 
     with get_session() as session:
-        with session.begin():
-            return session.query(FSItem).filter_by(parent_id=folder_id).count() == 0
+        return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
 
 
 def remove_item(item_id: str):

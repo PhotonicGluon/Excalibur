@@ -25,11 +25,10 @@ def get_user(username: str) -> User | None:
     """
 
     with get_session() as session:
-        with session.begin():
-            user = session.get(User, username)
-            if user is not None:
-                user = user.model_copy()  # So that we can avoid session issues
-            return user
+        user = session.get(User, username)
+        if user is not None:
+            user = user.model_copy()  # So that we can avoid session issues
+        return user
 
 
 def remove_user(username: str):
