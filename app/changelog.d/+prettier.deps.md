@@ -1,1 +1,4 @@
-⬆️ Updated `prettier` development dependency from `3.8.1` to `3.8.3`
+⬆️ Updated Prettier development dependencies:
+
+- `prettier` from `3.8.1` to `3.8.3`
+- `prettier-plugin-tailwindcss` from `0.7.2` to `0.7.3`
