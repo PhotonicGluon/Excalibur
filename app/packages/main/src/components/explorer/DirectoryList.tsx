@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { IonCol, IonGrid, IonIcon, IonLabel, IonRow } from "@ionic/react";
-import { arrowDown, arrowUp } from "ionicons/icons";
+import { alertCircleOutline, arrowDown, arrowUp, checkmarkCircleOutline } from "ionicons/icons";
 
 import { Directory } from "@lib/files/structures";
 
@@ -17,6 +17,8 @@ interface ContainerProps {
      * If `null`, will interpret as pending content.
      */
     directory: Directory | null;
+    /** Whether the directory listener is connected */
+    listenerConnected: boolean;
 }
 
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
@@ -39,11 +41,19 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                         </div>
                     </IonCol>
                     {props.directory && props.directory.items && (
-                        <IonCol className="flex items-center justify-end pr-2">
+                        <IonCol
+                            id={`${props.id ?? "directory-list"}-stats`}
+                            className="flex items-center justify-end gap-1 pr-2"
+                        >
                             <IonLabel color="medium" className="text-sm">
                                 {props.directory.items.length} Item
                                 {props.directory.items.length !== 1 ? "s" : ""}
                             </IonLabel>
+                            <IonIcon
+                                color="medium"
+                                icon={props.listenerConnected ? checkmarkCircleOutline : alertCircleOutline}
+                                aria-label={props.listenerConnected ? "Listener connected" : "Listener disconnected"}
+                            />
                         </IonCol>
                     )}
                 </IonRow>

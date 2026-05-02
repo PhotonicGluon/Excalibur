@@ -84,21 +84,26 @@ function connectToListener(
  * Sets up a WebSocket connection to listen for directory changes.
  *
  * @param auth the current authentication provider
+ * @param onConnect callback function to be called when the listener connection is established
+ * @param onDisconnect callback function to be called when the listener connection is closed
  * @param onPathUpdateRef reference to a callback function to be called when a directory change is
  *      detected
  * @returns a cleanup function to close the WebSocket connection
  */
 export function directoryChangesListener(
     auth: AuthProvider,
+    onConnect: () => void,
+    onDisconnect: () => void,
     onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
 ) {
     let retryCount = 0;
     let isCleaningUp = false;
 
-    const onConnect = () => {
+    const onConnectInternal = () => {
         retryCount = 0;
+        onConnect();
     };
-    const onDisconnect = () => {
+    const onDisconnectInternal = () => {
         if (isCleaningUp) {
             return;
         }
@@ -107,18 +112,32 @@ export function directoryChangesListener(
             console.log(`Attempting to reconnect to listener (${retryCount}/${RETRY_COUNT})...`);
             sleep(RETRY_INTERVAL).then(() => {
                 if (!isCleaningUp) {
-                    ws = connectToListener(auth, onConnect, onDisconnect, onPathUpdateRef, () => isCleaningUp);
+                    ws = connectToListener(
+                        auth,
+                        onConnectInternal,
+                        onDisconnectInternal,
+                        onPathUpdateRef,
+                        () => isCleaningUp,
+                    );
                 }
             });
         } else if (retryCount >= RETRY_COUNT) {
-            console.log("Max retry attempts reached. Stopping reconnection attempts.");
+            console.warn("Max retry attempts reached. Stopping reconnection attempts.");
         }
+        onDisconnect();
     };
 
-    let ws: WebSocket = connectToListener(auth, onConnect, onDisconnect, onPathUpdateRef, () => isCleaningUp);
+    console.log("Setting up directory changes listener");
+    let ws: WebSocket = connectToListener(
+        auth,
+        onConnectInternal,
+        onDisconnectInternal,
+        onPathUpdateRef,
+        () => isCleaningUp,
+    );
     return () => {
         isCleaningUp = true;
-        if (ws && ws.readyState === WebSocket.OPEN) {
+        if (ws.readyState === WebSocket.OPEN) {
             ws.close();
         }
     };
