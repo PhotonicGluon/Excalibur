@@ -85,7 +85,7 @@ export function useDirectory(): {
     }, [refreshContents]);
 
     useEffect(() => {
-        directoryChangesListener(auth, refreshContentsRef);
+        return directoryChangesListener(auth, refreshContentsRef);
     }, [auth]);
 
     return { directoryContents, refreshContents };
