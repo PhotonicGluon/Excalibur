@@ -3,6 +3,7 @@ import { useState } from "react";
 import { IonCol, IonContent, IonGrid, IonIcon, IonItem, IonLabel, IonList, IonRow, useIonPopover } from "@ionic/react";
 import { alertCircleOutline, arrowDown, arrowUp, checkmark, checkmarkCircleOutline } from "ionicons/icons";
 
+import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
 
 import DirectoryListRaw from "./DirectoryListRaw";
@@ -21,58 +22,9 @@ interface ContainerProps {
     listenerConnected: boolean;
 }
 
-const SortOptionsPopover: React.FC<{
-    sortAsc: boolean;
-    setSortAsc: (sortAsc: boolean) => void;
-    onDismissPopover: () => void;
-}> = ({ sortAsc, setSortAsc, onDismissPopover }) => (
-    <IonContent>
-        <IonList lines="none" className="h-full">
-            <IonItem className="-mb-2">
-                <IonLabel className="font-bold">Sort by</IonLabel>
-            </IonItem>
-            <IonList lines="none">
-                {/* TODO: Add other sort options */}
-                <IonItem
-                    button={true}
-                    onClick={() => {
-                        console.log("Sorting by name");
-                        onDismissPopover();
-                    }}
-                >
-                    <IonIcon className="size-6 pr-2" icon={checkmark}></IonIcon>
-                    <IonLabel>Name</IonLabel>
-                </IonItem>
-            </IonList>
-            <hr className="my-0 bg-neutral-400 dark:bg-neutral-500" />
-            <IonList lines="none">
-                <IonItem
-                    button={true}
-                    onClick={() => {
-                        setSortAsc(true);
-                        onDismissPopover();
-                    }}
-                >
-                    <IonIcon className="size-6 pr-2" icon={sortAsc ? checkmark : undefined}></IonIcon>
-                    <IonLabel>A to Z {/* TODO: Customize label */}</IonLabel>
-                </IonItem>
-                <IonItem
-                    button={true}
-                    onClick={() => {
-                        setSortAsc(false);
-                        onDismissPopover();
-                    }}
-                >
-                    <IonIcon className="size-6 pr-2" icon={sortAsc ? undefined : checkmark}></IonIcon>
-                    <IonLabel>Z to A {/* TODO: Customize label */}</IonLabel>
-                </IonItem>
-            </IonList>
-        </IonList>
-    </IonContent>
-);
-
 const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
+    const [sortType, setSortType] = useState<SortType>(SortType.NAME);
     const [sortAsc, setSortAsc] = useState(true);
 
     // Contexts
@@ -80,6 +32,8 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
     // Render
     const [showPopover, dismissPopover] = useIonPopover(SortOptionsPopover, {
+        sortType: sortType,
+        setSortType: setSortType,
         sortAsc: sortAsc,
         setSortAsc: setSortAsc,
         onDismissPopover: () => dismissPopover(),
@@ -94,7 +48,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                             className="flex items-center hover:cursor-pointer"
                             onClick={(e) => showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" })}
                         >
-                            <IonLabel>Name</IonLabel>
+                            <IonLabel>{sortType}</IonLabel>
                             <IonIcon
                                 className="ml-1 size-4 rounded-full bg-blue-500/50 p-1"
                                 icon={sortAsc ? arrowUp : arrowDown}
@@ -125,9 +79,93 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                 className="h-[calc(80vh-4rem)]"
                 path={explorerContext.path}
                 directory={props.directory}
+                sortType={sortType}
                 sortAsc={sortAsc}
             />
         </div>
+    );
+};
+
+const SortOptionsPopover: React.FC<{
+    sortType: SortType;
+    setSortType: (sortType: SortType) => void;
+    sortAsc: boolean;
+    setSortAsc: (sortAsc: boolean) => void;
+    onDismissPopover: () => void;
+}> = ({ sortType, setSortType, sortAsc, setSortAsc, onDismissPopover }) => {
+    let ascendingText;
+    let descendingText;
+    switch (sortType) {
+        case SortType.NAME:
+            ascendingText = "A to Z";
+            descendingText = "Z to A";
+            break;
+        case SortType.CREATION_TIME:
+            ascendingText = "Old to New";
+            descendingText = "New to Old";
+            break;
+    }
+
+    return (
+        <IonContent>
+            <IonList lines="none" className="h-full">
+                <IonItem className="-mb-2">
+                    <IonLabel className="font-bold">Sort by</IonLabel>
+                </IonItem>
+                <IonList lines="none">
+                    {/* TODO: Add other sort options */}
+                    <IonItem
+                        button={true}
+                        onClick={() => {
+                            setSortType(SortType.NAME);
+                            onDismissPopover();
+                        }}
+                    >
+                        <IonIcon
+                            className="size-6 pr-2"
+                            icon={sortType === SortType.NAME ? checkmark : undefined}
+                        ></IonIcon>
+                        <IonLabel>Name</IonLabel>
+                    </IonItem>
+                    <IonItem
+                        button={true}
+                        onClick={() => {
+                            setSortType(SortType.CREATION_TIME);
+                            onDismissPopover();
+                        }}
+                    >
+                        <IonIcon
+                            className="size-6 pr-2"
+                            icon={sortType === SortType.CREATION_TIME ? checkmark : undefined}
+                        ></IonIcon>
+                        <IonLabel>Creation Time</IonLabel>
+                    </IonItem>
+                </IonList>
+                <hr className="my-0 bg-neutral-400 dark:bg-neutral-500" />
+                <IonList lines="none">
+                    <IonItem
+                        button={true}
+                        onClick={() => {
+                            setSortAsc(true);
+                            onDismissPopover();
+                        }}
+                    >
+                        <IonIcon className="size-6 pr-2" icon={sortAsc ? checkmark : undefined}></IonIcon>
+                        <IonLabel>{ascendingText}</IonLabel>
+                    </IonItem>
+                    <IonItem
+                        button={true}
+                        onClick={() => {
+                            setSortAsc(false);
+                            onDismissPopover();
+                        }}
+                    >
+                        <IonIcon className="size-6 pr-2" icon={sortAsc ? undefined : checkmark}></IonIcon>
+                        <IonLabel>{descendingText}</IonLabel>
+                    </IonItem>
+                </IonList>
+            </IonList>
+        </IonContent>
     );
 };
 

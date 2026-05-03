@@ -1,7 +1,7 @@
 import { IonIcon, IonLabel, IonList } from "@ionic/react";
 import { sadOutline } from "ionicons/icons";
 
-import { sortItems } from "@lib/files/sorting";
+import { SortType, sortItems } from "@lib/files/sorting";
 import { Directory, File } from "@lib/files/structures";
 import { getParent } from "@lib/util";
 
@@ -20,6 +20,8 @@ interface ContainerProps {
      * If `null`, will interpret as pending content.
      */
     directory: Directory | null;
+    /** The type of sorting to perform */
+    sortType: SortType;
     /** Whether to sort in ascending order */
     sortAsc?: boolean;
     /** Optional override for the parent button click handler */
@@ -49,7 +51,7 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
             <DirectoryItem key={idx} oddRow={isOddRow(idx)}></DirectoryItem>
         ));
     } else if (props.directory.items && props.directory.items.length > 0) {
-        MainBody = sortItems(props.directory, props.sortAsc).map((item, idx) => (
+        MainBody = sortItems(props.directory, props.sortType, props.sortAsc).map((item, idx) => (
             <DirectoryItem
                 key={idx}
                 oddRow={isOddRow(idx)}
