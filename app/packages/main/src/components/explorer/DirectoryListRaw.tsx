@@ -54,6 +54,7 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
                 key={idx}
                 oddRow={isOddRow(idx)}
                 name={item.name}
+                creation_time={item.creation_time}
                 fullpath={item.fullpath}
                 type={item.type}
                 size={item.type === "file" ? item.size : undefined}

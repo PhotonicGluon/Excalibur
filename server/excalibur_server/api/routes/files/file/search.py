@@ -22,6 +22,7 @@ from excalibur_server.src.users import get_user
                         [
                             {
                                 "name": "example.txt",
+                                "creation_time": 1100000000,
                                 "fullpath": "example.txt",
                                 "type": "file",
                                 "size": 1024,

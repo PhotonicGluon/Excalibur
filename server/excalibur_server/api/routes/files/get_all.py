@@ -19,12 +19,14 @@ from excalibur_server.src.users import get_user
                     "example": [
                         {
                             "name": "example.txt",
+                            "creation_time": 1100000000,
                             "fullpath": "example.txt",
                             "type": "file",
                             "size": 1024,
                         },
                         {
                             "name": "folder-1",
+                            "creation_time": 1200000000,
                             "fullpath": "folder-1",
                             "type": "directory",
                             "items": None,
