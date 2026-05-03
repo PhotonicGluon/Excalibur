@@ -12,6 +12,9 @@ class Filelike(BaseModel):
     name: str
     "Name of item"
 
+    creation_time: int
+    "Creation timestamp of the item as *seconds* since the Unix epoch"
+
     fullpath: str
     "Path to the item from the root directory"
 
@@ -32,20 +35,9 @@ class Filelike(BaseModel):
 
         return {
             "name": fsitem.name,
+            "creation_time": fsitem.timestamp,
             "fullpath": fullpath.as_posix(),
         }
-
-    @classmethod
-    def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
-        """
-        Create a Filelike instance from an FSItem.
-
-        :param fsitem: `FSItem` to create instance from
-        :param parent_dir_path: parent directory path, defaults to None
-        :return: Filelike instance
-        """
-
-        return cls(**cls._get_base_fields(fsitem, parent_dir_path))
 
 
 class File(Filelike):

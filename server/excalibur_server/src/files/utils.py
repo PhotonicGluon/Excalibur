@@ -30,7 +30,7 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
         else:
             items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path, include_exef_size=include_exef_size))
 
-    return Directory(name=folder.name, fullpath=parent_dir_path.as_posix(), items=items)
+    return Directory(name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items)
 
 
 def rmitem(item: FSItem):

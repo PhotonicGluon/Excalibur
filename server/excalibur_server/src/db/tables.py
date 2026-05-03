@@ -95,7 +95,7 @@ class FSItem(SQLModel, table=True):
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
     timestamp: int = Field(nullable=False, default_factory=lambda: int(time()))
-    "Creation timestamp of the item as _seconds_ since the Unix epoch"
+    "Creation timestamp of the item as *seconds* since the Unix epoch"
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
