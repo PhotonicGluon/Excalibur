@@ -15,3 +15,13 @@
 import "./commands";
 
 // Cypress.session.clearAllSavedSessions();
+
+// Override timezone to UTC for consistent date testing
+Cypress.on("test:before:run", () => {
+    Cypress.automation("remote:debugger:protocol", {
+        command: "Emulation.setTimezoneOverride",
+        params: {
+            timezoneId: "UTC",
+        },
+    });
+});

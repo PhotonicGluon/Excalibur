@@ -13,7 +13,7 @@ class Filelike(BaseModel):
     "Name of item"
 
     creation_time: int
-    "Creation timestamp of the item as *seconds* since the Unix epoch"
+    "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
     fullpath: str
     "Path to the item from the root directory"
