@@ -1,4 +1,14 @@
 /**
+ * Returns the sign of a number.
+ *
+ * @param x the number
+ * @returns 1 if x is positive, -1 if x is negative, 0 if x is zero
+ */
+export function sgn(x: number): 1 | -1 | 0 {
+    return x > 0 ? 1 : x < 0 ? -1 : 0;
+}
+
+/**
  * Returns the positive remainder of dividing `a` by `b`. This is different from the `%` operator
  * in that it always returns a positive result, even if `a` is negative.
  *

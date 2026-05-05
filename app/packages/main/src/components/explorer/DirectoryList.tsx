@@ -100,6 +100,14 @@ const SortOptionsPopover: React.FC<{
             ascendingText = "A to Z";
             descendingText = "Z to A";
             break;
+        case SortType.SIZE:
+            ascendingText = "Smallest to Largest";
+            descendingText = "Largest to Smallest";
+            break;
+        case SortType.TYPE:
+            ascendingText = "Normal";
+            descendingText = "Reversed";
+            break;
         case SortType.CREATION_TIME:
             ascendingText = "Old to New";
             descendingText = "New to Old";
@@ -113,33 +121,22 @@ const SortOptionsPopover: React.FC<{
                     <IonLabel className="font-bold">Sort by</IonLabel>
                 </IonItem>
                 <IonList lines="none">
-                    {/* TODO: Add other sort options */}
-                    <IonItem
-                        button={true}
-                        onClick={() => {
-                            setSortType(SortType.NAME);
-                            onDismissPopover();
-                        }}
-                    >
-                        <IonIcon
-                            className="size-6 pr-2"
-                            icon={sortType === SortType.NAME ? checkmark : undefined}
-                        ></IonIcon>
-                        <IonLabel>Name</IonLabel>
-                    </IonItem>
-                    <IonItem
-                        button={true}
-                        onClick={() => {
-                            setSortType(SortType.CREATION_TIME);
-                            onDismissPopover();
-                        }}
-                    >
-                        <IonIcon
-                            className="size-6 pr-2"
-                            icon={sortType === SortType.CREATION_TIME ? checkmark : undefined}
-                        ></IonIcon>
-                        <IonLabel>Creation Time</IonLabel>
-                    </IonItem>
+                    {Object.values(SortType).map((sortTypeValue) => (
+                        <IonItem
+                            key={sortTypeValue}
+                            button={true}
+                            onClick={() => {
+                                setSortType(sortTypeValue);
+                                onDismissPopover();
+                            }}
+                        >
+                            <IonIcon
+                                className="size-6 pr-2"
+                                icon={sortType === sortTypeValue ? checkmark : undefined}
+                            ></IonIcon>
+                            <IonLabel>{sortTypeValue}</IonLabel>
+                        </IonItem>
+                    ))}
                 </IonList>
                 <hr className="my-0 bg-neutral-400 dark:bg-neutral-500" />
                 <IonList lines="none">

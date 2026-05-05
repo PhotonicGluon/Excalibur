@@ -2,7 +2,6 @@ import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import writeBlob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
-import mime from "mime";
 import React from "react";
 
 import {
@@ -32,6 +31,7 @@ import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
+import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
@@ -68,7 +68,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
     const nameNoExEF = props.name?.replace(/\.exef$/, "");
     const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
-    const mimetype = mime.getType(nameNoExEF || "");
+    const mimetype = props.name ? getMIMEType(props.name) : null;
 
     // Contexts
     const auth = useAuth();

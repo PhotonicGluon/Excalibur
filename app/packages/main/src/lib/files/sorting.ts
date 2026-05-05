@@ -1,10 +1,17 @@
 import naturalCompare from "natural-compare";
 
-import { Directory, FileLike } from "./structures";
+import { sgn } from "@lib/util";
+import { getMIMEType } from "@lib/util/mime";
+
+import { Directory, File, FileLike } from "./structures";
 
 export enum SortType {
     /** Sort by the item name */
     NAME = "Name",
+    /** Sort by file size */
+    SIZE = "File Size",
+    /** Sort by file type */
+    TYPE = "File Type",
     /** Sort by the item creation time */
     CREATION_TIME = "Creation Time",
 }
@@ -17,14 +24,27 @@ function sortByName(a: FileLike, b: FileLike): ComparisonResult {
     return naturalCompare(a.name, b.name);
 }
 
-function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
-    const delta = a.creation_time - b.creation_time;
-    if (delta > 0) {
-        return 1;
-    } else if (delta < 0) {
-        return -1;
+function sortBySize(a: FileLike, b: FileLike): ComparisonResult {
+    // Here, either both are files or both are directories
+    if (a.type === "directory" && b.type === "directory") {
+        // For the case of directories, we use name sorting
+        return sortByName(a, b);
     }
-    return 0;
+
+    // Both are files, so we can compare their sizes
+    return sgn((a as File).size - (b as File).size);
+}
+
+function sortByType(a: FileLike, b: FileLike): ComparisonResult {
+    const aType = getMIMEType(a.name) || "";
+    const bType = getMIMEType(b.name) || "";
+
+    // We directly sort the names of the MIME types
+    return naturalCompare(aType, bType);
+}
+
+function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
+    return sgn(a.creation_time - b.creation_time);
 }
 
 // Main function
@@ -60,6 +80,12 @@ export function sortItems(directory: Directory, sortType: SortType, sortAsc: boo
         switch (sortType) {
             case SortType.NAME:
                 sortVal = sortByName(a, b);
+                break;
+            case SortType.SIZE:
+                sortVal = sortBySize(a, b);
+                break;
+            case SortType.TYPE:
+                sortVal = sortByType(a, b);
                 break;
             case SortType.CREATION_TIME:
                 sortVal = sortByCreationTime(a, b);

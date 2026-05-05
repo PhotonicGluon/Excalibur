@@ -1,6 +1,12 @@
-import { expect } from "vitest";
+import { expect, test } from "vitest";
 
-import { modInv, modulo, powmod } from "./math";
+import { modInv, modulo, powmod, sgn } from "./math";
+
+test("sgn", () => {
+    expect(sgn(1.23)).toEqual(1);
+    expect(sgn(-1.23)).toEqual(-1);
+    expect(sgn(0)).toEqual(0);
+});
 
 test("modulo", () => {
     // Well-defined
