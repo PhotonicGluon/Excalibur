@@ -20,7 +20,7 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => 
     const explorerContext = useExplorerContext();
 
     // Hooks
-    const { directoryContents, refreshContents, listenerConnected } = useDirectory();
+    const { directoryContents, refreshContents } = useDirectory();
     const { onDropFileItem } = useUploadFile();
 
     // Effects
@@ -63,7 +63,7 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => 
             )}
 
             {/* Files list */}
-            <DirectoryList directory={directoryContents} listenerConnected={listenerConnected} />
+            <DirectoryList directory={directoryContents} />
         </div>
     );
 };

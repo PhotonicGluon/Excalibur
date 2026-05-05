@@ -1,17 +1,13 @@
 import { createFile, createFolder } from "../helpers";
 import { LARGE_SIZE, SMALL_SIZE } from "./constants";
 
-beforeEach(() => {
-    cy.login("http://127.0.0.1:8989", "test-user", "Password");
-    cy.visit("/files/");
-    cy.url().should("include", "/files");
-
-    // Wait for listener to connect
-    cy.get("#directory-list-stats").should("exist");
-    cy.get("#directory-list-stats ion-icon").should("have.attr", "aria-label", "Listener connected");
-});
-
 describe("Upload and Download Operations", () => {
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
+
     afterEach(function () {
         // Stop other tests if any test fails
         if (this.currentTest.state === "failed") {
@@ -42,6 +38,12 @@ describe("Upload and Download Operations", () => {
 });
 
 describe("Rename Operations", () => {
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
+
     afterEach(function () {
         // Stop other tests if any test fails
         if (this.currentTest.state === "failed") {
@@ -76,6 +78,12 @@ describe("Rename Operations", () => {
 });
 
 describe("Deletion Operations", () => {
+    beforeEach(() => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
+
     afterEach(function () {
         // Stop other tests if any test fails
         if (this.currentTest.state === "failed") {

@@ -33,7 +33,6 @@ describe("<DirectoryList />", () => {
         props = {},
         rowAlternatingColours: RowAlternatingColours = "off",
         pretendPending: boolean = false,
-        listenerConnected: boolean = true,
     ) {
         const defaultProps: Directory = {
             items,
@@ -71,11 +70,7 @@ describe("<DirectoryList />", () => {
                             checkUpdateInterval: 0,
                         }}
                     >
-                        <DirectoryList
-                            id="directory-list"
-                            directory={pretendPending ? null : defaultProps}
-                            listenerConnected={listenerConnected}
-                        />
+                        <DirectoryList id="directory-list" directory={pretendPending ? null : defaultProps} />
                     </settingsContext.Provider>
                 </explorerContext.Provider>
             </IonApp>,
@@ -155,19 +150,5 @@ describe("<DirectoryList />", () => {
             .then(($el) => {
                 cy.get("#directory-list ion-list > ion-item").eq(1).should("not.have.class", $el.attr("class"));
             });
-    });
-
-    describe("Listener Icon", () => {
-        it("renders listener connected icon", () => {
-            renderComponent({}, "off", false, true);
-            cy.get("#directory-list-stats").should("exist");
-            cy.get("#directory-list-stats ion-icon").should("have.attr", "aria-label", "Listener connected");
-        });
-
-        it("renders listener disconnected icon", () => {
-            renderComponent({}, "off", false, false);
-            cy.get("#directory-list-stats").should("exist");
-            cy.get("#directory-list-stats ion-icon").should("have.attr", "aria-label", "Listener disconnected");
-        });
     });
 });
