@@ -3,6 +3,8 @@ export type ItemType = "file" | "directory" | "parent";
 export interface FileLike {
     /** Name of item */
     name: string;
+    /** Creation time of the item */
+    creation_time: number;
     /** Path to the item from the root directory */
     fullpath: string;
     /** Type of the item */

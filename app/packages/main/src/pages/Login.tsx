@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { menuController } from "@ionic/core/components";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@ionic/react";
 
 import { e2ee } from "@lib/auth/e2ee";
-import { useEffectOnce } from "@lib/hooks";
+import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 import { checkUser, getAdditionalUserInfo } from "@lib/users/api";
 import { AdditionalUserInfo } from "@lib/users/structures";
@@ -240,7 +240,7 @@ const Login: React.FC = () => {
         }
     });
 
-    useEffect(() => {
+    useMount(() => {
         // Get existing values from preferences
         Preferences.get("username").then((result) => {
             if (!result) return;
@@ -261,7 +261,7 @@ const Login: React.FC = () => {
                 document.querySelector("#save-password-checkbox")!.removeAttribute("checked");
             }
         });
-    }, []);
+    });
 
     // Render
     return (

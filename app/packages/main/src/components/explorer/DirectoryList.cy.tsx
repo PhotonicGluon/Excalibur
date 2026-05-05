@@ -13,6 +13,7 @@ const files: File[] = [];
 for (let i = 0; i < 10; i++) {
     files.push({
         name: `Sample File ${i}.txt.exef`,
+        creation_time: 1000000000 + i * 1000,
         fullpath: `/some/path/Sample File ${i}.txt.exef`,
         size: 100000 * (i + 1) + 23456,
         type: "file",
@@ -20,6 +21,7 @@ for (let i = 0; i < 10; i++) {
 }
 const directory: Directory = {
     name: "Sample Directory",
+    creation_time: 1100000000,
     fullpath: "/some/path",
     type: "directory",
     items: [files[2]],
@@ -36,6 +38,7 @@ describe("<DirectoryList />", () => {
             items,
             fullpath: ".",
             name: "A Directory",
+            creation_time: 1200000000,
             type: "directory",
             ...props,
         };
@@ -90,8 +93,10 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-grid ion-label").get("ion-label").contains(`${items.length} Items`);
 
         // Items should be in the correct order
-        cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "Sample Directory"); // First item is the directory
-        cy.get("#directory-list ion-list").get("ion-item").eq(1).should("contain.text", "Sample File"); // Second item is the file
+        cy.get("#directory-list ion-list").get("ion-item").eq(0).should("contain.text", "Sample Directory"); // First item is the directory
+        for (let i = 1; i < items.length; i++) {
+            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", "Sample File"); // Second item onwards are files
+        }
 
         // Row colour classes should be identical (since rowAlternatingColours is "off")
         cy.get("#directory-list ion-list > ion-item")
@@ -121,8 +126,10 @@ describe("<DirectoryList />", () => {
 
         // Items should be in the correct order
         cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "(Go Back)"); // First item is the directory
-        cy.get("#directory-list ion-list").get("ion-item").eq(1).should("have.text", "Sample Directory"); // First item is the directory
-        cy.get("#directory-list ion-list").get("ion-item").eq(2).should("contain.text", "Sample File"); // Second item is the file
+        cy.get("#directory-list ion-list").get("ion-item").eq(1).should("contain.text", "Sample Directory"); // Next item is the directory
+        for (let i = 2; i < items.length; i++) {
+            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", "Sample File"); // Third item onwards are files
+        }
     });
 
     it("renders correctly if pending", () => {

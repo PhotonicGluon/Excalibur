@@ -20,7 +20,7 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
     if folder is None or not folder.is_folder:
         return None
 
-    parent_dir_path = get_item_fullpath(folder_id)  # TODO: Could we perhaps cache this to improve performance?
+    parent_dir_path = get_item_fullpath(folder_id)
     fsitems = get_items_in_folder(folder_id)
 
     items = []
@@ -30,7 +30,7 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
         else:
             items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path, include_exef_size=include_exef_size))
 
-    return Directory(name=folder.name, fullpath=parent_dir_path.as_posix(), items=items)
+    return Directory(name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items)
 
 
 def rmitem(item: FSItem):

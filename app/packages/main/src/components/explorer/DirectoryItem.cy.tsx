@@ -25,6 +25,7 @@ describe("<DirectoryItem />", () => {
         const defaultProps: ContainerProps = {
             oddRow: true,
             name: "Sample File.txt.exef",
+            creation_time: 1577934245, // 2020-01-02 03:04:05
             fullpath: "/some/path",
             size: 123456,
             type: "file",
@@ -93,7 +94,10 @@ describe("<DirectoryItem />", () => {
 
         // Correct size should be present
         cy.get("#directory-item ion-note").should("exist");
-        cy.get("#directory-item ion-note").should("have.text", "123.46 kB");
+        cy.get("#directory-item ion-note").eq(0).should("have.text", "123.46 kB");
+
+        // Correct creation time should be present
+        cy.get("#directory-item ion-note").eq(1).should("have.text", "2020-01-02 03:04:05");
     });
 
     it("renders skeleton when pending", () => {

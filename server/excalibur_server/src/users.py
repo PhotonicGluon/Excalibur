@@ -30,14 +30,7 @@ def add_user(user: User):
     """
 
     # Create new root folder for the user
-    root_item = FSItem(
-        name=user.username,
-        parent_id=None,
-        root_id=None,
-        is_folder=True,
-        fullpath="",
-        last_modified=0,  # This is to make the root item as non-modifiable
-    )
+    root_item = FSItem(name=user.username, parent_id=None, root_id=None, is_folder=True)
     root_item.root_id = root_item.id
 
     user.fsitem_id = root_item.id

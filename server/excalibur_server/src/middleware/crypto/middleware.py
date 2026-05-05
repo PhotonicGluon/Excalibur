@@ -226,6 +226,13 @@ class EncryptionHandler:
         if message_type == "http.response.body":
             # Encrypt body
             plaintext_body = message.get("body", b"")
+            if plaintext_body == b"" and self._started_response:
+                # For some reason, in production mode, uvicorn may sometimes send an empty message to mark the end of
+                # the body. We don't need to encrypt it (since the body has already ended and encrypted) but we still
+                # need to send it to tell the client that the response has ended.
+                await self._send(message)
+                return
+
             self._exef.encryptor.update(plaintext_body)
 
             # Determine what we need to send

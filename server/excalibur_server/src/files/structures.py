@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal, Self, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from excalibur_server.src.db.operations import get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
@@ -11,6 +11,9 @@ from excalibur_server.src.exef import ExEF
 class Filelike(BaseModel):
     name: str
     "Name of item"
+
+    creation_time: int
+    "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
     fullpath: str
     "Path to the item from the root directory"
@@ -32,20 +35,9 @@ class Filelike(BaseModel):
 
         return {
             "name": fsitem.name,
+            "creation_time": fsitem.timestamp,
             "fullpath": fullpath.as_posix(),
         }
-
-    @classmethod
-    def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
-        """
-        Create a Filelike instance from an FSItem.
-
-        :param fsitem: `FSItem` to create instance from
-        :param parent_dir_path: parent directory path, defaults to None
-        :return: Filelike instance
-        """
-
-        return cls(**cls._get_base_fields(fsitem, parent_dir_path))
 
 
 class File(Filelike):
@@ -79,7 +71,7 @@ class File(Filelike):
 class Directory(Filelike):
     type: Literal["directory"] = "directory"
 
-    items: list[Union[File, "Directory"]] | None = None
+    items: list[Union[File, "Directory"]] | None = Field(default=None, exclude_if=lambda v: v is None)
     "List of filelike instances in the directory"
 
     @classmethod

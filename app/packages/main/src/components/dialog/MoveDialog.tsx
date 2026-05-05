@@ -15,6 +15,7 @@ import { close } from "ionicons/icons";
 
 import { listdir, moveItem } from "@lib/files/api";
 import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
+import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
 
 import { useAuth } from "@components/auth/context";
@@ -130,6 +131,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
                 <DirectoryListRaw
                     path={destFolder}
                     directory={destFolderContents}
+                    sortValues={{ sortType: SortType.NAME, sortAsc: true }}
                     onParentClickOverride={onClickFolder}
                     directoryItemPropsOverride={(item) => ({
                         disabled: item.type === "file",

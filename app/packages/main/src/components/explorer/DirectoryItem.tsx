@@ -2,7 +2,6 @@ import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import writeBlob from "capacitor-blob-writer";
 import * as Comlink from "comlink";
-import mime from "mime";
 import React from "react";
 
 import {
@@ -31,6 +30,8 @@ import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { bytesToHumanReadable } from "@lib/util";
+import { timestampToDateString } from "@lib/util/date";
+import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
 import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
@@ -67,7 +68,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isFile = props.type === "file";
     const nameNoExEF = props.name?.replace(/\.exef$/, "");
     const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
-    const mimetype = mime.getType(nameNoExEF || "");
+    const mimetype = props.name ? getMIMEType(props.name) : null;
 
     // Contexts
     const auth = useAuth();
@@ -351,18 +352,22 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                 {!isLoading && <IonIcon icon={icon} color={props.disabled ? "light" : undefined} />}
                                 {isLoading && <IonSkeletonText animated={true} />}
                             </IonThumbnail>
-                            <div className="w-[calc(100%-var(--spacing)*10)] pl-4">
+                            <div className="w-[calc(100%-var(--spacing)*10)] pl-4 *:block">
                                 <IonLabel className="max-w-100 truncate" color={props.disabled ? "light" : undefined}>
                                     {!isLoading &&
                                         (props.type === "directory" || props.keepExEF ? props.name : nameNoExEF)}
                                     {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                                 </IonLabel>
                                 {!isLoading && props.size !== undefined && (
-                                    <IonNote color={props.disabled ? "light" : undefined}>
+                                    <IonNote className="text-sm" color={props.disabled ? "medium" : undefined}>
                                         {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
                                     </IonNote>
                                 )}
-                                {!isLoading && props.size === undefined}
+                                {!isLoading && props.creation_time !== undefined && (
+                                    <IonNote className="text-xs" color={props.disabled ? "dark" : undefined}>
+                                        {timestampToDateString(props.creation_time!)}
+                                    </IonNote>
+                                )}
                                 {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                             </div>
                         </IonCol>

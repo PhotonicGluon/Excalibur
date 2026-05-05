@@ -1,7 +1,7 @@
 import { IonIcon, IonLabel, IonList } from "@ionic/react";
 import { sadOutline } from "ionicons/icons";
 
-import { sortItems } from "@lib/files/sorting";
+import { SortValues, sortItems } from "@lib/files/sorting";
 import { Directory, File } from "@lib/files/structures";
 import { getParent } from "@lib/util";
 
@@ -20,8 +20,8 @@ interface ContainerProps {
      * If `null`, will interpret as pending content.
      */
     directory: Directory | null;
-    /** Whether to sort in ascending order */
-    sortAsc?: boolean;
+    /** The sorting values for the directory */
+    sortValues: SortValues;
     /** Optional override for the parent button click handler */
     onParentClickOverride?: (fullpath: string) => void;
     /** Optional override for the DirectoryItem props, depending on the item */
@@ -49,11 +49,12 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
             <DirectoryItem key={idx} oddRow={isOddRow(idx)}></DirectoryItem>
         ));
     } else if (props.directory.items && props.directory.items.length > 0) {
-        MainBody = sortItems(props.directory, props.sortAsc).map((item, idx) => (
+        MainBody = sortItems(props.directory, props.sortValues.sortType, props.sortValues.sortAsc).map((item, idx) => (
             <DirectoryItem
                 key={idx}
                 oddRow={isOddRow(idx)}
                 name={item.name}
+                creation_time={item.creation_time}
                 fullpath={item.fullpath}
                 type={item.type}
                 size={item.type === "file" ? item.size : undefined}

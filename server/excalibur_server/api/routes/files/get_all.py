@@ -19,12 +19,14 @@ from excalibur_server.src.users import get_user
                     "example": [
                         {
                             "name": "example.txt",
+                            "creation_time": 1100000000,
                             "fullpath": "example.txt",
                             "type": "file",
                             "size": 1024,
                         },
                         {
                             "name": "folder-1",
+                            "creation_time": 1200000000,
                             "fullpath": "folder-1",
                             "type": "directory",
                             "items": None,
@@ -39,7 +41,7 @@ def get_all_items_endpoint(credentials: Annotated[Credentials, Depends(get_crede
     """
     Lists all the items owned by the authenticated user.
 
-    Any directories will *not* have their items returned (i.e. items will be set as `null`).
+    Any directories will *not* have their items returned.
     """
 
     username = credentials.username
@@ -51,7 +53,6 @@ def get_all_items_endpoint(credentials: Annotated[Credentials, Depends(get_crede
     # Convert to appropriate filelike instances
     items = []
     for fsitem in fsitems:
-        item = None
         if fsitem.is_folder:
             item = Directory.from_fsitem(fsitem)
         else:

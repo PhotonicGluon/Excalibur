@@ -23,7 +23,6 @@ class TestListdir:
             root_id=root_id,
             name="test-dir",
             is_folder=True,
-            fullpath="test-dir",
         )
         db_session.add(folder)
 
@@ -32,14 +31,12 @@ class TestListdir:
             parent_id=folder.id,
             root_id=root_id,
             name="test-file.txt.exef",
-            fullpath="test-file.txt.exef",
             size=100,
         )
         file2 = FSItem(
             parent_id=folder.id,
             root_id=root_id,
             name="test-file2.txt.exef",
-            fullpath="test-file2.txt.exef",
             size=100,
         )
         db_session.add(file1)

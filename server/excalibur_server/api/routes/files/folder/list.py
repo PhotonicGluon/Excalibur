@@ -22,6 +22,7 @@ from excalibur_server.src.users import get_user
                     "example": [
                         {
                             "name": "example.txt",
+                            "creation_time": 1100000000,
                             "fullpath": "example.txt",
                             "type": "file",
                             "size": 1024,
@@ -45,7 +46,7 @@ def listdir_endpoint(
     """
     Lists the contents of a directory.
 
-    Any subdirectories in the main directory will *not* have their items listed (i.e. items will be set as `null`).
+    Any subdirectories in the main directory will *not* have their items returned.
     """
 
     path = processed_path

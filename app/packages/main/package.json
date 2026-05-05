@@ -11,14 +11,15 @@
         "test:unit": "vitest watch",
         "test:unit-run": "vitest run",
         "test:component": "cypress run --component",
+        "typecheck": "tsc --noEmit",
         "lint": "cd ../.. && pnpm run lint"
     },
     "type": "module",
     "dependencies": {
         "@capacitor-community/safe-area": "^8.0.1",
-        "@capacitor/android": "^8.3.0",
+        "@capacitor/android": "^8.3.1",
         "@capacitor/app": "^8.1.0",
-        "@capacitor/core": "^8.3.0",
+        "@capacitor/core": "^8.3.1",
         "@capacitor/filesystem": "^8.1.2",
         "@capacitor/keyboard": "^8.0.3",
         "@capacitor/preferences": "^8.0.1",
@@ -43,13 +44,13 @@
         "react-router-dom": "^5.3.4",
         "seedrandom": "^3.0.5",
         "semver-parser": "^4.1.8",
-        "tailwindcss": "^4.2.2",
+        "tailwindcss": "^4.2.4",
         "use-immer": "^0.11.0"
     },
     "devDependencies": {
         "@capacitor/assets": "^3.0.5",
-        "@capacitor/cli": "^8.3.0",
-        "@tailwindcss/vite": "^4.2.2",
+        "@capacitor/cli": "^8.3.1",
+        "@tailwindcss/vite": "^4.2.4",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/natural-compare": "^1.4.3",
         "@types/node": "^25.6.0",
@@ -59,15 +60,15 @@
         "@types/react-router-dom": "^5.3.3",
         "@types/seedrandom": "^3.0.8",
         "@vitejs/plugin-react": "^6.0.1",
-        "baseline-browser-mapping": "^2.10.19",
-        "cypress": "^15.13.1",
+        "baseline-browser-mapping": "^2.10.23",
+        "cypress": "^15.14.1",
         "globals": "^17.5.0",
         "lint-staged": "^16.4.0",
         "prettier": "^3.8.3",
-        "prettier-plugin-tailwindcss": "^0.7.2",
+        "prettier-plugin-tailwindcss": "^0.7.3",
         "vite": "~8.0.3",
         "vite-plugin-node-polyfills": "^0.26.0",
-        "vitest": "^4.1.4"
+        "vitest": "^4.1.5"
     },
     "private": true
 }

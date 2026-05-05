@@ -11,17 +11,17 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
     """
     Middleware that limits the size of uploaded files.
 
-    Note that the middleware will allow requests which Content-Length are 1024 bytes more than the
-    maximum upload size. This is to account for the additional content size for the multipart file
-    upload format.
+    Note that this middleware will allow requests with a content length that is 1024 bytes more than
+    the maximum permitted upload size. This is to account for the additional content size for the
+    multipart file upload format.
     """
 
     def __init__(self, app: ASGIApp, max_upload_size: int) -> None:
         """
         Constructor
 
-        :param app: The ASGI app
-        :param max_upload_size: The maximum size of *unencrypted* uploaded files in bytes
+        :param app: the ASGI app
+        :param max_upload_size: the maximum size of *unencrypted* uploaded files in bytes
         """
 
         super().__init__(app)
@@ -35,15 +35,23 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
         """
         Handles the request
 
-        :param request: The request
-        :param call_next: The next function in the chain
-        :return: The response
+        :param request: the request
+        :param call_next: the next function in the chain
+        :return: the response
         """
 
         if request.method == "POST":
             if "content-length" not in request.headers:
-                return Response(status_code=status.HTTP_411_LENGTH_REQUIRED)
+                return Response(
+                    status_code=status.HTTP_411_LENGTH_REQUIRED,
+                    content={"message": "Content-Length header is required"},
+                )
+
             content_length = int(request.headers["content-length"])
             if content_length > self.max_upload_size:
-                return Response(status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+                return Response(
+                    status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                    content={"message": "Request body too large"},
+                )
+
         return await call_next(request)

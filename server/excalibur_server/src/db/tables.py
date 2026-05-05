@@ -1,7 +1,7 @@
 import uuid
-from time import time, time_ns
+from datetime import datetime, timezone
 
-from sqlmodel import BigInteger, Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
+from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.srp.group import SRPGroup
@@ -90,20 +90,12 @@ class FSItem(SQLModel, table=True):
     "Item name"
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
-    fullpath: str = Field(nullable=False)
-    "Full path to the item from the root directory"
 
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    timestamp: int = Field(nullable=False, default_factory=lambda: int(time()))
-    "Creation timestamp of the item as _seconds_ since the Unix epoch"
-    last_modified: int = Field(sa_column=Column(BigInteger(), nullable=False), default_factory=time_ns)
-    """
-    Last modified timestamp of the item as _nanoseconds_ since the Unix epoch.
-    
-    Used internally to check whether the fullpath needs to be updated.
-    """
+    timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=timezone.utc).timestamp()))
+    "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)

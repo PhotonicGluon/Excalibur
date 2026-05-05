@@ -64,7 +64,6 @@ class TestCreateDir:
             root_id=root_id,
             name=f"test-dir-{uuid}",
             is_folder=True,
-            fullpath=f"test-dir-{uuid}",
         )
         db_session.add(move_folder)
         db_session.commit()

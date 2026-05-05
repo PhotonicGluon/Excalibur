@@ -138,7 +138,6 @@ def migrate_files():
     # Code proper
     from pathlib import Path
     from shutil import rmtree
-    from time import time_ns
 
     from excalibur_server.src.config import CONFIG
     from excalibur_server.src.db.operations import add_item, get_session
@@ -159,14 +158,7 @@ def migrate_files():
         typer.secho(f"==> Migrating user '{user.username}'...")
 
         # Create root item for user
-        root_item = FSItem(
-            parent_id=None,
-            root_id="",
-            name=user.username,
-            is_folder=True,
-            fullpath="",
-            last_modified=0,  # This is to make the root item as non-modifiable
-        )
+        root_item = FSItem(parent_id=None, root_id="", name=user.username, is_folder=True)
         root_item.root_id = root_item.id
         root_id = root_item.id
         add_item(root_item)
@@ -183,8 +175,6 @@ def migrate_files():
                     root_id=root_id,
                     name=path.name,
                     is_folder=True,
-                    fullpath=path.as_posix(),
-                    last_modified=time_ns(),
                 )
                 directories[str(path)] = dir_item.id
                 add_item(dir_item)
@@ -196,10 +186,8 @@ def migrate_files():
                 root_id=root_id,
                 name=path.name,
                 is_folder=False,
-                fullpath=path.as_posix(),
                 size=abs_path.stat().st_size,
                 timestamp=int(abs_path.stat().st_mtime),
-                last_modified=time_ns(),
             )
             file_renaming_map[abs_path] = f"{file_item.id}.exef"
             add_item(file_item)

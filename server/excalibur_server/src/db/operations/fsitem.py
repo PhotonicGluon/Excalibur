@@ -1,6 +1,8 @@
 import uuid
-from pathlib import Path
-from time import time_ns
+from pathlib import PurePosixPath
+
+from sqlalchemy.orm import aliased
+from sqlmodel import select
 
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
@@ -27,11 +29,10 @@ def get_item(item_id: str) -> FSItem | None:
     """
 
     with get_session() as session:
-        with session.begin():
-            item = session.get(FSItem, item_id)
-            if item is not None:
-                item = item.model_copy()  # So that we can avoid session issues
-            return item
+        item = session.get(FSItem, item_id)
+        if item is not None:
+            item = item.model_copy()  # So that we can avoid session issues
+        return item
 
 
 def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
@@ -49,19 +50,25 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
         path = ""
 
     parts = [p for p in path.split("/") if p]
-    current_parent_id = root_id
-    current_item = get_item(root_id)
+    if not parts:
+        return get_item(root_id)
 
+    num_parts = len(parts)
     with get_session() as session:
-        with session.begin():
-            for part in parts:
-                current_item = session.query(FSItem).filter_by(name=part, parent_id=current_parent_id).first()
+        aliases = [aliased(FSItem, name=f"part_{i}") for i in range(num_parts)]
 
-                if not current_item:
-                    return None
-                current_parent_id = current_item.id
+        stmt = (
+            select(aliases[-1])
+            .select_from(aliases[0])
+            .where(aliases[0].parent_id == root_id, aliases[0].name == parts[0])  # First item must be child of the root
+        )
+        for i in range(1, num_parts):
+            stmt = stmt.join(aliases[i], aliases[i].parent_id == aliases[i - 1].id).where(aliases[i].name == parts[i])
 
-            return current_item.model_copy()
+        stmt = stmt.where(aliases[-1].root_id == root_id)  # Remove results where the target is not in the correct root
+
+        result = session.execute(stmt).scalar()
+        return result.model_copy() if result else None
 
 
 def get_items_in_folder(folder_id: str) -> list[FSItem]:
@@ -73,9 +80,8 @@ def get_items_in_folder(folder_id: str) -> list[FSItem]:
     """
 
     with get_session() as session:
-        with session.begin():
-            items = session.query(FSItem).filter_by(parent_id=folder_id).all()
-            return [item.model_copy() for item in items]
+        items = session.execute(select(FSItem).where(FSItem.parent_id == folder_id)).scalars().all()
+        return [item.model_copy() for item in items]
 
 
 def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
@@ -87,46 +93,43 @@ def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
     """
 
     with get_session() as session:
-        with session.begin():
-            items = session.query(FSItem).filter_by(root_id=root_id).all()
-            return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
+        items = session.execute(select(FSItem).where(FSItem.root_id == root_id)).scalars().all()
+        return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
 
 
-def get_item_fullpath(item_id: uuid.UUID) -> Path:
+def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     """
     Gets the full path of a filesystem item, relative to the user's root directory.
 
     :param item_id: the ID of the filesystem item
-    :return: the full path of the filesystem item
+    :return: a PurePosixPath object representing the full path of the filesystem item
     """
 
-    item = get_item(item_id)
-    if item.parent_id is None:
-        return Path("")
+    # Base case: Select the target item
+    base_query = (
+        select(FSItem.id, FSItem.parent_id, FSItem.name)
+        .where(FSItem.id == item_id)
+        .where(FSItem.parent_id.is_not(None))  # Root folder should not be included in path
+        .cte(name="fullpath_cte", recursive=True)
+    )
 
-    # FIXME: This approach needs fixing. For now, we'll just recurse up the tree
-    # fullpath = Path(item.fullpath)
-    # parent_item = get_item(item.parent_id)
-    # if parent_item.last_modified > item.last_modified:
-    #     # The parent was modified more recently than this item, so we need to update the fullpath
-    #     fullpath = get_item_fullpath(parent_item.id) / item.name
-    #     with get_session() as session:
-    #         with session.begin():
-    #             current_item = session.query(FSItem).filter_by(id=item_id).first()
-    #             current_item.fullpath = fullpath.as_posix()
-    #             current_item.last_modified = time_ns()
-    #             session.add(current_item)
+    # Recursive case: Join parents to the current item
+    parent_alias = aliased(FSItem)
+    recursive_query = (
+        select(parent_alias.id, parent_alias.parent_id, parent_alias.name)
+        .join(base_query, base_query.c.parent_id == parent_alias.id)
+        .where(parent_alias.parent_id.is_not(None))  # Stop when we reach the root folder
+    )
 
-    fullpath = get_item_fullpath(item.parent_id) / item.name
-    if item.fullpath != fullpath.as_posix():
-        # Update the database records
-        with get_session() as session:
-            with session.begin():
-                current_item = session.query(FSItem).filter_by(id=item_id).first()
-                current_item.fullpath = fullpath.as_posix()
-                current_item.last_modified = time_ns()
-                session.add(current_item)
+    # Execute combined CTE query to get all parts of the path
+    fullpath_cte = base_query.union_all(recursive_query)
+    with get_session() as session:
+        parts = session.execute(select(fullpath_cte.c.name)).scalars().all()
 
+    # Reverse and join them (since results are child -> root)
+    fullpath = PurePosixPath("")
+    for part in reversed(parts):
+        fullpath /= part
     return fullpath
 
 
@@ -139,8 +142,7 @@ def is_dir_empty(folder_id: uuid.UUID) -> bool:
     """
 
     with get_session() as session:
-        with session.begin():
-            return session.query(FSItem).filter_by(parent_id=folder_id).count() == 0
+        return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
 
 
 def remove_item(item_id: str):
