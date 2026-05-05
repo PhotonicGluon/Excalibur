@@ -16,6 +16,13 @@ export enum SortType {
     CREATION_TIME = "Creation Time",
 }
 
+export type SortValues = {
+    /** The type of sorting to perform */
+    sortType: SortType;
+    /** Whether to sort in ascending order */
+    sortAsc: boolean;
+};
+
 type ComparisonResult = 0 | -1 | 1;
 
 // Sort functions

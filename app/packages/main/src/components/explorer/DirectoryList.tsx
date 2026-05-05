@@ -5,6 +5,8 @@ import { alertCircleOutline, arrowDown, arrowUp, checkmark, checkmarkCircleOutli
 
 import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
+import { useMount } from "@lib/hooks";
+import Preferences from "@lib/preferences";
 
 import DirectoryListRaw from "./DirectoryListRaw";
 import { useExplorerContext } from "./context";
@@ -30,12 +32,33 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
     // Contexts
     const explorerContext = useExplorerContext();
 
+    // Effects
+    useMount(() => {
+        // Get existing values from preferences
+        Preferences.get("sortType").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing sort type from preferences: ${result}`);
+            setSortType(result as SortType);
+        });
+        Preferences.get("sortAsc").then((result) => {
+            if (!result) return;
+            console.debug(`Got existing sort asc from preferences: ${result}`);
+            setSortAsc(result === "true");
+        });
+    });
+
     // Render
     const [showPopover, dismissPopover] = useIonPopover(SortOptionsPopover, {
         sortType: sortType,
-        setSortType: setSortType,
+        setSortType: (newSortType: SortType) => {
+            setSortType(newSortType);
+            Preferences.set({ sortType: newSortType });
+        },
         sortAsc: sortAsc,
-        setSortAsc: setSortAsc,
+        setSortAsc: (newSortAsc: boolean) => {
+            setSortAsc(newSortAsc);
+            Preferences.set({ sortAsc: newSortAsc });
+        },
         onDismissPopover: () => dismissPopover(),
     });
     return (
@@ -79,8 +102,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                 className="h-[calc(80vh-4rem)]"
                 path={explorerContext.path}
                 directory={props.directory}
-                sortType={sortType}
-                sortAsc={sortAsc}
+                sortValues={{ sortType: sortType, sortAsc: sortAsc }}
             />
         </div>
     );

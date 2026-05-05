@@ -11,6 +11,7 @@
         "test:unit": "vitest watch",
         "test:unit-run": "vitest run",
         "test:component": "cypress run --component",
+        "typecheck": "tsc --noEmit",
         "lint": "cd ../.. && pnpm run lint"
     },
     "type": "module",
