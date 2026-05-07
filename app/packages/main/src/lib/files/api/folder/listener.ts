@@ -7,8 +7,9 @@ import { sleep } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
-const RETRY_COUNT = 3;
-const RETRY_INTERVAL = 1000;
+const RETRY_COUNT = 5;
+const RETRY_BACKOFF_MULTIPLIER = 2;
+const RETRY_INITIAL_DELAY = 100; // In ms
 
 /**
  * Helper function that handles the authentication part of the WebSocket connection.
@@ -124,8 +125,11 @@ export function directoryChangesListener(
         }
         if (retryCount < RETRY_COUNT) {
             retryCount++;
-            console.log(`Attempting to reconnect to listener (${retryCount}/${RETRY_COUNT})...`);
-            sleep(RETRY_INTERVAL).then(() => {
+
+            const delay = RETRY_INITIAL_DELAY * Math.pow(RETRY_BACKOFF_MULTIPLIER, retryCount - 1);
+            console.log(`Attempting to reconnect to listener after ${delay} ms (${retryCount}/${RETRY_COUNT})...`);
+
+            sleep(delay).then(() => {
                 if (!isCleaningUp) {
                     ws = connectToListener(
                         auth,
