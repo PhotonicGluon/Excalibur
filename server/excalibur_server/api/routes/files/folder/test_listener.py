@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from Crypto.Random import get_random_bytes
+from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from starlette.testclient import WebSocketTestSession
@@ -18,8 +19,10 @@ from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 
+LISTENER_PATH = "/api/files/listen"
 
-def _make_websocket(username: str, path: str, encrypted: bool = True):
+
+def _auth_websocket(username: str, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
@@ -36,7 +39,11 @@ def _make_websocket(username: str, path: str, encrypted: bool = True):
         nonce=get_random_bytes(16),
     )
 
-    # Connect
+    return auth_client, auth_token, pop_header
+
+
+def _make_websocket(username: str, path: str, encrypted: bool = True):
+    auth_client, auth_token, pop_header = _auth_websocket(username, path)
     with auth_client.websocket_connect(
         f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted={encrypted}"
     ) as ws:
@@ -46,11 +53,11 @@ def _make_websocket(username: str, path: str, encrypted: bool = True):
 class TestDirectoryChangesListener:
     @pytest.fixture
     def ws_client(self):
-        yield from _make_websocket("test-user-db", "/api/files/listen", encrypted=False)
+        yield from _make_websocket("test-user-db", LISTENER_PATH, encrypted=False)
 
     @pytest.fixture()
     def ws_client_encrypted(self):
-        yield from _make_websocket("test-user-db", "/api/files/listen", encrypted=True)
+        yield from _make_websocket("test-user-db", LISTENER_PATH, encrypted=True)
 
     @pytest.fixture(scope="class")
     def example_file(self, test_user, test_user_db_vault_folder: Path, db_session: Session) -> Path:
@@ -192,3 +199,27 @@ class TestDirectoryChangesListener:
         # Check if the updates were transmitted
         assert ws_client.receive_text() == "."
         assert ExEF(b"one demo 16B key").decrypt(ws_client_encrypted.receive_bytes()).decode("utf-8") == "."
+
+    def test_duplicate_connection(self):
+        auth_client, auth_token, pop_header = _auth_websocket("test_user", LISTENER_PATH)
+        with auth_client.websocket_connect(
+            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
+        ) as _:
+            try:
+                with auth_client.websocket_connect(
+                    f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
+                ) as _:
+                    pass
+            except WebSocketDisconnect as e:
+                assert e.code == 4000
+                assert e.reason == "Duplicate connection"
+
+    def test_multi_requests(self, auth_client_db: TestClient, ws_client: WebSocketTestSession):
+        # Create a folder
+        for _ in range(10):
+            response = auth_client_db.post("/api/files/mkdir/.", json=f"test-multi-create-{uuid4().hex}")
+            assert response.status_code == 201
+
+        # Check if the updates were transmitted
+        assert ws_client.receive_text() == "."  # Initial creation
+        assert ws_client.receive_text() == "."  # Grouped creation requests

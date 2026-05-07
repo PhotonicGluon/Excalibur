@@ -52,7 +52,12 @@ def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentia
     if credentials.comm_uuid not in MASTER_KEYS_CACHE:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Comm UUID not found in cache")
 
-    file_update_manager.disconnect(credentials)
+    # Disconnect from update manager if connection exists
+    try:
+        file_update_manager.disconnect(credentials)
+    except ValueError:
+        pass
+
     master_key = MASTER_KEYS_CACHE.pop(credentials.comm_uuid)
 
     return _gen_token(credentials.username, master_key, CONFIG.security.session_duration)
