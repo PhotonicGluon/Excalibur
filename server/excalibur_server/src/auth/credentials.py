@@ -216,6 +216,6 @@ async def get_credentials_ws(
         )
     except HTTPException:
         # Catch generic credential exceptions and convert to WebSocketException
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing, invalid, or expired bearer token"
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Missing, invalid, or expired bearer token"
         )
