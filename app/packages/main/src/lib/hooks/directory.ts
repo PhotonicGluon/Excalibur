@@ -10,14 +10,17 @@ import { useExplorerContext } from "@components/explorer/context";
 /**
  * React hook that provides access to directory listing functionality.
  *
- * @returns Object containing directory contents and a function to refresh them
+ * @returns Object containing directory contents, a function to refresh them, and a boolean
+ *      indicating if the listener is connected
  */
 export function useDirectory(): {
     directoryContents: Directory | null;
     refreshContents: (sourceFolder?: string) => Promise<void>;
+    listenerConnected: boolean;
 } {
     // States
     const [directoryContents, setDirectoryContents] = useState<Directory | null>(null);
+    const [listenerConnected, setListenerConnected] = useState<boolean>(false);
 
     const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);
     const latestRequestRef = useRef<number>(0);
@@ -85,8 +88,14 @@ export function useDirectory(): {
     }, [refreshContents]);
 
     useEffect(() => {
-        directoryChangesListener(auth, refreshContentsRef);
+        const cleanup = directoryChangesListener(
+            auth,
+            () => setListenerConnected(true),
+            () => setListenerConnected(false),
+            refreshContentsRef,
+        );
+        return cleanup;
     }, [auth]);
 
-    return { directoryContents, refreshContents };
+    return { directoryContents, refreshContents, listenerConnected };
 }
