@@ -58,7 +58,7 @@ This key generation step is used to generate a key for unlocking the vault[^vaul
 
 :::note[Secure Remote Password (SRP)]
 
-If a user uses [SRP authentication](./server-api/authentication.mdx), the same key generation step is used to generate a key for SRP authentication, called the **SRP Key**, using a salt called `srp_salt`.
+If a user uses [SRP authentication](./server-api/authentication/srp), the same key generation step is used to generate a key for SRP authentication, called the **SRP Key**, using a salt called `srp_salt`.
 
 The reason for why we need a second key is that we don't want a leak of the communication key (i.e., the SRP key) to compromise the vault, and vice versa. Thus the two salts, `auk_salt` and `srp_salt`, are distinct.
 

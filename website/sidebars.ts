@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
         "reference/architecture",
         "reference/security-model",
         "reference/keygen",
+        "reference/name-obfuscation",
         "reference/exef",
         {
             type: "category",
@@ -61,6 +62,7 @@ const sidebars: SidebarsConfig = {
                 },
                 "reference/server-api/encrypted-requests-and-responses",
                 "reference/server-api/files",
+                "reference/server-api/additional-user-info",
             ],
         },
     ],

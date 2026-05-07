@@ -118,7 +118,7 @@ The initial authentication process is as follows:
 16. Client computes its own $M_2$ value using the same formula (using $K_{\texttt{client}}$ in place of $K_{\texttt{server}}$), and checks with the received $M_2$.
     - If they do not match, client terminates the connection.
 17. Client sends message with status `OK` with no data.
-18. Server prepares [authentication token](#authentication-token) in the form of a JSON Web Token (JWT) and encrypts it with the shared master key $K$ using AES-GCM-256.
+18. Server prepares [authentication token](./subsequent#authentication-token) in the form of a JSON Web Token (JWT) and encrypts it with the shared master key $K$ using AES-GCM-256.
 19. Server sends message with no status and JSON data containing three fields: `nonce`, `token`, and `tag`, each as a Base64 encoded byte array:
     - `nonce`: A random value
     - `token`: The encrypted JWT
