@@ -80,6 +80,59 @@ Now, begin the migration to the new filesystem by running:
 excalibur db migrate-files
 ```
 
+## Server CLI Changes
+
+### `excalibur start` Command
+
+The `--enable-cors` and `--disable-cors` flags have been renamed to `--enable-cors-validation` and `--no-cors-validation` respectively, since "disabling CORS" resulting in all requests being allowed was misleading.
+
+### `excalibur user add` Command
+
+Along with the addition of the [OPAQUE-3DH](/docs//reference/server-api/authentication/opaque) protocol for authentication, a new option `--auth-protocol` has been added to the `excalibur user add` command. It defaults to the new OPAQUE authentication mechanism; for SRP compatibility, specify `--auth-protocol=SRP`.
+
+## Server API Changes
+
+This update introduces some significant changes to the server API.
+
+### MIME Type Determination for Files
+
+Some endpoints return files or a directory containing a list of items (like files). In previous versions, these `File`s would include a MIME type in the `mimetype` field. However, we have **removed it from the `File` type** in favour of the client performing their own MIME type determination.
+
+This affects the following endpoints:
+
+- `/api/files/search` (which returns a list of file-score pairs)
+- `/api/files/list/{path}` (which returns a list of files or directories)
+
+If your custom client code interacts with any of these endpoints, you will need to update it to perform MIME type determination on the client side.
+
+### Response Content Removed for Some Endpoints
+
+Certain endpoints' response _content_ have been removed as their response _codes_ sufficiently indicate the success/failure of the operation. 
+
+In particular, these endpoints now no longer return any content for the `200 OK` status code:
+
+- `/api/files/move` (previously returned `Item Moved`)
+- `/api/files/mkdir/{path}` (previously returned `Directory created`)
+- `/api/files/rename/{path}` (previously returned `Item renamed`)
+- `/api/files/upload/{path}` (previously returned `File uploaded`)
+
+If your custom client code interacts with any of these endpoints, you will need to update it to rely solely on the response code.
+
+## Optional Upgrades
+
+There are also some optional upgrades which would be beneficial to apply.
+
+### (App) Obfuscated Names
+
+To better improve the privacy of users while using the app, Excalibur 0.6 adds name obfuscation for the files and folders uploaded to the server.
+
+By default, this feature is disabled for existing users, but it can be enabled by:
+
+1. Logging into the app
+2. Going to the "Settings" page
+3. Going to the "Server Settings" submenu
+4. Toggling "Obfuscated Names"
+
 ## Conclusion
 
 These are the steps to upgrade your Excalibur app and server instances to version 0.6. After following these steps, your Excalibur instance should be running on version 0.6.
