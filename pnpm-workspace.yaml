@@ -24,6 +24,7 @@ trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
 overrides:
   "@xmldom/xmldom@<0.8.13": ">=0.8.13"
   minimatch@<3.1.4: ">=3.1.4"
+  plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   tar@<=7.5.10: ">=7.5.11"
 
 sideEffectsCache: false
