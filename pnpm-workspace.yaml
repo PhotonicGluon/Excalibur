@@ -2,8 +2,6 @@ packages:
   - website
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
-minimumReleaseAgeExclude:
-  - uuid@14.0.0
 
 blockExoticSubdeps: true
 
@@ -19,6 +17,7 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   - "detect-port@1.6.1"
   - "semver@6.3.1"
+trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
 
 overrides:
   serialize-javascript@<7.0.5: ">=7.0.5"
