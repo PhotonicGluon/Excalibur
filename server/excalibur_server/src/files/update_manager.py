@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, ConfigDict
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
@@ -45,8 +46,8 @@ class FileUpdateManager:
         """
         Sends an update to a user.
 
-        :param credentials: The credentials of the user to send the update to
-        :param path: The path of the file that was updated
+        :param credentials: the credentials of the user to send the update to
+        :param path: the path of the file that was updated
         """
 
         username = credentials.username
@@ -54,9 +55,6 @@ class FileUpdateManager:
 
         key = (username, path)
         for comm_uuid in self._connections[username]:
-            if comm_uuid not in self._active_sockets:
-                continue
-
             active_socket = self._active_sockets[comm_uuid]
             if active_socket.encrypted:
                 e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
@@ -73,12 +71,17 @@ class FileUpdateManager:
         """
         Connects a user to the update manager.
 
-        :param credentials: The credentials of the user to connect
-        :param websocket: The websocket to connect
-        :param encrypted: Whether the connection should be encrypted
+        :param credentials: the credentials of the user to connect
+        :param websocket: the websocket to connect
+        :param encrypted: whether the connection should be encrypted
+        :raises ValueError: if the connection is already active
         """
 
-        await websocket.accept()
+        await websocket.accept()  # Always accept to not prematurely fail the WebSocket handshake
+
+        if credentials.comm_uuid in self._active_sockets:
+            raise ValueError("Cannot connect to already connected connection")
+
         self._active_sockets[credentials.comm_uuid] = Socket(websocket=websocket, encrypted=encrypted)
         self._connections[credentials.username].append(credentials.comm_uuid)
 
@@ -86,19 +89,27 @@ class FileUpdateManager:
         """
         Disconnects a user from the update manager if the user is connected.
 
-        :param credentials: The credentials of the user to disconnect
+        :param credentials: the credentials of the user to disconnect
+        :raises ValueError: if the connection is not active
         """
 
-        if credentials.comm_uuid in self._connections[credentials.username]:
-            self._connections[credentials.username].remove(credentials.comm_uuid)
-        self._active_sockets.pop(credentials.comm_uuid, None)
+        if credentials.comm_uuid not in self._active_sockets:
+            raise ValueError("Cannot disconnect from non-existent connection")
+
+        # If websocket is still connected, gracefully close it
+        if self._active_sockets[credentials.comm_uuid].websocket.client_state == WebSocketState.CONNECTED:
+            self._active_sockets[credentials.comm_uuid].websocket.close()
+
+        # Clean up
+        self._connections[credentials.username].remove(credentials.comm_uuid)
+        self._active_sockets.pop(credentials.comm_uuid)
 
     async def add_update(self, credentials: Credentials, path: Path):
         """
         Adds an update to the update manager.
 
-        :param credentials: The credentials of the user to notify
-        :param path: The path of the file that was updated
+        :param credentials: the credentials of the user to notify
+        :param path: the path of the file that was updated
         """
 
         username = credentials.username

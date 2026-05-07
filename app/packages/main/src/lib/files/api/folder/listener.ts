@@ -3,9 +3,9 @@ import { RefObject } from "react";
 import { generatePoPHeader } from "@lib/auth/pop";
 import ExEF from "@lib/exef";
 import { getURLEncodedPath, quotePlus } from "@lib/url";
+import { sleep } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
-import { sleep } from "@lib/util";
 
 const RETRY_COUNT = 3;
 const RETRY_INTERVAL = 1000;
@@ -69,11 +69,26 @@ function connectToListener(
         await onPathUpdateRef.current(path);
     });
 
-    ws.addEventListener("close", () => {
+    ws.addEventListener("close", (event) => {
         if (isCleaningUp()) {
             return;
         }
-        console.log("Disconnected from server");
+
+        switch (event.code) {
+            case 1000:
+                console.log("Cleanly disconnected from server");
+                break;
+            case 1006:
+                console.warn("WebSocket connection closed unexpectedly");
+                break;
+            case 4000:
+                console.warn("Duplicate connection detected; closing");
+                break;
+            default:
+                console.warn(`WebSocket closed with code ${event.code}: ${event.reason}`);
+                break;
+        }
+
         onDisconnect();
     });
 
