@@ -6,6 +6,15 @@ from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import Envelope, RegistrationRecord
 
 
+class TestOPAQUEValidationTests:
+    def test_reject_dh_point_at_infinity(self):
+        with pytest.raises(OPAQUEAuthError):
+            OPAQUEClient()._diffie_hellman(0, Ristretto255.GENERATOR)
+
+        with pytest.raises(OPAQUEAuthError):
+            OPAQUEClient()._diffie_hellman(1337, Ristretto255.IDENTITY)
+
+
 class TestOPAQUERistretto255:
     # Test vectors from RFC9807, Appendix C.1.1 and C.1.2
     CONTEXTS_RAW = [

@@ -5,6 +5,16 @@ import { bytesToBigInt } from "@lib/util";
 import { OPAQUEAuthError, OPAQUEClient } from "./client";
 import { Ristretto255 } from "./ristretto255";
 
+describe("OPAQUE Validation Tests", () => {
+    it("should reject Diffie-Hellman point at infinity", () => {
+        const client = new OPAQUEClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (client as any)._diffieHellman(0n, Ristretto255.GENERATOR)).toThrow(OPAQUEAuthError);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => (client as any)._diffieHellman(1337n, Ristretto255.IDENTITY)).toThrow(OPAQUEAuthError);
+    });
+});
+
 // Test vectors from RFC9807, Appendix C.1.1 and C.1.2
 const CONTEXTS_RAW = ["4f50415155452d504f43", "4f50415155452d504f43"];
 const CLIENT_IDENTITIES_RAW = [

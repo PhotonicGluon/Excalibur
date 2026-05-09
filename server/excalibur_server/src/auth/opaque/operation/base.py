@@ -190,18 +190,22 @@ class BaseOPAQUE:
 
     def _diffie_hellman(self, k: int, b: Ristretto255) -> Ristretto255:
         """
-        Performs the Diffie-Hellman operation between the private input `k` and public input `b`, as
-        described in section 6.4.1.1.
+        Performs the Diffie-Hellman operation between the private input `k` and public input `b` as
+        described in section 6.4.1.1, with validation as required in section 10.7.
 
         We differ from the specification by returning the base curve element instead of its
         serialized form.
 
-        :param k: the private key
-        :param b: the public key
+        :param k: the private input
+        :param b: the public input
+        :raises OPAQUEAuthError: if the shared secret is the point at infinity
         :return: the shared secret
         """
 
-        return k * b
+        shared_secret = k * b
+        if shared_secret.is_identity():
+            raise OPAQUEAuthError("Diffie-Hellman shared secret is the point at infinity")
+        return shared_secret
 
     def _expand_label(self, secret: bytes, label: bytes, context: bytes, length: int) -> bytes:
         """

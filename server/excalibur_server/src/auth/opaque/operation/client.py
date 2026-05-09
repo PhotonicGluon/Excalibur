@@ -230,6 +230,8 @@ class OPAQUEClient(BaseOPAQUE):
         :param client_private_key: the client's private key
         :param ke2: a KE2 message structure
         :return: the KE3 message to send to the server and the shared session secret
+        :raises OPAQUEAuthError: if any of the Diffie-Hellman shared secrets is the point at
+            infinity
         :raises OPAQUEServerAuthError: if the server authentication fails
         """
 
@@ -339,6 +341,7 @@ class OPAQUEClient(BaseOPAQUE):
             credentials)
         :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
             mismatch)
+        :raises OPAQUEAuthError: if any of the Diffie-Hellman shared secrets is the point at infinity
         :raises OPAQUEServerAuthError: if the server authentication fails
         """
 

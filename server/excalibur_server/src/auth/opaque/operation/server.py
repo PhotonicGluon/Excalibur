@@ -98,6 +98,7 @@ class OPAQUEServer(BaseOPAQUE):
         :param credential_response: the credential response
         :param nonce: optional server's nonce
         :param keyshare_seed: optional server's keyshare seed
+        :raises OPAQUEAuthError: if any of the Diffie-Hellman shared secrets is the point at infinity
         :return: the authentication response structure
         """
 
@@ -197,6 +198,8 @@ class OPAQUEServer(BaseOPAQUE):
         :param masking_nonce: optional masking nonce
         :param nonce: optional server's nonce
         :param keyshare_seed: optional server's keyshare seed
+        :raises OPAQUEAuthError: if any of the Diffie-Hellman shared secrets is the point at
+            infinity
         :return: the server's KE2 message
         """
 

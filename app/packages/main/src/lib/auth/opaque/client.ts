@@ -348,18 +348,23 @@ export class OPAQUEClient {
     }
 
     /**
-     * Performs the Diffie-Hellman operation between the private input `k` and public input `b`, as
-     * described in section 6.4.1.1.
+     * Performs the Diffie-Hellman operation between the private input `k` and public input `b` as
+     * described in section 6.4.1.1, with validation as required in section 10.7.
      *
      * We differ from the specification by returning the base curve element instead of its
      * serialized form.
      *
-     * @param k the private key
-     * @param b the public key
+     * @param k the private input
+     * @param b the public input
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @returns the shared secret
      */
     private _diffieHellman(k: bigint, b: Ristretto255): Ristretto255 {
-        return b.mul(k);
+        const sharedSecret = b.mul(k);
+        if (sharedSecret.isIdentity()) {
+            throw new OPAQUEAuthError("Diffie-Hellman shared secret is the point at infinity");
+        }
+        return sharedSecret;
     }
 
     /**
@@ -481,6 +486,7 @@ export class OPAQUEClient {
      * @param clientPrivateKey the client's private key
      * @param ke2 a KE2 message structure
      * @returns the KE3 message to send to the server and the shared session secret
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @throws {OPAQUEAuthError} if the server authentication fails
      */
     private _authClientFinalize(
@@ -592,6 +598,7 @@ export class OPAQUEClient {
      *      credentials)
      * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag
      *      mismatch)
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @throws {OPAQUEServerAuthError} if the server authentication fails
      */
     generateKE3(clientIdentity: Uint8Array, serverIdentity: Uint8Array, ke2: KE2): [KE3, Uint8Array, Uint8Array] {
