@@ -331,7 +331,7 @@ class TestOPAQUERistretto255:
             )
 
         # Next test is to truncate the password by 1
-        with pytest.raises(OPAQUEClientAuthError):
+        with pytest.raises(OPAQUEAuthError):
             opaque_client._password = self.PASSWORDS[test_idx][:-1]
             opaque_client.generate_ke3(
                 client_identity=client_identity,

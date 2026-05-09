@@ -2,7 +2,7 @@ import { createDecipheriv } from "crypto";
 
 import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import { OPAQUEAuthError, OPAQUEClientAuthError } from "@lib/auth/opaque/client";
+import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
 import { b64decode } from "@lib/util";
 
 import { HandshakeData } from "./structures";
@@ -95,28 +95,28 @@ export async function handshakeOPAQUE(
                         }
 
                         const opaqueError = e as OPAQUEAuthError;
-                        if (opaqueError instanceof OPAQUEClientAuthError) {
-                            // Likely due to incorrect client credentials
+                        if (opaqueError instanceof OPAQUEServerAuthError) {
+                            // Failed to authenticate server
                             ws.close();
                             stopLoading?.();
                             showAlert?.(
-                                "Authentication Failed",
-                                "Invalid username or password",
-                                "Please check your credentials and try again",
+                                "Server Verification Failed",
+                                "Client failed to verify server",
+                                "Server may be compromised",
                             );
-                            reject("Invalid username or password");
+                            reject("Server verification failed");
                             return;
                         }
 
-                        // Failed to authenticate server
+                        // Likely due to incorrect client credentials
                         ws.close();
                         stopLoading?.();
                         showAlert?.(
-                            "Server Verification Failed",
-                            "Client failed to verify server",
-                            "Server may be compromised",
+                            "Authentication Failed",
+                            "Invalid username or password",
+                            "Please check your credentials and try again",
                         );
-                        reject("Server verification failed");
+                        reject("Invalid username or password");
                         return;
                     }
 

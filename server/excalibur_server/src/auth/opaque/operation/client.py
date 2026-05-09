@@ -4,7 +4,6 @@ from excalibur_server.src.auth.opaque.misc import xor
 from excalibur_server.src.auth.opaque.operation.base import (
     BaseOPAQUE,
     OPAQUEAuthError,
-    OPAQUEClientAuthError,
     OPAQUEServerAuthError,
 )
 from excalibur_server.src.auth.opaque.oprf import OPRFType
@@ -27,7 +26,7 @@ from excalibur_server.src.auth.opaque.structures import (
 class OPAQUEClient(BaseOPAQUE):
     """
     Client implementation of the OPAQUE protocol as described in
-    [RFC9807](https://www.rfc-editor.org/rfc/rfc9807).
+    [RFC9807](https://datatracker.ietf.org/doc/html/rfc9807).
     """
 
     def __init__(self, oprf_type: OPRFType = "ristretto255-sha512"):
@@ -162,7 +161,7 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: optional server's identity
         :param client_identity: the client's identity
         :return: the client's private key, cleartext credentials, and the `export_key`
-        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by
+        :raises OPAQUEAuthError: if the server public key is invalid (could be caused by
             incorrect credentials)
         :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
             mismatch)
@@ -187,7 +186,7 @@ class OPAQUEClient(BaseOPAQUE):
         try:
             server_public_key = Ristretto255.from_bytes(server_public_key_and_envelope[: Ristretto255.KEY_LENGTH])
         except Exception as e:
-            raise OPAQUEClientAuthError("failed to recover server public key") from e
+            raise OPAQUEAuthError("failed to recover server public key") from e
         envelope = Envelope.deserialize(server_public_key_and_envelope[Ristretto255.KEY_LENGTH :], self.NONCE_LENGTH)
 
         client_private_key, cleartext_credentials, export_key = self._recover(
@@ -336,8 +335,8 @@ class OPAQUEClient(BaseOPAQUE):
         :param server_identity: the server's identity
         :param ke2: the KE2 message from the server
         :return: the client's KE3 message, the session key, and the export key
-        :raises OPAQUEClientAuthError: if the server public key is invalid (could be caused by
-            incorrect credentials)
+        :raises OPAQUEAuthError: if the server public key is invalid (could be caused by incorrect
+            credentials)
         :raises OPAQUEAuthError: if the Envelope fails to be recovered (e.g., envelope auth tag
             mismatch)
         :raises OPAQUEServerAuthError: if the server authentication fails

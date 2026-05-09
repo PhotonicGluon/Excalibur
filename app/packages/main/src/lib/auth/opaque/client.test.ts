@@ -2,7 +2,7 @@ import { expect } from "vitest";
 
 import { bytesToBigInt } from "@lib/util";
 
-import { OPAQUEAuthError, OPAQUEClient, OPAQUEClientAuthError } from "./client";
+import { OPAQUEAuthError, OPAQUEClient } from "./client";
 import { Ristretto255 } from "./ristretto255";
 
 // Test vectors from RFC9807, Appendix C.1.1 and C.1.2
@@ -234,7 +234,7 @@ describe("OPAQUEClient", () => {
                             CLIENT_KEYSHARE_SEEDS[i],
                         );
                         opaqueClient.generateKE3(clientIdentity, serverIdentity, opaqueClient.deserializeKE2(KE2[i]));
-                    }).toThrow(OPAQUEClientAuthError);
+                    }).toThrow(OPAQUEAuthError);
                 });
             }
         });

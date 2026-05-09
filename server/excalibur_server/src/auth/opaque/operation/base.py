@@ -38,7 +38,7 @@ class OPAQUEServerAuthError(OPAQUEAuthError):
 class BaseOPAQUE:
     """
     Base class for the OPAQUE protocol implementation as described in
-    [RFC9807](https://www.rfc-editor.org/rfc/rfc9807).
+    [RFC9807](https://datatracker.ietf.org/doc/html/rfc9807).
     """
 
     NONCE_LENGTH = 32  # See section 2

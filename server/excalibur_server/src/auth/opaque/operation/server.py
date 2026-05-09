@@ -21,7 +21,7 @@ from excalibur_server.src.auth.opaque.structures import (
 class OPAQUEServer(BaseOPAQUE):
     """
     Server implementation of the OPAQUE protocol as described in
-    [RFC9807](https://www.rfc-editor.org/rfc/rfc9807).
+    [RFC9807](https://datatracker.ietf.org/doc/html/rfc9807).
     """
 
     def __init__(self, oprf_type: OPRFType = "ristretto255-sha512"):
@@ -237,7 +237,7 @@ class OPAQUEServer(BaseOPAQUE):
 
         :param ke3: the client's KE3 message
         :return: the session key
-        :raises OPAQUEAuthError: if the client MAC does not match the expected MAC
+        :raises OPAQUEClientAuthError: if the client MAC does not match the expected MAC
         """
 
         return self._auth_server_finalize(ke3)
