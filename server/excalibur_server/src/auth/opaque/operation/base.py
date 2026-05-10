@@ -9,10 +9,8 @@ from excalibur_server.src.auth.opaque.oprf import OPRFRistrettoSHA512, OPRFType
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
-    KE2,
     KE3,
     AuthRequest,
-    AuthResponse,
     CleartextCredentials,
     CredentialRequest,
     CredentialResponse,
@@ -28,10 +26,6 @@ class OPAQUEAuthError(Exception):
 
 
 class OPAQUEClientAuthError(OPAQUEAuthError):
-    pass
-
-
-class OPAQUEServerAuthError(OPAQUEAuthError):
     pass
 
 
@@ -108,34 +102,6 @@ class BaseOPAQUE:
             + self.NONCE_LENGTH  # Client nonce
             + Ristretto255.KEY_LENGTH  # Client public keyshare
         )
-
-    @cached_property
-    def ke2_size(self) -> int:
-        """
-        :returns: size of the KE2 message in bytes
-        """
-
-        masked_response_length = Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
-
-        return (
-            # Credential response
-            Ristretto255.KEY_LENGTH  # Evaluated element
-            + self.NONCE_LENGTH  # Masking nonce
-            + masked_response_length  # Masked response
-            +
-            # Authentication response
-            self.NONCE_LENGTH
-            + Ristretto255.KEY_LENGTH
-            + self.kdf.digest_size
-        )
-
-    @cached_property
-    def ke3_size(self) -> int:
-        """
-        :returns: size of the KE3 message in bytes
-        """
-
-        return self.kdf.digest_size
 
     # Helper methods
     def _hash(self, data: bytes) -> bytes:
@@ -381,46 +347,6 @@ class BaseOPAQUE:
         auth_request = AuthRequest(client_nonce=client_nonce, client_public_keyshare=client_public_keyshare)
 
         return KE1(credential_request=credential_request, auth_request=auth_request)
-
-    def deserialize_ke2(self, ke2_raw: bytes) -> KE2:
-        """
-        Deserializes a KE2 message from raw bytes.
-
-        :param ke2_raw: the raw bytes of the KE2 message
-        :return: the deserialized KE2 message
-        """
-
-        # First part is the credential response
-        evaluated_element = Ristretto255.from_bytes(ke2_raw[: Ristretto255.KEY_LENGTH])
-        masking_nonce = ke2_raw[Ristretto255.KEY_LENGTH : Ristretto255.KEY_LENGTH + self.NONCE_LENGTH]
-
-        masked_response_length = Ristretto255.KEY_LENGTH + self.NONCE_LENGTH + self.kdf.digest_size
-        masked_response = ke2_raw[
-            Ristretto255.KEY_LENGTH + self.NONCE_LENGTH : Ristretto255.KEY_LENGTH
-            + self.NONCE_LENGTH
-            + masked_response_length
-        ]
-
-        credential_response = CredentialResponse(
-            evaluated_element=evaluated_element, masking_nonce=masking_nonce, masked_response=masked_response
-        )
-        credential_response_length = len(credential_response.serialize())
-
-        # Then we have the auth response, consisting of a server nonce, public keyshare, and server MAC
-        server_nonce = ke2_raw[credential_response_length : credential_response_length + self.NONCE_LENGTH]
-        server_public_keyshare = Ristretto255.from_bytes(
-            ke2_raw[
-                credential_response_length + self.NONCE_LENGTH : credential_response_length
-                + self.NONCE_LENGTH
-                + Ristretto255.KEY_LENGTH
-            ]
-        )
-        server_mac = ke2_raw[credential_response_length + self.NONCE_LENGTH + Ristretto255.KEY_LENGTH : self.ke2_size]
-        auth_response = AuthResponse(
-            server_nonce=server_nonce, server_public_keyshare=server_public_keyshare, server_mac=server_mac
-        )
-
-        return KE2(credential_response=credential_response, auth_response=auth_response)
 
     def deserialize_ke3(self, ke3_raw: bytes) -> KE3:
         """
