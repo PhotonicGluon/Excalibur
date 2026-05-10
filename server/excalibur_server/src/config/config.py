@@ -7,7 +7,7 @@ from excalibur_server.src.config.security import Security
 from excalibur_server.src.config.server import Server
 from excalibur_server.src.config.storage import Storage
 
-SETTINGS_VERSION = 5
+SETTINGS_VERSION = 6
 
 
 class Config(BaseSettings):

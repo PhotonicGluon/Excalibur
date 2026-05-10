@@ -55,7 +55,6 @@ def add_user(
 
     import typer
     from Crypto.Random import get_random_bytes
-    from Crypto.Util.number import bytes_to_long, long_to_bytes
 
     from excalibur_server.src.auth.keygen import generate_key
     from excalibur_server.src.config import CONFIG
@@ -70,29 +69,7 @@ def add_user(
     vault_key: bytes = b64decode(vault_key)
     vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
 
-    if auth_protocol == AuthProtocol.SRP:
-        from excalibur_server.src.auth.srp import SRP
-
-        # Generate SRP data
-        srp_handler = SRP(CONFIG.security.srp.group)
-
-        srp_salt = get_random_bytes(16)
-        srp_key = generate_key(password, {"username": username}, srp_salt)
-        verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))
-
-        # Create user
-        add_user(
-            User(
-                username=username,
-                auth_protocol=auth_protocol,
-                srp_group=CONFIG.security.srp.group,
-                srp_salt=srp_salt,
-                srp_verifier=verifier,
-                auk_salt=auk_salt,
-                key_enc=vault_key_enc,
-            )
-        )
-    else:
+    if auth_protocol == AuthProtocol.OPAQUE_3DH:
         from excalibur_server.src.auth.opaque import OPAQUE as opaque_server
         from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
         from excalibur_server.src.auth.opaque.operation import OPAQUEClient
@@ -121,7 +98,6 @@ def add_user(
             User(
                 username=username,
                 auth_protocol=auth_protocol,
-                srp_group=CONFIG.security.srp.group,
                 registration_record=registration_record.serialize(),
                 auk_salt=auk_salt,
                 key_enc=vault_key_enc,

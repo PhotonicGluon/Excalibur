@@ -74,9 +74,6 @@ async def registration_endpoint(
                 with session.begin():
                     current_user = session.query(User).filter_by(username=username).first()
                     current_user.auth_protocol = AuthProtocol.OPAQUE_3DH
-                    current_user.srp_group = None
-                    current_user.srp_salt = None
-                    current_user.srp_verifier = None
                     current_user.registration_record = registration_record_raw
                     session.add(current_user)
         else:

@@ -153,12 +153,21 @@ def update_config():
 
         return config
 
-    SETTINGS_VERSION = 5
+    def v5_to_v6(config: dict) -> dict:
+        config["version"] = 6
+
+        # Remove the SRP table
+        del config["security"]["srp"]
+
+        return config
+
+    SETTINGS_VERSION = 6
     UPDATERS = {
         1: v1_to_v2,
         2: v2_to_v3,
         3: v3_to_v4,
         4: v4_to_v5,
+        5: v5_to_v6,
     }
 
     # Read the config
