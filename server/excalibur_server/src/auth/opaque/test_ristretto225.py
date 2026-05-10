@@ -1,3 +1,5 @@
+import pytest
+
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 
 # Test vectors from RFC9496, Appendix A
@@ -158,10 +160,14 @@ EXPECTED_A4 = [
 class TestRistretto255Point:
     def test_encode_decode(self):
         for e in EXPECTED_A1:
-            assert Ristretto255.from_bytes(e).to_bytes() == e
+            assert Ristretto255.from_bytes(e, allow_identity=True).to_bytes() == e
+
+    def test_identity_prohibition(self):
+        with pytest.raises(ValueError):
+            Ristretto255.from_bytes(bytes(32), allow_identity=False)
 
     def test_multiples_of_generator(self):
-        curr = Ristretto255.from_bytes(EXPECTED_A1[0])
+        curr = Ristretto255.from_bytes(EXPECTED_A1[0], allow_identity=True)
         for i in range(1, len(EXPECTED_A1)):
             curr = curr + Ristretto255.from_bytes(EXPECTED_A1[1])
             assert curr.to_bytes() == EXPECTED_A1[i], f"Addition differs at index {i}"

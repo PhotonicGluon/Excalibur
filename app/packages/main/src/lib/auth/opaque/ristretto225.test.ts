@@ -162,12 +162,16 @@ const EXPECTED_A4: [bigint, bigint, boolean, bigint][] = EXPECTED_A4_RAW.map(([x
 describe("Ristretto225", () => {
     it("should handle encoding and decoding correctly", () => {
         for (const expected of EXPECTED_A1) {
-            expect(Buffer.from(Ristretto255.fromBytes(expected).toBytes())).toEqual(expected);
+            expect(Buffer.from(Ristretto255.fromBytes(expected, true).toBytes())).toEqual(expected);
         }
     });
 
+    it("should handle identity prohibition", () => {
+        expect(() => Ristretto255.fromBytes(Buffer.alloc(32), false)).toThrow();
+    });
+
     it("should have correct multiples of generator", () => {
-        let curr = Ristretto255.fromBytes(EXPECTED_A1[0]);
+        let curr = Ristretto255.fromBytes(EXPECTED_A1[0], true);
         for (let i = 1; i < EXPECTED_A1.length; i++) {
             curr = curr.add(Ristretto255.fromBytes(EXPECTED_A1[1]));
             expect(Buffer.from(curr.toBytes())).toEqual(EXPECTED_A1[i]);
