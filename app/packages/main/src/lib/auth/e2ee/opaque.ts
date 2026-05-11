@@ -22,13 +22,14 @@ interface HandshakeState {
 /**
  * Perform OPAQUE-3DH protocol handshake.
  *
- * @param apiURL The HTTP(S) URL of the API server to query
- * @param username The username to log in as
- * @param password The password for logging in
- * @param stopLoading A function to call when any loading indicators needs to be stopped
- * @param setLoadingState A function to call to update the loading state with a message
- * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to the handshake data, or undefined if the handshake fails
+ * @param apiURL the HTTP(S) URL of the API server to query
+ * @param username the username to log in as
+ * @param password the password for logging in
+ * @param stopLoading a function to call when any loading indicators needs to be stopped
+ * @param setLoadingState a function to call to update the loading state with a message
+ * @param showAlert a function to call if an error occurs, which takes a header and a message
+ * @throws if the handshake fails
+ * @returns a promise which resolves to the handshake data
  */
 export async function handshakeOPAQUE(
     apiURL: string,
