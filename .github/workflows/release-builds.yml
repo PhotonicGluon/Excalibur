@@ -87,6 +87,12 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
+            - name: Sets MODIFIED_BRANCH_NAME
+              env:
+                name: "${{ github.ref_name }}"
+              run: |
+                echo "MODIFIED_BRANCH_NAME=${name/\//-}" >> $GITHUB_ENV
+
             - name: Install pnpm
               uses: pnpm/action-setup@v5
               with:
@@ -123,13 +129,13 @@ jobs:
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/packages/main/app-${{ github.ref_name }}-pwa.zip"
+                  subject-path: "app/packages/main/app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip"
 
             - name: Upload PWA Artifact
               uses: actions/upload-artifact@v6
               with:
                   name: app-pwa
-                  path: app/packages/main/app-${{ github.ref_name }}-pwa.zip
+                  path: app/packages/main/app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip
                   if-no-files-found: error
 
             - name: Sync Capacitor
@@ -162,20 +168,20 @@ jobs:
               working-directory: ./app/packages/android/app/build/outputs/apk/release
               run: |
                   for f in *-signed.apk; do
-                    mv -- "$f" ./app-${{ github.ref_name }}-release.apk
+                    mv -- "$f" ./app-${{ env.MODIFIED_BRANCH_NAME }}-release.apk
                   done
 
             - name: Attest
               uses: actions/attest-build-provenance@v3
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
-                  subject-path: "app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk"
+                  subject-path: "app/packages/android/app/build/outputs/apk/release/app-${{ env.MODIFIED_BRANCH_NAME }}-release.apk"
 
             - name: Upload Release APK
               uses: actions/upload-artifact@v6
               with:
                   name: app-android
-                  path: app/packages/android/app/build/outputs/apk/release/app-${{ github.ref_name }}-release.apk
+                  path: app/packages/android/app/build/outputs/apk/release/app-${{ env.MODIFIED_BRANCH_NAME }}-release.apk
                   if-no-files-found: error
 
     build-server:
