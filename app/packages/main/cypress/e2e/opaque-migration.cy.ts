@@ -6,8 +6,8 @@ describe("Migration from SRP to OPAQUE", () => {
         cy.visit("/login");
 
         // Login using form
-        cy.get("#username-input > .input-wrapper").type("{selectAll}" + USERNAME);
-        cy.get("#password-input > .input-wrapper").type("{selectAll}" + PASSWORD);
+        cy.get("#username-input").type("{selectAll}" + USERNAME);
+        cy.get("#password-input").type("{selectAll}" + PASSWORD);
         cy.get("#login-button").click();
     }
 

@@ -21,8 +21,8 @@ export function createFolder() {
 
     // Enter test folder name
     const folderName = `Test Folder ${Date.now()}`;
-    cy.get(".alert-input-wrapper").click().wait(100); // For the focus to appear
-    cy.get(".alert-input-wrapper").type(folderName);
+    cy.get(".alert-input-wrapper").find("input").click().wait(100); // For the focus to appear
+    cy.get(".alert-input-wrapper").find("input").type(folderName);
 
     // Click create
     cy.get(".alert-button-group").contains("Create").click();
