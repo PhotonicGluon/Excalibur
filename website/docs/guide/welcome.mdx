@@ -12,7 +12,7 @@ Welcome to Excalibur, a trustless secure file management solution using military
 
 <ul>
     {features.map((feature) => (
-        <li><b>{feature.icon} {feature.title}</b>: {feature.description}</li>
+        <li><b>{feature.icon} {feature.title}</b>: <span dangerouslySetInnerHTML={{ __html: feature.description }} /></li>
     ))}
 </ul>
 

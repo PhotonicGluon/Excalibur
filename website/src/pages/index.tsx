@@ -12,47 +12,33 @@ import WaveBackground from "@site/src/components/WaveBackground";
 import { fadeInUp, staggerContainer } from "@site/src/variants";
 
 // Features
-// TODO: Update
 export const features: FeatureCardProps[] = [
     {
-        title: "User-Friendly",
-        description: "Simple, intuitive interface that makes secure file storage effortless.",
-        icon: "✨",
-    },
-    {
         title: "Enterprise-Grade Security",
-        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
+        description: "The time-proven encryption algorithm AES-256-GCM protects your files at rest and in transit.",
         icon: "🛡️",
     },
     {
+        title: "User-Friendly",
+        description: "Boasting a simple and intuitive interface that makes secure file storage effortless.",
+        icon: "✨",
+    },
+    {
         title: "Zero-Trust By Default",
-        description: "Designed with zero-trust principles in mind. Trust no one but yourself.",
-        icon: "🕵️",
-    },
-    {
-        title: "End-to-End Encryption",
-        description: "Data in transit is always encrypted using AES-GCM.",
-        icon: "🔒",
-    },
-    {
-        title: "Zero-Knowledge Authentication",
-        description: "Your password never leaves your device.",
+        description:
+            "Verify both your identity and the server's identity using the state-of-the-art <a href='https://datatracker.ietf.org/doc/html/rfc9807' target='_blank'>OPAQUE protocol</a> without ever revealing your password.",
         icon: "🗝️",
+    },
+    {
+        title: "Open Source and Attested",
+        description:
+            "A fully transparent and auditable codebase with a publicly traceable provenance for maximum trust and transparency.",
+        icon: "📜",
     },
     {
         title: "Multi-Platform",
         description: "Available as a desktop app, an Android app, and a Progressive Web App (PWA).",
         icon: "📱",
-    },
-    {
-        title: "Open Source",
-        description: "Fully transparent and auditable codebase for maximum trust.",
-        icon: "📦",
-    },
-    {
-        title: "Attestations",
-        description: "Everything has a publicly traceable provenance for maximum transparency.",
-        icon: "🗺️",
     },
     {
         title: "Self-Hostable",

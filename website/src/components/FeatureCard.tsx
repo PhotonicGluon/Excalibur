@@ -19,7 +19,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon }) =
                 <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
             </div>
 
-            <p className="text-gray-600 dark:text-gray-300">{description}</p>
+            <p className="text-gray-600 dark:text-gray-300" dangerouslySetInnerHTML={{ __html: description }} />
         </motion.div>
     );
 };
