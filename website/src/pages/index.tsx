@@ -12,7 +12,23 @@ import WaveBackground from "@site/src/components/WaveBackground";
 import { fadeInUp, staggerContainer } from "@site/src/variants";
 
 // Features
+// TODO: Update
 export const features: FeatureCardProps[] = [
+    {
+        title: "User-Friendly",
+        description: "Simple, intuitive interface that makes secure file storage effortless.",
+        icon: "✨",
+    },
+    {
+        title: "Enterprise-Grade Security",
+        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
+        icon: "🛡️",
+    },
+    {
+        title: "Zero-Trust By Default",
+        description: "Designed with zero-trust principles in mind. Trust no one but yourself.",
+        icon: "🕵️",
+    },
     {
         title: "End-to-End Encryption",
         description: "Data in transit is always encrypted using AES-GCM.",
@@ -45,28 +61,11 @@ export const features: FeatureCardProps[] = [
     },
 ];
 
-interface SignatureFeatureProps extends FeatureCardProps {
-    screenshot: React.ReactNode;
-}
-export const signatureFeatures: SignatureFeatureProps[] = [
-    {
-        title: "User-Friendly",
-        description: "Simple, intuitive interface that makes secure file storage effortless.",
-        icon: "✨",
-        screenshot: <img src="/img/screenshots/explorer.png" alt="Explorer" />,
-    },
-    {
-        title: "Military-Grade Security",
-        description: "State-of-the-art encryption algorithms protect your files at rest and in transit.",
-        icon: "🛡️",
-        screenshot: <img src="/img/screenshots/security.png" alt="Security" />,
-    },
-    {
-        title: "Zero-Trust By Default",
-        description: "Designed with zero-trust principles in mind. Trust no one but yourself.",
-        icon: "🕵️",
-        screenshot: <img src="/img/screenshots/zero-trust.png" alt="Excalibur Authentication Process" />,
-    },
+// Screenshots
+const screenshots = [
+    <img src="/img/screenshots/login.png" alt="Login" />,
+    <img src="/img/screenshots/explorer.png" alt="Explorer" />,
+    <img src="/img/screenshots/settings.png" alt="Settings" />,
 ];
 
 // Main component
@@ -147,47 +146,7 @@ const Home: React.FC = () => {
             </header>
 
             <main className="bg-slate-100 dark:bg-slate-900">
-                {/* Signature features */}
-                <section className="py-24">
-                    <div className="container mx-auto space-y-24 px-4">
-                        {signatureFeatures.map((feature, index) => (
-                            <motion.div
-                                key={index}
-                                className="grid items-center gap-12 lg:grid-cols-2"
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true, amount: 0.3 }}
-                                variants={staggerContainer}
-                            >
-                                <motion.div
-                                    className={`flex items-center justify-center rounded-lg border-gray-200 lg:h-80 lg:border lg:bg-white lg:shadow-lg/25 dark:border-gray-700 lg:dark:bg-slate-800 ${
-                                        index % 2 === 0 ? "lg:order-1" : "lg:order-2"
-                                    } *:max-h-full`}
-                                    variants={fadeInUp}
-                                >
-                                    {feature.screenshot}
-                                </motion.div>
-                                <motion.div
-                                    className={`text-left ${index % 2 === 0 ? "lg:order-2" : "lg:order-1"}`}
-                                    variants={fadeInUp}
-                                >
-                                    <div className="flex items-center gap-y-4 lg:block lg:gap-0">
-                                        <div className="text-4xl md:text-5xl lg:mb-4">{feature.icon}</div>
-                                        <h3 className="mb-0! text-3xl font-bold text-gray-900 dark:text-white">
-                                            {feature.title}
-                                        </h3>
-                                    </div>
-
-                                    <p className="my-4! text-lg text-gray-600 dark:text-gray-400">
-                                        {feature.description}
-                                    </p>
-                                </motion.div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* "Other" features */}
+                {/* Features */}
                 <section id="features" className="bg-white py-24 dark:bg-black/20">
                     <div className="container mx-auto px-4">
                         {/* Title */}
@@ -216,7 +175,7 @@ const Home: React.FC = () => {
                                 viewport={{ once: true, amount: 0.3 }}
                             >
                                 {featureRows.map((row, _rowIndex) =>
-                                    row.map((feature, cardIndex) => <FeatureCard key={cardIndex} {...feature} />),
+                                    row.map((feature) => <FeatureCard {...feature} />),
                                 )}
                             </motion.div>
                         </div>
@@ -232,9 +191,45 @@ const Home: React.FC = () => {
                                     whileInView="visible"
                                     viewport={{ once: true, amount: 0.3 }}
                                 >
-                                    {row.map((feature, cardIndex) => (
-                                        <FeatureCard key={cardIndex} {...feature} />
+                                    {row.map((feature) => (
+                                        <FeatureCard {...feature} />
                                     ))}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Screenshots */}
+                <section id="features" className="bg-white py-24 dark:bg-black/20">
+                    <div className="container mx-auto px-4">
+                        {/* Title */}
+                        <motion.div
+                            className="mb-16 text-center"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.5 }}
+                            variants={fadeInUp}
+                        >
+                            <h2 className="mb-6 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
+                                Screenshots
+                            </h2>
+                            <p className="text-center! text-xl text-gray-600 dark:text-gray-400">
+                                See Excalibur in action
+                            </p>
+                        </motion.div>
+
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                            {screenshots.map((screenshot, index) => (
+                                <motion.div
+                                    key={index}
+                                    className="*:rounded-lg"
+                                    variants={fadeInUp}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true, amount: 0.3 }}
+                                >
+                                    {screenshot}
                                 </motion.div>
                             ))}
                         </div>

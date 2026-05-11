@@ -2,7 +2,7 @@
 slug: /
 ---
 
-import { features, signatureFeatures } from "@site/src/pages/index";
+import { features } from "@site/src/pages/index";
 
 # Welcome to Excalibur
 
@@ -11,7 +11,7 @@ Welcome to Excalibur, a trustless secure file management solution using military
 ## Features
 
 <ul>
-    {(signatureFeatures.concat(features)).map((feature) => (
+    {features.map((feature) => (
         <li><b>{feature.icon} {feature.title}</b>: {feature.description}</li>
     ))}
 </ul>
