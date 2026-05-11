@@ -21,6 +21,10 @@
             "path": "server"
         },
         {
+            "name": "Screenshotter",
+            "path": "screenshotter"
+        },
+        {
             "name": "Root",
             "path": "."
         }
