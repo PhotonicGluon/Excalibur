@@ -2,12 +2,18 @@
 
 Helper tool to generate screenshots for the website.
 
-## Post-Install
+## Setting Up
 
-After installing dependencies, run:
+Install dependencies:
 
 ```bash
-uv run playwright install chrome
+uv sync
+```
+
+Then install the browser:
+
+```bash
+uv run playwright install chromium
 ```
 
 ## Usage
