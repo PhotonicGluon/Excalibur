@@ -65,7 +65,7 @@ There are some deviations from the aforementioned RFC, as noted below.
 ### `KE1 + username` Message
 In RFC9807, the username is sent as part of the `KE1` message. However the server still has to have a way to obtain the username in order to check it and to generate `KE2`.
 
-To achieve this, we **concatenate the username after the `KE1` message** and send both to the server together. The server then extracts the username from the message and uses it to check if the user exists and to generate `KE2`.
+To achieve this, we **concatenate the username after the `KE1` message** and send both to the server together (as described in section 10.3 of the RFC). The server then extracts the username from the message and uses it to check if the user exists and to generate `KE2`.
 
 ### Master Key
 
@@ -107,7 +107,7 @@ sequenceDiagram
 There are some deviations from the aforementioned RFC, as noted below.
 
 ### `request + username` Message
-Like with the login flow, we need to send the username to the server. Thus we **concatenate the username after the registration `request` message** and send both to the server together. The server then extracts the username from the message and uses it to check if the user exists and to generate the appropriate response.
+Like with the login flow, we need to send the username to the server. Thus we **concatenate the username after the registration `request` message** and send both to the server together (like in section 10.3 of the RFC). The server then extracts the username from the message and uses it to check if the user exists and to generate the appropriate response.
 
 ### `record + auk_salt + key_enc` Message
 

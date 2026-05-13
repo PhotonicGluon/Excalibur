@@ -159,11 +159,13 @@ You should now see a login screen.
 
 <Image img={require("./img/login.png")} alt="Login Screen" />
 
-Click on the "Sign Up" hyperlink. You should now see this page.
+Click on "Sign Up". You should now see this page.
 
 <Image img={require("./img/sign-up.png")} alt="Sign Up Screen" />
 
-Enter your desired username and password into the fields. To create your user on the server, you will also need to provide the Account Creation Key (ACK) Mnemonic of the server. The mnemonic can be retrieved by running the command
+Enter your desired username and password into the fields. You can optionally choose to enable or disable obfuscated names. If enabled, this means that the names of the files on the server would be obfuscated, making it harder for others to guess what files you have stored. **The names of the files on the client-side remain unchanged.**
+
+To finish creating the user, you will also need to provide the Account Creation Key (ACK) Mnemonic of the server. The mnemonic can be retrieved by running the command
 ```bash
 excalibur user ack
 ```
@@ -187,7 +189,7 @@ This key is the actual key used to encrypt your data. Actually, what is shown is
 
 :::important
 
-Please ***scroll down*** on the pop-up to see the full vault key mnemonic.
+Please ***scroll down*** on the pop-up to see the full vault key mnemonic. You can click on the copy button on the right of the warning at the top to copy it to your clipboard.
 
 :::
 

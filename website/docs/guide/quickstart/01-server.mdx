@@ -64,7 +64,14 @@ The configuration file is a TOML file named `config.toml` in the `excalibur-file
 - **`server.rate_limit.capacity` and `server.rate_limit.fill_rate`**: These control the rate limit for the server. The default values are `250` and `25` respectively.
 - **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
 - **`security.key_strength`**: The size of the keys used for cryptographic operations, in bits. The default value of `128` bits should be both secure and performant, but if you prefer a higher security, you can set it to `192` or `256`.
-- **`security.srp.group`**: The size of the Secure Remote Password (SRP) group used for authentication. The default value of `small` is sufficient for most use cases, but if you prefer a higher security, you can set it to `medium` or `large`.
+
+You should also notice that the `security.opaque` table has been populated. These values are used for the [OPAQUE-3DH](../../reference/server-api/authentication/opaque) authentication system, a more modern augmented password-authenticated key exchange (aPAKE) protocol.
+
+:::note[Legacy SRP Configuration]
+
+You might notice that there is a `security.srp` table in the configuration file. This is for the legacy Secure Remote Password (SRP) authentication system, which is still supported but not recommended for new deployments. If you want to use the legacy SRP system, you can set the `security.srp.group` value to `small`, `medium`, or `large` to control the security level.
+
+:::
 
 ## Starting the Server
 

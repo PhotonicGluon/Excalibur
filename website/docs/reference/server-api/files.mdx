@@ -15,18 +15,11 @@ Like with all operations, this request needs to be authenticated. Provide the fo
 
 There is an optional query parameter, `encrypted`, describing whether the WebSocket messages should be encrypted. It is recommended to _not_ set this to `false` (it is set to `true` by default).
 
-:::warning[Duplicate Connections]
-
-If the same `auth_token` is used to open another listener connection while the existing one has not yet disconnected, the second connection will close with code `4000`.
-
-:::
-
 :::danger[Authentication Failure]
 
 Failure to provide the correct `hmac_validation` value will result in the connection being closed with code `1008 Policy Violation`.
 
 :::
-
 
 ### Listening
 

@@ -27,4 +27,4 @@ Here's how the official Excalibur client performs the above steps:
 
 ## Key Management
 
-The process described above requires us to (a) authenticate and (b) decrypt the user's vault key. **_It is not advisable to use the same key for both operations_**. Use one key to authenticate (the "SRP key") and another key to unlock the vault (the "Account Unlock Key (AUK)"). Read more in the [key generation](../keygen.mdx) process.
+The process described above requires us to (a) authenticate and (b) decrypt the user's vault key. **_It is not advisable to use the same key for both operations_**. For example, for SRP, we use one key to authenticate (the "SRP key") and another key to unlock the vault (the "Account Unlock Key (AUK)"). Read more in the [key generation](../keygen.mdx) process.
