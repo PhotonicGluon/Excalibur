@@ -17,7 +17,7 @@ input()
 
 # Get the ACK for signing up
 print("[cyan]Getting ACK...[/cyan]")
-ack = get("http://localhost:8989/api/auth/ack?as_string=true").text
+ack = get("http://localhost:8989/api/auth/ack?as_string=true", verify=False).text
 
 print("[cyan]Starting screenshotter...[/cyan]")
 
@@ -97,6 +97,12 @@ with sync_playwright() as p:
     )
     screenshot(path="screenshots/drag-and-drop.png")
     page.mouse.up()
+    page.reload()  # Reset page state
+    page.wait_for_timeout(500)  # To allow page to fully load
+
+    page.locator("ion-label", has_text="Name").click()
+    page.wait_for_timeout(500)  # To allow popup to fully appear
+    screenshot(clip={"x": 27, "y": 125, "width": 275, "height": 400}, path="screenshots/sort-options.png")
     page.reload()  # Reset page state
     page.wait_for_timeout(500)  # To allow page to fully load
 
