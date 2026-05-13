@@ -34,8 +34,8 @@ class FileUpdateManager:
     """
 
     def __init__(self):
-        self._active_sockets: dict[str, Socket] = {}
-        "Dictionary of communications UUID to socket object mappings"
+        self._active_sockets: dict[str, list[Socket]] = defaultdict(list)
+        "Dictionary of communications UUID to list of sockets"
         self._connections: dict[str, list[str]] = defaultdict(list)
         "Dictionary of username to communications UUID"
         self._transmissions: dict[tuple[str, Path], Transmission] = defaultdict(Transmission)
@@ -55,12 +55,12 @@ class FileUpdateManager:
 
         key = (username, path)
         for comm_uuid in self._connections[username]:
-            active_socket = self._active_sockets[comm_uuid]
-            if active_socket.encrypted:
-                e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
-                await active_socket.websocket.send_bytes(ExEF(e2ee_key).encrypt(str(path).encode("UTF-8")))
-            else:
-                await active_socket.websocket.send_text(str(path))
+            for active_socket in self._active_sockets[comm_uuid]:
+                if active_socket.encrypted:
+                    e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
+                    await active_socket.websocket.send_bytes(ExEF(e2ee_key).encrypt(str(path).encode("UTF-8")))
+                else:
+                    await active_socket.websocket.send_text(str(path))
 
         self._transmissions[key].last_time = time.time()
         if self._transmissions[key].lock.locked():
@@ -74,42 +74,34 @@ class FileUpdateManager:
         :param credentials: the credentials of the user to connect
         :param websocket: the websocket to connect
         :param encrypted: whether the connection should be encrypted
-        :raises ValueError: if the connection is already active
         """
 
-        await websocket.accept()  # Always accept to not prematurely fail the WebSocket handshake
-
-        if credentials.comm_uuid in self._active_sockets:
-            raise ValueError("Cannot connect to already connected connection")
-
-        self._active_sockets[credentials.comm_uuid] = Socket(websocket=websocket, encrypted=encrypted)
+        await websocket.accept()
+        self._active_sockets[credentials.comm_uuid].append(Socket(websocket=websocket, encrypted=encrypted))
         self._connections[credentials.username].append(credentials.comm_uuid)
 
-    def disconnect(self, credentials: Credentials):
+    async def disconnect(self, credentials: Credentials):
         """
         Disconnects a user from the update manager if the user is connected.
 
-        :param credentials: the credentials of the user to disconnect
-        :raises ValueError: if the connection is not active
+        :param credentials: The credentials of the user to disconnect
         """
 
-        if credentials.comm_uuid not in self._active_sockets:
-            raise ValueError("Cannot disconnect from non-existent connection")
+        if credentials.comm_uuid in self._connections[credentials.username]:
+            self._connections[credentials.username].remove(credentials.comm_uuid)
 
-        # If websocket is still connected, gracefully close it
-        if self._active_sockets[credentials.comm_uuid].websocket.client_state == WebSocketState.CONNECTED:
-            self._active_sockets[credentials.comm_uuid].websocket.close()
+        for active_socket in self._active_sockets.get(credentials.comm_uuid, []):
+            if active_socket.websocket.client_state == WebSocketState.CONNECTED:
+                await active_socket.websocket.close()
 
-        # Clean up
-        self._connections[credentials.username].remove(credentials.comm_uuid)
-        self._active_sockets.pop(credentials.comm_uuid)
+        self._active_sockets.pop(credentials.comm_uuid, None)
 
     async def add_update(self, credentials: Credentials, path: Path):
         """
         Adds an update to the update manager.
 
-        :param credentials: the credentials of the user to notify
-        :param path: the path of the file that was updated
+        :param credentials: The credentials of the user to notify
+        :param path: The path of the file that was updated
         """
 
         username = credentials.username

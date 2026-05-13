@@ -6,7 +6,6 @@ from uuid import uuid4
 
 import pytest
 from Crypto.Random import get_random_bytes
-from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from starlette.testclient import WebSocketTestSession
@@ -200,22 +199,22 @@ class TestDirectoryChangesListener:
         assert ws_client.receive_text() == "."
         assert ExEF(b"one demo 16B key").decrypt(ws_client_encrypted.receive_bytes()).decode("utf-8") == "."
 
-    def test_duplicate_connection(self):
-        auth_client, auth_token, pop_header = _auth_websocket("test_user", LISTENER_PATH)
+    def test_duplicate_connection(self, auth_client_db: TestClient):
+        auth_client, auth_token, pop_header = _auth_websocket("test-user-db", LISTENER_PATH)
         with auth_client.websocket_connect(
-            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-        ) as _:
-            try:
-                with auth_client.websocket_connect(
-                    f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-                ) as _:
-                    pass
-            except WebSocketDisconnect as e:
-                assert e.code == 4000
-                assert e.reason == "Duplicate connection"
+            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
+        ) as ws1:
+            with auth_client.websocket_connect(
+                f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
+            ) as ws2:
+                response = auth_client_db.post("/api/files/mkdir/.", json=f"test-dir-{uuid4().hex}")
+                assert response.status_code == 201
+
+                assert ws1.receive_text() == "."
+                assert ws2.receive_text() == "."
 
     def test_multi_requests(self, auth_client_db: TestClient, ws_client: WebSocketTestSession):
-        # Create a folder
+        # Create folders
         for _ in range(10):
             response = auth_client_db.post("/api/files/mkdir/.", json=f"test-multi-create-{uuid4().hex}")
             assert response.status_code == 201

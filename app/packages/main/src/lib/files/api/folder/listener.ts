@@ -82,9 +82,6 @@ function connectToListener(
             case 1006:
                 console.warn("WebSocket connection closed unexpectedly");
                 break;
-            case 4000:
-                console.warn("Duplicate connection detected; closing");
-                break;
             default:
                 console.warn(`WebSocket closed with code ${event.code}: ${event.reason}`);
                 break;
