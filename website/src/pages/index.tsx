@@ -49,9 +49,10 @@ export const features: FeatureCardProps[] = [
 
 // Screenshots
 const screenshots = [
-    <img src="/img/screenshots/login.png" alt="Login" />,
+    <img src="/img/screenshots/login.png" alt="Login Screen" />,
+    <img src="/img/screenshots/sign-up.png" alt="Sign Up Screen" />,
+    <img src="/img/screenshots/explorer-empty.png" alt="Explorer (Empty)" />,
     <img src="/img/screenshots/explorer.png" alt="Explorer" />,
-    <img src="/img/screenshots/settings.png" alt="Settings" />,
 ];
 
 // Main component
