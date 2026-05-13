@@ -73,7 +73,7 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
                         >
                             <IonLabel>{sortType}</IonLabel>
                             <IonIcon
-                                className="ml-1 size-4 rounded-full bg-blue-500/50 p-1"
+                                className="ml-1 size-4 rounded-full bg-blue-500/50 p-1 hover:bg-blue-500/60"
                                 icon={sortAsc ? arrowUp : arrowDown}
                             />
                         </div>
