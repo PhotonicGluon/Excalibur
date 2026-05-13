@@ -39,7 +39,7 @@ def _gen_token(username: str, master_key: bytes, expiry_time: int):
     },
     response_class=PlainTextResponse,
 )
-def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
+async def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
     """
     Gets a new authentication token for a logged-in user.
 
@@ -54,7 +54,7 @@ def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_credentia
 
     # Disconnect from update manager if connection exists
     try:
-        file_update_manager.disconnect(credentials)
+        await file_update_manager.disconnect(credentials)
     except ValueError:
         pass
 

@@ -446,7 +446,10 @@ const FileExplorer: React.FC = () => {
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
 
                             {/* Breadcrumbs */}
-                            <div ref={topBarRef} className="ml-1 w-full overflow-x-scroll pt-1">
+                            <div
+                                ref={topBarRef}
+                                className="ml-1 w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-1 hover:scrollbar-thumb-blue-500/50"
+                            >
                                 <DirectoryBreadcrumbs
                                     className="flex-nowrap"
                                     path={requestedPath}

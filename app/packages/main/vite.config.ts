@@ -64,6 +64,9 @@ export const viteConfig = {
                 },
             },
         },
+        // See https://github.com/vitejs/vite/issues/21903.
+        // For now disabling CSS code splitting works, but a more permanent solution is needed.
+        cssCodeSplit: false,
     },
 };
 export default defineConfig(viteConfig);
