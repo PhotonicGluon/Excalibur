@@ -1,1 +1,1 @@
-⬆️ Updated `typer` from `0.24.1` to `0.25.0`
+⬆️ Updated `typer` from `0.24.1` to `0.25.1`

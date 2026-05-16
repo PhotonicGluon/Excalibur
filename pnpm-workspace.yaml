@@ -22,6 +22,8 @@ allowBuilds:
   sharp: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - prettier-plugin-tailwindcss@0.7.4
 trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
 
 overrides:

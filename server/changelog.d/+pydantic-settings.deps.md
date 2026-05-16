@@ -1,1 +1,1 @@
-⬆️ Updated `pydantic-settings` from `2.13.1` to `2.14.0`
+⬆️ Updated `pydantic-settings` from `2.13.1` to `2.14.1`
