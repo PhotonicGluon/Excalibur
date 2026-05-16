@@ -49,7 +49,7 @@ You should see `Config is valid!` appear in the terminal.
 
 The database schema has been updated, with the following changes:
 - Added fields needed for the OPAQUE-3DH protocol
-- Modified existing SRP fields to be nullable
+- Modified existing Secure Remote Password (SRP) fields to be nullable
 - Implemented new database-backed filesystem (explained [below](#new-filesystem))
 
 As such, existing databases need to be upgraded. This can be done by running
@@ -118,11 +118,25 @@ In particular, these endpoints now no longer return any content for the `200 OK`
 
 If your custom client code interacts with any of these endpoints, you will need to update it to rely solely on the response code.
 
-## Optional Upgrades
+## App Upgrades
 
-There are also some optional upgrades which would be beneficial to apply.
+There are also some upgrades that need to be applied from the app.
 
-### (App) Obfuscated Names
+### Switching from SRP to OPAQUE
+
+Excalibur 0.6 switches the default authentication protocol from the legacy SRP protocol to the state-of-the-art OPAQUE protocol introduced in [RFC9807](https://datatracker.ietf.org/doc/html/rfc9807).
+
+When existing users who use SRP authentication log into the server, a popup will appear asking them to switch to OPAQUE. Simply click on "OK" to complete the transition.
+
+:::warning[Deprecation]
+
+SRP will be deprecated in a future release, so it is recommended to switch to OPAQUE as soon as possible.
+
+:::
+
+New users will automatically use the OPAQUE protocol, so no action is needed for them.
+
+### (Optional) Obfuscated Names
 
 To better improve the privacy of users while using the app, Excalibur 0.6 adds name obfuscation for the files and folders uploaded to the server.
 
