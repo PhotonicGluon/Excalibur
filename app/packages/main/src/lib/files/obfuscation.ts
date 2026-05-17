@@ -129,12 +129,13 @@ export async function toggleObfuscationForAllFiles(
     for (let i = 0; i < items.length; i++) {
         setLoadingState(`Processed ${i} of ${numItems} Items`);
         const item = items[i];
+        const nameNoExEF = item.name.replace(/\.exef$/g, "");
 
         let newName;
         if (obfuscated) {
-            newName = auth.noc!.encipher(Buffer.from(item.name, "utf-8"));
+            newName = auth.noc!.encipher(Buffer.from(nameNoExEF, "utf-8")) + (item.type === "file" ? ".exef" : "");
         } else {
-            newName = auth.noc!.decipher(item.name).toString("utf-8");
+            newName = auth.noc!.decipher(nameNoExEF).toString("utf-8") + (item.type === "file" ? ".exef" : "");
         }
 
         console.debug(`Renaming item '${item.fullpath}' from '${item.name}' to '${newName}'`);
