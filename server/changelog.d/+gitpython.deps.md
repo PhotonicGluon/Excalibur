@@ -1,1 +1,0 @@
-⬆️ Updated `gitpython` from `3.1.46` to `3.1.50`
