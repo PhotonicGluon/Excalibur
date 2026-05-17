@@ -2,6 +2,7 @@ import { themes as prismThemes } from "prism-react-renderer";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
+import { BlogPost } from "@docusaurus/plugin-content-blog";
 import type * as Preset from "@docusaurus/preset-classic";
 import type { Config } from "@docusaurus/types";
 
@@ -101,6 +102,21 @@ const config: Config = {
                 showReadingTime: true,
                 readingTime: ({ content }) => content.length,
                 onUntruncatedBlogPosts: "ignore",
+                processBlogPosts: ({ blogPosts }: { blogPosts: BlogPost[] }) => {
+                    return blogPosts.sort((a, b) => {
+                        const dateA = new Date(a.metadata.date);
+                        const dateB = new Date(b.metadata.date);
+                        const deltaTime = dateB.getTime() - dateA.getTime();
+
+                        if (deltaTime === 0) {
+                            // Compare by name; latest name first
+                            return b.metadata.title.localeCompare(a.metadata.title);
+                        }
+
+                        // Otherwise sort by date (newest first)
+                        return deltaTime;
+                    });
+                },
             },
         ],
     ],
