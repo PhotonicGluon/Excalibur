@@ -60,19 +60,13 @@ In previous versions of Excalibur, the filesystem is based on the operating syst
 
 In Excalibur 0.6, we have migrated the filesystem to be based on the database. This makes the filesystem more consistent across platforms. This, however, means that a migration is needed to use the new filesystem.
 
-{/* First, it is recommended to create a backup of the server files by running:
+First, it is recommended to create a backup of the server files by running:
 
 ```bash
 excalibur backup
 ```
 
-You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created. */}
-
-First, it is recommended to create a backup of the server files by zipping up the `excalibur-files` folder. For example, on Linux, you can run:
-
-```bash
-zip -r excalibur-files-backup.zip excalibur-files
-```
+You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created.
 
 Now, begin the migration to the new filesystem by running:
 
