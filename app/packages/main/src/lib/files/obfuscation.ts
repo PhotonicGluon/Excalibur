@@ -104,6 +104,7 @@ export async function toggleObfuscationForAllFiles(
     timePerFile: number = 100,
 ) {
     // Get number of items owned by the current user
+    setLoadingState(`Getting item count...`);
     const countResponse = await getCount(auth);
     if (!countResponse.success) {
         throw new Error(countResponse.error!);
@@ -115,6 +116,7 @@ export async function toggleObfuscationForAllFiles(
     console.debug(`User owns ${numItems} items, using a timeout of ${timeout} seconds`);
 
     // Get items owned by the current user
+    setLoadingState(`Getting items...`);
     const allItemsResponse = await getAllItems(auth, timeout);
     if (!allItemsResponse.success) {
         throw new Error(allItemsResponse.error!);
