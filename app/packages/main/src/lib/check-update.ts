@@ -26,9 +26,8 @@ async function checkForUpdate(): Promise<{
     const latestReleaseInfo = await (await fetch(`${GITHUB_API_BASE_URL}/releases/latest`)).json();
     const latestVersion = latestReleaseInfo["tag_name"].replace(/^v/, "");
 
-    const currentVersion = packageInfo.version;
-    if (compareSemVer(latestVersion, currentVersion) <= 0) {
-        console.debug(`No update available (latest is ${latestVersion}, current is ${currentVersion})`);
+    if (compareSemVer(latestVersion, packageInfo.version) <= 0) {
+        console.debug(`No update available (latest is ${latestVersion}, current is ${packageInfo.version})`);
         return { updateAvailable: false };
     }
     return { updateAvailable: true, latestVersion };
@@ -62,6 +61,7 @@ export async function performUpdateCheck(
     // Show alert that a new update is available
     presentAlert({
         header: `Version ${updateCheckResponse.latestVersion} Available`,
+        subHeader: `You have ${packageInfo.version}`,
         message: "Do you want to read the release notes?",
         buttons: [
             {
