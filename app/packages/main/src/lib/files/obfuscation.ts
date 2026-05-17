@@ -1,6 +1,6 @@
 import seedrandom from "seedrandom";
 
-import { getAllItems, renameItem } from "@lib/files/api";
+import { getAllItems, getCount, renameItem } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 
 import { AuthProvider } from "@components/auth/context";
@@ -95,24 +95,35 @@ export function deobfuscateDirectoryItems(directory: Directory, noc: Substitutio
  * @param auth authentication provider
  * @param obfuscated whether to obfuscate or deobfuscate
  * @param setLoadingState function to set the loading state
+ * @param timePerFile amount of time, in milliseconds, to add to the timeout for each file operation
  */
 export async function toggleObfuscationForAllFiles(
     auth: AuthProvider,
     obfuscated: boolean,
     setLoadingState: (state: string) => void,
+    timePerFile: number = 100,
 ) {
+    // Get number of items owned by the current user
+    const countResponse = await getCount(auth);
+    if (!countResponse.success) {
+        throw new Error(countResponse.error!);
+    }
+
+    const numItems = countResponse.count!;
+    const timeout = 5 + (timePerFile / 1000) * numItems;
+
+    console.debug(`User owns ${numItems} items, using a timeout of ${timeout} seconds`);
+
     // Get items owned by the current user
-    const allItemsResponse = await getAllItems(auth);
+    const allItemsResponse = await getAllItems(auth, timeout);
     if (!allItemsResponse.success) {
         throw new Error(allItemsResponse.error!);
     }
 
     const rawItems = allItemsResponse.items!;
-    const numItems = rawItems.length;
 
     // Sort by fullpath, with the deepest items processed first
     const items = rawItems.sort((a, b) => b.fullpath.split("/").length - a.fullpath.split("/").length);
-    console.debug(`Got ${numItems} items to process: `, items);
 
     // Rename items
     for (let i = 0; i < items.length; i++) {
