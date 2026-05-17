@@ -6,18 +6,18 @@ minimumReleaseAge: 7200 # 5 days, expressed in minutes
 blockExoticSubdeps: true
 
 strictDepBuilds: true
-allowBuilds:
-  "@swc/core": true
-  "@tailwindcss/oxide": true
-  core-js-pure: true
-  core-js: true
-  sharp: true
+onlyBuiltDependencies: # CloudFlare uses pnpm v10.11, which doesn't have `allowBuilds`
+  - "@swc/core"
+  - "@tailwindcss/oxide"
+  - "core-js-pure"
+  - "core-js"
+  - "sharp"
 
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - "detect-port@1.6.1"
   - "semver@6.3.1"
-trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
+trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   serialize-javascript@<7.0.5: ">=7.0.5"
