@@ -53,6 +53,12 @@ export const viteConfig = {
                     }
 
                     // For production, we'll split the chunks better
+                    if (/css$/.test(id)) {
+                        // See https://github.com/vitejs/vite/issues/21903.
+                        // For now we'll combine all the stylesheets into one chunk.
+                        return "style";
+                    }
+
                     if (id.includes("node_modules")) {
                         let importPath = id.toString().split("node_modules/")[1];
                         if (importPath.startsWith(".pnpm")) {
@@ -64,9 +70,6 @@ export const viteConfig = {
                 },
             },
         },
-        // See https://github.com/vitejs/vite/issues/21903.
-        // For now disabling CSS code splitting works, but a more permanent solution is needed.
-        cssCodeSplit: false,
     },
 };
 export default defineConfig(viteConfig);
