@@ -6,7 +6,7 @@ test("changeTimezone", () => {
     const date = new Date("2020-01-02T03:04:05Z");
     const timezone = "Asia/Singapore"; // UTC+8
     const result = changeTimezone(date, timezone);
-    expect(result.toLocaleString()).toBe("1/2/2020, 11:04:05 AM");
+    expect(result.toLocaleString("en-US")).toBe("1/2/2020, 11:04:05 AM");
 });
 
 test("timestampToDateString", () => {

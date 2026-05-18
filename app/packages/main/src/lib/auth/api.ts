@@ -1,25 +1,7 @@
-import { type _SRPGroup, getSRPGroup } from "@lib/auth/srp";
 import ExEF from "@lib/exef";
-import { popFetch, timedFetch } from "@lib/network";
+import { popFetch } from "@lib/network";
 
 import { AuthProvider } from "@components/auth/context";
-
-/**
- * Fetches the SRP group size from the server, and returns the corresponding
- * {@link SRPGroup} object.
- *
- * @param apiURL The URL of the API server to query.
- * @returns The SRP group size, or an error message.
- */
-export async function getGroup(apiURL: string): Promise<{ group?: _SRPGroup; error?: string }> {
-    try {
-        const response = await timedFetch(`${apiURL}/auth/group-size`);
-        const groupSize = parseInt(await response.text());
-        return { group: getSRPGroup(groupSize) };
-    } catch (e) {
-        return { error: (e as Error).message };
-    }
-}
 
 /**
  * Fetches a new authentication token from the server.

@@ -3,12 +3,9 @@ import { AlertButton } from "@ionic/core";
 import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
 import generateKey from "@lib/auth/keygen";
-import { decodeJWT } from "@lib/auth/token";
 import { getSecurityDetails } from "@lib/users/api";
-import { registerUserOPAQUE } from "@lib/users/api/registration/opaque";
 
 import { handshakeOPAQUE } from "./opaque";
-import { handshakeSRP } from "./srp";
 
 /**
  * Perform end-to-end encryption setup with the server.
@@ -16,7 +13,6 @@ import { handshakeSRP } from "./srp";
  * @param apiURL the HTTP(S) URL of the API server to query
  * @param username the username to log in as
  * @param password the password for logging in
- * @param startLoading a function to call to start any loading indicators
  * @param stopLoading a function to call when any loading indicators needs to be stopped
  * @param setLoadingState a function to call to update the loading state with a message
  * @param showAlert a function to call if an error occurs, which takes a header and a message
@@ -26,7 +22,6 @@ async function e2ee(
     apiURL: string,
     username: string,
     password: string,
-    startLoading?: () => void,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (
@@ -50,37 +45,6 @@ async function e2ee(
         `Obtained security details: salt '${aukSalt.toString("hex")}' and authentication protocol '${authProtocol}'`,
     );
 
-    // If currently on SRP, prompt user whether to upgrade to OPAQUE
-    let upgradeToOPAQUE: boolean | null = null;
-    if (authProtocol === AuthProtocol.SRP) {
-        stopLoading?.();
-        upgradeToOPAQUE = await new Promise<boolean>((resolve) => {
-            showAlert?.(
-                "Upgrade to OPAQUE",
-                undefined,
-                "You are currently using Secure Remote Password (SRP) to authenticate. Would you like to upgrade to OPAQUE for better security?",
-                [
-                    {
-                        text: "No",
-                        role: "cancel",
-                        handler: () => {
-                            resolve(false);
-                            startLoading?.();
-                        },
-                    },
-                    {
-                        text: "Yes",
-                        role: "confirm",
-                        handler: () => {
-                            resolve(true);
-                            startLoading?.();
-                        },
-                    },
-                ],
-            );
-        });
-    }
-
     // Generate keys
     setLoadingState?.("Generating keys...");
     const additionalInfo = { username };
@@ -91,18 +55,6 @@ async function e2ee(
     let handshakeData: HandshakeData | undefined;
     try {
         switch (authProtocol) {
-            case AuthProtocol.SRP:
-                handshakeData = await handshakeSRP(
-                    apiURL,
-                    username,
-                    password,
-                    securityDetailsResponse.srpSalt!,
-                    additionalInfo,
-                    stopLoading,
-                    setLoadingState,
-                    showAlert,
-                );
-                break;
             case AuthProtocol.OPAQUE_3DH:
                 handshakeData = await handshakeOPAQUE(
                     apiURL,
@@ -119,25 +71,6 @@ async function e2ee(
     } catch (error) {
         console.error(`End-to-end encryption setup failed: ${error}`);
         return;
-    }
-
-    // Handle OPAQUE upgrade if needed
-    if (upgradeToOPAQUE) {
-        const reregisterResponse = await registerUserOPAQUE(
-            apiURL,
-            username,
-            password,
-            handshakeData!.key, // Use the established session key to communicate
-            Buffer.alloc(32), // We don't care about the AUK salt; the server will retrieve it for us
-            Buffer.alloc(0), // We also don't care about the encrypted vault key
-            decodeJWT<Record<string, string>>(handshakeData!.token).uuid,
-            stopLoading,
-            setLoadingState,
-            showAlert,
-        );
-        if (!reregisterResponse.success) {
-            console.warn("Failed to upgrade to OPAQUE... continuing with the rest of the process");
-        }
     }
 
     // Return E2EE data

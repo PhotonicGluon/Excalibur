@@ -165,9 +165,6 @@ importers:
       ionicons:
         specifier: ^8.0.13
         version: 8.0.13
-      js-sha3:
-        specifier: ^0.9.3
-        version: 0.9.3
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -3350,9 +3347,6 @@ packages:
   joi@18.2.1:
     resolution: {integrity: sha512-2/OKlogiESf2Nh3TFCrRjrr9z1DRHeW0I+KReF67+4J0Ns+8hBtHRmoWAZ2OFU6I5+TWLEe6sVlSdXPjHm5UbQ==}
     engines: {node: '>= 20'}
-
-  js-sha3@0.9.3:
-    resolution: {integrity: sha512-BcJPCQeLg6WjEx3FE591wVAevlli8lxsxm9/FzV4HXkV49TmBH38Yvrpce6fjbADGMKFrBMGTqrVz3qPIZ88Gg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -8814,8 +8808,6 @@ snapshots:
       '@hapi/tlds': 1.1.6
       '@hapi/topo': 6.0.2
       '@standard-schema/spec': 1.1.0
-
-  js-sha3@0.9.3: {}
 
   js-tokens@4.0.0: {}
 

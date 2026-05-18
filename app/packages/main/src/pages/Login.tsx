@@ -140,7 +140,6 @@ const Login: React.FC = () => {
             auth.serverInfo!.apiURL!,
             values.username,
             values.password,
-            () => setIsLoading(true),
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg, buttons) => {

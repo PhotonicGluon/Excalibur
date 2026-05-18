@@ -33,7 +33,6 @@
         "comlink": "^4.4.2",
         "immer": "^11.1.8",
         "ionicons": "^8.0.13",
-        "js-sha3": "^0.9.3",
         "jsonwebtoken": "^9.0.3",
         "mime": "^4.1.0",
         "natural-compare": "^1.4.0",

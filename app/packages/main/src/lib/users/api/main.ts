@@ -37,7 +37,6 @@ export async function getSecurityDetails(
     success: boolean;
     aukSalt?: Buffer;
     authProtocol?: AuthProtocol;
-    srpSalt?: Buffer;
     error?: string;
 }> {
     const response = await timedFetch(`${apiURL}/users/security/${username}`, {
@@ -57,7 +56,6 @@ export async function getSecurityDetails(
         success: true,
         aukSalt: b64decode(data["auk_salt"]),
         authProtocol: data["auth_protocol"] as AuthProtocol,
-        srpSalt: data["srp_salt"] !== null ? b64decode(data["srp_salt"]) : undefined,
     };
 }
 
