@@ -4,11 +4,11 @@ import { getURLEncodedPath } from "@lib/url";
 /**
  * Fetches a URL with a timeout.
  *
- * @param url The URL to fetch
- * @param options The options to pass to fetch
- * @param timeout The timeout, in seconds. If null, no timeout is applied
- * @returns The response from fetch
- * @throws {TypeError} If the fetch fails
+ * @param url the URL to fetch
+ * @param options the options to pass to fetch
+ * @param timeout the timeout, in seconds. If null, no timeout is applied
+ * @returns the response from fetch
+ * @throws {TypeError} if the fetch fails
  */
 export async function timedFetch(url: string, options?: RequestInit, timeout: number | null = 3): Promise<Response> {
     return globalThis.fetch(url, {
@@ -20,9 +20,9 @@ export async function timedFetch(url: string, options?: RequestInit, timeout: nu
 /**
  * Sets up an `XMLHttpRequest` for sending a request with a timeout.
  *
- * @param url The URL to fetch
+ * @param url the URL to fetch
  * @param method HTTP method
- * @param timeout The timeout, in seconds. If null or 0, no timeout is applied
+ * @param timeout the timeout, in seconds. If null or 0, no timeout is applied
  * @returns XMLHttpRequest with the timeout
  */
 export function timedXHR(url: string, method: string, timeout: number | null = 3): XMLHttpRequest {
@@ -58,7 +58,7 @@ export async function popFetch(
     let headers = options?.headers;
     if (popHeader) {
         headers = {
-            "X-SRP-PoP": popHeader,
+            "X-Auth-PoP": popHeader,
             ...options?.headers,
         };
     }
@@ -69,11 +69,11 @@ export async function popFetch(
 /**
  * Sets up an `XMLHttpRequest` for sending a request with a Proof of Possession (PoP) and timeout.
  *
- * @param url The URL to fetch
- * @param token The authentication token to use
- * @param masterKey The master key to use for generating the PoP
+ * @param url the URL to fetch
+ * @param token the authentication token to use
+ * @param masterKey the master key to use for generating the PoP
  * @param method HTTP method
- * @param timeout The timeout, in seconds. If null or 0, no timeout is applied
+ * @param timeout the timeout, in seconds. If null or 0, no timeout is applied
  * @returns XMLHttpRequest with the timeout and PoP
  */
 export function popXHR(
@@ -90,7 +90,7 @@ export function popXHR(
         const popHeader = generatePoPHeader(masterKey, method, path);
 
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-        xhr.setRequestHeader("X-SRP-PoP", popHeader);
+        xhr.setRequestHeader("X-Auth-PoP", popHeader);
     }
 
     return xhr;

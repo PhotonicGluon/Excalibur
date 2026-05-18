@@ -38,14 +38,14 @@ class TestHTTPPoPChecks:
         assert response.json()["detail"] == "Missing PoP"
 
     def test_invalid_pop(self, auth_client: TestClient):
-        response = auth_client.get("/api/auth/pop-demo", headers={"X-SRP-PoP": "invalid-pop"})
+        response = auth_client.get("/api/auth/pop-demo", headers={"X-Auth-PoP": "invalid-pop"})
         assert response.status_code == 422
 
     def test_invalid_timestamp(self, auth_client: TestClient):
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": "0 "
+                "X-Auth-PoP": "0 "
                 + b64encode(_gen_nonce()).decode("UTF-8")
                 + " "
                 + b64encode(b"\x00" * 32).decode("UTF-8")
@@ -58,7 +58,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": "9999999999 "
+                "X-Auth-PoP": "9999999999 "
                 + b64encode(_gen_nonce()).decode("UTF-8")
                 + " "
                 + b64encode(b"\x00" * 32).decode("UTF-8")
@@ -73,7 +73,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="WRONG",
                     path="/api/auth/pop-demo",
@@ -91,7 +91,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="GET",
                     path="/api/some-incorrect-path",
@@ -118,7 +118,7 @@ class TestHTTPPoPChecks:
         # First request should succeed
         response = auth_client.get(
             "/api/auth/pop-demo",
-            headers={"X-SRP-PoP": header},
+            headers={"X-Auth-PoP": header},
         )
         assert response.status_code == 200
         assert response.json()["username"] == "test-user"
@@ -126,7 +126,7 @@ class TestHTTPPoPChecks:
         # Second request should fail
         response = auth_client.get(
             "/api/auth/pop-demo",
-            headers={"X-SRP-PoP": header},
+            headers={"X-Auth-PoP": header},
         )
         assert response.status_code == 401
         assert response.json()["detail"] == "Nonce reused"
@@ -235,7 +235,7 @@ def test_get(auth_client: TestClient):
     response = auth_client.get(
         "/api/auth/pop-demo",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path="/api/auth/pop-demo",
@@ -257,7 +257,7 @@ def test_get_with_path(auth_client: TestClient):
     response = auth_client.get(
         "/api/auth/pop-demo-get/hello-world",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path="/api/auth/pop-demo-get/hello-world",
@@ -276,7 +276,7 @@ def test_get_with_path(auth_client: TestClient):
     response = auth_client.get(
         f"/api/auth/pop-demo-get/{path_b64}",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path=f"/api/auth/pop-demo-get/{path_b64}",
@@ -296,7 +296,7 @@ def test_post_no_encrypt(auth_client: TestClient):
     response = auth_client.post(
         "/api/auth/pop-demo",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="POST",
                 path="/api/auth/pop-demo",
@@ -332,7 +332,7 @@ def test_post_encrypted(auth_client: TestClient):
             "Content-Type": "application/octet-stream",
             "X-Encrypted": "true",
             "X-Content-Type": "text/plain",
-            "X-SRP-PoP": hmac_header,
+            "X-Auth-PoP": hmac_header,
         },
         content=transit_encrypted_data,
     )
