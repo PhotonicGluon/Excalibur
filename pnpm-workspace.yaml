@@ -7,19 +7,29 @@ auditConfig:
     - CVE-2025-14505 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
+minimumReleaseAgeExclude:
+  - tailwindcss@4.3.0
+  - "@tailwindcss/*"
 
-onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
-  - core-js
-  - cypress
-  - electron
-  - electron-winstaller
-  - esbuild
-  - sharp
+blockExoticSubdeps: true
+
+strictDepBuilds: true
+allowBuilds:
+  cypress: true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  sharp: true
+
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - prettier-plugin-tailwindcss@0.7.4
+trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
 
 overrides:
   "@xmldom/xmldom@<0.8.13": ">=0.8.13"
   minimatch@<3.1.4: ">=3.1.4"
+  plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   tar@<=7.5.10: ">=7.5.11"
 
 sideEffectsCache: false

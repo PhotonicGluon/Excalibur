@@ -25,6 +25,7 @@ def add_folder_change(credentials: Credentials, path: Path):
 
 # Add endpoints
 from .checks import check_path_endpoint as check_path_endpoint
+from .count import count_all_items_endpoint as count_all_items_endpoint
 from .delete import delete_endpoint as delete_endpoint
 from .file import download_file_endpoint as download_file_endpoint
 from .file import search_endpoint as search_endpoint

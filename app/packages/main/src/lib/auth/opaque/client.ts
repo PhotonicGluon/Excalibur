@@ -28,13 +28,6 @@ export class OPAQUEAuthError extends Error {
     }
 }
 
-export class OPAQUEClientAuthError extends OPAQUEAuthError {
-    constructor(message: string) {
-        super(message);
-        this.name = "OPAQUEClientAuthError";
-    }
-}
-
 export class OPAQUEServerAuthError extends OPAQUEAuthError {
     constructor(message: string) {
         super(message);
@@ -295,7 +288,7 @@ export class OPAQUEClient {
      * @param serverIdentity optional server's identity
      * @param clientIdentity the client's identity
      * @return the client's private key, cleartext credentials, and the `export_key`
-     * @throws {OPAQUEClientAuthError} if the server public key is invalid (could be caused by incorrect credentials)
+     * @throws {OPAQUEAuthError} if the server public key is invalid (could be caused by incorrect credentials)
      * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
      */
     private _recoverCredentials(
@@ -325,7 +318,7 @@ export class OPAQUEClient {
         try {
             serverPublicKey = Ristretto255.fromBytes(serverPublicKeyAndEnvelope.subarray(0, Ristretto255.KEY_LENGTH));
         } catch (_e) {
-            throw new OPAQUEClientAuthError("failed to recover server public key");
+            throw new OPAQUEAuthError("failed to recover server public key");
         }
         const envelope = Envelope.deserialize(
             serverPublicKeyAndEnvelope.subarray(Ristretto255.KEY_LENGTH),
@@ -355,18 +348,23 @@ export class OPAQUEClient {
     }
 
     /**
-     * Performs the Diffie-Hellman operation between the private input `k` and public input `b`, as
-     * described in section 6.4.1.1.
+     * Performs the Diffie-Hellman operation between the private input `k` and public input `b` as
+     * described in section 6.4.1.1, with validation as required in section 10.7.
      *
      * We differ from the specification by returning the base curve element instead of its
      * serialized form.
      *
-     * @param k the private key
-     * @param b the public key
+     * @param k the private input
+     * @param b the public input
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @returns the shared secret
      */
     private _diffieHellman(k: bigint, b: Ristretto255): Ristretto255 {
-        return b.mul(k);
+        const sharedSecret = b.mul(k);
+        if (sharedSecret.isIdentity()) {
+            throw new OPAQUEAuthError("Diffie-Hellman shared secret is the point at infinity");
+        }
+        return sharedSecret;
     }
 
     /**
@@ -488,6 +486,7 @@ export class OPAQUEClient {
      * @param clientPrivateKey the client's private key
      * @param ke2 a KE2 message structure
      * @returns the KE3 message to send to the server and the shared session secret
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @throws {OPAQUEAuthError} if the server authentication fails
      */
     private _authClientFinalize(
@@ -595,8 +594,11 @@ export class OPAQUEClient {
      * @param serverIdentity the server's identity
      * @param ke2 the KE2 message from the server
      * @returns the client's KE3 message, the session key, and the export key
-     * @throws {OPAQUEClientAuthError} if the server public key is invalid (could be caused by incorrect credentials)
-     * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag mismatch)
+     * @throws {OPAQUEAuthError} if the server public key is invalid (could be caused by incorrect
+     *      credentials)
+     * @throws {OPAQUEAuthError} if the Envelope fails to be recovered (e.g., envelope auth tag
+     *      mismatch)
+     * @throws {OPAQUEAuthError} if the shared secret is the point at infinity
      * @throws {OPAQUEServerAuthError} if the server authentication fails
      */
     generateKE3(clientIdentity: Uint8Array, serverIdentity: Uint8Array, ke2: KE2): [KE3, Uint8Array, Uint8Array] {

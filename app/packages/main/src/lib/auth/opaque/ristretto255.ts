@@ -3,8 +3,8 @@ import { randomBytes } from "crypto";
 import { bigIntToBytes, bytesToBigInt, modInv, modulo, powmod } from "@lib/util";
 
 /**
- * Implementation of the Ristretto255 group from [RFC9496](https://www.rfc-editor.org/rfc/rfc9496),
- * section 4.
+ * Implementation of the Ristretto255 group from
+ * [RFC9496](https://datatracker.ietf.org/doc/html/rfc9496), section 4.
  */
 export class Ristretto255 {
     static readonly P = 2n ** 255n - 19n; // See section 2
@@ -50,9 +50,9 @@ export class Ristretto255 {
     // Helper methods
     /**
      * Checks if an element is "negative" according to section 3.1 of
-     * [RFC8032](https://www.rfc-editor.org/rfc/inline-errata/rfc8032.html). That is,
-     * this function returns `true` if the least nonnegative integer representing `e` is odd,
-     * and `false` if it is even.
+     * [RFC8032](https://datatracker.ietf.org/doc/html/inline-errata/rfc8032.html). That is, this
+     * function returns `true` if the least nonnegative integer representing `e` is odd, and `false`
+     * if it is even.
      */
     static _isNegative(e: bigint): boolean {
         return (modulo(e, Ristretto255.P) & 1n) === 1n;
@@ -238,11 +238,16 @@ export class Ristretto255 {
     /**
      * Decodes a 32-byte string as a field element, following section 4.3.1.
      *
+     * This implementation differs from the reference implementation in that it will prohibit the
+     * point at infinity (i.e., identity) from being decoded unless explicitly allowed.
+     *
      * @param b 32-byte string
+     * @param allowIdentity whether to allow the identity point to be decoded
      * @returns a point on the Ristretto255 curve
-     * @throws {Error} if data is not 32 bytes or if the data is invalid
+     * @throws {Error} if data is not 32 bytes or if the data is invalid (or if the point at
+     *      infinity is prohibited and encountered)
      */
-    static fromBytes(b: Uint8Array): Ristretto255 {
+    static fromBytes(b: Uint8Array, allowIdentity: boolean = false): Ristretto255 {
         // Step 1
         if (b.length !== Ristretto255.KEY_LENGTH) {
             throw new Error(`data must be exactly ${Ristretto255.KEY_LENGTH} bytes long`);
@@ -277,6 +282,11 @@ export class Ristretto255 {
         // Step 4
         if (!wasSquare || Ristretto255._isNegative(t) || y === 0n) {
             throw new Error("invalid encoding");
+        }
+
+        // Additionally prohibit identity if not allowed
+        if (!allowIdentity && x === 0n && y === 1n && t === 0n) {
+            throw new Error("identity point not allowed");
         }
 
         return new Ristretto255(x, y, 1n, t);

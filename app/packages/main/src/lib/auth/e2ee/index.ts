@@ -13,14 +13,14 @@ import { handshakeSRP } from "./srp";
 /**
  * Perform end-to-end encryption setup with the server.
  *
- * @param apiURL The HTTP(S) URL of the API server to query
- * @param username The username to log in as
- * @param password The password for logging in
- * @param startLoading A function to call to start any loading indicators
- * @param stopLoading A function to call when any loading indicators needs to be stopped
- * @param setLoadingState A function to call to update the loading state with a message
- * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to the E2EE data, or undefined if the E2EE setup fails
+ * @param apiURL the HTTP(S) URL of the API server to query
+ * @param username the username to log in as
+ * @param password the password for logging in
+ * @param startLoading a function to call to start any loading indicators
+ * @param stopLoading a function to call when any loading indicators needs to be stopped
+ * @param setLoadingState a function to call to update the loading state with a message
+ * @param showAlert a function to call if an error occurs, which takes a header and a message
+ * @returns a promise which resolves to the E2EE data, or undefined if the E2EE setup fails
  */
 async function e2ee(
     apiURL: string,
@@ -89,24 +89,36 @@ async function e2ee(
 
     // Perform handshake
     let handshakeData: HandshakeData | undefined;
-    switch (authProtocol) {
-        case AuthProtocol.SRP:
-            handshakeData = await handshakeSRP(
-                apiURL,
-                username,
-                password,
-                securityDetailsResponse.srpSalt!,
-                additionalInfo,
-                stopLoading,
-                setLoadingState,
-                showAlert,
-            );
-            break;
-        case AuthProtocol.OPAQUE_3DH:
-            handshakeData = await handshakeOPAQUE(apiURL, username, password, stopLoading, setLoadingState, showAlert);
-            break;
-        default:
-            throw new Error(`Unknown auth protocol: ${authProtocol}`);
+    try {
+        switch (authProtocol) {
+            case AuthProtocol.SRP:
+                handshakeData = await handshakeSRP(
+                    apiURL,
+                    username,
+                    password,
+                    securityDetailsResponse.srpSalt!,
+                    additionalInfo,
+                    stopLoading,
+                    setLoadingState,
+                    showAlert,
+                );
+                break;
+            case AuthProtocol.OPAQUE_3DH:
+                handshakeData = await handshakeOPAQUE(
+                    apiURL,
+                    username,
+                    password,
+                    stopLoading,
+                    setLoadingState,
+                    showAlert,
+                );
+                break;
+            default:
+                throw new Error(`Unknown auth protocol: ${authProtocol}`);
+        }
+    } catch (error) {
+        console.error(`End-to-end encryption setup failed: ${error}`);
+        return;
     }
 
     // Handle OPAQUE upgrade if needed
@@ -124,7 +136,7 @@ async function e2ee(
             showAlert,
         );
         if (!reregisterResponse.success) {
-            throw new Error("Failed to upgrade to OPAQUE");
+            console.warn("Failed to upgrade to OPAQUE... continuing with the rest of the process");
         }
     }
 

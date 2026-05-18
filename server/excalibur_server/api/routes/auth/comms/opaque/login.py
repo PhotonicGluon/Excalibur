@@ -10,7 +10,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
-from excalibur_server.src.auth.opaque.operation.base import OPAQUEClientAuthError
+from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
@@ -44,20 +44,26 @@ async def comms_endpoint(websocket: WebSocket):
 
         # Generate second key exchange message
         ke1 = OPAQUE.deserialize_ke1(ke1_raw)
-        ke2 = OPAQUE.generate_ke2(
-            server_identity=_get_server_identity(),
-            server_private_key=_get_private_key(),
-            server_public_key=_get_public_key(),
-            record=OPAQUE.deserialize_registration_record(user.registration_record),
-            credential_identifier=_get_credential_identifier(username),
-            oprf_seed=_get_oprf_seed(),
-            ke1=ke1,
-            client_identity=_get_client_identity(username),
-            # For testing only. These values are usually set to `None`
-            masking_nonce=_get_masking_nonce(),
-            nonce=_get_nonce(),
-            keyshare_seed=_get_keyshare_seed(),
-        )
+        try:
+            ke2 = OPAQUE.generate_ke2(
+                server_identity=_get_server_identity(),
+                server_private_key=_get_private_key(),
+                server_public_key=_get_public_key(),
+                record=OPAQUE.deserialize_registration_record(user.registration_record),
+                credential_identifier=_get_credential_identifier(username),
+                oprf_seed=_get_oprf_seed(),
+                ke1=ke1,
+                client_identity=_get_client_identity(username),
+                # For testing only. These values are usually set to `None`
+                masking_nonce=_get_masking_nonce(),
+                nonce=_get_nonce(),
+                keyshare_seed=_get_keyshare_seed(),
+            )
+        except OPAQUEAuthError:
+            await ws_manager.send(WebSocketMsg("Failed to generate KE2", "ERR"))
+            await ws_manager.close()
+            return
+
         await ws_manager.send(WebSocketMsg(ke2.serialize()))
 
         # Wait for client to send final key exchange message

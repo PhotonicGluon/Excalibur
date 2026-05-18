@@ -2,7 +2,7 @@ import { createDecipheriv } from "crypto";
 
 import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import { OPAQUEAuthError, OPAQUEClientAuthError } from "@lib/auth/opaque/client";
+import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
 import { b64decode } from "@lib/util";
 
 import { HandshakeData } from "./structures";
@@ -22,13 +22,14 @@ interface HandshakeState {
 /**
  * Perform OPAQUE-3DH protocol handshake.
  *
- * @param apiURL The HTTP(S) URL of the API server to query
- * @param username The username to log in as
- * @param password The password for logging in
- * @param stopLoading A function to call when any loading indicators needs to be stopped
- * @param setLoadingState A function to call to update the loading state with a message
- * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to the handshake data, or undefined if the handshake fails
+ * @param apiURL the HTTP(S) URL of the API server to query
+ * @param username the username to log in as
+ * @param password the password for logging in
+ * @param stopLoading a function to call when any loading indicators needs to be stopped
+ * @param setLoadingState a function to call to update the loading state with a message
+ * @param showAlert a function to call if an error occurs, which takes a header and a message
+ * @throws if the handshake fails
+ * @returns a promise which resolves to the handshake data
  */
 export async function handshakeOPAQUE(
     apiURL: string,
@@ -95,28 +96,28 @@ export async function handshakeOPAQUE(
                         }
 
                         const opaqueError = e as OPAQUEAuthError;
-                        if (opaqueError instanceof OPAQUEClientAuthError) {
-                            // Likely due to incorrect client credentials
+                        if (opaqueError instanceof OPAQUEServerAuthError) {
+                            // Failed to authenticate server
                             ws.close();
                             stopLoading?.();
                             showAlert?.(
-                                "Authentication Failed",
-                                "Invalid username or password",
-                                "Please check your credentials and try again",
+                                "Server Verification Failed",
+                                "Client failed to verify server",
+                                "Server may be compromised",
                             );
-                            reject("Invalid username or password");
+                            reject("Server verification failed");
                             return;
                         }
 
-                        // Failed to authenticate server
+                        // Likely due to incorrect client credentials
                         ws.close();
                         stopLoading?.();
                         showAlert?.(
-                            "Server Verification Failed",
-                            "Client failed to verify server",
-                            "Server may be compromised",
+                            "Authentication Failed",
+                            "Invalid username or password",
+                            "Please check your credentials and try again",
                         );
-                        reject("Server verification failed");
+                        reject("Invalid username or password");
                         return;
                     }
 

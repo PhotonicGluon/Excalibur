@@ -7,7 +7,7 @@ import { Ristretto255 } from "./ristretto255";
 
 /**
  * Base class for an Oblivious Pseudo-Random Function (OPRF) implementation using the Ristretto255
- * curve based on [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+ * curve based on [RFC9497](https://datatracker.ietf.org/doc/html/rfc9497).
  */
 abstract class BaseOPRFRistretto {
     abstract hashfunc(msg: Uint8Array): { digest(): Uint8Array };
@@ -190,7 +190,7 @@ abstract class BaseOPRFRistretto {
 
 /**
  * The `OPRF(ristretto255, SHA-512)` implementation based on
- * [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+ * [RFC9497](https://datatracker.ietf.org/doc/html/rfc9497).
  */
 class OPRFRistrettoSHA512 extends BaseOPRFRistretto {
     hashfunc(msg: Uint8Array): { digest(): Uint8Array } {

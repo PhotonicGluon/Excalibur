@@ -49,9 +49,9 @@ class TestRename:
         db_session.commit()
 
         # Rename the item
-        response = auth_client_db.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="new-name")
+        response = auth_client_db.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="new-name.exef")
         assert response.status_code == 200
-        assert get_item(file.id).name == "new-name"
+        assert get_item(file.id).name == "new-name.exef"
 
     def test_rename_with_encrypted_path(
         self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem
@@ -77,7 +77,7 @@ class TestRename:
             "X-Content-Type": "text/plain",
         }
         path_encrypted = ExEF(b"one demo 16B key").encrypt(b"rename-folder/r-file-enc")
-        destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"new-name-enc")
+        destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"new-name-enc.exef")
 
         # Make request
         response = auth_client_db.post(
@@ -87,7 +87,7 @@ class TestRename:
         )
 
         assert response.status_code == 200
-        assert get_item(file.id).name == "new-name-enc"
+        assert get_item(file.id).name == "new-name-enc.exef"
 
     def test_rename_nested_item(
         self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem
@@ -195,7 +195,7 @@ class TestRename:
         existing_file = FSItem(
             parent_id=rename_folder.id,
             root_id=root_id,
-            name="already-existent",
+            name="already-existent.exef",
             is_folder=False,
         )
         db_session.add(file)
@@ -203,9 +203,25 @@ class TestRename:
         db_session.commit()
 
         # Try to rename file to existing name
-        response = auth_client_db.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="already-existent")
+        response = auth_client_db.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="already-existent.exef")
         assert response.status_code == 409  # Item already exists
 
     def test_rename_root(self, auth_client_db: TestClient):
         response = auth_client_db.post("/api/files/rename/.", json="new-name")
         assert response.status_code == 412  # Cannot rename root
+
+    def test_rename_file_without_exef_extension(
+        self, auth_client_db: TestClient, test_user, db_session: Session, rename_folder: FSItem
+    ):
+        # Create test file
+        file = FSItem(
+            parent_id=rename_folder.id,
+            root_id=test_user["root_id"],
+            name="r-file-no-exef",
+            is_folder=False,
+        )
+        db_session.add(file)
+        db_session.commit()
+
+        response = auth_client_db.post("/api/files/rename/rename-folder/r-file-no-exef", json="no-exef")
+        assert response.status_code == 417

@@ -38,8 +38,8 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
             cy.visit("/login");
 
             // Login using form
-            cy.get("#username-input > .input-wrapper").type(username);
-            cy.get("#password-input > .input-wrapper").type(password);
+            cy.get("#username-input").type("{selectAll}" + username);
+            cy.get("#password-input").type("{selectAll}" + password);
             cy.get("#login-button").click();
 
             cy.url().should("include", "/files");

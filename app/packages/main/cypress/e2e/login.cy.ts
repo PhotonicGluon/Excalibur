@@ -24,6 +24,33 @@ describe("Handle Auth Process", () => {
         cy.visit("/files/");
         cy.url().should("not.include", "/login");
     });
+
+    describe("Handle Incorrect Credentials", () => {
+        beforeEach(() => {
+            cy.onboard(Cypress.expose("serverURL"));
+            cy.visit("/login");
+        });
+
+        it("should show error if user does not exist", () => {
+            cy.get("#username-input").type("{selectAll}" + "non-existent-user");
+            cy.get("#password-input").type("{selectAll}" + "Password");
+            cy.get("#login-button").click();
+
+            cy.url().should("include", "/login"); // Did not move into files page
+            cy.get(".alert-wrapper").should("be.visible");
+            cy.get(".alert-title").should("contain.text", "User Not Found");
+        });
+
+        it("should show error if password is incorrect", () => {
+            cy.get("#username-input").type("{selectAll}" + "test-user");
+            cy.get("#password-input").type("{selectAll}" + "WrongPassword");
+            cy.get("#login-button").click();
+
+            cy.url().should("include", "/login"); // Did not move into files page
+            cy.get(".alert-wrapper").should("be.visible");
+            cy.get(".alert-title").should("contain.text", "Authentication Failed");
+        });
+    });
 });
 
 describe("Check All Inputs Filled", () => {

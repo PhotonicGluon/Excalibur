@@ -5,8 +5,8 @@ from Crypto.Random import get_random_bytes
 
 class Ristretto255:
     """
-    Implementation of the Ristretto255 group from [RFC9496](https://www.rfc-editor.org/rfc/rfc9496),
-    section 4.
+    Implementation of the Ristretto255 group from
+    [RFC9496](https://datatracker.ietf.org/doc/html/rfc9496), section 4.
     """
 
     P = 2**255 - 19  # See section 2
@@ -104,9 +104,9 @@ class Ristretto255:
     def _is_negative(cls, e: int) -> bool:
         """
         Checks if an element is "negative" according to section 3.1 of
-        [RFC8032](https://www.rfc-editor.org/rfc/inline-errata/rfc8032.html). That is,
-        this function returns `True` if the least nonnegative integer representing `e` is odd,
-        and `False` if it is even.
+        [RFC8032](https://datatracker.ietf.org/doc/html/inline-errata/rfc8032.html). That is, this
+        function returns `True` if the least nonnegative integer representing `e` is odd, and
+        `False` if it is even.
         """
 
         return ((e % cls.P) & 1) == 1
@@ -228,13 +228,18 @@ class Ristretto255:
         return pow(scalar, -1, cls.ORDER)
 
     @classmethod
-    def from_bytes(cls, b: bytes) -> Self:
+    def from_bytes(cls, b: bytes, allow_identity: bool = False) -> Self:
         """
         Decodes a 32-byte string as a field element, following section 4.3.1.
 
+        This implementation differs from the reference implementation in that it will prohibit the
+        point at infinity (i.e., identity) from being decoded unless explicitly allowed.
+
         :param b: 32-byte string
+        :param allow_identity: whether to allow the identity point to be decoded
         :returns: a point on the Ristretto255 curve
-        :raises ValueError: if data is not 32 bytes or if the data is invalid
+        :raises ValueError: if data is not 32 bytes or if the data is invalid (or if the point at
+            infinity is prohibited and encountered)
         """
 
         # Step 1
@@ -268,6 +273,10 @@ class Ristretto255:
         # Step 4
         if not was_square or cls._is_negative(t) or y == 0:
             raise ValueError("invalid encoding")
+
+        # Additionally prohibit identity if not allowed
+        if not allow_identity and x == 0 and y == 1 and t == 0:
+            raise ValueError("identity point not allowed")
 
         return cls(x, y, 1, t)
 

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, WebSocket, WebSocketDisconnect, WebSocketException
+from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
@@ -17,10 +17,7 @@ async def directory_changes_listener_endpoint(
     Listens for directory changes and sends updates to the client.
     """
 
-    try:
-        await file_update_manager.connect(credentials, websocket, encrypted)
-    except ValueError:
-        raise WebSocketException(code=4000, reason="Duplicate connection")
+    await file_update_manager.connect(credentials, websocket, encrypted)
 
     try:
         # Keep the connection alive
@@ -29,4 +26,4 @@ async def directory_changes_listener_endpoint(
     except WebSocketDisconnect:
         pass
     finally:
-        file_update_manager.disconnect(credentials)
+        await file_update_manager.disconnect(credentials)

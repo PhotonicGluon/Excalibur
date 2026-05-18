@@ -33,13 +33,21 @@ def update_app() -> dict[str, tuple[str, str]]:
 
     # Run the `pnpm update` command
     with Status("Updating application dependencies"):
-        subprocess.run(
+        result = subprocess.run(
             APP_DEP_UPDATE_COMMAND,
             shell=True,
             capture_output=True,
-            text=True,
-            check=True,
+            text=True
         )
+        try:
+            result.check_returncode()
+        except subprocess.CalledProcessError as e:
+            print(f"Error updating application dependencies: {e}")
+            print("===== STDOUT =====")
+            print(e.stdout)
+            print("===== STDERR =====")
+            print(e.stderr)
+            raise
 
     # Get new `package.json` contents
     new_package_json_contents = {}

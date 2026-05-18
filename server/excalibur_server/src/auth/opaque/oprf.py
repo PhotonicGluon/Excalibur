@@ -10,7 +10,7 @@ from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 class BaseOPRFRistretto(ABC):
     """
     Base class for an Oblivious Pseudo-Random Function (OPRF) implementation using the Ristretto255
-    curve based on [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+    curve based on [RFC9497](https://datatracker.ietf.org/doc/html/rfc9497).
     """
 
     # To be overridden by subclasses
@@ -193,7 +193,7 @@ class BaseOPRFRistretto(ABC):
 class OPRFRistrettoSHA512(BaseOPRFRistretto):
     """
     The `OPRF(ristretto255, SHA-512)` implementation based on
-    [RFC9497](https://www.rfc-editor.org/rfc/rfc9497).
+    [RFC9497](https://datatracker.ietf.org/doc/html/rfc9497).
     """
 
     hashfunc = sha512

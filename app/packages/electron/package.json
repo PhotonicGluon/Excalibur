@@ -18,10 +18,10 @@
     },
     "devDependencies": {
         "@electron-toolkit/tsconfig": "^2.0.0",
-        "@tailwindcss/vite": "^4.2.4",
+        "@tailwindcss/vite": "^4.3.0",
         "@vitejs/plugin-react": "^5.2.0",
         "dmg-builder": "^26.8.1",
-        "electron": "^41.3.0",
+        "electron": "^41.5.1",
         "electron-builder": "^26.8.1",
         "electron-builder-squirrel-windows": "^26.8.1",
         "electron-vite": "^5.0.0",

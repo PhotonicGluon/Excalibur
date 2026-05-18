@@ -15,7 +15,7 @@ ion-fab-button::part(native) {
 }
 
 ion-toggle {
-    @apply contain-none [--handle-height:calc(var(--spacing)*4)] [--handle-max-height:auto] [--handle-spacing:var(--spacing)] [--handle-width:calc(var(--spacing)*4)];
+    @apply contain-none [--handle-height:--spacing(4)] [--handle-max-height:auto] [--handle-spacing:var(--spacing)] [--handle-width:--spacing(4)];
 }
 
 ion-toggle::part(track) {
@@ -31,7 +31,7 @@ ion-toggle.toggle-checked::part(track) {
 }
 
 ion-toggle.toggle-checked::part(handle) {
-    @apply bg-(--color-white) [--handle-height:calc(var(--spacing)*5)] [--handle-spacing:calc(var(--spacing)*1.5)] [--handle-width:calc(var(--spacing)*5)];
+    @apply bg-(--color-white) [--handle-height:--spacing(5)] [--handle-spacing:--spacing(1.5)] [--handle-width:--spacing(5)];
 }
 
 ion-searchbar.md {

@@ -11,15 +11,15 @@ beforeEach(() => {
     cy.get("#directory-list-stats ion-icon").should("have.attr", "aria-label", "Listener connected");
 });
 
-describe("Upload and Download Operations", () => {
-    afterEach(function () {
-        // Stop other tests if any test fails
-        if (this.currentTest.state === "failed") {
-            Cypress.stop();
-            return;
-        }
-    });
+afterEach(function () {
+    // Stop other tests if any test fails
+    if (this.currentTest.state === "failed") {
+        Cypress.stop();
+        return;
+    }
+});
 
+describe("Upload and Download Operations", () => {
     describe("Single-file Upload and Download", () => {
         it("should handle small file", () => {
             createFile(SMALL_SIZE);
@@ -42,14 +42,6 @@ describe("Upload and Download Operations", () => {
 });
 
 describe("Rename Operations", () => {
-    afterEach(function () {
-        // Stop other tests if any test fails
-        if (this.currentTest.state === "failed") {
-            Cypress.stop();
-            return;
-        }
-    });
-
     it("should rename item", () => {
         // Create test item
         const folderName = createFolder();
@@ -65,8 +57,10 @@ describe("Rename Operations", () => {
 
         // Enter test folder name
         const newName = `New Name ${Date.now()}`;
-        cy.get(".alert-input-wrapper").click().wait(100); // For the focus to appear
-        cy.get(".alert-input-wrapper").type("{selectAll}" + newName);
+        cy.get(".alert-input-wrapper").find("input").click().wait(100); // For the focus to appear
+        cy.get(".alert-input-wrapper")
+            .find("input")
+            .type("{selectAll}" + newName);
         cy.get(".alert-button-group").contains("Rename").click();
         cy.get(".alert-head").should("not.exist");
 
@@ -76,14 +70,6 @@ describe("Rename Operations", () => {
 });
 
 describe("Deletion Operations", () => {
-    afterEach(function () {
-        // Stop other tests if any test fails
-        if (this.currentTest.state === "failed") {
-            Cypress.stop();
-            return;
-        }
-    });
-
     it("should delete file", () => {
         // Create file
         const [fileName] = createFile(SMALL_SIZE);
