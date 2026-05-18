@@ -48,3 +48,44 @@ jobs:
             - name: Run E2E Test
               working-directory: ./
               run: pnpm run test:e2e
+    test-e2e-prod:
+        name: Test End-to-End (Production)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v5
+              with:
+                  version: 10
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  cache: "pnpm"
+                  cache-dependency-path: pnpm-lock.yaml
+
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version-file: "./server/pyproject.toml"
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v7
+              with:
+                  enable-cache: true
+                  version: "0.10.9"
+                  cache-dependency-glob: "server/uv.lock"
+
+            - name: Install App Dependencies
+              working-directory: ./app
+              run: pnpm install --filter !excalibur-electron
+
+            - name: Install E2E Testing Dependencies
+              working-directory: ./
+              run: pnpm i
+
+            - name: Run E2E Test
+              working-directory: ./
+              run: pnpm run test:e2e-prod
