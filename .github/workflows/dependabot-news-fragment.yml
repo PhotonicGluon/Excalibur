@@ -1,0 +1,48 @@
+name: Create Dependabot News Fragments
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write # Needed to push the news fragment commit back to the PR
+
+jobs:
+  generate-news-fragment:
+    runs-on: ubuntu-latest
+    # We only want this action to run for Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # Checkout the Dependabot PR branch so we can commit directly to it
+          ref: ${{ github.head_ref }}
+
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Generate News Fragment
+        run: python3 .github/scripts/generate_news_fragment.py
+        env:
+          DEP_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+          PREV_VERSION: ${{ steps.dependabot-metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
+          DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
+
+      - name: Commit and push fragment
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stage potentially created changelog files
+          git add "app/changelog.d/" "server/changelog.d/"
+          
+          # Only commit and push if a new fragment was generated
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-generate news fragments for dependency update"
+            git push
+          fi
