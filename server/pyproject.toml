@@ -22,7 +22,7 @@ dependencies = [
     "rapidfuzz>=3.14.5",
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
-    "sqlalchemy<=2.0.44",
+    "sqlalchemy<=2.0.49",
     "sqlmodel>=0.0.37",
     "toml>=0.10.2",
     "tomlkit>=0.15.0",
