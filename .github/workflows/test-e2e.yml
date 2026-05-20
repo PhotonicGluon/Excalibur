@@ -5,13 +5,11 @@ on:
         branches:
             - main
             - stable
-        paths:
-            - app/**
-            - "!app/changelog/**"
-            - "!app/changelog.d/**"
-            - server/**
-            - "!server/changelog/**"
-            - "!server/changelog.d/**"
+        paths-ignore:
+            - "app/changelog/**"
+            - "app/changelog.d/**"
+            - "server/changelog/**"
+            - "server/changelog.d/**"
     workflow_dispatch:
 
 jobs:
