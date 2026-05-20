@@ -4,6 +4,7 @@ on:
     pull_request:
         branches:
             - main
+            - stable
     workflow_dispatch:
 
 jobs:
