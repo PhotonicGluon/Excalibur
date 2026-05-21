@@ -10,9 +10,13 @@ updates:
     target-branch: "stable"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 5
 
   - package-ecosystem: "uv"
     directory: "/server"
     target-branch: "stable"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 5
