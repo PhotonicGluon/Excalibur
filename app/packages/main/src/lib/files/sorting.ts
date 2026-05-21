@@ -28,7 +28,7 @@ type ComparisonResult = 0 | -1 | 1;
 // Sort functions
 function sortByName(a: FileLike, b: FileLike): ComparisonResult {
     // Use natural sort for names
-    return naturalCompare(a.name, b.name);
+    return naturalCompare(a.name.toLowerCase(), b.name.toLowerCase());
 }
 
 function sortBySize(a: FileLike, b: FileLike): ComparisonResult {
