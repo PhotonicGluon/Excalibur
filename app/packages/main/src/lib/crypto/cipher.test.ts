@@ -13,8 +13,7 @@ const TAG = Buffer.from("c7b4fb22bc5182d56b357aa48f09e5cf", "hex");
 describe("GCMCipher", () => {
     it("should encrypt", () => {
         const cipher = new GCMCipher("aes-128-gcm", KEY, NONCE);
-        const encrypted = cipher.update(PLAINTEXT);
-        cipher.final();
+        const encrypted = Buffer.concat([cipher.update(PLAINTEXT), cipher.final()]);
         const authTag = cipher.getAuthTag();
 
         expect(encrypted).toEqual(CIPHERTEXT);
@@ -24,11 +23,10 @@ describe("GCMCipher", () => {
     it("should encrypt in chunks", () => {
         const cipher = new GCMCipher("aes-128-gcm", KEY, NONCE);
         const chunks = [PLAINTEXT.subarray(0, 5), PLAINTEXT.subarray(5, 10), PLAINTEXT.subarray(10)];
-        const encrypted = chunks.map((chunk) => cipher.update(chunk));
-        cipher.final();
+        const encrypted = Buffer.concat(chunks.map((chunk) => cipher.update(chunk)).concat(cipher.final()));
         const authTag = cipher.getAuthTag();
 
-        expect(Buffer.concat(encrypted)).toEqual(CIPHERTEXT);
+        expect(encrypted).toEqual(CIPHERTEXT);
         expect(authTag).toEqual(TAG);
     });
 });

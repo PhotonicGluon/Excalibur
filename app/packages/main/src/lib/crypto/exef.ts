@@ -276,8 +276,8 @@ export default class ExEF {
                         controller.enqueue(cipher.final());
                         break;
                     }
-                    const encBlock = cipher.update(Buffer.from(value));
-                    controller.enqueue(encBlock);
+                    const encBlock = cipher.update(value);
+                    controller.enqueue(Buffer.from(encBlock));
                 }
 
                 // Yield footer
