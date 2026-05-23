@@ -1,6 +1,6 @@
 import { CipherCCM, DecipherCCM, createCipheriv, createDecipheriv, createHmac, randomBytes } from "crypto";
 
-import HKDF from "@lib/auth/hkdf";
+import HKDF from "@lib/crypto/hkdf";
 import { chunkStream } from "@lib/util";
 
 const EXEF_VERSION = 3;

@@ -23,8 +23,8 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import generateKey from "@lib/auth/keygen";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
+import generateKey from "@lib/crypto/keygen";
 import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
 import { AdditionalUserInfo } from "@lib/users/structures";
 

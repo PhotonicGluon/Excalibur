@@ -1,6 +1,6 @@
 import { pbkdf2 } from "crypto";
 
-import HKDF from "@lib/auth/hkdf";
+import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
 
 const DIGEST_ALGORITHM = "sha256";

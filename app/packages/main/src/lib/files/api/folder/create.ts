@@ -1,4 +1,4 @@
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { popFetch } from "@lib/network";
 import { b64encodeURLSafe } from "@lib/util";
 

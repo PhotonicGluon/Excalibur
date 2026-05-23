@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import HKDF from "@lib/auth/hkdf";
+import HKDF from "@lib/crypto/hkdf";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import { checkAPIUrl, getServerInfo } from "@lib/network";

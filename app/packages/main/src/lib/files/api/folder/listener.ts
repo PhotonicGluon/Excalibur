@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 
 import { generatePoPHeader } from "@lib/auth/pop";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { getURLEncodedPath, quotePlus } from "@lib/url";
 import { sleep } from "@lib/util";
 

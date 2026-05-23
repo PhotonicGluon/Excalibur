@@ -2,7 +2,7 @@ import { AlertButton } from "@ionic/core";
 
 import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
-import generateKey from "@lib/auth/keygen";
+import generateKey from "@lib/crypto/keygen";
 import { getSecurityDetails } from "@lib/users/api";
 
 import { handshakeOPAQUE } from "./opaque";

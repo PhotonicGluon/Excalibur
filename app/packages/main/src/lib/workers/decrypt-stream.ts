@@ -1,6 +1,6 @@
 import { expose } from "comlink";
 
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 
 const decryptionProcessor = {
     /**

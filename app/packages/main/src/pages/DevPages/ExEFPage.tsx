@@ -21,7 +21,7 @@ import {
     IonTitle,
 } from "@ionic/react";
 
-import ExEF, { KeyStrength } from "@lib/exef";
+import ExEF, { KeyStrength } from "@lib/crypto/exef";
 import { b64decodeURLSafe, b64encodeURLSafe } from "@lib/util";
 
 const ExEFPage: React.FC = () => {

@@ -1,6 +1,6 @@
 import { parseResponse as _parseResponse, generateResponse } from "@lib/auth/e2ee/response-handling";
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 
 enum RegistrationStage {
     SENT_REGISTRATION_REQUEST,
