@@ -1,4 +1,4 @@
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { File } from "@lib/files/structures";
 import { popFetch } from "@lib/network";
 

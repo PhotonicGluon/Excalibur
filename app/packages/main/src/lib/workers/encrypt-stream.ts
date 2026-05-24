@@ -1,6 +1,6 @@
 import { expose } from "comlink";
 
-import ExEF, { KeyStrength } from "@lib/exef";
+import ExEF, { KeyStrength } from "@lib/crypto/exef";
 
 const encryptionProcessor = {
     /** Flag to track cancellation */

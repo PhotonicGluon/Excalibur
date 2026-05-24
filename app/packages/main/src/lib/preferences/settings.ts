@@ -1,4 +1,4 @@
-import { KeyStrength } from "@lib/exef";
+import { KeyStrength } from "@lib/crypto/exef";
 
 // Types
 export type Theme = "light" | "dark" | "system";

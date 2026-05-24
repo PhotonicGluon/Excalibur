@@ -1,6 +1,5 @@
 import { randomBytes } from "crypto";
 
-import HKDF from "@lib/auth/hkdf";
 import {
     AuthRequest,
     AuthResponse,
@@ -15,6 +14,7 @@ import {
     RegistrationRequest,
     RegistrationResponse,
 } from "@lib/auth/opaque/structures";
+import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";

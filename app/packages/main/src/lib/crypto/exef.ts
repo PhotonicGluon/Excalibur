@@ -1,13 +1,13 @@
-import { CipherCCM, DecipherCCM, createCipheriv, createDecipheriv, createHmac, randomBytes } from "crypto";
+import { createHmac, randomBytes } from "crypto";
 
-import HKDF from "@lib/auth/hkdf";
+import { GCMAlgorithm, GCMCipher, GCMDecipher } from "@lib/crypto/cipher";
+import HKDF from "@lib/crypto/hkdf";
 import { chunkStream } from "@lib/util";
 
 const EXEF_VERSION = 3;
 
 type CipherID = 1 | 2 | 3;
 export type KeyStrength = 128 | 192 | 256;
-type Algorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
 
 /**
  * Converts a cipher ID to a key strength
@@ -153,7 +153,7 @@ export default class ExEF {
     nonce: Buffer;
 
     /** Internal cipher used for encryption or decryption */
-    private readonly _cipher: CipherCCM | DecipherCCM;
+    private readonly _cipher: GCMCipher | GCMDecipher;
     private readonly _cryptoKey: Buffer;
     private readonly _macKey: Buffer;
 
@@ -188,16 +188,16 @@ export default class ExEF {
         this._macKey = ExEF._genMacKey(key, nonce, strength / 8);
 
         if (mode === "encrypt") {
-            this._cipher = createCipheriv(this.alg, this._cryptoKey, this.nonce);
+            this._cipher = new GCMCipher(this.alg, this._cryptoKey, this.nonce);
         } else {
-            this._cipher = createDecipheriv(this.alg, this._cryptoKey, this.nonce);
+            this._cipher = new GCMDecipher(this.alg, this._cryptoKey, this.nonce);
         }
     }
 
     // Properties
     /** The encryption algorithm used in the ExEF format based on the key strength */
-    get alg(): Algorithm {
-        return `aes-${this.strength}-gcm` as Algorithm;
+    get alg(): GCMAlgorithm {
+        return `aes-${this.strength}-gcm` as GCMAlgorithm;
     }
 
     // Helper methods
@@ -237,11 +237,11 @@ export default class ExEF {
      * @returns The ExEF bytes
      */
     encrypt(data: Buffer): Buffer {
-        const cipher = this._cipher as CipherCCM;
+        const cipher = this._cipher as GCMCipher;
 
         // Encrypt
         const ciphertext = Buffer.concat([cipher.update(data), cipher.final()]);
-        const tag = cipher.getAuthTag();
+        const tag = Buffer.from(cipher.getAuthTag());
 
         // Form the output
         const headerMAC = this._getHeaderMAC(ciphertext.length);
@@ -261,7 +261,7 @@ export default class ExEF {
     encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize: number): ReadableStream<Buffer> {
         const headerMAC = this._getHeaderMAC(ptLen);
         const header = new ExEFHeader(this.strength, this.nonce, headerMAC, ptLen);
-        const cipher = this._cipher as CipherCCM;
+        const cipher = this._cipher as GCMCipher;
         const chunkingStream = chunkStream(ptStream, chunkSize);
         return new ReadableStream<Buffer>({
             async start(controller) {
@@ -273,15 +273,15 @@ export default class ExEF {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {
-                        controller.enqueue(cipher.final());
+                        controller.enqueue(Buffer.from(cipher.final()));
                         break;
                     }
                     const encBlock = cipher.update(value);
-                    controller.enqueue(encBlock);
+                    controller.enqueue(Buffer.from(encBlock));
                 }
 
                 // Yield footer
-                const tag = cipher.getAuthTag();
+                const tag = Buffer.from(cipher.getAuthTag());
                 const footer = new ExEFFooter(tag);
                 controller.enqueue(footer.toBuffer());
 
@@ -315,7 +315,7 @@ export default class ExEF {
         const ciphertext = exefData.subarray(ExEFHeader.headerSize, ExEFHeader.headerSize + header.ctLen);
 
         const instance = new ExEF(key, header.nonce, "decrypt", header.strength);
-        const cipher = instance._cipher as DecipherCCM;
+        const cipher = instance._cipher as GCMDecipher;
         cipher.setAuthTag(footer.tag);
 
         try {
@@ -369,7 +369,7 @@ export default class ExEF {
 
                 // Set up cipher
                 const instance = new ExEF(key, header.nonce, "decrypt", header.strength);
-                const cipher = instance._cipher as DecipherCCM;
+                const cipher = instance._cipher as GCMDecipher;
 
                 // Decrypt the ciphertext
                 let remainingLen = header.ctLen;

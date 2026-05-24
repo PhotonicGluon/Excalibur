@@ -25,7 +25,7 @@ import {
 import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";

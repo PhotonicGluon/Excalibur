@@ -1,5 +1,5 @@
 import { AuthProtocol } from "@lib/auth/enums";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { popFetch, timedFetch } from "@lib/network";
 import { b64decode } from "@lib/util";
 
