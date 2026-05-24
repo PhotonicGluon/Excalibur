@@ -20,6 +20,7 @@ const buffers = [
 ];
 
 const CryptoBenchPage: React.FC = () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const states = buffers.map(() => React.useState<string>("Waiting for results..."));
 
     async function mark(name: string, fn: () => void, setResults: React.Dispatch<React.SetStateAction<string>>) {
