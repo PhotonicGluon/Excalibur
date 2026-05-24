@@ -33,16 +33,17 @@ jobs:
           NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
           DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
 
-      - name: Commit and push fragment
+      - name: Stage changelog files
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Stage potentially created changelog files
-          git add "app/changelog.d/" "server/changelog.d/"
-          
-          # Only commit and push if a new fragment was generated
-          if ! git diff --staged --quiet; then
-            git commit -m "Auto-generate news fragments for dependency update"
-            git push
-          fi
+          git add 
+  
+      - name: Sign and commit
+        uses: planetscale/ghcommit-action@v0.2.20
+        with:
+          commit_message: "Auto-generate news fragment(s) for dependency update"
+          repo: ${{ github.repository }}
+          branch: ${{ github.head_ref || github.ref_name }}
+          empty: false
+          file_pattern: "app/changelog.d/* server/changelog.d/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
