@@ -6,10 +6,10 @@ on:
             - main
             - stable
         paths-ignore:
-            - "app/changelog/**"
-            - "app/changelog.d/**"
-            - "server/changelog/**"
-            - "server/changelog.d/**"
+            - "app/changelog/*"
+            - "app/changelog.d/*"
+            - "server/changelog/*"
+            - "server/changelog.d/*"
     workflow_dispatch:
 
 jobs:
