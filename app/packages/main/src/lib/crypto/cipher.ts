@@ -32,8 +32,7 @@
 
 import { GHASH, ghash } from "@noble/ciphers/_polyval.js";
 import { unsafe as nobleAES } from "@noble/ciphers/aes.js";
-import { clean, copyBytes, isAligned32, u64Lengths } from "@noble/ciphers/utils.js";
-import { createDecipheriv, DecipherCCM } from "node:crypto";
+import { clean, copyBytes, equalBytes, isAligned32, u64Lengths } from "@noble/ciphers/utils.js";
 
 const BLOCK_SIZE = 16;
 const EMPTY_BLOCK = new Uint8Array(BLOCK_SIZE);
@@ -57,6 +56,15 @@ abstract class BaseGCMCipher {
     /** Tag mask for authentication */
     protected readonly tagMask: Uint8Array;
 
+    /** Buffer for partial blocks */
+    protected partialBlocks: Uint8Array = new Uint8Array(0);
+    /** Total length of data processed so far */
+    protected length: number = 0;
+    /** GHASH instance for authentication */
+    protected readonly hasher: GHASH;
+    /** GHASH authentication tag */
+    protected tag: Uint8Array | null = null;
+
     /**
      * Creates a new BaseGCMCipher instance.
      *
@@ -78,14 +86,11 @@ abstract class BaseGCMCipher {
         this.authKey = authKey;
         this.counter = counter;
         this.tagMask = tagMask;
+
+        this.hasher = ghash.create(this.authKey);
     }
 
-    /** Updates the cipher with `data` */
-    abstract update(data: Uint8Array): Uint8Array;
-
-    /** Finalizes the cipher */
-    abstract final(): Uint8Array;
-
+    // Helper methods
     /**
      * Derives the keys used in GCM.
      *
@@ -110,90 +115,91 @@ abstract class BaseGCMCipher {
         return { xk, authKey, counter, tagMask };
         // ---  END  ---
     }
-}
-
-export class GCMCipher extends BaseGCMCipher {
-    /** Buffer for partial blocks */
-    private _partialBlocks: Uint8Array = new Uint8Array(0);
-    /** Total length of data processed so far */
-    private _length: number = 0;
-    /** GHASH instance for authentication */
-    private readonly _hasher: GHASH;
-    /** GHASH authentication tag */
-    private _tag: Uint8Array | null = null;
-
-    constructor(alg: GCMAlgorithm, key: Buffer, nonce: Buffer) {
-        super(alg, key, nonce);
-        this._hasher = ghash.create(this.authKey);
-    }
 
     /**
-     * Encrypts the given data using AES-CTR and updates the GHASH authentication tag
+     * Processes the given data using AES-CTR.
      *
-     * @param data the data to encrypt
-     * @returns the encrypted data
+     * @param data the data to process
+     * @returns the processed data
      */
-    private _doCTR(data: Uint8Array) {
-        const ciphertext = new Uint8Array(data.length);
-        let pt: Uint8Array = data;
+    protected doCTR(data: Uint8Array): Uint8Array<ArrayBuffer> {
+        const output = new Uint8Array(data.length);
         const toClean: Uint8Array[] = [];
 
-        // Make sure plaintext is aligned to 4-byte offset
-        if (!isAligned32(pt)) {
-            pt = copyBytes(pt);
-            toClean.push(pt);
+        let input: Uint8Array = data;
+        if (!isAligned32(input)) {
+            input = copyBytes(input);
+            toClean.push(input);
         }
+        this.length += input.length;
 
-        // Encrypt the aligned blocks and update tag
-        nobleAES.ctr32(this.xk, false, this.counter, pt, ciphertext);
-        this._hasher.update(ciphertext);
-        this._length += data.length;
-
-        // Clean up and return
+        nobleAES.ctr32(this.xk, false, this.counter, input, output);
         if (toClean.length > 0) {
             clean(...toClean);
         }
 
-        return ciphertext;
+        return output;
     }
 
+    // Abstract methods
+    /**
+     * Updates the cipher with `data`.
+     *
+     * @param data the data to update the cipher with
+     * @returns processed data
+     */
+    abstract update(data: Uint8Array): Uint8Array;
+
+    /**
+     * Finalizes the cipher.
+     *
+     * @returns the final processed data
+     */
+    abstract final(): Uint8Array;
+}
+
+export class GCMCipher extends BaseGCMCipher {
     update(plaintext: Uint8Array): Uint8Array {
         // Concatenate any leftover buffer with the new plaintext
-        const data = new Uint8Array(this._partialBlocks.length + plaintext.length);
-        data.set(this._partialBlocks, 0);
-        data.set(plaintext, this._partialBlocks.length);
+        const data = new Uint8Array(this.partialBlocks.length + plaintext.length);
+        data.set(this.partialBlocks, 0);
+        data.set(plaintext, this.partialBlocks.length);
 
         // Determine the number of complete 16-byte blocks
         const blocksLen = Math.floor(data.length / 16) * 16;
         const blocks = data.subarray(0, blocksLen);
 
         // Keep the remainder for the next `update()` or `final()`
-        this._partialBlocks = data.subarray(blocksLen);
+        this.partialBlocks = data.subarray(blocksLen);
 
         if (blocksLen === 0) {
             return new Uint8Array(0);
         }
 
-        return this._doCTR(blocks);
+        // Perform CTR
+        const ciphertext = this.doCTR(blocks);
+        this.hasher.update(ciphertext);
+        return ciphertext;
     }
 
     final(): Uint8Array {
         // Encrypt any remaining bytes (the final partial block)
         let finalCiphertext = new Uint8Array(0);
-        if (this._partialBlocks.length > 0) {
-            finalCiphertext = this._doCTR(this._partialBlocks);
+        if (this.partialBlocks.length > 0) {
+            finalCiphertext = this.doCTR(this.partialBlocks);
+            this.hasher.update(finalCiphertext);
         }
 
         // Add the final block length
-        const num = u64Lengths(8 * this._length, 0, false);
-        this._hasher.update(num);
+        const num = u64Lengths(8 * this.length, 0, false);
+        this.hasher.update(num);
 
         // Mask the tag
-        const tag = this._hasher.digest();
+        const tag = this.hasher.digest();
         for (let i = 0; i < this.tagMask.length; i++) {
             tag[i] ^= this.tagMask[i];
         }
-        this._tag = tag;
+        this.tag = tag;
 
         // Clean up stuff
         clean(this.xk, this.authKey, this.counter, this.tagMask);
@@ -205,33 +211,80 @@ export class GCMCipher extends BaseGCMCipher {
      * @returns the authentication tag
      * @throws {Error} if the cipher has not been finalized
      */
-    getAuthTag(): Buffer {
-        if (this._tag === null) {
+    getAuthTag(): Uint8Array {
+        if (this.tag === null) {
             throw new Error("Cipher has not been finalized");
         }
-        return Buffer.from(this._tag);
+        return this.tag;
     }
 }
 
 export class GCMDecipher extends BaseGCMCipher {
-    /** Internal cipher used for decryption */
-    private readonly _cipher: DecipherCCM;
-
-    constructor(alg: GCMAlgorithm, key: Buffer, nonce: Buffer) {
-        super(alg, key, nonce);
-        this._cipher = createDecipheriv(this.alg, this.key, this.nonce);
+    /**
+     * Sets the GCM authentication tag.
+     *
+     * Must be done before calling `final()`.
+     *
+     * @param tag the GCM authentication tag
+     */
+    setAuthTag(tag: Uint8Array): void {
+        this.tag = tag;
     }
 
-    update(data: Uint8Array): Uint8Array {
-        return this._cipher.update(data);
+    update(ciphertext: Uint8Array): Uint8Array {
+        // Concatenate any leftover buffer with the new plaintext
+        const data = new Uint8Array(this.partialBlocks.length + ciphertext.length);
+        data.set(this.partialBlocks, 0);
+        data.set(ciphertext, this.partialBlocks.length);
+
+        // Determine the number of complete 16-byte blocks
+        const blocksLen = Math.floor(data.length / 16) * 16;
+        const blocks = data.subarray(0, blocksLen);
+
+        // Keep the remainder for the next `update()` or `final()`
+        this.partialBlocks = data.subarray(blocksLen);
+
+        if (blocksLen === 0) {
+            return new Uint8Array(0);
+        }
+
+        // Perform CTR
+        const plaintext = this.doCTR(blocks);
+        this.hasher.update(blocks);
+        return plaintext;
     }
 
     final(): Uint8Array {
-        return this._cipher.final();
-    }
+        if (this.tag === null) {
+            throw new Error("Authentication tag not set");
+        }
 
-    /** Sets the authentication tag */
-    setAuthTag(tag: Buffer): void {
-        this._cipher.setAuthTag(tag);
+        // Decrypt any remaining bytes (the final partial block)
+        let finalPlaintext = new Uint8Array(0);
+        if (this.partialBlocks.length > 0) {
+            finalPlaintext = this.doCTR(this.partialBlocks);
+            this.hasher.update(this.partialBlocks);
+        }
+
+        // Add the final block length
+        const num = u64Lengths(8 * this.length, 0, false);
+        this.hasher.update(num);
+
+        // Mask the tag
+        const tag = this.hasher.digest();
+        for (let i = 0; i < this.tagMask.length; i++) {
+            tag[i] ^= this.tagMask[i];
+        }
+
+        // Clean up stuff
+        clean(this.xk, this.authKey, this.counter, this.tagMask);
+
+        // Verify the tag
+        if (!equalBytes(this.tag, tag)) {
+            clean(tag, this.tag);
+            throw new Error("Invalid authentication tag");
+        }
+
+        return finalPlaintext;
     }
 }

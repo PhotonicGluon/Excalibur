@@ -241,7 +241,7 @@ export default class ExEF {
 
         // Encrypt
         const ciphertext = Buffer.concat([cipher.update(data), cipher.final()]);
-        const tag = cipher.getAuthTag();
+        const tag = Buffer.from(cipher.getAuthTag());
 
         // Form the output
         const headerMAC = this._getHeaderMAC(ciphertext.length);
@@ -273,7 +273,7 @@ export default class ExEF {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {
-                        controller.enqueue(cipher.final());
+                        controller.enqueue(Buffer.from(cipher.final()));
                         break;
                     }
                     const encBlock = cipher.update(value);
@@ -281,7 +281,7 @@ export default class ExEF {
                 }
 
                 // Yield footer
-                const tag = cipher.getAuthTag();
+                const tag = Buffer.from(cipher.getAuthTag());
                 const footer = new ExEFFooter(tag);
                 controller.enqueue(footer.toBuffer());
 

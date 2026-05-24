@@ -17,7 +17,7 @@ describe("GCMCipher", () => {
         const authTag = cipher.getAuthTag();
 
         expect(encrypted).toEqual(CIPHERTEXT);
-        expect(authTag).toEqual(TAG);
+        expect(Buffer.from(authTag)).toEqual(TAG);
     });
 
     it("should encrypt in chunks", () => {
@@ -27,7 +27,12 @@ describe("GCMCipher", () => {
         const authTag = cipher.getAuthTag();
 
         expect(encrypted).toEqual(CIPHERTEXT);
-        expect(authTag).toEqual(TAG);
+        expect(Buffer.from(authTag)).toEqual(TAG);
+    });
+
+    it("should throw if `getAuthTag()` called before `final()`", () => {
+        const cipher = new GCMCipher("aes-128-gcm", KEY, NONCE);
+        expect(() => cipher.getAuthTag()).toThrow("Cipher has not been finalized");
     });
 });
 
@@ -35,8 +40,7 @@ describe("GCMDecipher", () => {
     it("should decrypt", () => {
         const decipher = new GCMDecipher("aes-128-gcm", KEY, NONCE);
         decipher.setAuthTag(TAG);
-        const decrypted = decipher.update(CIPHERTEXT);
-        decipher.final();
+        const decrypted = Buffer.concat([decipher.update(CIPHERTEXT), decipher.final()]);
 
         expect(decrypted).toEqual(PLAINTEXT);
     });
@@ -45,9 +49,19 @@ describe("GCMDecipher", () => {
         const decipher = new GCMDecipher("aes-128-gcm", KEY, NONCE);
         decipher.setAuthTag(TAG);
         const chunks = [CIPHERTEXT.subarray(0, 5), CIPHERTEXT.subarray(5, 10), CIPHERTEXT.subarray(10)];
-        const decrypted = chunks.map((chunk) => decipher.update(chunk));
-        decipher.final();
+        const decrypted = Buffer.concat(chunks.map((chunk) => decipher.update(chunk)).concat(decipher.final()));
 
-        expect(Buffer.concat(decrypted)).toEqual(PLAINTEXT);
+        expect(decrypted).toEqual(PLAINTEXT);
+    });
+
+    it("should throw if `final()` called before `setAuthTag()`", () => {
+        const decipher = new GCMDecipher("aes-128-gcm", KEY, NONCE);
+        expect(() => decipher.final()).toThrow("Authentication tag not set");
+    });
+
+    it("should throw if authentication tag is invalid", () => {
+        const decipher = new GCMDecipher("aes-128-gcm", KEY, NONCE);
+        decipher.setAuthTag(Buffer.from("invalid tag"));
+        expect(() => decipher.final()).toThrow("Invalid authentication tag");
     });
 });
