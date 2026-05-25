@@ -5,6 +5,7 @@ import { IS_DEV } from "@lib/util";
 
 import CryptoBenchPage from "./CryptoBenchPage";
 import ExEFPage from "./ExEFPage";
+import ModalPage from "./ModalPage";
 import TestPage from "./TestPage";
 
 const DevPages: React.FC = () => {
@@ -17,6 +18,7 @@ const DevPages: React.FC = () => {
             <Route path="/dev/test" component={TestPage} />
             <Route path="/dev/exef" component={ExEFPage} />
             <Route path="/dev/crypto" component={CryptoBenchPage} />
+            <Route path="/dev/modal" component={ModalPage} />
         </>
     );
 };
