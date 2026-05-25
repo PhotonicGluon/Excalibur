@@ -1,19 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { IonButton, IonContent, IonItem, IonLabel, IonList, IonPage, IonTitle } from "@ionic/react";
 
 import Modal from "@components/Modal";
 
 const ModalPage: React.FC = () => {
+    const [isModalShown, setIsModalShown] = useState(false);
     return (
         <IonPage>
             <IonContent className="ion-padding">
                 <h1>Modal Page</h1>
-                <IonButton id="open-modal" expand="block">
+                <IonButton onClick={() => setIsModalShown(true)} expand="block">
                     Open Modal
                 </IonButton>
 
-                <Modal trigger="open-modal" header={<IonTitle>Demo Modal</IonTitle>}>
+                <Modal isShown={isModalShown} setIsShown={setIsModalShown} header={<IonTitle>Demo Modal</IonTitle>}>
                     <IonList>
                         <IonItem>
                             <IonLabel>

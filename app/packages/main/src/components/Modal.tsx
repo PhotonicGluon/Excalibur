@@ -6,8 +6,10 @@ import { chevronDown, chevronUp, close } from "ionicons/icons";
 import { sleep } from "@lib/util";
 
 interface ContainerProps {
-    /** ID for the modal trigger */
-    trigger: string;
+    /** Whether the modal is shown */
+    isShown: boolean;
+    /** Function to set the modal shown state */
+    setIsShown: React.Dispatch<React.SetStateAction<boolean>>;
     /** Header content for the modal */
     header?: React.ReactNode;
     /** Content to display within the modal */
@@ -30,28 +32,14 @@ const Modal: React.FC<ContainerProps> = (props) => {
     }
 
     // Render
-    const Header = (
-        <IonHeader ref={headerRef}>
-            <IonToolbar>
-                {props.header}
-                <IonButtons slot="end">
-                    <IonButton onClick={() => modalRef.current?.dismiss()}>
-                        <IonIcon slot="icon-only" icon={close} />
-                    </IonButton>
-                    <IonButton onClick={toggleExpand}>
-                        <IonIcon slot="icon-only" icon={isFull ? chevronDown : chevronUp} />
-                    </IonButton>
-                </IonButtons>
-            </IonToolbar>
-        </IonHeader>
-    );
     return (
         <IonModal
             ref={modalRef}
-            trigger={props.trigger}
+            isOpen={props.isShown}
             handle={false}
             initialBreakpoint={initialBreakpoint}
             breakpoints={[initialBreakpoint, 1]}
+            backdropBreakpoint={0.5}
             backdropDismiss={false}
             onDidPresent={async () => {
                 const initialBreakpointValue = headerRef.current?.offsetHeight
@@ -61,9 +49,24 @@ const Modal: React.FC<ContainerProps> = (props) => {
                 await sleep(1); // Allow value change to propagate
                 modalRef.current?.setCurrentBreakpoint(initialBreakpointValue);
             }}
-            onDidDismiss={() => setIsFull(false)}
+            onDidDismiss={() => {
+                setIsFull(false);
+                props.setIsShown(false);
+            }}
         >
-            {Header}
+            <IonHeader ref={headerRef}>
+                <IonToolbar>
+                    {props.header}
+                    <IonButtons slot="end">
+                        <IonButton onClick={() => props.setIsShown(false)}>
+                            <IonIcon slot="icon-only" icon={close} />
+                        </IonButton>
+                        <IonButton onClick={toggleExpand}>
+                            <IonIcon slot="icon-only" icon={isFull ? chevronDown : chevronUp} />
+                        </IonButton>
+                    </IonButtons>
+                </IonToolbar>
+            </IonHeader>
             <IonContent className="ion-padding">{props.children}</IonContent>
         </IonModal>
     );
