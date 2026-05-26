@@ -21,7 +21,6 @@ import {
     IonRefresher,
     IonRefresherContent,
     IonText,
-    IonTitle,
     IonToolbar,
     useIonAlert,
     useIonRouter,
@@ -35,7 +34,6 @@ import { useTokenManager, useUploadFile } from "@lib/hooks";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
-import Modal from "@components/Modal";
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
@@ -43,8 +41,8 @@ import SearchDialog from "@components/dialog/SearchDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
-import JobsList from "@components/explorer/jobs/JobsList";
-import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
+import JobsModal from "@components/explorer/jobs/JobsModal";
+import { ProvideJobs } from "@components/explorer/jobs/context";
 
 const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolean }> = (props) => {
     // Hooks
@@ -71,24 +69,6 @@ const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolea
                 </IonFabButton>
             </IonFabList>
         </IonFab>
-    );
-};
-
-const JobsModalHeader: React.FC = () => {
-    // Contexts
-    const jobsManager = useJobsManager();
-
-    // Render
-    return (
-        <IonTitle>
-            {jobsManager.jobs.size > 0 ? (
-                <span>
-                    {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
-                </span>
-            ) : (
-                <span>No Jobs</span>
-            )}
-        </IonTitle>
     );
 };
 
@@ -448,9 +428,7 @@ const FileExplorer: React.FC = () => {
                             <FilesArea refreshTrigger={refreshTrigger} />
 
                             {/* Jobs modal */}
-                            <Modal isShown={showJobsModal} setIsShown={setShowJobsModal} header={<JobsModalHeader />}>
-                                <JobsList />
-                            </Modal>
+                            <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />
                         </explorerContext.Provider>
                     </IonContent>
                 </ProvideJobs>

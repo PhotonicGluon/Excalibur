@@ -21,10 +21,11 @@ import { validateURL } from "@lib/url";
 
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
+import { IS_DEV } from "@lib/util";
 
 const API_CHECK_TIMEOUT = 3; // In seconds
 
-const Welcome: React.FC = () => {
+const ServerChoice: React.FC = () => {
     // States
     const auth = useAuth();
     const router = useIonRouter();
@@ -203,7 +204,6 @@ const Welcome: React.FC = () => {
                 {/* Main container */}
                 <div className="flex h-full items-center justify-center">
                     <div className="mx-auto flex w-4/5 flex-col">
-                        {/* Branding */}
                         <div className="flex flex-col items-baseline">
                             <h1 className="-mt-4 mb-2 text-2xl font-bold">Choose a Server</h1>
                             <p className="-mt-3 mb-2 text-sm text-wrap">
@@ -223,6 +223,7 @@ const Welcome: React.FC = () => {
                                             onConfirm();
                                         }
                                     }}
+                                    value={IS_DEV ? "http://localhost:8888" : ""}
                                 />
                             </div>
 
@@ -244,4 +245,4 @@ const Welcome: React.FC = () => {
     );
 };
 
-export default Welcome;
+export default ServerChoice;

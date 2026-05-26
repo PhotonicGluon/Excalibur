@@ -56,6 +56,7 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
             onIonBlur={() => markTouched()}
             onKeyDown={props.onKeyDown}
             disabled={props.disabled}
+            value={props.value}
         ></IonInput>
     );
 };
