@@ -25,7 +25,7 @@ describe("<JobEntry />", () => {
         mountComponent(baseJob);
 
         cy.get("ion-label").contains(baseJob.name).should("be.visible");
-        cy.get("ion-label").contains(baseJob.description).should("be.visible");
+        cy.get("ion-note").contains(baseJob.description).should("be.visible");
         cy.get(".circular-progress-bar").should("be.visible");
     });
 
@@ -59,7 +59,7 @@ describe("<JobEntry />", () => {
         const job: Job = { ...baseJob, description: "My Custom Description" };
         mountComponent(job);
 
-        cy.get("ion-label").contains("My Custom Description").should("be.visible");
+        cy.get("ion-note").contains("My Custom Description").should("be.visible");
     });
 
     it("truncates a long filename", () => {

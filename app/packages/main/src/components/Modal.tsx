@@ -35,6 +35,7 @@ const Modal: React.FC<ContainerProps> = (props) => {
     return (
         <IonModal
             ref={modalRef}
+            className="[--max-width:--spacing(180)] [--width:100vw]"
             isOpen={props.isShown}
             handle={false}
             initialBreakpoint={initialBreakpoint}
