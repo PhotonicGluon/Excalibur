@@ -210,8 +210,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     return;
                 }
                 console.error(err);
+                jobsManager.updateJob(jobID, "Failed", false);
+                return;
             } finally {
-                jobsManager.deleteJob(jobID);
+                jobsManager.updateJob(jobID, "Complete", true);
             }
         }
 

@@ -10,6 +10,8 @@ interface ContainerProps {
     isShown: boolean;
     /** Function to set the modal shown state */
     setIsShown: React.Dispatch<React.SetStateAction<boolean>>;
+    /** Function to call when the modal is closed */
+    onClose?: () => void;
     /** Header content for the modal */
     header?: React.ReactNode;
     /** Content to display within the modal */
@@ -53,6 +55,7 @@ const Modal: React.FC<ContainerProps> = (props) => {
             onDidDismiss={() => {
                 setIsFull(false);
                 props.setIsShown(false);
+                props.onClose?.();
             }}
         >
             <IonHeader ref={headerRef}>

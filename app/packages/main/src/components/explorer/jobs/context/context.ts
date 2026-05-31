@@ -13,6 +13,7 @@ export interface JobsManager {
     updateProgress(id: string, newProgress: number | null | boolean): void;
     cancelJob(id: string): void;
     deleteJob(id: string): void;
+    clearComplete(): void;
 }
 
 export const jobsContext = createContext<JobsManager>(null!);

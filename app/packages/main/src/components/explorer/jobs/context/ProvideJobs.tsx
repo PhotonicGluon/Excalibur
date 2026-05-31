@@ -99,5 +99,15 @@ function useProvideJobsManager(): JobsManager {
         [updateJobs],
     );
 
-    return { jobs, addJob, getJob, updateJob, updateProgress, cancelJob, deleteJob };
+    const clearComplete = useCallback(() => {
+        updateJobs((draft) => {
+            for (const [id, job] of draft) {
+                if (job.progress === true || job.progress === false) {
+                    draft.delete(id);
+                }
+            }
+        });
+    }, [updateJobs]);
+
+    return { jobs, addJob, getJob, updateJob, updateProgress, cancelJob, deleteJob, clearComplete };
 }

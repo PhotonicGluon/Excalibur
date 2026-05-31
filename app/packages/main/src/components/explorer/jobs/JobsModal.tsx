@@ -1,9 +1,10 @@
+import { useEffect } from "react";
+
 import { IonTitle } from "@ionic/react";
 
 import Modal from "@components/Modal";
 import JobsList from "@components/explorer/jobs/JobsList";
 import { useJobsManager } from "@components/explorer/jobs/context";
-import { useEffect } from "react";
 
 interface ContainerProps {
     /** Whether the modal is shown */
@@ -29,6 +30,7 @@ const JobsModal: React.FC<ContainerProps> = ({ isShown, setIsShown }) => {
         <Modal
             isShown={isShown}
             setIsShown={setIsShown}
+            onClose={() => jobsManager.clearComplete()}
             header={
                 <IonTitle>
                     {jobsManager.jobs.size > 0 ? (
