@@ -1,9 +1,11 @@
 import React from "react";
 
-import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
-import JobsList from "@components/explorer/jobs/JobsList";
 import { IonContent, IonPage } from "@ionic/react";
+
 import { useMount } from "@lib/hooks";
+
+import JobsList from "@components/explorer/jobs/JobsList";
+import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
 
 const JobsDisplay = () => {
     const jobsManager = useJobsManager();
@@ -35,6 +37,20 @@ const JobsDisplay = () => {
             description: "Uploading...",
             progress: 0.789,
             direction: "upload",
+            controller: new AbortController(),
+        });
+        jobsManager.addJob("done", {
+            name: "done.txt",
+            description: "Completed",
+            progress: true,
+            direction: "download",
+            controller: new AbortController(),
+        });
+        jobsManager.addJob("error", {
+            name: "error.txt",
+            description: "Failed",
+            progress: false,
+            direction: "download",
             controller: new AbortController(),
         });
     });

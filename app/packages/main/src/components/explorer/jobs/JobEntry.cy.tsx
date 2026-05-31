@@ -71,6 +71,14 @@ describe("<JobEntry />", () => {
         cy.get("ion-label.truncate").should("have.class", "truncate");
     });
 
+    it("passes the correct progress value to the CircularProgressBar", () => {
+        const job: Job = { ...baseJob, progress: 0.75 };
+        mountComponent(job);
+
+        cy.get(".circular-progress-bar").should("have.attr", "aria-valuenow", "75");
+        cy.get(".circular-progress-bar").should("have.attr", "aria-label", "In progress");
+    });
+
     it("displays an indeterminate progress bar when progress is null", () => {
         const job: Job = { ...baseJob, progress: null };
         mountComponent(job);
@@ -78,10 +86,19 @@ describe("<JobEntry />", () => {
         cy.get(".circular-progress-bar").should("not.have.attr", "aria-valuenow");
     });
 
-    it("passes the correct progress value to the CircularProgressBar", () => {
-        const job: Job = { ...baseJob, progress: 0.75 };
+    it("displays a green circle when progress is true", () => {
+        const job: Job = { ...baseJob, progress: true };
         mountComponent(job);
 
-        cy.get(".circular-progress-bar").should("have.attr", "aria-valuenow", "75");
+        cy.get(".circular-progress-bar").should("have.attr", "aria-valuenow", "100");
+        cy.get(".circular-progress-bar").should("have.attr", "aria-label", "Completed");
+    });
+
+    it("displays a red circle when progress is false", () => {
+        const job: Job = { ...baseJob, progress: false };
+        mountComponent(job);
+
+        cy.get(".circular-progress-bar").should("have.attr", "aria-valuenow", "100");
+        cy.get(".circular-progress-bar").should("have.attr", "aria-label", "Failed");
     });
 });

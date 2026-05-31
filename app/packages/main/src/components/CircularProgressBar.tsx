@@ -12,6 +12,8 @@ interface ContainerProps {
     colour?: Color;
     /** How long animation takes to go from one percentage to another, in seconds */
     transitionDuration?: number;
+    /** ARIA label for the progress bar */
+    ariaLabel?: string;
 }
 
 const CircularProgressBar: React.FC<ContainerProps> = (props) => {
@@ -38,6 +40,7 @@ const CircularProgressBar: React.FC<ContainerProps> = (props) => {
     return (
         <div
             className={(props.className ?? "") + " circular-progress-bar"}
+            aria-label={props.ariaLabel}
             aria-valuenow={props.value ? props.value * 100 : undefined}
         >
             {spinner}

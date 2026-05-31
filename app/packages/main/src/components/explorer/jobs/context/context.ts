@@ -9,8 +9,8 @@ export interface JobsManager {
     jobs: Map<string, Job>;
     addJob(id: string, job: Job): void;
     getJob(id: string): Job;
-    updateJob(id: string, newStatus: string, newProgress?: number | null, newWorker?: Worker): void;
-    updateProgress(id: string, newProgress: number | null): void;
+    updateJob(id: string, newStatus: string, newProgress?: number | null | boolean, newWorker?: Worker): void;
+    updateProgress(id: string, newProgress: number | null | boolean): void;
     cancelJob(id: string): void;
     deleteJob(id: string): void;
 }
