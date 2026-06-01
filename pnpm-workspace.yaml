@@ -3,8 +3,8 @@ packages:
   - app/packages/**
 
 auditConfig:
-  ignoreCves:
-    - CVE-2025-14505 # Unfixed vulnerability in elliptic
+  ignoreGhsas:
+    - GHSA-848j-6mx2-7j84 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
 minimumReleaseAgeExclude:
@@ -23,7 +23,8 @@ allowBuilds:
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - prettier-plugin-tailwindcss@0.7.4
-trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
+  - tinyexec@1.2.2
+trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   "@xmldom/xmldom@<0.8.13": ">=0.8.13"
