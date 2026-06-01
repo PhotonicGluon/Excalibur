@@ -86,10 +86,10 @@ importers:
         version: 2.0.0(@types/node@25.6.2)
       '@tailwindcss/vite':
         specifier: ^4.3.0
-        version: 4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       '@vitejs/plugin-react':
         specifier: ^5.2.0
-        version: 5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       dmg-builder:
         specifier: ^26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@26.8.1)
@@ -104,46 +104,46 @@ importers:
         version: 26.8.1(dmg-builder@26.8.1)
       electron-vite:
         specifier: ^5.0.0
-        version: 5.0.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 5.0.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       vite:
         specifier: ~7.3.2
-        version: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+        version: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
       vite-plugin-node-polyfills:
         specifier: ^0.26.0
-        version: 0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
 
   app/packages/main:
     dependencies:
       '@capacitor-community/safe-area':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.2.0)
+        version: 8.0.1(@capacitor/core@8.3.4)
       '@capacitor/android':
-        specifier: 8.2.0
-        version: 8.2.0(@capacitor/core@8.2.0)
+        specifier: 8.3.4
+        version: 8.3.4(@capacitor/core@8.3.4)
       '@capacitor/app':
         specifier: ^8.1.0
-        version: 8.1.0(@capacitor/core@8.2.0)
+        version: 8.1.0(@capacitor/core@8.3.4)
       '@capacitor/core':
-        specifier: 8.2.0
-        version: 8.2.0
+        specifier: 8.3.4
+        version: 8.3.4
       '@capacitor/filesystem':
         specifier: ^8.1.2
-        version: 8.1.2(@capacitor/core@8.2.0)
+        version: 8.1.2(@capacitor/core@8.3.4)
       '@capacitor/keyboard':
         specifier: ^8.0.3
-        version: 8.0.3(@capacitor/core@8.2.0)
+        version: 8.0.3(@capacitor/core@8.3.4)
       '@capacitor/preferences':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.2.0)
+        version: 8.0.1(@capacitor/core@8.3.4)
       '@capacitor/privacy-screen':
         specifier: ^2.0.1
-        version: 2.0.1(@capacitor/core@8.2.0)
+        version: 2.0.1(@capacitor/core@8.3.4)
       '@capacitor/screen-orientation':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.2.0)
+        version: 8.0.1(@capacitor/core@8.3.4)
       '@capawesome/capacitor-file-picker':
         specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@8.2.0)
+        version: 8.0.2(@capacitor/core@8.3.4)
       '@ionic/core':
         specifier: ^8.8.6
         version: 8.8.6
@@ -158,7 +158,7 @@ importers:
         version: 2.2.0
       capacitor-blob-writer:
         specifier: ^1.1.20
-        version: 1.1.20(@capacitor/core@8.2.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.2.0))
+        version: 1.1.20(@capacitor/core@8.3.4)(@capacitor/filesystem@8.1.2(@capacitor/core@8.3.4))
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -207,13 +207,13 @@ importers:
     devDependencies:
       '@capacitor/assets':
         specifier: ^3.0.5
-        version: 3.0.5(@types/node@25.6.2)(encoding@0.1.13)(typescript@6.0.2)
+        version: 3.0.5(@types/node@25.6.2)(typescript@6.0.2)
       '@capacitor/cli':
-        specifier: 8.2.0
-        version: 8.2.0
+        specifier: 8.3.4
+        version: 8.3.4
       '@tailwindcss/vite':
         specifier: ^4.3.0
-        version: 4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
@@ -240,7 +240,7 @@ importers:
         version: 3.0.8
       '@vitejs/plugin-react':
         specifier: ^5.2.0
-        version: 5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       baseline-browser-mapping:
         specifier: ^2.10.29
         version: 2.10.29
@@ -261,13 +261,13 @@ importers:
         version: 0.8.0(@trivago/prettier-plugin-sort-imports@6.0.2(prettier@3.8.3))(prettier@3.8.3)
       vite:
         specifier: ~7.3.2
-        version: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+        version: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
       vite-plugin-node-polyfills:
         specifier: ^0.26.0
-        version: 0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       vitest:
         specifier: ^4.1.5
-        version: 4.1.5(@types/node@25.6.2)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+        version: 4.1.5(@types/node@25.6.2)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
 
 packages:
 
@@ -372,10 +372,10 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/android@8.2.0':
-    resolution: {integrity: sha512-XLm5OsWLPfXQxDxzFS7SOdMEgGvW+2c7TGLXkTR2cSKdkWK5Abns4imlT5qghKYhjM9r74IrDkBWg/9ALUGNKQ==}
+  '@capacitor/android@8.3.4':
+    resolution: {integrity: sha512-7gJjrG3X32Am1QMLqgMztWTYMLMVNE+VZwhekNxhvYizH4mOV05vH+rC9B+f17bCkYZfyu/qXQX6hoY7kLeVZw==}
     peerDependencies:
-      '@capacitor/core': ^8.2.0
+      '@capacitor/core': ^8.3.0
 
   '@capacitor/app@8.1.0':
     resolution: {integrity: sha512-MlmttTOWHDedr/G4SrhNRxsXMqY+R75S4MM4eIgzsgCzOYhb/MpCkA5Q3nuOCfL1oHm26xjUzqZ5aupbOwdfYg==}
@@ -392,13 +392,13 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  '@capacitor/cli@8.2.0':
-    resolution: {integrity: sha512-1cMEk0d/I6tl1U+v/lnJR5Oylpx8ZBIHrvQxD5zK0MkjYOUyQAAGJgh97rkhGJqjAUvrGpa8H4BmyhNQN9a17A==}
+  '@capacitor/cli@8.3.4':
+    resolution: {integrity: sha512-QEmyNdiDDVNYl0Mahm7YTVA/3t2tKcy7FWYDapeKGavS6HDNHZSjyTVwQpUXQbDZrrs/PS2Wau3Aii+LIFwm/A==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.2.0':
-    resolution: {integrity: sha512-oKaoNeNtH2iIZMDFVrb1atoyRECDGHcfLMunJ5KWN8DtvpVBeeA4c41e20NTuhMxw1cSYbpq2PV2hb+/9CJxlQ==}
+  '@capacitor/core@8.3.4':
+    resolution: {integrity: sha512-CqRQCkb6HXxcx/N7s+hHTN6ef2CmamFiRMITwm4qB840ph56mS42bzUgn6tKCP+RZjdDweiRHj9ytDDeN6jFag==}
 
   '@capacitor/filesystem@8.1.2':
     resolution: {integrity: sha512-doaaMfGoFR2hWU6aV6u83I+5ZsGyJVq+Gz4r9lMpJzUKMm1eMu0hLnFdV1aXZlU9FlK/RndFrVD8oRZfNOqWgQ==}
@@ -979,9 +979,6 @@ packages:
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
-
-  '@jridgewell/source-map@0.3.11':
-    resolution: {integrity: sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA==}
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
@@ -2121,9 +2118,6 @@ packages:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
 
-  commander@2.20.3:
-    resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
-
   commander@5.1.0:
     resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
     engines: {node: '>= 6'}
@@ -2502,9 +2496,6 @@ packages:
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
-
-  encoding@0.1.13:
-    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
@@ -4204,6 +4195,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.14.2:
@@ -4767,11 +4759,6 @@ packages:
   tempy@3.2.0:
     resolution: {integrity: sha512-d79HhZya5Djd7am0q+W4RTsSU+D/aJzM+4Y4AGJGuGlgM2L6sx5ZvOYTmZjqPhrDrV6xJTtRSm1JCLj6V6LHLQ==}
     engines: {node: '>=14.16'}
-
-  terser@5.44.1:
-    resolution: {integrity: sha512-t/R3R/n0MSwnnazuPpPNVO60LX0SKL45pyl9YlvxIdkH0Of7D5qM2EVe+yASRIlY5pZ73nclYJfNANGWPwFDZw==}
-    engines: {node: '>=10'}
-    hasBin: true
 
   text-decoder@1.2.7:
     resolution: {integrity: sha512-vlLytXkeP4xvEq2otHeJfSQIRyWxo/oZGEbXrtEEF9Hnmrdly59sUbzZ/QgyWuLYHctCHxFF4tRQZNQ9k60ExQ==}
@@ -5434,19 +5421,19 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@capacitor-community/safe-area@8.0.1(@capacitor/core@8.2.0)':
+  '@capacitor-community/safe-area@8.0.1(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/android@8.2.0(@capacitor/core@8.2.0)':
+  '@capacitor/android@8.3.4(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/app@8.1.0(@capacitor/core@8.2.0)':
+  '@capacitor/app@8.1.0(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/assets@3.0.5(@types/node@25.6.2)(encoding@0.1.13)(typescript@6.0.2)':
+  '@capacitor/assets@3.0.5(@types/node@25.6.2)(typescript@6.0.2)':
     dependencies:
       '@capacitor/cli': 5.7.8
       '@ionic/utils-array': 2.1.6
@@ -5455,7 +5442,7 @@ snapshots:
       commander: 8.3.0
       debug: 4.3.4
       fs-extra: 10.1.0
-      node-fetch: 2.7.0(encoding@0.1.13)
+      node-fetch: 2.7.0
       node-html-parser: 5.4.2
       sharp: 0.32.6
       tslib: 2.6.2
@@ -5493,7 +5480,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/cli@8.2.0':
+  '@capacitor/cli@8.3.4':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
@@ -5515,36 +5502,36 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.2.0':
+  '@capacitor/core@8.3.4':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.2(@capacitor/core@8.2.0)':
+  '@capacitor/filesystem@8.1.2(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
       '@capacitor/synapse': 1.0.4
 
-  '@capacitor/keyboard@8.0.3(@capacitor/core@8.2.0)':
+  '@capacitor/keyboard@8.0.3(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/preferences@8.0.1(@capacitor/core@8.2.0)':
+  '@capacitor/preferences@8.0.1(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.2.0)':
+  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
-  '@capacitor/screen-orientation@8.0.1(@capacitor/core@8.2.0)':
+  '@capacitor/screen-orientation@8.0.1(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
   '@capacitor/synapse@1.0.4': {}
 
-  '@capawesome/capacitor-file-picker@8.0.2(@capacitor/core@8.2.0)':
+  '@capawesome/capacitor-file-picker@8.0.2(@capacitor/core@8.3.4)':
     dependencies:
-      '@capacitor/core': 8.2.0
+      '@capacitor/core': 8.3.4
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -6086,12 +6073,6 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
-  '@jridgewell/source-map@0.3.11':
-    dependencies:
-      '@jridgewell/gen-mapping': 0.3.13
-      '@jridgewell/trace-mapping': 0.3.31
-    optional: true
-
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@jridgewell/trace-mapping@0.3.31':
@@ -6356,12 +6337,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.0
 
-  '@tailwindcss/vite@4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@tailwindcss/node': 4.3.0
       '@tailwindcss/oxide': 4.3.0
       tailwindcss: 4.3.0
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
 
   '@trapezedev/gradle-parse@7.1.3': {}
 
@@ -6640,7 +6621,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.2
       eslint-visitor-keys: 5.0.1
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))':
+  '@vitejs/plugin-react@5.2.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -6648,7 +6629,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -6661,13 +6642,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.5(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))':
+  '@vitest/mocker@4.1.5(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 4.1.5
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
 
   '@vitest/pretty-format@4.1.5':
     dependencies:
@@ -7151,10 +7132,10 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capacitor-blob-writer@1.1.20(@capacitor/core@8.2.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.2.0)):
+  capacitor-blob-writer@1.1.20(@capacitor/core@8.3.4)(@capacitor/filesystem@8.1.2(@capacitor/core@8.3.4)):
     dependencies:
-      '@capacitor/core': 8.2.0
-      '@capacitor/filesystem': 8.1.2(@capacitor/core@8.2.0)
+      '@capacitor/core': 8.3.4
+      '@capacitor/filesystem': 8.1.2(@capacitor/core@8.3.4)
 
   caseless@0.12.0: {}
 
@@ -7272,9 +7253,6 @@ snapshots:
   commander@12.1.0: {}
 
   commander@14.0.3: {}
-
-  commander@2.20.3:
-    optional: true
 
   commander@5.1.0: {}
 
@@ -7754,7 +7732,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-vite@5.0.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)):
+  electron-vite@5.0.0(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-arrow-functions': 7.27.1(@babel/core@7.29.0)
@@ -7762,7 +7740,7 @@ snapshots:
       esbuild: 0.25.12
       magic-string: 0.30.21
       picocolors: 1.1.1
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7803,11 +7781,6 @@ snapshots:
   emoji-regex@10.6.0: {}
 
   emoji-regex@8.0.0: {}
-
-  encoding@0.1.13:
-    dependencies:
-      iconv-lite: 0.6.3
-    optional: true
 
   end-of-stream@1.4.5:
     dependencies:
@@ -9253,11 +9226,9 @@ snapshots:
       object.entries: 1.1.9
       semver: 6.3.1
 
-  node-fetch@2.7.0(encoding@0.1.13):
+  node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
-    optionalDependencies:
-      encoding: 0.1.13
 
   node-gyp@12.3.0:
     dependencies:
@@ -10376,14 +10347,6 @@ snapshots:
       type-fest: 2.19.0
       unique-string: 3.0.0
 
-  terser@5.44.1:
-    dependencies:
-      '@jridgewell/source-map': 0.3.11
-      acorn: 8.16.0
-      commander: 2.20.3
-      source-map-support: 0.5.21
-    optional: true
-
   text-decoder@1.2.7:
     dependencies:
       b4a: 1.8.1
@@ -10647,15 +10610,15 @@ snapshots:
       extsprintf: 1.4.1
     optional: true
 
-  vite-plugin-node-polyfills@0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)):
+  vite-plugin-node-polyfills@0.26.0(rollup@4.60.3)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)):
     dependencies:
       '@rollup/plugin-inject': 5.0.5(rollup@4.60.3)
       node-stdlib-browser: 1.3.1
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - rollup
 
-  vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0):
+  vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0):
     dependencies:
       esbuild: 0.27.7
       fdir: 6.5.0(picomatch@4.0.4)
@@ -10668,13 +10631,12 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       lightningcss: 1.32.0
-      terser: 5.44.1
       yaml: 2.9.0
 
-  vitest@4.1.5(@types/node@25.6.2)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)):
+  vitest@4.1.5(@types/node@25.6.2)(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.5
-      '@vitest/mocker': 4.1.5(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.5(vite@7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       '@vitest/pretty-format': 4.1.5
       '@vitest/runner': 4.1.5
       '@vitest/snapshot': 4.1.5
@@ -10691,7 +10653,7 @@ snapshots:
       tinyexec: 1.1.2
       tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
-      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.44.1)(yaml@2.9.0)
+      vite: 7.3.2(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.6.2
