@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { IonTitle } from "@ionic/react";
 
@@ -17,6 +17,37 @@ const JobsModal: React.FC<ContainerProps> = ({ isShown, setIsShown }) => {
     // Contexts
     const jobsManager = useJobsManager();
 
+    // Functions
+    /**
+     * Nicely formats the jobs count for display in the modal header.
+     *
+     * @returns the formatted jobs count
+     */
+    const formatJobsCount = useCallback(() => {
+        const total = jobsManager.jobs.size;
+        if (total === 0) {
+            return "No Jobs";
+        }
+
+        const progresses = Array.from(jobsManager.jobs.values()).map((job) => job.progress);
+        const completed = progresses.filter((progress) => progress === true).length;
+        const failed = progresses.filter((progress) => progress === false).length;
+        const running = total - completed - failed;
+
+        const pieces = [];
+        if (running > 0) {
+            pieces.push(`${running} In Progress`);
+        }
+        if (completed > 0) {
+            pieces.push(`${completed} Done`);
+        }
+        if (failed > 0) {
+            pieces.push(`${failed} Failed`);
+        }
+
+        return pieces.join(", ");
+    }, [jobsManager.jobs]);
+
     // Effects
     useEffect(() => {
         // Make modal pop up if there are jobs
@@ -31,17 +62,7 @@ const JobsModal: React.FC<ContainerProps> = ({ isShown, setIsShown }) => {
             isShown={isShown}
             setIsShown={setIsShown}
             onClose={() => jobsManager.clearComplete()}
-            header={
-                <IonTitle>
-                    {jobsManager.jobs.size > 0 ? (
-                        <span>
-                            {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
-                        </span>
-                    ) : (
-                        <span>No Jobs</span>
-                    )}
-                </IonTitle>
-            }
+            header={<IonTitle>{formatJobsCount()}</IonTitle>}
         >
             <JobsList />
         </Modal>

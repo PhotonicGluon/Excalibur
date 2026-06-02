@@ -12,7 +12,7 @@ export const ProvideJobs: React.FC<{ children: React.ReactNode }> = ({ children 
 /**
  * React hook that provides access to job management functionality.
  *
- * @returns Jobs manager
+ * @returns the jobs manager
  */
 function useProvideJobsManager(): JobsManager {
     const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
