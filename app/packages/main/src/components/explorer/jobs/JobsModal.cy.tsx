@@ -46,7 +46,7 @@ describe("<JobsModal />", () => {
         mountComponent({ jobs }, true, () => {});
 
         cy.get("ion-modal ion-title").contains("No Jobs").should("be.visible");
-        cy.get("ion-button[aria-label='Expand modal']").click();
+        cy.get("ion-button[aria-label='Expand Modal']").click();
         cy.get("ion-modal ion-content").contains("No active jobs").should("be.visible");
     });
 

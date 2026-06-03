@@ -80,7 +80,7 @@ const JobEntry: React.FC<ContainerProps> = (props) => {
                             "-z-10 transition-opacity duration-100 group-hover:opacity-100 " +
                             (Capacitor.isNativePlatform() ? "opacity-100" : "opacity-0")
                         }
-                    ></IonIcon>
+                    />
                 </div>
             </div>
         </div>

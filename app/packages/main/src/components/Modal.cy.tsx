@@ -46,11 +46,11 @@ describe("<Modal />", () => {
         cy.get("#child-test").should("not.exist");
 
         // Expanding shows the child
-        cy.get("ion-button[aria-label='Expand modal']").click();
+        cy.get("ion-button[aria-label='Expand Modal']").click();
         cy.get("#child-test").should("be.visible");
 
         // Collapsing hides the child
-        cy.get("ion-button[aria-label='Collapse modal']").click(); // It's the same button with a different label
+        cy.get("ion-button[aria-label='Collapse Modal']").click(); // It's the same button with a different label
         cy.get("#child-test").should("not.exist");
     });
 
@@ -67,13 +67,13 @@ describe("<Modal />", () => {
         });
 
         it("should work", () => {
-            cy.get("ion-button[aria-label='Close modal']").click();
+            cy.get("ion-button[aria-label='Close Modal']").click();
             cy.get("ion-modal").should("not.be.visible");
         });
 
         it("should work even when expanded", () => {
-            cy.get("ion-button[aria-label='Expand modal']").click();
-            cy.get("ion-button[aria-label='Close modal']").click();
+            cy.get("ion-button[aria-label='Expand Modal']").click();
+            cy.get("ion-button[aria-label='Close Modal']").click();
             cy.get("ion-modal").should("not.be.visible");
         });
     });

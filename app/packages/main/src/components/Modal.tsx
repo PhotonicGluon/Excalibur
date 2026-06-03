@@ -62,10 +62,10 @@ const Modal: React.FC<ContainerProps> = (props) => {
                 <IonToolbar>
                     {props.header}
                     <IonButtons slot="end">
-                        <IonButton onClick={() => props.setIsShown(false)} aria-label="Close modal">
+                        <IonButton onClick={() => props.setIsShown(false)} aria-label="Close Modal">
                             <IonIcon slot="icon-only" icon={close} />
                         </IonButton>
-                        <IonButton onClick={toggleExpand} aria-label={isFull ? "Collapse modal" : "Expand modal"}>
+                        <IonButton onClick={toggleExpand} aria-label={isFull ? "Collapse Modal" : "Expand Modal"}>
                             <IonIcon slot="icon-only" icon={isFull ? chevronDown : chevronUp} />
                         </IonButton>
                     </IonButtons>

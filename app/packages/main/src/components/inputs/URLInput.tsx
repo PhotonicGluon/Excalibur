@@ -2,17 +2,21 @@ import React, { HTMLProps, useState } from "react";
 
 import { IonInput } from "@ionic/react";
 
+import { useMount } from "@lib/hooks";
 import { validateURL } from "@lib/url";
 
 interface ContainerProps extends HTMLProps<HTMLIonInputElement> {
     label: string;
-    value?: string;
+    defaultValue?: string;
 }
 
 const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
     // States
     const [isTouched, setIsTouched] = useState(false);
     const [isValid, setIsValid] = useState<boolean>();
+
+    // References
+    const inputRef = React.useRef<HTMLIonInputElement>(null);
 
     // Functions
     /**
@@ -42,9 +46,17 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
         setIsTouched(true);
     }
 
+    // Effects
+    useMount(() => {
+        if (props.defaultValue && inputRef.current) {
+            inputRef.current.value = props.defaultValue;
+        }
+    });
+
     // Render
     return (
         <IonInput
+            ref={inputRef}
             id={props.id}
             className={`${isValid && "ion-valid"} ${isValid === false && "ion-invalid"} ${isTouched && "ion-touched"} ${props.className}`}
             label={props.label}
@@ -56,7 +68,6 @@ const URLInput: React.FC<ContainerProps> = (props: ContainerProps) => {
             onIonBlur={() => markTouched()}
             onKeyDown={props.onKeyDown}
             disabled={props.disabled}
-            value={props.value}
         ></IonInput>
     );
 };

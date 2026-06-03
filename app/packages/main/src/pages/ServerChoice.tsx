@@ -18,10 +18,10 @@ import { useEffectOnce } from "@lib/hooks";
 import { APICheckResult, checkAPIUrl, getServerInfo, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
+import { IS_DEV } from "@lib/util";
 
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
-import { IS_DEV } from "@lib/util";
 
 const API_CHECK_TIMEOUT = 3; // In seconds
 
@@ -223,7 +223,7 @@ const ServerChoice: React.FC = () => {
                                             onConfirm();
                                         }
                                     }}
-                                    value={IS_DEV ? "http://localhost:8888" : ""}
+                                    defaultValue={IS_DEV ? "http://localhost:8888" : ""}
                                 />
                             </div>
 
