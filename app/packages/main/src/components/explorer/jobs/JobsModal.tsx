@@ -32,11 +32,11 @@ const JobsModal: React.FC<ContainerProps> = ({ isShown, setIsShown }) => {
         const progresses = Array.from(jobsManager.jobs.values()).map((job) => job.progress);
         const completed = progresses.filter((progress) => progress === true).length;
         const failed = progresses.filter((progress) => progress === false).length;
-        const running = total - completed - failed;
+        const pending = total - completed - failed;
 
         const pieces = [];
-        if (running > 0) {
-            pieces.push(`${running} In Progress`);
+        if (pending > 0) {
+            pieces.push(`${pending} Pending`);
         }
         if (completed > 0) {
             pieces.push(`${completed} Done`);
