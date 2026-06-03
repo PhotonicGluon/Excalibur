@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 import { PrivacyScreen } from "@capacitor/privacy-screen";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { enableMapSet } from "immer";
@@ -49,8 +49,14 @@ setupIonicReact();
 enableMapSet(); // To allow immer to update maps
 
 // Helper functions
-function toggleDarkPalette(shouldAdd: boolean) {
-    document.documentElement.classList.toggle("ion-palette-dark", shouldAdd);
+/**
+ * Toggles the dark palette for the app.
+ *
+ * @param isDark whether to enable the dark palette
+ */
+function toggleDarkPalette(isDark: boolean) {
+    document.documentElement.classList.toggle("ion-palette-dark", isDark);
+    SystemBars.setStyle({ style: isDark ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
 }
 
 // Enable privacy screen if on a release build
