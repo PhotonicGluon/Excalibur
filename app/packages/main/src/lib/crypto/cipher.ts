@@ -29,10 +29,9 @@
  *
  * The specific parts that were adapted from `@noble/ciphers` will be marked so below.
  */
-
 import { GHASH, ghash } from "@noble/ciphers/_polyval.js";
 import { unsafe as nobleAES } from "@noble/ciphers/aes.js";
-import { clean, copyBytes, equalBytes, isAligned32, u64Lengths } from "@noble/ciphers/utils.js";
+import { clean, copyBytes, createView, equalBytes, isAligned32, u64Lengths } from "@noble/ciphers/utils.js";
 
 const BLOCK_SIZE = 16;
 const EMPTY_BLOCK = new Uint8Array(BLOCK_SIZE);
@@ -70,15 +69,11 @@ abstract class BaseGCMCipher {
      *
      * @param alg algorithm used for encryption/decryption
      * @param key key used for encryption/decryption
-     * @param nonce 12-byte nonce used for encryption
+     * @param nonce nonce used for encryption
      */
     constructor(alg: GCMAlgorithm, key: Buffer, nonce: Buffer) {
         this.alg = alg;
         this.key = key;
-
-        if (nonce.length !== 12) {
-            throw new Error("nonce must be 12 bytes");
-        }
         this.nonce = nonce;
 
         const { xk, authKey, counter, tagMask } = this.deriveKeys();
@@ -106,8 +101,21 @@ abstract class BaseGCMCipher {
 
         nobleAES.ctr32(xk, false, counter, counter, authKey);
 
-        // Since our nonce is always 12 bytes, we can just set it directly
-        counter.set(this.nonce);
+        // Different behavior for 96-bit and non-96-bit nonces
+        if (this.nonce.length === 12) {
+            counter.set(this.nonce);
+        } else {
+            const nonceLen = EMPTY_BLOCK.slice();
+            const view = createView(nonceLen);
+            view.setBigUint64(8, BigInt(this.nonce.length * 8), false);
+            // GHASH.update() pads each call to 16 bytes, so
+            // update(nonce).update(nonceLen) realizes
+            // IV || 0^s || 0^64 || [len(IV)]_64 for non-96-bit nonces.
+            // ghash(nonce || u64be(0) || u64be(nonceLen*8))
+            const g = ghash.create(authKey).update(this.nonce).update(nonceLen);
+            g.digestInto(counter); // digestInto doesn't trigger '.destroy'
+            g.destroy();
+        }
 
         // GCTR_K(J0, 0^128) = E_K(J0); reusing ctr32() here extracts that tag
         // mask and leaves `counter` advanced to inc32(J0) for payload GCTR.
