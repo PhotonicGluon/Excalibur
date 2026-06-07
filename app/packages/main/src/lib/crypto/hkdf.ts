@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import createHmac from "create-hmac";
 
 /** Supported algorithms for HKDF */
 export type HKDFAlgorithm = "sha1" | "sha256" | "sha512";

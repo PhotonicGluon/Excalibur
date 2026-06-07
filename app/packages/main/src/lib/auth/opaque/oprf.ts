@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import createHash from "create-hash";
 
 import { bigIntToBytes, bytesToBigInt, modulo, xorBuffer } from "@lib/util";
 

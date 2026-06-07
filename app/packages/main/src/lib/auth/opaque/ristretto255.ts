@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 
 import { bigIntToBytes, bytesToBigInt, modInv, modulo, powmod } from "@lib/util";
 

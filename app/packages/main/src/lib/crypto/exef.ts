@@ -1,4 +1,5 @@
-import { createHmac, randomBytes } from "crypto";
+import createHmac from "create-hmac";
+import randomBytes from "randombytes";
 
 import { GCMAlgorithm, GCMCipher, GCMDecipher } from "@lib/crypto/cipher";
 import HKDF from "@lib/crypto/hkdf";

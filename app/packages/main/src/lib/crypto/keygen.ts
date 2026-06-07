@@ -1,4 +1,4 @@
-import { pbkdf2 } from "crypto";
+import { pbkdf2 } from "pbkdf2";
 
 import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
