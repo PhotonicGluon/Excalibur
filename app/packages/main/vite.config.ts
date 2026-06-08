@@ -31,7 +31,15 @@ export const viteConfig = {
     plugins: [
         react({}),
         tailwindcss(),
-        nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
+        nodePolyfills({
+            include: ["buffer", "stream", "util", "vm"],
+            overrides: {
+                buffer: "buffer/",
+                // stream: "stream-browserify",
+                // util: "util/",
+                vm: "vm-browserify",
+            },
+        }),
         syncTheme(),
     ],
     resolve: {
