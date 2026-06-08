@@ -1,6 +1,9 @@
+import { Buffer } from "buffer";
 import { expose } from "comlink";
 
 import ExEF from "@lib/crypto/exef";
+
+globalThis.Buffer = Buffer;
 
 const decryptionProcessor = {
     /**
