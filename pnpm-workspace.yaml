@@ -34,6 +34,9 @@ overrides:
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   tar@<=7.5.10: ">=7.5.11"
 
+patchedDependencies:
+  randombytes: pnpm_patches/randombytes.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
+
 sideEffectsCache: false
 
 virtualStoreDirMaxLength: 60
