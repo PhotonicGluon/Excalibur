@@ -32,9 +32,10 @@ export const viteConfig = {
         react({}),
         tailwindcss(),
         nodePolyfills({
-            include: ["buffer", "stream", "util", "vm"],
+            include: ["buffer", "crypto", "stream", "util", "vm"],
             overrides: {
                 buffer: "buffer/",
+                // crypto: "crypto-browserify",
                 // stream: "stream-browserify",
                 // util: "util/",
                 vm: "vm-browserify",

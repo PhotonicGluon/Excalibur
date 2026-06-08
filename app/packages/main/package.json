@@ -36,6 +36,7 @@
         "comlink": "^4.4.2",
         "create-hash": "^1.2.0",
         "create-hmac": "^1.1.7",
+        "crypto-browserify": "^3.12.1",
         "immer": "^11.1.8",
         "ionicons": "^8.0.13",
         "jsonwebtoken": "^9.0.3",

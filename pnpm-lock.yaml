@@ -177,6 +177,9 @@ importers:
       create-hmac:
         specifier: ^1.1.7
         version: 1.1.7
+      crypto-browserify:
+        specifier: ^3.12.1
+        version: 3.12.1
       immer:
         specifier: ^11.1.8
         version: 11.1.8
@@ -4055,10 +4058,6 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
-  pbkdf2@3.1.5:
-    resolution: {integrity: sha512-Q3CG/cYvCO1ye4QKkuH7EXxs3VC/rI1/trd+qX2+PolbaKG0H+bgcZzrTt96mMyRtejk+JMCiLUn3y29W8qmFQ==}
-    engines: {node: '>= 0.10'}
-
   pbkdf2@3.1.6:
     resolution: {integrity: sha512-BT6eelPB1EyGHo8pC0o9Bl6k6SYVhKO1jEbd3lcTrtr7XHdjP8BW1YpfCV3G9Kwkxgattk+S5q2/RvuttCsS1g==}
     engines: {node: '>= 0.10'}
@@ -7494,7 +7493,7 @@ snapshots:
       diffie-hellman: 5.0.3
       hash-base: 3.0.5
       inherits: 2.0.4
-      pbkdf2: 3.1.5
+      pbkdf2: 3.1.6
       public-encrypt: 4.0.3
       randombytes: 2.1.0(patch_hash=25f3e2609867ff24297c87403691e02ff4e571c9354cdb4328ba5ea9d21a6529)
       randomfill: 1.0.4
@@ -9490,7 +9489,7 @@ snapshots:
       asn1.js: 4.10.1
       browserify-aes: 1.2.0
       evp_bytestokey: 1.0.3
-      pbkdf2: 3.1.5
+      pbkdf2: 3.1.6
       safe-buffer: 5.2.1
 
   parse-imports-exports@0.2.4:
@@ -9542,15 +9541,6 @@ snapshots:
       pify: 3.0.0
 
   pathe@2.0.3: {}
-
-  pbkdf2@3.1.5:
-    dependencies:
-      create-hash: 1.2.0
-      create-hmac: 1.1.7
-      ripemd160: 2.0.3
-      safe-buffer: 5.2.1
-      sha.js: 2.4.12
-      to-buffer: 1.2.2
 
   pbkdf2@3.1.6:
     dependencies:
