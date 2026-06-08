@@ -35,7 +35,7 @@ overrides:
   tar@<=7.5.10: ">=7.5.11"
 
 patchedDependencies:
-  randombytes@2.1.0: ./pnpm_patches/randombytes@2.1.0.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
+  randombytes@2.1.0: app/packages/main/patches/randombytes@2.1.0.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
 
 sideEffectsCache: false
 
