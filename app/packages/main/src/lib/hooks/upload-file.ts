@@ -166,9 +166,9 @@ export function useUploadFile() {
                 console.error(err);
                 jobsManager.updateJob(jobID, "Failed", false);
                 return;
-            } finally {
-                jobsManager.updateJob(jobID, "Complete", true);
             }
+
+            jobsManager.updateJob(jobID, "Complete", true);
         }
 
         if (!files) {

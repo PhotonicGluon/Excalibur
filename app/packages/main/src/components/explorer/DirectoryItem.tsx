@@ -212,9 +212,9 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 console.error(err);
                 jobsManager.updateJob(jobID, "Failed", false);
                 return;
-            } finally {
-                jobsManager.updateJob(jobID, "Complete", true);
             }
+
+            jobsManager.updateJob(jobID, "Complete", true);
         }
 
         // If on mobile, check if the file already exists
