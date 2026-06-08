@@ -11,7 +11,7 @@ overrides:
   tar@<=7.5.10: '>=7.5.11'
 
 patchedDependencies:
-  randombytes: 25f3e2609867ff24297c87403691e02ff4e571c9354cdb4328ba5ea9d21a6529
+  randombytes@2.1.0: 25f3e2609867ff24297c87403691e02ff4e571c9354cdb4328ba5ea9d21a6529
 
 importers:
 
