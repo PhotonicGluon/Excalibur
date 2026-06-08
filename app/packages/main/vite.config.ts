@@ -26,20 +26,12 @@ function getAliasesFromTSConfig() {
     return aliases;
 }
 
-// https://vitejs.dev/config/
 export const viteConfig: UserConfig = {
     plugins: [
         react({}),
         tailwindcss(),
         nodePolyfills({
             include: ["buffer", "crypto", "stream", "util", "vm"],
-            overrides: {
-                buffer: "buffer/",
-                // crypto: "crypto-browserify",
-                // stream: "stream-browserify",
-                // util: "util/",
-                vm: "vm-browserify",
-            },
         }),
         syncTheme(),
     ],
@@ -53,7 +45,6 @@ export const viteConfig: UserConfig = {
         warmup: { clientFiles: ["./src/components/**/*"] },
     },
     build: {
-        chunkSizeWarningLimit: 750, // 750 kB
         rolldownOptions: {
             output: {
                 manualChunks(id: string) {
@@ -63,8 +54,10 @@ export const viteConfig: UserConfig = {
 
                     // For production, we'll split the chunks better
                     if (/css$/.test(id)) {
-                        // See https://github.com/vitejs/vite/issues/21903.
-                        // For now we'll combine all the stylesheets into one chunk.
+                        // See https://github.com/vitejs/vite/issues/22301 and
+                        // https://github.com/vitejs/vite/issues/21903.
+                        // For now we'll combine all the stylesheets into one chunk. This isn't that
+                        // bad, but it would be better to split them up.
                         return "style";
                     }
 
