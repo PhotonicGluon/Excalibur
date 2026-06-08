@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
-import { defineConfig } from "vite";
+import { UserConfig, defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 import { syncTheme } from "./src/theme/sync-theme.ts";
@@ -27,7 +27,7 @@ function getAliasesFromTSConfig() {
 }
 
 // https://vitejs.dev/config/
-export const viteConfig = {
+export const viteConfig: UserConfig = {
     plugins: [
         react({}),
         tailwindcss(),
@@ -54,7 +54,7 @@ export const viteConfig = {
     },
     build: {
         chunkSizeWarningLimit: 750, // 750 kB
-        rollupOptions: {
+        rolldownOptions: {
             output: {
                 manualChunks(id: string) {
                     if (!process || !process.env || process.env.NODE_ENV !== "production") {
