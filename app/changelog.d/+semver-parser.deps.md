@@ -1,0 +1,1 @@
+⬆️ Updated `semver-parser` from `4.1.8` to `4.2.1`
