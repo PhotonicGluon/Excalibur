@@ -27,7 +27,7 @@ dependencies = [
     "toml>=0.10.2",
     "tomlkit>=0.15.0",
     "typer>=0.25.1",
-    "uvicorn>=0.48.0",
+    "uvicorn>=0.49.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
     "websockets>=16.0",
 ]
