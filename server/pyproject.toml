@@ -18,7 +18,7 @@ dependencies = [
     "pycryptodome>=3.23.0",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
-    "pyjwt>=2.12.1",
+    "pyjwt>=2.13.0",
     "rapidfuzz>=3.14.5",
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
