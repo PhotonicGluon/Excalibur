@@ -1,6 +1,6 @@
 {
     "name": "excalibur",
-    "version": "0.7.0-alpha.4",
+    "version": "0.7.0-alpha.5",
     "description": "A trustless, secure file management solution using military-grade encryption",
     "homepage": "https://github.com/PhotonicGluon/Excalibur",
     "bugs": {

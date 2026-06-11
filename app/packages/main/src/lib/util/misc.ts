@@ -1,5 +1,5 @@
 /** Whether the process is running in development mode */
-export const IS_DEV = process.env.NODE_ENV === "development";
+export const IS_DEV = import.meta.env.DEV;
 
 /**
  * Sleeps for the given duration.

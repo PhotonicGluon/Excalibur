@@ -10,7 +10,7 @@ test("generatePoP", () => {
         1234,
         Buffer.from("some nonce value", "utf-8"),
     );
-    expect(pop).toEqual(Buffer.from("4116ecf4f60c9af95fdfeaa53704eab6eb816aa526a3e0a93550f2adfc702deb", "hex"));
+    expect(pop.toString("hex")).toEqual("4116ecf4f60c9af95fdfeaa53704eab6eb816aa526a3e0a93550f2adfc702deb");
 });
 
 test("generatePoPHeader", () => {
