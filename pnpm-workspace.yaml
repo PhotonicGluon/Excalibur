@@ -7,10 +7,7 @@ auditConfig:
     - GHSA-848j-6mx2-7j84 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
-minimumReleaseAgeExclude:
-  - "@capacitor/android@8.4.0"
-  - "@capacitor/cli@8.4.0"
-  - "@capacitor/core@8.4.0"
+minimumReleaseAgeExclude: []
 
 blockExoticSubdeps: true
 
@@ -34,6 +31,9 @@ overrides:
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   tar@<=7.5.10: ">=7.5.11"
   readable-stream@<=4: ">=4"
+  qs@>=6.11.1 <=6.15.1: "^6.15.2"
+  tmp@<0.2.6: "^0.2.6"
+  uuid@<11.1.1: "^11.1.1"
 
 patchedDependencies:
   randombytes@2.1.0: app/packages/main/patches/randombytes@2.1.0.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
