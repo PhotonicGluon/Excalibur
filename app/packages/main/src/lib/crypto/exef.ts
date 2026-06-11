@@ -1,4 +1,5 @@
-import { createHmac, randomBytes } from "crypto";
+import createHmac from "create-hmac";
+import randomBytes from "randombytes";
 
 import { GCMAlgorithm, GCMCipher, GCMDecipher } from "@lib/crypto/cipher";
 import HKDF from "@lib/crypto/hkdf";
@@ -305,7 +306,7 @@ export default class ExEF {
 
         const macKey = ExEF._genMacKey(key, header.nonce, header.strength / 8);
         const computedHeaderMAC = ExEF._getHeaderMAC(macKey, header.strength, header.nonce, header.ctLen);
-        if (!header.headerMAC.equals(computedHeaderMAC)) {
+        if (header.headerMAC.toString("hex") !== computedHeaderMAC.toString("hex")) {
             throw new Error("header MAC mismatch");
         }
 
@@ -363,7 +364,7 @@ export default class ExEF {
                 // Check header MAC
                 const macKey = ExEF._genMacKey(key, header.nonce, header.strength / 8);
                 const computedHeaderMAC = ExEF._getHeaderMAC(macKey, header.strength, header.nonce, header.ctLen);
-                if (!header.headerMAC.equals(computedHeaderMAC)) {
+                if (header.headerMAC.toString("hex") !== computedHeaderMAC.toString("hex")) {
                     throw new Error("header MAC mismatch");
                 }
 

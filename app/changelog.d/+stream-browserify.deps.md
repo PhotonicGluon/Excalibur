@@ -1,0 +1,1 @@
+➕ Added `stream-browserify` dependency
