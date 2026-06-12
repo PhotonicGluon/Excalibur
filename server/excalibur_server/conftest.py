@@ -1,5 +1,4 @@
 import os
-import shutil
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -120,36 +119,3 @@ def auth_client_db(test_user) -> TestClient:
     token = generate_auth_token("test-user-db", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
-
-
-@pytest.fixture(scope="session", autouse=True)
-def test_user_vault_folder(tmp_path_factory: pytest.TempPathFactory):
-    vault = tmp_path_factory.mktemp("vault")
-    CONFIG.storage.vault_folder = vault
-
-    test_user_folder = vault / "test-user"
-    test_user_folder.mkdir()
-    yield test_user_folder
-    shutil.rmtree(vault)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def test_user_db_vault_folder(test_user_vault_folder: Path):
-    test_user_db_folder = test_user_vault_folder.parent / "test-user-db"
-    test_user_db_folder.mkdir()
-    yield test_user_db_folder
-    shutil.rmtree(test_user_db_folder)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_vault_files(test_user_vault_folder: Path):
-    folder = test_user_vault_folder / "folder"
-    folder.mkdir()
-
-    empty_folder = test_user_vault_folder / "empty-folder"
-    empty_folder.mkdir()
-
-    (test_user_vault_folder / "file").touch()
-    (folder / "subfile").touch()
-
-    yield

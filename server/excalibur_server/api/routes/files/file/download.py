@@ -49,7 +49,7 @@ def download_file_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
 
     return FileResponse(
-        CONFIG.storage.vault_folder / username / item.system_path,
+        CONFIG.storage.vault_folder / item.system_path,
         media_type="application/octet-stream",
         filename=item.name,
     )

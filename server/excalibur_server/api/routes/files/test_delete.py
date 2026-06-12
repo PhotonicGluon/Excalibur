@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item, get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
@@ -12,7 +11,7 @@ from excalibur_server.src.exef import ExEF
 
 class TestDeletePath:
     @pytest.fixture
-    def deletable_file(self, test_user, test_user_db_vault_folder: Path, db_session: Session) -> FSItem:
+    def deletable_file(self, test_user, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
         file = FSItem(
@@ -21,7 +20,7 @@ class TestDeletePath:
             name="test-delete.txt.exef",
             is_folder=False,
         )
-        file_path = test_user_db_vault_folder / file.system_path
+        file_path = CONFIG.storage.vault_folder / file.system_path
         file_path.parent.mkdir(parents=True, exist_ok=True)
         encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
         file.size = file_path.write_bytes(encrypted_data)
@@ -58,9 +57,7 @@ class TestDeletePath:
             db_session.commit()
 
     @pytest.fixture
-    def deletable_folder_with_items(
-        self, test_user, test_user_db_vault_folder: Path, db_session: Session
-    ) -> tuple[FSItem, list[FSItem]]:
+    def deletable_folder_with_items(self, test_user, db_session: Session) -> tuple[FSItem, list[FSItem]]:
         root_id = test_user["root_id"]
 
         # Make containing folder
@@ -79,7 +76,7 @@ class TestDeletePath:
             name="test-delete.txt.exef",
             is_folder=False,
         )
-        file1_path = test_user_db_vault_folder / file1.system_path
+        file1_path = CONFIG.storage.vault_folder / file1.system_path
         file1_path.parent.mkdir(parents=True, exist_ok=True)
         encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
         file1.size = file1_path.write_bytes(encrypted_data)
@@ -92,7 +89,7 @@ class TestDeletePath:
             name="test-delete2.txt.exef",
             is_folder=False,
         )
-        file2_path = test_user_db_vault_folder / file2.system_path
+        file2_path = CONFIG.storage.vault_folder / file2.system_path
         file2_path.parent.mkdir(parents=True, exist_ok=True)
         encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
         file2.size = file2_path.write_bytes(encrypted_data)
@@ -118,15 +115,15 @@ class TestDeletePath:
         response = TestClient(app).delete(f"/api/files/delete/{deletable_file}")
         assert response.status_code == 401
 
-    def test_delete_file(self, auth_client_db: TestClient, test_user_db_vault_folder: Path, deletable_file: FSItem):
+    def test_delete_file(self, auth_client_db: TestClient, deletable_file: FSItem):
         # Ensure items exist before deletion
         assert get_item(deletable_file.id) is not None
-        assert (test_user_db_vault_folder / deletable_file.system_path).exists()
+        assert (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
         response = auth_client_db.delete(f"/api/files/delete/{get_item_fullpath(deletable_file.id)}")
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
-        assert not (test_user_db_vault_folder / deletable_file.system_path).exists()
+        assert not (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
     def test_delete_folder(self, auth_client_db: TestClient, deletable_folder: FSItem):
         path = get_item_fullpath(deletable_folder.id)
@@ -144,7 +141,6 @@ class TestDeletePath:
     def test_delete_folder_with_items(
         self,
         auth_client_db: TestClient,
-        test_user_db_vault_folder: Path,
         deletable_folder_with_items: tuple[FSItem, list[FSItem]],
     ):
         folder, files = deletable_folder_with_items
@@ -157,7 +153,7 @@ class TestDeletePath:
         assert get_item(folder.id) is not None
         for file in files:
             assert get_item(file.id) is not None
-            assert (test_user_db_vault_folder / file.system_path).exists()
+            assert (CONFIG.storage.vault_folder / file.system_path).exists()
 
         # Not specifying `force` should fail
         response = auth_client_db.delete(f"/api/files/delete/{path}?as_dir=true")
@@ -166,7 +162,7 @@ class TestDeletePath:
         assert get_item(folder.id) is not None
         for file in files:
             assert get_item(file.id) is not None
-            assert (test_user_db_vault_folder / file.system_path).exists()
+            assert (CONFIG.storage.vault_folder / file.system_path).exists()
 
         # Specifying `force` should work
         response = auth_client_db.delete(f"/api/files/delete/{path}?as_dir=true&force=true")
@@ -175,11 +171,9 @@ class TestDeletePath:
         assert get_item(folder.id) is None
         for file in files:
             assert get_item(file.id) is None
-            assert not (test_user_db_vault_folder / file.system_path).exists()
+            assert not (CONFIG.storage.vault_folder / file.system_path).exists()
 
-    def test_delete_with_encrypted_path(
-        self, auth_client_db: TestClient, test_user_db_vault_folder: Path, deletable_file: FSItem
-    ):
+    def test_delete_with_encrypted_path(self, auth_client_db: TestClient, deletable_file: FSItem):
         from base64 import b64encode
 
         path_encrypted = ExEF(b"one demo 16B key").encrypt(
@@ -190,7 +184,7 @@ class TestDeletePath:
         )
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
-        assert not (test_user_db_vault_folder / deletable_file.system_path).exists()
+        assert not (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
     def test_path_not_found(self, auth_client_db: TestClient):
         response = auth_client_db.delete("/api/files/delete/fake/path")

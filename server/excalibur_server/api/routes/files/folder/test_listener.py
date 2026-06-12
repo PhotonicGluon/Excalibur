@@ -14,6 +14,7 @@ from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.pop import generate_pop_header
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
@@ -59,11 +60,11 @@ class TestDirectoryChangesListener:
         yield from _make_websocket("test-user-db", LISTENER_PATH, encrypted=True)
 
     @pytest.fixture(scope="class")
-    def example_file(self, test_user, test_user_db_vault_folder: Path, db_session: Session) -> Path:
+    def example_file(self, test_user, db_session: Session) -> Path:
         root_id = test_user["root_id"]
 
         file_id = uuid4()
-        file_path = test_user_db_vault_folder / f"{file_id}.exef"
+        file_path = CONFIG.storage.vault_folder / f"{file_id}.exef"
         encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
         size = file_path.write_bytes(encrypted_data)
 
@@ -108,9 +109,7 @@ class TestDirectoryChangesListener:
         # Check if the update was transmitted
         assert ws_client.receive_text() == "."
 
-    def test_new_folder_in_folder(
-        self, auth_client_db: TestClient, ws_client: WebSocketTestSession, test_user_vault_folder: Path
-    ):
+    def test_new_folder_in_folder(self, auth_client_db: TestClient, ws_client: WebSocketTestSession):
         # Create a folder
         uuid = uuid4().hex
         subdir = f"test-dir-{uuid}"

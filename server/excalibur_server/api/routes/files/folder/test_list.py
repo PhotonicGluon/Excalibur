@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -53,8 +52,8 @@ class TestListdir:
             db_session.delete(folder)
             db_session.commit()
 
-    def test_no_auth(self, test_user_vault_folder: Path):
-        response = TestClient(app).get(f"/api/files/list/{test_user_vault_folder}")
+    def test_no_auth(self):
+        response = TestClient(app).get("/api/files/list/.")
         assert response.status_code == 401
 
     def test_listdir(self, auth_client_db: TestClient, dir_with_items: FSItem):

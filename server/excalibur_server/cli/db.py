@@ -116,17 +116,15 @@ def current(
 
 
 @db_app.command()
-def migrate_files():
+def migrate_files_v7():
     """
-    Migrate files from the old operating-system dependent system to the new database-backed system.
+    Migrate files from the per-user directory structure to a UUID-based directory structure.
 
     Will be removed in a future release.
     """
 
     # Warn about migration
-    typer.echo(
-        "This will migrate files from the old operating-system dependent system to the new database-backed system."
-    )
+    typer.echo("This will migrate files from the per-user directory structure to a UUID-based directory structure.")
     typer.secho("Please ensure that the database revision is up-to-date.", fg=typer.colors.YELLOW)
     typer.echo("Press Enter to continue...")
     try:
@@ -136,78 +134,39 @@ def migrate_files():
         return
 
     # Code proper
+    from os.path import splitext
     from pathlib import Path
-    from shutil import rmtree
+    from tempfile import TemporaryDirectory
 
     from excalibur_server.src.config import CONFIG
-    from excalibur_server.src.db.operations import add_item, get_session
-    from excalibur_server.src.db.tables import FSItem, User
+    from excalibur_server.src.db.tables import FSItem
 
     vault_folder = CONFIG.storage.vault_folder
 
-    # Get users that need to be migrated
-    with get_session() as session:
-        with session.begin():
-            users = session.query(User).all()
-            users: list[User] = [user.model_copy() for user in users if user.fsitem_id is None]
+    with TemporaryDirectory() as temp_dir:
+        # Move existing users to a temporary, safe directory
+        typer.secho("Moving existing users to a temporary directory...", fg=typer.colors.YELLOW)
+        temp_path = Path(temp_dir)
+        for user_folder in vault_folder.iterdir():
+            user_folder.rename(temp_path / user_folder.name)
 
-    typer.echo(f"Found {len(users)} user(s) to migrate.")
+        # Move files
+        typer.secho("Migrating files...", fg=typer.colors.YELLOW)
+        for user_folder in temp_path.iterdir():
+            for file in user_folder.iterdir():
+                if not file.is_file():
+                    typer.secho(f"==> Skipped directory '{file.relative_to(temp_path)}'", fg=typer.colors.YELLOW)
+                    continue
 
-    for user in users:
-        user_folder = vault_folder / user.username
-        typer.secho(f"==> Migrating user '{user.username}'...")
+                # Old system is that the file name is the ID
+                file_id, _ = splitext(file.name)
 
-        # Create root item for user
-        root_item = FSItem(parent_id=None, root_id="", name=user.username, is_folder=True)
-        root_item.root_id = root_item.id
-        root_id = root_item.id
-        add_item(root_item)
+                # Get new system path
+                new_path = vault_folder / FSItem(id=file_id).system_path
 
-        # Add database entries
-        directories = {".": root_id}
-        file_renaming_map: dict[Path, str] = {}
-        for abs_path in user_folder.rglob("*"):
-            path = abs_path.relative_to(user_folder)
-            if abs_path.is_dir():
-                # Create new FSItem for the directory
-                dir_item = FSItem(
-                    parent_id=directories[str(path.parent)],
-                    root_id=root_id,
-                    name=path.name,
-                    is_folder=True,
-                )
-                directories[str(path)] = dir_item.id
-                add_item(dir_item)
-                continue
-
-            # Create new FSItem for the file
-            file_item = FSItem(
-                parent_id=directories[str(path.parent)],
-                root_id=root_id,
-                name=path.name,
-                is_folder=False,
-                size=abs_path.stat().st_size,
-                timestamp=int(abs_path.stat().st_mtime),
-            )
-            file_renaming_map[abs_path] = f"{file_item.id}.exef"
-            add_item(file_item)
-
-        # Finally, update user's root FSItem ID
-        with get_session() as session:
-            with session.begin():
-                current_user = session.query(User).filter_by(username=user.username).first()
-                current_user.fsitem_id = root_id
-                session.add(current_user)
-
-        # Move files to new locations
-        for old_path, new_name in file_renaming_map.items():
-            old_path.rename(user_folder / new_name)  # All files are now in the user's folder
-
-        # Delete all directories, except root
-        for rel_dir_path in sorted(directories.keys(), key=lambda x: len(x.split("/")), reverse=True):
-            if rel_dir_path == ".":
-                continue
-
-            rmtree(user_folder / rel_dir_path, ignore_errors=True)
+                # Move file
+                new_path.parent.mkdir(parents=True, exist_ok=True)
+                file.rename(new_path)
+                typer.secho(f"==> Migrated '{file.relative_to(temp_path)}'", fg=typer.colors.YELLOW)
 
     typer.secho("Migration complete.", fg=typer.colors.GREEN)

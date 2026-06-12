@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item, get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
@@ -12,7 +11,7 @@ from excalibur_server.src.exef import ExEF
 
 class TestDownload:
     @pytest.fixture
-    def dir_with_items(self, test_user, test_user_db_vault_folder: Path, db_session: Session) -> FSItem:
+    def dir_with_items(self, test_user, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
         # Make containing folder
@@ -31,7 +30,8 @@ class TestDownload:
             name="test-file.txt.exef",
             is_folder=False,
         )
-        file_path = test_user_db_vault_folder / file.system_path
+        file_path = CONFIG.storage.vault_folder / file.system_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         file.size = file_path.write_bytes(b"a" * 100)
         db_session.add(file)
 

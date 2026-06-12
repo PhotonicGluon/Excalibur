@@ -74,8 +74,6 @@ async def upload_file_endpoint(
     path = PathlibPath(processed_path).relative_to(".")
     username = credentials.username
 
-    base_path = CONFIG.storage.vault_folder / username
-
     # Split path into directory and file name
     dir_path, name = os.path.split(path)
 
@@ -110,9 +108,13 @@ async def upload_file_endpoint(
         size=0,  # Will be updated later
     )
 
+    # Create file paths
+    new_file_path = CONFIG.storage.vault_folder / new_file.system_path
+    new_file_path.parent.mkdir(parents=True, exist_ok=True)
+
     # Save the file
     size = 0
-    async with aiofiles.open(base_path / new_file.system_path, "wb") as out_file:
+    async with aiofiles.open(new_file_path, "wb") as out_file:
         while content := file.read(CONFIG.storage.write_chunk_size):
             size += await out_file.write(content)
 

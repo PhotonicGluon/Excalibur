@@ -100,7 +100,11 @@ class FSItem(SQLModel, table=True):
         :raises NotImplementedError: if this is not a file
         """
 
-        if not self.is_folder:
-            return Path(str(self.id) + ".exef")
-        else:
+        if self.is_folder:
             raise NotImplementedError("System path is only defined for files")
+
+        file_id = str(self.id)
+        level_1 = file_id[:2]
+        level_2 = file_id[2:4]
+        rest = file_id[4:]
+        return Path(level_1, level_2, rest + ".exef")
