@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
@@ -89,3 +90,17 @@ class FSItem(SQLModel, table=True):
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
+
+    @property
+    def system_path(self) -> Path:
+        """
+        Get the system path for this item. Only defined for files.
+
+        :return: path to the file, relative to the base directory
+        :raises NotImplementedError: if this is not a file
+        """
+
+        if not self.is_folder:
+            return Path(str(self.id) + ".exef")
+        else:
+            raise NotImplementedError("System path is only defined for files")

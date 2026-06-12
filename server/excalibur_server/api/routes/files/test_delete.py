@@ -1,5 +1,4 @@
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,25 +15,23 @@ class TestDeletePath:
     def deletable_file(self, test_user, test_user_db_vault_folder: Path, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
-        file_id = uuid4()
-        file_path = test_user_db_vault_folder / f"{file_id}.exef"
-        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
-        size = file_path.write_bytes(encrypted_data)
-
         file = FSItem(
-            id=file_id,
             parent_id=root_id,
             root_id=root_id,
             name="test-delete.txt.exef",
             is_folder=False,
-            size=size,
         )
+        file_path = test_user_db_vault_folder / file.system_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
+        file.size = file_path.write_bytes(encrypted_data)
+
         db_session.add(file)
         db_session.commit()
 
         yield file
 
-        if get_item(file_id) is not None:
+        if get_item(file.id) is not None:
             db_session.delete(file)
             db_session.commit()
 
@@ -76,32 +73,29 @@ class TestDeletePath:
         db_session.add(folder)
 
         # Make test files
-        file1_id = uuid4()
-        file1_path = test_user_db_vault_folder / f"{file1_id}.exef"
-        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
-        size = file1_path.write_bytes(encrypted_data)
         file1 = FSItem(
-            id=file1_id,
             parent_id=folder.id,
             root_id=root_id,
             name="test-delete.txt.exef",
             is_folder=False,
-            size=size,
         )
+        file1_path = test_user_db_vault_folder / file1.system_path
+        file1_path.parent.mkdir(parents=True, exist_ok=True)
+        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
+        file1.size = file1_path.write_bytes(encrypted_data)
+
         db_session.add(file1)
 
-        file2_id = uuid4()
-        file2_path = test_user_db_vault_folder / f"{file2_id}.exef"
-        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
-        size = file2_path.write_bytes(encrypted_data)
         file2 = FSItem(
-            id=file2_id,
             parent_id=folder.id,
             root_id=root_id,
             name="test-delete2.txt.exef",
             is_folder=False,
-            size=size,
         )
+        file2_path = test_user_db_vault_folder / file2.system_path
+        file2_path.parent.mkdir(parents=True, exist_ok=True)
+        encrypted_data = ExEF(b"one demo 16B key").encrypt(b"test")
+        file2.size = file2_path.write_bytes(encrypted_data)
         db_session.add(file2)
 
         # Commit and yield
@@ -127,12 +121,12 @@ class TestDeletePath:
     def test_delete_file(self, auth_client_db: TestClient, test_user_db_vault_folder: Path, deletable_file: FSItem):
         # Ensure items exist before deletion
         assert get_item(deletable_file.id) is not None
-        assert (test_user_db_vault_folder / f"{deletable_file.id}.exef").exists()
+        assert (test_user_db_vault_folder / deletable_file.system_path).exists()
 
         response = auth_client_db.delete(f"/api/files/delete/{get_item_fullpath(deletable_file.id)}")
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
-        assert not (test_user_db_vault_folder / f"{deletable_file.id}.exef").exists()
+        assert not (test_user_db_vault_folder / deletable_file.system_path).exists()
 
     def test_delete_folder(self, auth_client_db: TestClient, deletable_folder: FSItem):
         path = get_item_fullpath(deletable_folder.id)
@@ -163,7 +157,7 @@ class TestDeletePath:
         assert get_item(folder.id) is not None
         for file in files:
             assert get_item(file.id) is not None
-            assert (test_user_db_vault_folder / f"{file.id}.exef").exists()
+            assert (test_user_db_vault_folder / file.system_path).exists()
 
         # Not specifying `force` should fail
         response = auth_client_db.delete(f"/api/files/delete/{path}?as_dir=true")
@@ -172,7 +166,7 @@ class TestDeletePath:
         assert get_item(folder.id) is not None
         for file in files:
             assert get_item(file.id) is not None
-            assert (test_user_db_vault_folder / f"{file.id}.exef").exists()
+            assert (test_user_db_vault_folder / file.system_path).exists()
 
         # Specifying `force` should work
         response = auth_client_db.delete(f"/api/files/delete/{path}?as_dir=true&force=true")
@@ -181,7 +175,7 @@ class TestDeletePath:
         assert get_item(folder.id) is None
         for file in files:
             assert get_item(file.id) is None
-            assert not (test_user_db_vault_folder / f"{file.id}.exef").exists()
+            assert not (test_user_db_vault_folder / file.system_path).exists()
 
     def test_delete_with_encrypted_path(
         self, auth_client_db: TestClient, test_user_db_vault_folder: Path, deletable_file: FSItem
@@ -196,7 +190,7 @@ class TestDeletePath:
         )
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
-        assert not (test_user_db_vault_folder / f"{deletable_file.id}.exef").exists()
+        assert not (test_user_db_vault_folder / deletable_file.system_path).exists()
 
     def test_path_not_found(self, auth_client_db: TestClient):
         response = auth_client_db.delete("/api/files/delete/fake/path")

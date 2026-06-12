@@ -24,7 +24,7 @@ class TestUpload:
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
         assert item is not None
 
-        uploaded_file = test_user_db_vault_folder / f"{item.id}.exef"
+        uploaded_file = test_user_db_vault_folder / item.system_path
         assert uploaded_file.exists()
         assert uploaded_file.read_bytes() == content
 
@@ -53,7 +53,7 @@ class TestUpload:
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
         assert item is not None
 
-        uploaded_file = test_user_db_vault_folder / f"{item.id}.exef"
+        uploaded_file = test_user_db_vault_folder / item.system_path
         assert uploaded_file.exists()
         assert uploaded_file.read_bytes() == content
 
@@ -67,7 +67,7 @@ class TestUpload:
         assert response.status_code == 201
 
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
-        uploaded_file = test_user_db_vault_folder / f"{item.id}.exef"
+        uploaded_file = test_user_db_vault_folder / item.system_path
         assert uploaded_file.exists()
         assert uploaded_file.read_bytes() == b"first"
 
@@ -83,7 +83,7 @@ class TestUpload:
         assert not uploaded_file.exists()  # Path changed because we gave a new uploaded item
 
         item = get_item_by_path(root_id, f"test-{uuid}.txt.exef")
-        uploaded_file = test_user_db_vault_folder / f"{item.id}.exef"
+        uploaded_file = test_user_db_vault_folder / item.system_path
         assert uploaded_file.exists()
         assert uploaded_file.read_bytes() == b"third"
 

@@ -1,6 +1,5 @@
 import os
 import tempfile
-import uuid
 from pathlib import Path as PathlibPath
 from typing import Annotated, Generator
 
@@ -102,21 +101,22 @@ async def upload_file_endpoint(
 
         rmitem(existing_file)
 
-    # Save the file
-    new_file_id = uuid.uuid4()
-    size = 0
-    async with aiofiles.open(base_path / (str(new_file_id) + ".exef"), "wb") as out_file:
-        while content := file.read(CONFIG.storage.write_chunk_size):
-            size += await out_file.write(content)
-
-    # Create the file in the database
+    # Prepare a new `FSItem` instance
     new_file = FSItem(
-        id=new_file_id,
         parent_id=parent.id,
         root_id=parent.root_id,
         name=name,
         is_folder=False,
-        size=size,
+        size=0,  # Will be updated later
     )
+
+    # Save the file
+    size = 0
+    async with aiofiles.open(base_path / new_file.system_path, "wb") as out_file:
+        while content := file.read(CONFIG.storage.write_chunk_size):
+            size += await out_file.write(content)
+
+    # Create the file in the database
+    new_file.size = size
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)

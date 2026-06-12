@@ -1,5 +1,4 @@
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,18 +25,14 @@ class TestDownload:
         db_session.add(folder)
 
         # Make test files
-        file_id = uuid4()
-        file_path = test_user_db_vault_folder / f"{file_id}.exef"
-        size = file_path.write_bytes(b"a" * 100)
-
         file = FSItem(
-            id=file_id,
             parent_id=folder.id,
             root_id=root_id,
             name="test-file.txt.exef",
             is_folder=False,
-            size=size,
         )
+        file_path = test_user_db_vault_folder / file.system_path
+        file.size = file_path.write_bytes(b"a" * 100)
         db_session.add(file)
 
         # Commit and yield

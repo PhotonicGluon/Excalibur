@@ -42,7 +42,7 @@ def rmitem(item: FSItem):
 
     if not item.is_folder:
         # Remove the item from the database and the file system
-        path = CONFIG.storage.vault_folder / get_item(item.root_id).name / f"{item.id}.exef"
+        path = CONFIG.storage.vault_folder / get_item(item.root_id).name / item.system_path
         path.unlink()
         remove_item(item.id)
         return
