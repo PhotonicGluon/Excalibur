@@ -148,6 +148,8 @@ def migrate_files_v7():
         typer.secho("Moving existing users to a temporary directory...", fg=typer.colors.YELLOW)
         temp_path = Path(temp_dir)
         for user_folder in vault_folder.iterdir():
+            if not user_folder.is_dir():
+                continue
             user_folder.rename(temp_path / user_folder.name)
 
         # Move files
