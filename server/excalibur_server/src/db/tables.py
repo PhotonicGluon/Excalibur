@@ -14,7 +14,8 @@ class User(SQLModel, table=True):
     """
 
     # Basic information
-    username: str = Field(primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(unique=True)
     auth_protocol: AuthProtocol = Field(
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )

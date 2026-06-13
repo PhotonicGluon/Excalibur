@@ -1,3 +1,5 @@
+from sqlmodel import select
+
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import User
 
@@ -25,7 +27,7 @@ def get_user(username: str) -> User | None:
     """
 
     with get_session() as session:
-        user = session.get(User, username)
+        user = session.execute(select(User).where(User.username == username)).scalars().first()
         if user is not None:
             user = user.model_copy()  # So that we can avoid session issues
         return user
@@ -41,7 +43,7 @@ def remove_user(username: str):
 
     with get_session() as session:
         with session.begin():
-            user = session.get(User, username)
+            user = session.execute(select(User).where(User.username == username)).scalars().first()
             if user is None:
                 raise ValueError(f"User '{username}' does not exist.")
             session.delete(user)
