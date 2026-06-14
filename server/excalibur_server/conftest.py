@@ -1,5 +1,4 @@
 import os
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -75,26 +74,25 @@ def test_user(db_session: Session):
     )
     db_session.add(legacy_test_user)
 
-    # Create root folder for user
-    root_id = uuid.uuid4()
-    root_folder = FSItem(id=root_id, parent_id=None, root_id=root_id, name="test-user-db", is_folder=True)
-    db_session.add(root_folder)
-
     # Create test user with database filesystem
     db_test_user = User(
         username="test-user-db",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
-        fsitem_id=root_id,
         additional_info="Some Sample Info",
         auk_salt=b"test_auk_salt_16_bytes",
         key_enc=b"test_encrypted_vault_key",
     )
+    root_folder = FSItem(name=str(db_test_user.id), parent_id=None, is_folder=True)
+    root_folder.root_id = root_folder.id
+    db_test_user.fsitem_id = root_folder.id
+
     db_session.add(db_test_user)
+    db_session.add(root_folder)
 
     # Commit all items
     db_session.commit()
 
-    return {"user": db_test_user, "root_id": root_id}
+    return {"user": db_test_user, "root_id": root_folder.id}
 
 
 @pytest.fixture(scope="class")
