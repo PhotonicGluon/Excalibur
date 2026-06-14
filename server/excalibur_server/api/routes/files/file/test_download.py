@@ -52,8 +52,8 @@ class TestDownload:
         response = TestClient(app).get("/api/files/download/not-authorized-oops")
         assert response.status_code == 401
 
-    def test_download_file(self, auth_client_db: TestClient, dir_with_items: FSItem):
-        response = auth_client_db.get(
+    def test_download_file(self, auth_client: TestClient, dir_with_items: FSItem):
+        response = auth_client.get(
             f"/api/files/download/{get_item_fullpath(dir_with_items.id).as_posix()}/test-file.txt.exef"
         )
         assert response.status_code == 200
@@ -62,13 +62,13 @@ class TestDownload:
         response = ExEF(b"one demo 16B key").decrypt(response.content)
         assert response == b"a" * 100
 
-    def test_download_file_encrypted_path(self, auth_client_db: TestClient, dir_with_items: FSItem):
+    def test_download_file_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
         from base64 import b64encode
 
         path = f"{get_item_fullpath(dir_with_items.id).as_posix()}/test-file.txt.exef"
         path_encrypted = ExEF(b"one demo 16B key").encrypt(path.encode("utf-8"))
 
-        response = auth_client_db.get(
+        response = auth_client.get(
             f"/api/files/download/{b64encode(path_encrypted, altchars=b'-_').decode()}",
             headers={"X-Encrypted": "true"},
         )
@@ -78,6 +78,6 @@ class TestDownload:
         response = ExEF(b"one demo 16B key").decrypt(response.content)
         assert response == b"a" * 100
 
-    def test_file_not_found(self, auth_client_db: TestClient):
-        response = auth_client_db.get("/api/files/download/fake-file.txt.exef")
+    def test_file_not_found(self, auth_client: TestClient):
+        response = auth_client.get("/api/files/download/fake-file.txt.exef")
         assert response.status_code == 404

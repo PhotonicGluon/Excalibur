@@ -60,39 +60,25 @@ def test_user(db_session: Session):
     # Check if user already exists
     from excalibur_server.src.db.operations import get_user
 
-    if existing_user := get_user("test-user-db"):
+    if existing_user := get_user("test-user"):
         return {"user": existing_user, "root_id": existing_user.fsitem_id}
 
-    # Create legacy test user (i.e., using traditional file system) for existing tests
-    legacy_test_user = User(
+    # Create test user
+    user = User(
         username="test-user",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
-        fsitem_id=None,  # No database filesystem for legacy user
         additional_info="Some Sample Info",
         auk_salt=b"test_auk_salt_16_bytes",
         key_enc=b"test_encrypted_vault_key",
     )
-    db_session.add(legacy_test_user)
-
-    # Create test user with database filesystem
-    db_test_user = User(
-        username="test-user-db",
-        auth_protocol=AuthProtocol.OPAQUE_3DH,
-        additional_info="Some Sample Info",
-        auk_salt=b"test_auk_salt_16_bytes",
-        key_enc=b"test_encrypted_vault_key",
-    )
-    root_folder = FSItem(name=str(db_test_user.id), parent_id=None, is_folder=True)
+    root_folder = FSItem(name=str(user.id), parent_id=None, is_folder=True)
     root_folder.root_id = root_folder.id
-    db_test_user.fsitem_id = root_folder.id
-
-    db_session.add(db_test_user)
+    user.fsitem_id = root_folder.id
     db_session.add(root_folder)
-
-    # Commit all items
+    db_session.add(user)
     db_session.commit()
 
-    return {"user": db_test_user, "root_id": root_folder.id}
+    return {"user": user, "root_id": root_folder.id}
 
 
 @pytest.fixture(scope="class")
@@ -103,17 +89,5 @@ def auth_client(test_user) -> TestClient:
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
     token = generate_auth_token("test-user", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
-    with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
-        yield client
-
-
-@pytest.fixture(scope="class")
-def auth_client_db(test_user) -> TestClient:
-    """
-    An authenticated client for testing with database filesystem.
-    """
-
-    MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token("test-user-db", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
