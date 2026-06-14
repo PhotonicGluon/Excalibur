@@ -6,7 +6,6 @@ import { AdditionalUserInfo } from "@lib/users/structures";
  * Retrieves additional user information from the server.
  *
  * @param apiURL The URL of the API server to query
- * @param username The username to retrieve the additional information for
  * @param token Authentication token for accessing the server
  * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
  * @returns A promise which resolves to an object containing the success status, an optional error
@@ -14,11 +13,10 @@ import { AdditionalUserInfo } from "@lib/users/structures";
  */
 export async function getAdditionalUserInfo(
     apiURL: string,
-    username: string,
     token: string,
     e2eeKey: Buffer,
 ): Promise<{ success: boolean; error?: string; info?: AdditionalUserInfo }> {
-    const response = await popFetch(`${apiURL}/users/info/${username}`, e2eeKey, {
+    const response = await popFetch(`${apiURL}/users/info`, e2eeKey, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
     });
@@ -41,7 +39,6 @@ export async function getAdditionalUserInfo(
  * Edits additional user information on the server.
  *
  * @param apiURL The URL of the API server to query
- * @param username The username to retrieve the additional information for
  * @param token Authentication token for accessing the server
  * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
  * @param info The new additional user information to set
@@ -50,13 +47,12 @@ export async function getAdditionalUserInfo(
  */
 export async function editAdditionalUserInfo(
     apiURL: string,
-    username: string,
     token: string,
     e2eeKey: Buffer,
     info: AdditionalUserInfo,
 ): Promise<{ success: boolean; error?: string }> {
     const rawInfo = JSON.stringify(info);
-    const response = await popFetch(`${apiURL}/users/edit-info/${username}`, e2eeKey, {
+    const response = await popFetch(`${apiURL}/users/edit-info`, e2eeKey, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,

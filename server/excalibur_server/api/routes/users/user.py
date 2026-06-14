@@ -77,21 +77,13 @@ def get_user_security_details_endpoint(username: Annotated[str, Path()]):
 
 
 @router.get(
-    "/vault/{username}",
+    "/vault",
     summary="Get User Vault Key",
     dependencies=[Depends(get_credentials)],
-    responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
-    },
     response_model=EncryptedVaultKey,
     tags=["encrypted"],
 )
-def get_user_vault_key_endpoint(
-    credentials: Annotated[Credentials, Depends(get_credentials)],
-    _username: Annotated[
-        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
-    ],
-):
+def get_user_vault_key_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
     """
     Returns the vault key of the currently authenticated user.
     """
@@ -101,21 +93,13 @@ def get_user_vault_key_endpoint(
 
 
 @router.get(
-    "/info/{username}",
+    "/info",
     summary="Get Additional User Info",
     dependencies=[Depends(get_credentials)],
-    responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
-    },
     tags=["encrypted"],
     response_class=PlainTextResponse,
 )
-def get_additional_user_info_endpoint(
-    credentials: Annotated[Credentials, Depends(get_credentials)],
-    _username: Annotated[
-        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
-    ],
-):
+def get_additional_user_info_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
     """
     Returns the additional user info of the currently authenticated user.
     """
@@ -125,21 +109,16 @@ def get_additional_user_info_endpoint(
 
 
 @router.post(
-    "/edit-info/{username}",
+    "/edit-info",
     summary="Edit Additional User Info",
     dependencies=[Depends(get_credentials)],
     responses={
         status.HTTP_200_OK: {"description": "User info updated", "content": None},
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
     },
     tags=["encrypted"],
 )
 def edit_additional_user_info_endpoint(
-    credentials: Annotated[Credentials, Depends(get_credentials)],
-    _username: Annotated[
-        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
-    ],
-    info: Annotated[str, Body()],
+    credentials: Annotated[Credentials, Depends(get_credentials)], info: Annotated[str, Body()]
 ):
     """
     Edits the additional user info of the currently authenticated user.

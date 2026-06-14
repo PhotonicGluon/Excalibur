@@ -174,7 +174,6 @@ const NewUser: React.FC = () => {
 
         const setAdditionalInfoResponse = await editAdditionalUserInfo(
             auth.serverInfo!.apiURL!,
-            values.username,
             e2eeData.token,
             e2eeData.key,
             additionalInfo,
