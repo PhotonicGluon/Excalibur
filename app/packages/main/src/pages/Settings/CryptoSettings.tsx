@@ -15,7 +15,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { KeyStrength } from "@lib/exef";
+import { KeyStrength } from "@lib/crypto/exef";
 import { CryptoChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";

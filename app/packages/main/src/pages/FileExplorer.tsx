@@ -27,7 +27,7 @@ import {
     useIonToast,
     useIonViewWillEnter,
 } from "@ionic/react";
-import { add, documentOutline, ellipsisVertical, folderOutline, searchOutline } from "ionicons/icons";
+import { add, documentOutline, ellipsisVertical, folderOutline, listOutline, searchOutline } from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
@@ -41,16 +41,22 @@ import SearchDialog from "@components/dialog/SearchDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
-import JobsList from "@components/explorer/jobs/JobsList";
-import { ProvideJobs, useJobsManager } from "@components/explorer/jobs/context";
+import JobsModal from "@components/explorer/jobs/JobsModal";
+import { ProvideJobs } from "@components/explorer/jobs/context";
 
-const FabButton: React.FC<{ onCreateFolder: () => void }> = (props) => {
+const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolean }> = (props) => {
     // Hooks
     const { onUploadFile } = useUploadFile();
 
     // Render
     return (
-        <IonFab id="fab-button" slot="fixed" vertical="bottom" horizontal="end">
+        <IonFab
+            id="fab-button"
+            slot="fixed"
+            vertical="bottom"
+            horizontal="end"
+            className={`${props.isJobsDialogOpen ? "mb-16" : ""} transform-all duration-100`}
+        >
             <IonFabButton>
                 <IonIcon icon={add} />
             </IonFabButton>
@@ -63,26 +69,6 @@ const FabButton: React.FC<{ onCreateFolder: () => void }> = (props) => {
                 </IonFabButton>
             </IonFabList>
         </IonFab>
-    );
-};
-
-const JobsSummary: React.FC<{
-    onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-}> = (props) => {
-    // Contexts
-    const jobsManager = useJobsManager();
-
-    // Render
-    return (
-        <div id="jobs-summary" className="p-2 hover:cursor-pointer" onClick={props.onClick}>
-            {jobsManager.jobs.size > 0 ? (
-                <span>
-                    {jobsManager.jobs.size} Job{jobsManager.jobs.size === 1 ? "" : "s"}
-                </span>
-            ) : (
-                <span>No Jobs</span>
-            )}
-        </div>
     );
 };
 
@@ -99,8 +85,7 @@ const FileExplorer: React.FC = () => {
     const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast, dismissToast] = useIonToast();
 
-    const jobsPopover = useRef<HTMLIonPopoverElement>(null);
-    const [showJobsPopover, setShowJobsPopover] = useState(false);
+    const [showJobsModal, setShowJobsModal] = useState(false);
 
     const [showMoveDialog, setShowMoveDialog] = useState(false);
     const [moveOrigPath, setMoveOrigPath] = useState<string>("");
@@ -347,6 +332,12 @@ const FileExplorer: React.FC = () => {
                                 <IonText className="pl-2">Search</IonText>
                             </IonLabel>
                         </IonItem>
+                        <IonItem button={true} onClick={() => setShowJobsModal(true)}>
+                            <IonLabel>
+                                <IonIcon icon={listOutline} size="large" />
+                                <IonText className="pl-2">Jobs</IonText>
+                            </IonLabel>
+                        </IonItem>
                         <IonItem
                             className={!Capacitor.isPluginAvailable("FolderOpener") ? "hidden" : ""}
                             button={true}
@@ -375,33 +366,6 @@ const FileExplorer: React.FC = () => {
                             <IonButtons className="w-24" slot="start">
                                 <IonMenuButton onClick={() => menuController.open()} />
                             </IonButtons>
-
-                            {/* Jobs display and popover */}
-                            <div className="flex w-full justify-center">
-                                {/* Jobs' summary */}
-                                <JobsSummary
-                                    onClick={(e) => {
-                                        jobsPopover.current!.event = e;
-                                        setShowJobsPopover(true);
-                                    }}
-                                ></JobsSummary>
-
-                                {/* Jobs' details */}
-                                <IonPopover
-                                    ref={jobsPopover}
-                                    id="jobs-popover"
-                                    className="[&::part(content)]:w-100 [&::part(content)]:max-w-[90vw]"
-                                    side="bottom"
-                                    alignment="center"
-                                    style={{ "--offset-y": "calc(var(--spacing)*2)" }}
-                                    isOpen={showJobsPopover}
-                                    onDidDismiss={() => setShowJobsPopover(false)}
-                                >
-                                    <IonContent className="ion-padding">
-                                        <JobsList />
-                                    </IonContent>
-                                </IonPopover>
-                            </div>
 
                             {/* Right-side buttons */}
                             <IonButtons className="w-24 justify-end" slot="end">
@@ -458,10 +422,13 @@ const FileExplorer: React.FC = () => {
                             </div>
 
                             {/* Fab button */}
-                            <FabButton onCreateFolder={onCreateFolder} />
+                            <FabButton isJobsDialogOpen={showJobsModal} onCreateFolder={onCreateFolder} />
 
                             {/* Files */}
                             <FilesArea refreshTrigger={refreshTrigger} />
+
+                            {/* Jobs modal */}
+                            <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />
                         </explorerContext.Provider>
                     </IonContent>
                 </ProvideJobs>

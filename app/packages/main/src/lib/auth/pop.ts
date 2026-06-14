@@ -1,4 +1,5 @@
-import { createHmac, randomBytes } from "crypto";
+import createHmac from "create-hmac";
+import randomBytes from "randombytes";
 
 import { b64encode } from "@lib/util";
 

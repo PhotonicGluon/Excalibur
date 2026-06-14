@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 import { useState } from "react";
 
 import {
@@ -23,8 +23,8 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import generateKey from "@lib/auth/keygen";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
+import generateKey from "@lib/crypto/keygen";
 import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
 import { AdditionalUserInfo } from "@lib/users/structures";
 
@@ -135,7 +135,6 @@ const NewUser: React.FC = () => {
             ack,
             aukSalt,
             encryptedVaultKey,
-            undefined, // No comms UUID (we're registering, not upgrading)
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg) => {
@@ -154,7 +153,6 @@ const NewUser: React.FC = () => {
             auth.serverInfo!.apiURL!,
             values.username,
             values.password,
-            () => setIsLoading(true),
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg, buttons) => {

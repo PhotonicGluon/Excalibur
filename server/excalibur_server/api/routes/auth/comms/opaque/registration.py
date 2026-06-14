@@ -1,28 +1,18 @@
-from typing import Annotated
+from fastapi import WebSocket, WebSocketDisconnect
 
-from fastapi import Query, WebSocket, WebSocketDisconnect
-
-from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
 
 
 @router.websocket("/opaque/register")
-async def registration_endpoint(
-    websocket: WebSocket,
-    comms_uuid: Annotated[
-        str | None,
-        Query(description="Communication UUID. Used for upgrading an existing user to OPAQUE from SRP authentication."),
-    ] = None,
-):
+async def registration_endpoint(websocket: WebSocket):
     """
     Endpoint that handles the registration communication of incoming requests.
 
@@ -32,8 +22,6 @@ async def registration_endpoint(
     OPAQUE = _get_opaque()
 
     key = CONFIG.security.account_creation_key
-    if comms_uuid and comms_uuid in MASTER_KEYS_CACHE:
-        key = MASTER_KEYS_CACHE[comms_uuid]
     ws_manager = EncryptedWebSocketManager(websocket, key)
 
     await ws_manager.accept()
@@ -68,27 +56,15 @@ async def registration_endpoint(
         auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
-        # If a valid communications UUID was given, we update the authentication protocol
-        if key != CONFIG.security.account_creation_key:
-            with get_session() as session:
-                with session.begin():
-                    current_user = session.query(User).filter_by(username=username).first()
-                    current_user.auth_protocol = AuthProtocol.OPAQUE_3DH
-                    current_user.srp_group = None
-                    current_user.srp_salt = None
-                    current_user.srp_verifier = None
-                    current_user.registration_record = registration_record_raw
-                    session.add(current_user)
-        else:
-            # Add new user
-            user = User(
-                username=username,
-                auth_protocol=AuthProtocol.OPAQUE_3DH,
-                registration_record=registration_record_raw,
-                auk_salt=auk_salt,
-                key_enc=key_enc,
-            )
-            add_user(user)
+        # Add the user
+        user = User(
+            username=username,
+            auth_protocol=AuthProtocol.OPAQUE_3DH,
+            registration_record=registration_record_raw,
+            auk_salt=auk_salt,
+            key_enc=key_enc,
+        )
+        add_user(user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))

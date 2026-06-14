@@ -19,6 +19,7 @@ describe("<Versions />", () => {
                             maxUploadSize: 0,
                         },
                         vaultKey: null,
+                        noc: null,
                         getToken: () => null,
                         setAuthInfo: () => {},
                         setServerInfo: () => {},

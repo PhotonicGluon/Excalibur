@@ -3,12 +3,11 @@ packages:
   - app/packages/**
 
 auditConfig:
-  ignoreCves:
-    - CVE-2025-14505 # Unfixed vulnerability in elliptic
+  ignoreGhsas:
+    - GHSA-848j-6mx2-7j84 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
-minimumReleaseAgeExclude:
-  - lint-staged@17.0.5
+minimumReleaseAgeExclude: []
 
 blockExoticSubdeps: true
 
@@ -23,13 +22,21 @@ allowBuilds:
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - prettier-plugin-tailwindcss@0.7.4
-trustPolicyIgnoreAfter: 43200  # 30 days, expressed in minutes
+  - tinyexec@1.2.2
+trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   "@xmldom/xmldom@<0.8.13": ">=0.8.13"
   minimatch@<3.1.4: ">=3.1.4"
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   tar@<=7.5.10: ">=7.5.11"
+  readable-stream@<=4: ">=4"
+  qs@>=6.11.1 <=6.15.1: "^6.15.2"
+  tmp@<0.2.6: "^0.2.6"
+  uuid@<11.1.1: "^11.1.1"
+
+patchedDependencies:
+  randombytes@2.1.0: app/packages/main/patches/randombytes@2.1.0.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
 
 sideEffectsCache: false
 

@@ -1,8 +1,7 @@
-import { createDecipheriv } from "crypto";
-
 import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
+import { GCMDecipher } from "@lib/crypto/cipher";
 import { b64decode } from "@lib/util";
 
 import { HandshakeData } from "./structures";
@@ -157,7 +156,7 @@ export async function handshakeOPAQUE(
                     const token = b64decode(authTokenData.token);
                     const tag = b64decode(authTokenData.tag);
 
-                    const cipher = createDecipheriv("aes-256-gcm", state.master!, nonce);
+                    const cipher = new GCMDecipher("aes-256-gcm", state.master!, nonce);
                     cipher.setAuthTag(tag);
 
                     const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);

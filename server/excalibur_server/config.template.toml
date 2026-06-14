@@ -11,7 +11,7 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 5
+version = 6
 
 # -----------------------------------------------------------------------------
 # Server & Network Configuration
@@ -80,11 +80,6 @@ account_creation_key = "Account Creation Key Goes Here!!"
 # The key strength, in bits, to use for cryptographic operations
 # Valid values: 128, 192, 256
 key_strength = 128
-
-[security.srp]
-# Secure Remote Password (SRP) group size for authentication
-# Valid values (case insensitive): "small", "medium", "large"
-group = "small"
 
 [security.opaque]
 # The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal format

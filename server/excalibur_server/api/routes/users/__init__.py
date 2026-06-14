@@ -4,7 +4,6 @@ from fastapi import APIRouter
 router = APIRouter(tags=["users"])
 
 # Add other endpoints
-from .user import add_user_endpoint as add_user_endpoint
 from .user import check_user_endpoint as check_user_endpoint
 from .user import edit_additional_user_info_endpoint as edit_additional_user_info_endpoint
 from .user import get_additional_user_info_endpoint as get_additional_user_info_endpoint

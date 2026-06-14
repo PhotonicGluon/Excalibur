@@ -76,7 +76,7 @@ async def _verify_and_extract_credentials(
     :param get_path_and_method: a function that returns the encoded path and method
     :param raise_exception: a function to call to raise context-specific exceptions
     :param credentials: the "Bearer" token credentials
-    :param hmac_validation: the X-SRP-PoP header value
+    :param hmac_validation: the X-Auth-PoP header value
     :return: the validated credentials
     """
 
@@ -131,7 +131,7 @@ async def get_credentials(
     hmac_validation: Annotated[
         str,
         Header(
-            alias="X-SRP-PoP",
+            alias="X-Auth-PoP",
             pattern=POP_HEADER_PATTERN,
             description="HMAC for authentication",
         ),
@@ -160,7 +160,7 @@ async def get_credentials(
         return get_url_encoded_path(request.url), request.method
 
     def raise_http_exception(detail: str):
-        headers = {"WWW-Authenticate": "Bearer", "X-SRP-PoP": POP_HEADER_PATTERN}
+        headers = {"WWW-Authenticate": "Bearer", "X-Auth-PoP": POP_HEADER_PATTERN}
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=detail,

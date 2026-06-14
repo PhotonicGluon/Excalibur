@@ -12,7 +12,7 @@ export const ProvideJobs: React.FC<{ children: React.ReactNode }> = ({ children 
 /**
  * React hook that provides access to job management functionality.
  *
- * @returns Jobs manager
+ * @returns the jobs manager
  */
 function useProvideJobsManager(): JobsManager {
     const [jobs, updateJobs] = useImmer<Map<string, Job>>(new Map());
@@ -99,5 +99,15 @@ function useProvideJobsManager(): JobsManager {
         [updateJobs],
     );
 
-    return { jobs, addJob, getJob, updateJob, updateProgress, cancelJob, deleteJob };
+    const clearComplete = useCallback(() => {
+        updateJobs((draft) => {
+            for (const [id, job] of draft) {
+                if (job.progress === true || job.progress === false) {
+                    draft.delete(id);
+                }
+            }
+        });
+    }, [updateJobs]);
+
+    return { jobs, addJob, getJob, updateJob, updateProgress, cancelJob, deleteJob, clearComplete };
 }

@@ -1,0 +1,1 @@
+➕ Added `vm-browserify` dependency

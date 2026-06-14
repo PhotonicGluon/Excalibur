@@ -1,4 +1,4 @@
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { getVaultKey } from "@lib/users/api";
 
 /**

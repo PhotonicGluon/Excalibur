@@ -23,9 +23,9 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Install pnpm
-              uses: pnpm/action-setup@v5
+              uses: pnpm/action-setup@v6
               with:
-                  version: 10
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -89,14 +89,14 @@ jobs:
 
             - name: Sets MODIFIED_BRANCH_NAME
               env:
-                name: "${{ github.ref_name }}"
+                  name: "${{ github.ref_name }}"
               run: |
-                echo "MODIFIED_BRANCH_NAME=${name/\//-}" >> $GITHUB_ENV
+                  echo "MODIFIED_BRANCH_NAME=${name/\//-}" >> $GITHUB_ENV
 
             - name: Install pnpm
-              uses: pnpm/action-setup@v5
+              uses: pnpm/action-setup@v6
               with:
-                  version: 10
+                  version: 11
 
             - name: Set up Node.js
               uses: actions/setup-node@v6
@@ -115,8 +115,8 @@ jobs:
             - name: Set up Android SDK
               uses: android-actions/setup-android@v4
               with:
-                packages: ""  # No additional packages
-                log-accepted-android-sdk-licenses: false  # Do not log the license
+                  packages: "" # No additional packages
+                  log-accepted-android-sdk-licenses: false # Do not log the license
 
             - name: Install Dependencies
               working-directory: ./app
@@ -206,7 +206,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
               with:
                   enable-cache: true
-                  version: "0.10.9"
+                  version: "0.11.16"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Build Server

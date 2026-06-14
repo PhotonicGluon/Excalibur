@@ -1,15 +1,15 @@
 [build-system]
-requires = ["uv_build>=0.10.9,<0.11.0"]
+requires = ["uv_build>=0.11.16,<0.12.0"]
 build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.6.5"
+version = "0.7.0a2"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",
     "colorama>=0.4.6 ; sys_platform == 'win32'",
-    "duckdb~=1.4.4",
+    "duckdb~=1.5.3",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.136.3",
     "gitpython>=3.1.50",
@@ -47,8 +47,8 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.14.0", "ruff>=0.15.13", "watchfiles>=1.2.0"]
-test = ["httpx>=0.28.1", "pytest>=9.0.3", "pytest-timeout>=2.4.0"]
+dev = ["ipython~=9.14.0", "ruff>=0.15.15", "watchfiles>=1.2.0"]
+test = ["httpx2>=2.3.0", "pytest>=9.0.3", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []

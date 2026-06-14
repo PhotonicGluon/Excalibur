@@ -5,21 +5,10 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
-from excalibur_server.src.auth.srp.group import SRPGroup
 from excalibur_server.src.exef.crypto import KeyStrength
 
 
 class Security(BaseModel):
-    class SRP(BaseModel):
-        group: SRPGroup
-
-        @field_validator("group", mode="before")
-        def edit_srp_group(cls, value: str) -> SRPGroup:
-            try:
-                return SRPGroup[value.upper()]
-            except KeyError:
-                raise ValueError(f"Invalid SRP group '{value}'; choose from {list(SRPGroup.__members__.keys())}")
-
     class OPAQUE(BaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -68,7 +57,6 @@ class Security(BaseModel):
     session_duration: int
     account_creation_key: bytes
     key_strength: KeyStrength
-    srp: SRP
     opaque: OPAQUE
     e2ee: E2EE
     pop: PoP

@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.auth.srp.group import SRPGroup
 from excalibur_server.src.exef import ExEF
 
 
@@ -32,15 +31,6 @@ class User(SQLModel, table=True):
     """
     additional_info: str = Field(default="", nullable=False)
     "Additional information about the user, accessible only after authentication"
-
-    # Secure Remote Password (SRP)
-    # TODO: Deprecate SRP fields in next version
-    srp_group: SRPGroup = Field(sa_column=Column(Enum(SRPGroup), nullable=True))
-    "Secure Remote Password (SRP) group to use for authentication"
-    srp_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=True))
-    "Salt for the SRP protocol key"
-    srp_verifier: bytes = Field(nullable=True)
-    "Verifier to prove server's identity in SRP"
 
     # OPAQUE
     registration_record: bytes = Field(nullable=True)  # TODO: Set maximum length

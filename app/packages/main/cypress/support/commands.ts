@@ -8,7 +8,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
             cy.get("#continue-button").click();
 
             cy.url().should("include", "/server-choice");
-            cy.get("#server-input").type(serverURL);
+            cy.get("#server-input").type("{selectAll}{del}" + serverURL);
             cy.get("#confirm-button").click();
 
             cy.url().should("include", "/login");

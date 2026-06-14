@@ -43,7 +43,7 @@ def test_get_token():
             "/api/auth/token",
             headers={
                 # Checking whether PoP works is handled in `test_pop_demo.py`
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="GET",
                     path="/api/auth/token",

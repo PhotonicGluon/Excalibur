@@ -1,6 +1,6 @@
 import { parseResponse as _parseResponse, generateResponse } from "@lib/auth/e2ee/response-handling";
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 
 enum RegistrationStage {
     SENT_REGISTRATION_REQUEST,
@@ -23,8 +23,6 @@ interface RegistrationState {
  * @param ack Account Creation Key (ACK)
  * @param aukSalt The account unlock key (AUK) salt to set up
  * @param encryptedVaultKey The vault key that was encrypted using the AUK
- * @param commsUUID Communication UUID. Used for upgrading an existing user to OPAQUE from SRP
- *      authentication.
  * @param stopLoading A function to call when any loading indicators needs to be stopped
  * @param setLoadingState A function to call to update the loading state with a message
  * @param showAlert A function to call if an error occurs, which takes a header and a message
@@ -38,7 +36,6 @@ export async function registerUserOPAQUE(
     ack: Buffer,
     aukSalt: Buffer,
     encryptedVaultKey: Buffer,
-    commsUUID?: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
@@ -62,7 +59,7 @@ export async function registerUserOPAQUE(
 
     // Set up WebSockets
     const wsURL = apiURL.replace("http", "ws");
-    const ws = new WebSocket(`${wsURL}/auth/opaque/register${commsUUID ? `?comms_uuid=${commsUUID}` : ""}`);
+    const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
 
     // Perform OPAQUE-3DH registration
     setLoadingState?.("Sending registration request...");

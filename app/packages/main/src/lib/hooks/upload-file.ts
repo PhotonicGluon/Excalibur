@@ -164,9 +164,11 @@ export function useUploadFile() {
                     return;
                 }
                 console.error(err);
-            } finally {
-                jobsManager.deleteJob(jobID);
+                jobsManager.updateJob(jobID, "Failed", false);
+                return;
             }
+
+            jobsManager.updateJob(jobID, "Complete", true);
         }
 
         if (!files) {
