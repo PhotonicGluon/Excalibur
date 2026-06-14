@@ -59,9 +59,9 @@ def db_session(test_database: Engine):
 @pytest.fixture(scope="session")
 def test_user(db_session: Session):
     # Check if user already exists
-    from excalibur_server.src.db.operations import get_user_from_id
+    from excalibur_server.src.db.operations import get_user
 
-    if existing_user := get_user_from_id("test-user"):
+    if existing_user := get_user("test-user"):
         return {"user": existing_user, "root_id": existing_user.fsitem_id}
 
     # Create test user

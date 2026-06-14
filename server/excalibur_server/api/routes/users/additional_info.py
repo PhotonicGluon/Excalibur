@@ -1,19 +1,16 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
+from fastapi import Body, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.api.routes.users import encrypted_router
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.users import User, get_user, is_user
 
-info_router = APIRouter()
 
-
-@info_router.get(
-    "/get/{username}",
+@encrypted_router.get(
+    "/info/get/{username}",
     summary="Get Additional User Info",
-    dependencies=[Depends(get_credentials)],
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},
     },
@@ -32,10 +29,9 @@ def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
     return user.additional_info
 
 
-@info_router.post(
-    "/edit/{username}",
+@encrypted_router.post(
+    "/info/edit/{username}",
     summary="Edit Additional User Info",
-    dependencies=[Depends(get_credentials)],
     responses={
         status.HTTP_200_OK: {"description": "User info updated", "content": None},
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},

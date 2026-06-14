@@ -65,7 +65,7 @@ async def rename_path_endpoint(
     with get_session() as session:
         try:
             with session.begin():
-                db_item = session.query(FSItem).filter_by(id=item.id).first()
+                db_item = session.get(FSItem, item.id)
                 db_item.name = new_name
                 session.add(db_item)
         except IntegrityError:

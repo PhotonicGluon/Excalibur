@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Path, status
 from pydantic import BaseModel, field_serializer
 
-from excalibur_server.api.routes.users import router
+from excalibur_server.api.routes.users import encrypted_router
 from excalibur_server.src.auth.credentials import get_credentials
 from excalibur_server.src.users import get_user, is_user
 
@@ -17,7 +17,7 @@ class EncryptedVaultKey(BaseModel):
         return b64encode(b).decode("utf-8")
 
 
-@router.get(
+@encrypted_router.get(
     "/vault/{username}",
     summary="Get User Vault Key",
     dependencies=[Depends(get_credentials)],

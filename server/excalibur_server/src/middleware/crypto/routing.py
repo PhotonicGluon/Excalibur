@@ -93,13 +93,6 @@ FILES_ROUTING_TREE = RoutingTree(
 USERS_ROUTING_TREE = RoutingTree(
     segment="users",
     subtrees={
-        "vault": RoutingTree(
-            segment="vault",
-            has_path_param=True,
-            encrypted_routes={
-                "GET": EncryptedRoute(),
-            },
-        ),
         "info": RoutingTree(
             segment="info",
             subtrees={
@@ -117,6 +110,25 @@ USERS_ROUTING_TREE = RoutingTree(
                         "POST": EncryptedRoute(),
                     },
                 ),
+            },
+        ),
+        "edit": RoutingTree(
+            segment="edit",
+            subtrees={
+                "username": RoutingTree(
+                    segment="username",
+                    has_path_param=True,
+                    encrypted_routes={
+                        "PUT": EncryptedRoute(),
+                    },
+                ),
+            },
+        ),
+        "vault": RoutingTree(
+            segment="vault",
+            has_path_param=True,
+            encrypted_routes={
+                "GET": EncryptedRoute(),
             },
         ),
     },
