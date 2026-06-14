@@ -14,7 +14,7 @@ from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPA
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 
 
@@ -35,7 +35,7 @@ async def comms_endpoint(websocket: WebSocket):
         username = ke1_raw_and_username[OPAQUE.ke1_size :].decode("utf-8")
 
         # Check username
-        user = get_user(username)
+        user = get_user_from_id(username)
         if user is None:
             # TODO: Do we send a fake vector instead of explicitly saying the user doesn't exist (cf. RFC9807)?
             await ws_manager.send(WebSocketMsg("User does not exist", "ERR"))

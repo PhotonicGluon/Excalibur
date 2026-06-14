@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -58,13 +59,14 @@ def db_session(test_database: Engine):
 @pytest.fixture(scope="session")
 def test_user(db_session: Session):
     # Check if user already exists
-    from excalibur_server.src.db.operations import get_user
+    from excalibur_server.src.db.operations import get_user_from_id
 
-    if existing_user := get_user("test-user"):
+    if existing_user := get_user_from_id("test-user"):
         return {"user": existing_user, "root_id": existing_user.fsitem_id}
 
     # Create test user
     user = User(
+        id=UUID("01234567-89ab-dcef-0123-456789abcdef"),
         username="test-user",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
         additional_info="Some Sample Info",
@@ -88,6 +90,8 @@ def auth_client(test_user) -> TestClient:
     """
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token("test-user", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(
+        str(test_user["user"].id), "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999
+    )
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client

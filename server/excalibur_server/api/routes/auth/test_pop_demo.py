@@ -121,7 +121,7 @@ class TestHTTPPoPChecks:
             headers={"X-Auth-PoP": header},
         )
         assert response.status_code == 200
-        assert response.json()["username"] == "test-user"
+        assert response.json()["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
 
         # Second request should fail
         response = auth_client.get(
@@ -245,7 +245,7 @@ def test_get(auth_client: TestClient):
         },
     )
     assert response.status_code == 200
-    assert response.json()["username"] == "test-user"
+    assert response.json()["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
 
 
 def test_get_with_path(auth_client: TestClient):
@@ -307,7 +307,7 @@ def test_post_no_encrypt(auth_client: TestClient):
         json="hello world",
     )
     assert response.status_code == 200
-    assert response.json()["credential"]["username"] == "test-user"
+    assert response.json()["credential"]["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
     assert response.json()["data"] == "hello world"
 
 
@@ -338,7 +338,7 @@ def test_post_encrypted(auth_client: TestClient):
     )
     assert response.status_code == 200
     response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
-    assert response["credential"]["username"] == "test-user"
+    assert response["credential"]["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
     assert response["data"] == "hello world"
 
 
@@ -359,4 +359,4 @@ def test_websocket(auth_client: TestClient, auth_token: str):
     ) as websocket:
         websocket.send_text("hello world")
         response = websocket.receive_text()
-        assert response == "test-user: hello world"
+        assert response == "01234567-89ab-dcef-0123-456789abcdef: hello world"

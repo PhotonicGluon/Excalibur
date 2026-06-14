@@ -103,7 +103,7 @@ def test_auth_negotiation(test_idx: int, monkeypatch: pytest.MonkeyPatch):
 
     # Perform monkeypatching of ALL the functions
     # (Note that we monkeypatch the destination, not the source)
-    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.login.get_user", lambda _username: user)
+    monkeypatch.setattr("excalibur_server.api.routes.auth.comms.opaque.login.get_user_from_id", lambda _user_id: user)
     monkeypatch.setattr(
         "excalibur_server.api.routes.auth.comms.opaque.login._get_oprf_seed",
         lambda: OPAQUETestVectors.OPRF_SEEDS[test_idx],

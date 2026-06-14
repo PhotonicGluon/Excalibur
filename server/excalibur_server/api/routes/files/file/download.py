@@ -8,7 +8,7 @@ from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item_by_path
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 class FileResponse(FastAPIFileResponse):
@@ -40,10 +40,10 @@ def download_file_endpoint(
     """
 
     path = processed_path
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get item to be downloaded
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item or item.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")

@@ -50,11 +50,11 @@ class FileUpdateManager:
         :param path: the path of the file that was updated
         """
 
-        username = credentials.username
-        logger.debug(f"Sending notification for '{username}' folder content change: {path}")
+        user_id = credentials.user_id
+        logger.debug(f"Sending notification for '{user_id}' folder content change: {path}")
 
-        key = (username, path)
-        for comm_uuid in self._connections[username]:
+        key = (user_id, path)
+        for comm_uuid in self._connections[user_id]:
             for active_socket in self._active_sockets[comm_uuid]:
                 if active_socket.encrypted:
                     e2ee_key = MASTER_KEYS_CACHE[comm_uuid]
@@ -78,7 +78,7 @@ class FileUpdateManager:
 
         await websocket.accept()
         self._active_sockets[credentials.comm_uuid].append(Socket(websocket=websocket, encrypted=encrypted))
-        self._connections[credentials.username].append(credentials.comm_uuid)
+        self._connections[credentials.user_id].append(credentials.comm_uuid)
 
     async def disconnect(self, credentials: Credentials):
         """
@@ -87,8 +87,8 @@ class FileUpdateManager:
         :param credentials: The credentials of the user to disconnect
         """
 
-        if credentials.comm_uuid in self._connections[credentials.username]:
-            self._connections[credentials.username].remove(credentials.comm_uuid)
+        if credentials.comm_uuid in self._connections[credentials.user_id]:
+            self._connections[credentials.user_id].remove(credentials.comm_uuid)
 
         for active_socket in self._active_sockets.get(credentials.comm_uuid, []):
             if active_socket.websocket.client_state == WebSocketState.CONNECTED:
@@ -104,11 +104,11 @@ class FileUpdateManager:
         :param path: The path of the file that was updated
         """
 
-        username = credentials.username
-        if username not in self._connections:
+        user_id = credentials.user_id
+        if user_id not in self._connections:
             return
 
-        key = (username, path)
+        key = (user_id, path)
         if time.time() - self._transmissions[key].last_time > CONFIG.server.consecutive_transmission_delay * 1e-3:
             await self._send_update(credentials, path)
             return

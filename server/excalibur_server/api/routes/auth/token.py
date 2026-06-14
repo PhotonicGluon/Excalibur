@@ -9,7 +9,7 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 
 
-def _gen_token(username: str, master_key: bytes, expiry_time: int):
+def _gen_token(user_id: str, master_key: bytes, expiry_time: int):
     from datetime import datetime, timezone
     from uuid import uuid4
 
@@ -19,7 +19,7 @@ def _gen_token(username: str, master_key: bytes, expiry_time: int):
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = master_key
     token = generate_auth_token(
-        username,
+        user_id,
         uuid,
         datetime.now(tz=timezone.utc).timestamp() + expiry_time,
     )
@@ -60,7 +60,7 @@ async def get_token_endpoint(credentials: Annotated[Credentials, Depends(get_cre
 
     master_key = MASTER_KEYS_CACHE.pop(credentials.comm_uuid)
 
-    return _gen_token(credentials.username, master_key, CONFIG.security.session_duration)
+    return _gen_token(credentials.user_id, master_key, CONFIG.security.session_duration)
 
 
 if is_debug():

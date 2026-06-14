@@ -1,6 +1,7 @@
 from excalibur_server.src.db.operations import add_item, get_item
 from excalibur_server.src.db.operations import add_user as _add_user
 from excalibur_server.src.db.operations import get_user as _get_user
+from excalibur_server.src.db.operations import get_user_from_id as _get_user_from_id
 from excalibur_server.src.db.operations import remove_user as _remove_user
 from excalibur_server.src.db.tables import FSItem, User
 from excalibur_server.src.files.utils import rmitem
@@ -59,5 +60,6 @@ def remove_user(username: str):
 
 
 get_user = _get_user
+get_user_from_id = _get_user_from_id
 
-__all__ = ["is_user", "add_user", "get_user", "remove_user", "User"]
+__all__ = ["is_user", "add_user", "get_user_from_id", "remove_user", "User", "get_user"]

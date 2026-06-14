@@ -22,11 +22,11 @@ from excalibur_server.src.exef import ExEF
 LISTENER_PATH = "/api/files/listen"
 
 
-def _auth_websocket(username: str, path: str):
+def _auth_websocket(user_id: str, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
-    token = generate_auth_token(username, uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(user_id, uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
     # Generate PoP header
@@ -42,8 +42,8 @@ def _auth_websocket(username: str, path: str):
     return auth_client, auth_token, pop_header
 
 
-def _make_websocket(username: str, path: str, encrypted: bool = True):
-    auth_client, auth_token, pop_header = _auth_websocket(username, path)
+def _make_websocket(user_id: str, path: str, encrypted: bool = True):
+    auth_client, auth_token, pop_header = _auth_websocket(user_id, path)
     with auth_client.websocket_connect(
         f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted={encrypted}"
     ) as ws:
@@ -53,11 +53,11 @@ def _make_websocket(username: str, path: str, encrypted: bool = True):
 class TestDirectoryChangesListener:
     @pytest.fixture
     def ws_client(self):
-        yield from _make_websocket("test-user", LISTENER_PATH, encrypted=False)
+        yield from _make_websocket("01234567-89ab-dcef-0123-456789abcdef", LISTENER_PATH, encrypted=False)
 
     @pytest.fixture()
     def ws_client_encrypted(self):
-        yield from _make_websocket("test-user", LISTENER_PATH, encrypted=True)
+        yield from _make_websocket("01234567-89ab-dcef-0123-456789abcdef", LISTENER_PATH, encrypted=True)
 
     @pytest.fixture(scope="class")
     def example_file(self, test_user, db_session: Session) -> Path:
@@ -199,7 +199,7 @@ class TestDirectoryChangesListener:
         assert ExEF(b"one demo 16B key").decrypt(ws_client_encrypted.receive_bytes()).decode("utf-8") == "."
 
     def test_duplicate_connection(self, auth_client: TestClient):
-        auth_client, auth_token, pop_header = _auth_websocket("test-user", LISTENER_PATH)
+        auth_client, auth_token, pop_header = _auth_websocket("01234567-89ab-dcef-0123-456789abcdef", LISTENER_PATH)
         with auth_client.websocket_connect(
             f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
         ) as ws1:

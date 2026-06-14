@@ -14,7 +14,7 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import add_item, get_item_by_path
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.utils import rmitem
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
@@ -72,7 +72,7 @@ async def upload_file_endpoint(
     """
 
     path = PathlibPath(processed_path).relative_to(".")
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Split path into directory and file name
     dir_path, name = os.path.split(path)
@@ -84,7 +84,7 @@ async def upload_file_endpoint(
         )
 
     # Get parent ID
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     parent = get_item_by_path(root_id, dir_path)
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
