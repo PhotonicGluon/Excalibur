@@ -1,1 +1,0 @@
-⬆️ Updated `typer` from `0.25.1` to `0.26.7` ([#49](https://github.com/PhotonicGluon/Excalibur/pull/49))
