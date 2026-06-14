@@ -114,7 +114,6 @@ function useProvideAuth(): AuthProvider {
         // Get vault key
         retrieveVaultKey(
             serverInfo.apiURL!,
-            authInfo.username!,
             authInfo.token,
             authInfo.key,
             authInfo.auk,

@@ -1,52 +1,45 @@
 from typing import Annotated
 
-from fastapi import Body, HTTPException, Path, status
+from fastapi import Body, Depends, status
 from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.routes.users import encrypted_router
-from excalibur_server.src.db.operations.helpers import get_session
-from excalibur_server.src.users import User, get_user, is_user
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.src.db.operations import get_session
+from excalibur_server.src.users import User, get_user_from_id
 
 
 @encrypted_router.get(
-    "/info/get/{username}",
+    "/info/get",
     summary="Get Additional User Info",
-    responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
-    },
     tags=["encrypted"],
     response_class=PlainTextResponse,
 )
-def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
+def get_additional_user_info_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
     """
-    Returns the additional user info of a user with the specified username.
+    Returns the additional user info of the currently authenticated user.
     """
 
-    if not is_user(username):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    user = get_user(username)
+    user = get_user_from_id(credentials.user_id)
     return user.additional_info
 
 
 @encrypted_router.post(
-    "/info/edit/{username}",
+    "/info/edit",
     summary="Edit Additional User Info",
     responses={
         status.HTTP_200_OK: {"description": "User info updated", "content": None},
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
     },
     tags=["encrypted"],
 )
-def edit_additional_user_info_endpoint(username: Annotated[str, Path()], info: Annotated[str, Body()]):
+def edit_additional_user_info_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)], info: Annotated[str, Body()]
+):
     """
-    Edits the additional user info of a user with the specified username.
+    Edits the additional user info of the currently authenticated user.
     """
 
     with get_session() as session:
-        curr_user = session.query(User).filter(User.username == username).first()
-        if curr_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        curr_user.additional_info = info
+        db_user = session.get(User, credentials.user_id)
+        db_user.additional_info = info
         session.commit()

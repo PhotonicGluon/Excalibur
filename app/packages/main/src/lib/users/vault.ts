@@ -5,7 +5,6 @@ import { getVaultKey } from "@lib/users/api";
  * Retrieves the vault key from the server.
  *
  * @param apiURL The URL of the API server to query
- * @param username The username to retrieve the vault key for
  * @param token Authentication token for accessing the server
  * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
  * @param auk The account unlock key
@@ -15,14 +14,13 @@ import { getVaultKey } from "@lib/users/api";
  */
 export async function retrieveVaultKey(
     apiURL: string,
-    username: string,
     token: string,
     e2eeKey: Buffer,
     auk: Buffer,
     onError: (error: string) => void,
 ): Promise<Buffer<ArrayBufferLike> | null> {
     console.debug("Retrieving vault key");
-    const vaultKeyResponse = await getVaultKey(apiURL, username, token, e2eeKey);
+    const vaultKeyResponse = await getVaultKey(apiURL, token, e2eeKey);
     if (!vaultKeyResponse.success) {
         onError(`Could not retrieve vault key: ${vaultKeyResponse.error}`);
         return null;

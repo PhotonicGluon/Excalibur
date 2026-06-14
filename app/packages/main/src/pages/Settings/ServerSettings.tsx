@@ -71,7 +71,6 @@ const ServerSettings: React.FC = () => {
 
         const setAdditionalInfoResponse = await editAdditionalUserInfo(
             auth.serverInfo!.apiURL!,
-            auth.authInfo!.username!,
             auth.getToken()!,
             auth.authInfo!.key,
             additionalInfo,

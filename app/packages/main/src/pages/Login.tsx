@@ -155,7 +155,6 @@ const Login: React.FC = () => {
         try {
             const vaultKey = await retrieveVaultKey(
                 auth.serverInfo!.apiURL!,
-                values.username,
                 e2eeData.token,
                 e2eeData.key,
                 e2eeData.auk,
@@ -190,7 +189,6 @@ const Login: React.FC = () => {
         try {
             const additionalInfoResponse = await getAdditionalUserInfo(
                 auth.serverInfo!.apiURL!,
-                values.username,
                 e2eeData.token,
                 e2eeData.key,
             );
