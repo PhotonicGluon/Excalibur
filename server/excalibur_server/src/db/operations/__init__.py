@@ -10,4 +10,4 @@ from .helpers import get_session as get_session
 from .user import add_user as add_user
 from .user import get_user as get_user
 from .user import get_user_from_id as get_user_from_id
-from .user import remove_user as remove_user
+from .user import remove_user_from_id as remove_user_from_id

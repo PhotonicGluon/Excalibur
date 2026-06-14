@@ -46,7 +46,7 @@ def get_user_from_id(user_id: str) -> User | None:
         return user
 
 
-def remove_user(user_id: str):
+def remove_user_from_id(user_id: str):
     """
     Removes a user from the database.
 

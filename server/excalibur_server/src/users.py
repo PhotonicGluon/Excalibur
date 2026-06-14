@@ -2,7 +2,7 @@ from excalibur_server.src.db.operations import add_item, get_item
 from excalibur_server.src.db.operations import add_user as _add_user
 from excalibur_server.src.db.operations import get_user as _get_user
 from excalibur_server.src.db.operations import get_user_from_id as _get_user_from_id
-from excalibur_server.src.db.operations import remove_user as _remove_user
+from excalibur_server.src.db.operations import remove_user_from_id as _remove_user_from_id
 from excalibur_server.src.db.tables import FSItem, User
 from excalibur_server.src.files.utils import rmitem
 
@@ -56,7 +56,7 @@ def remove_user(username: str):
         rmitem(root_item)
 
     # Remove user from database
-    _remove_user(username)
+    _remove_user_from_id(user.id)
 
 
 get_user = _get_user
