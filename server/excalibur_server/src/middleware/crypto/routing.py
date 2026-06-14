@@ -102,16 +102,21 @@ USERS_ROUTING_TREE = RoutingTree(
         ),
         "info": RoutingTree(
             segment="info",
-            has_path_param=True,
-            encrypted_routes={
-                "GET": EncryptedRoute(),
-            },
-        ),
-        "edit-info": RoutingTree(
-            segment="edit-info",
-            has_path_param=True,
-            encrypted_routes={
-                "POST": EncryptedRoute(),
+            subtrees={
+                "get": RoutingTree(
+                    segment="get",
+                    has_path_param=True,
+                    encrypted_routes={
+                        "GET": EncryptedRoute(),
+                    },
+                ),
+                "edit": RoutingTree(
+                    segment="edit",
+                    has_path_param=True,
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
             },
         ),
     },

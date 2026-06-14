@@ -18,7 +18,7 @@ export async function getAdditionalUserInfo(
     token: string,
     e2eeKey: Buffer,
 ): Promise<{ success: boolean; error?: string; info?: AdditionalUserInfo }> {
-    const response = await popFetch(`${apiURL}/users/info/${username}`, e2eeKey, {
+    const response = await popFetch(`${apiURL}/users/info/get/${username}`, e2eeKey, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
     });
@@ -56,7 +56,7 @@ export async function editAdditionalUserInfo(
     info: AdditionalUserInfo,
 ): Promise<{ success: boolean; error?: string }> {
     const rawInfo = JSON.stringify(info);
-    const response = await popFetch(`${apiURL}/users/edit-info/${username}`, e2eeKey, {
+    const response = await popFetch(`${apiURL}/users/info/edit/${username}`, e2eeKey, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,

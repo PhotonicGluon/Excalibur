@@ -1,16 +1,17 @@
 from typing import Annotated
 
-from fastapi import Body, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.routes.users import router
 from excalibur_server.src.auth.credentials import get_credentials
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.users import User, get_user, is_user
 
+info_router = APIRouter()
 
-@router.get(
-    "/info/{username}",
+
+@info_router.get(
+    "/get/{username}",
     summary="Get Additional User Info",
     dependencies=[Depends(get_credentials)],
     responses={
@@ -31,8 +32,8 @@ def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
     return user.additional_info
 
 
-@router.post(
-    "/edit-info/{username}",
+@info_router.post(
+    "/edit/{username}",
     summary="Edit Additional User Info",
     dependencies=[Depends(get_credentials)],
     responses={

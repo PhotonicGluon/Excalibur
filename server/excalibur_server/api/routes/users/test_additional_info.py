@@ -6,11 +6,11 @@ from excalibur_server.src.exef import ExEF
 
 class TestGetUserInfo:
     def test_no_auth(self):
-        response = TestClient(app).get("/api/users/info/test-user")
+        response = TestClient(app).get("/api/users/info/get/test-user")
         assert response.status_code == 401
 
     def test_get_info(self, auth_client: TestClient):
-        response = auth_client.get("/api/users/info/test-user")
+        response = auth_client.get("/api/users/info/get/test-user")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 
@@ -20,15 +20,15 @@ class TestGetUserInfo:
 
 class TestEditUserInfo:
     def test_no_auth(self):
-        response = TestClient(app).post("/api/users/edit-info/test-user", json="New Info")
+        response = TestClient(app).post("/api/users/info/edit/test-user", json="New Info")
         assert response.status_code == 401
 
     def test_edit_info(self, auth_client: TestClient):
-        response = auth_client.post("/api/users/edit-info/test-user", json="New Info")
+        response = auth_client.post("/api/users/info/edit/test-user", json="New Info")
         assert response.status_code == 200
 
         # Check that the info was updated
-        response = auth_client.get("/api/users/info/test-user")
+        response = auth_client.get("/api/users/info/get/test-user")
         assert response.status_code == 200
         response = ExEF(b"one demo 16B key").decrypt(response.content)
         assert response == b"New Info"
@@ -42,14 +42,14 @@ class TestEditUserInfo:
 
         transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(b"New Encrypted Data")
         response = auth_client.post(
-            "/api/users/edit-info/test-user",
+            "/api/users/info/edit/test-user",
             headers=headers,
             content=transit_encrypted_data,
         )
         assert response.status_code == 200
 
         # Check that the info was updated
-        response = auth_client.get("/api/users/info/test-user")
+        response = auth_client.get("/api/users/info/get/test-user")
         assert response.status_code == 200
         response = ExEF(b"one demo 16B key").decrypt(response.content)
         assert response == b"New Encrypted Data"
