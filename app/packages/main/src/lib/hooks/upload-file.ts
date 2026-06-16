@@ -203,8 +203,9 @@ export function useUploadFile() {
 
             // Check if containing directories exist
             if (file.directory) {
-                let dirs = getParents(explorerContext.path + "/" + file.directory + "/x"); // "/x" to include target dir
-                dirs = dirs.toReversed().slice(1);
+                const dirs = getParents(explorerContext.path + "/" + file.directory + "/x") // "/x" to add target dir
+                    .toReversed() // To get from root to target
+                    .slice(1); // Remove the last element (the "/x")
 
                 for (const dir of dirs) {
                     const checkDirResponse = await checkPath(auth, dir);
@@ -333,7 +334,12 @@ export function useUploadFile() {
                 let fileDirectory = item.path ? getParent(item.path.replace(/^\//, "")) : undefined;
                 if (auth.authInfo!.obfuscatedNames) {
                     fileName = auth.noc!.encipher(Buffer.from(fileName, "utf-8"));
-                    fileDirectory = fileDirectory ? auth.noc!.encipher(Buffer.from(fileDirectory, "utf-8")) : undefined;
+                    if (fileDirectory) {
+                        const slashObfuscated = auth.noc!.encipher(Buffer.from("/", "utf-8"));
+                        fileDirectory = auth
+                            .noc!.encipher(Buffer.from(fileDirectory, "utf-8"))
+                            .replaceAll(slashObfuscated, "/"); // Do not obfuscate slashes
+                    }
                 }
 
                 // Create instance
