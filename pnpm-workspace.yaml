@@ -29,6 +29,7 @@ overrides:
   "@xmldom/xmldom@<0.8.13": ">=0.8.13"
   minimatch@<3.1.4: ">=3.1.4"
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
+  prettier@<3.8.4: ">=3.8.4"
   tar@<=7.5.10: ">=7.5.11"
   readable-stream@<=4: ">=4"
   qs@>=6.11.1 <=6.15.1: "^6.15.2"
