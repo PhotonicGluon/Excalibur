@@ -8,7 +8,9 @@ auditConfig:
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
 minimumReleaseAgeExclude:
-  - lint-staged@17.0.5
+  - "@esbuild/*"
+  - esbuild@0.28.1
+  - form-data@4.0.6
 
 blockExoticSubdeps: true
 
@@ -26,11 +28,19 @@ trustPolicyExclude:
 trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
-  "@xmldom/xmldom@<0.8.13": ">=0.8.13"
-  minimatch@<3.1.4: ">=3.1.4"
+  # Main
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
-  tar@<=7.5.10: ">=7.5.11"
-  prettier@<3.8.4: ">=3.8.4"
+  # Security
+  "@babel/core@<=7.29.0": ^7.29.1
+  esbuild@>=0.17.0 <0.28.1: ^0.28.1
+  form-data@>=4.0.0 <4.0.6: ^4.0.6
+  js-yaml@<=4.1.1: ^4.1.2
+  minimatch@<3.1.4: ^3.1.4
+  qs@>=6.11.1 <=6.15.1: ^6.15.2
+  tar@<=7.5.15: ^7.5.16
+  tmp@<0.2.6: ^0.2.6
+  uuid@<11.1.1: ^11.1.1
+  vite@>=7.0.0 <=7.3.4: ~7.3.5
 
 sideEffectsCache: false
 
