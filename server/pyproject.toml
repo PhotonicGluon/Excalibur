@@ -54,6 +54,9 @@ test = ["httpx>=0.28.1", "pytest>=9.0.3", "pytest-timeout>=2.4.0"]
 default-groups = []
 exclude-newer = "5 days"
 
+[tool.uv.exclude-newer-package]
+starlette = "2026-06-17T00:00:00.000Z"
+
 [tool.uv.build-backend]
 module-name = "excalibur_server"
 module-root = ""
