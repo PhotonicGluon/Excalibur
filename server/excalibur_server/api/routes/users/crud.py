@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import Body, Depends, HTTPException, Path, status
+from fastapi import Body, Depends, HTTPException, Path, WebSocket, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.exc import IntegrityError
 
+from excalibur_server.api.routes.auth.comms.opaque.change_password import change_password_endpoint
 from excalibur_server.api.routes.users import encrypted_router, router
 from excalibur_server.env import is_debug
-from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials, get_credentials_ws
 from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import is_user, remove_user
@@ -27,6 +28,14 @@ def check_user_endpoint(username: Annotated[str, Path()]):
 
     if not is_user(username):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+
+@router.websocket("/edit/password")
+async def edit_password_endpoint(
+    websocket: WebSocket,
+    credentials: Annotated[Credentials, Depends(get_credentials_ws)],
+):
+    return change_password_endpoint(websocket, credentials)
 
 
 @encrypted_router.put(

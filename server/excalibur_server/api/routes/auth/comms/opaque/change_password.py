@@ -1,68 +1,62 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from typing import Annotated
 
+from fastapi import Depends, WebSocket, WebSocketDisconnect
+
+from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.enums import AuthProtocol
+from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
 from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
-from excalibur_server.src.users import add_user, get_user
+from excalibur_server.src.users import get_user_from_id
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
 
 
-@router.websocket("/opaque/register")
-async def registration_endpoint(websocket: WebSocket):
+@router.websocket("/opaque/change-password")
+async def change_password_endpoint(
+    websocket: WebSocket,
+    credentials: Annotated[Credentials, Depends(get_credentials_ws)],
+):
     """
-    Endpoint that handles the registration communication of incoming requests.
+    Endpoint that handles the changing of existing users' passwords.
 
-    All messages should be encrypted with the Account Creation Key (ACK).
+    All messages should be encrypted with the current session key of the user.
     """
 
     OPAQUE = _get_opaque()
 
-    key = CONFIG.security.account_creation_key
+    key = MASTER_KEYS_CACHE[credentials.comm_uuid]
     ws_manager = EncryptedWebSocketManager(websocket, key)
 
     await ws_manager.accept()
     try:
-        # Wait for username and registration request
-        registration_request_raw_and_username = (await ws_manager.receive()).data
-        registration_request_raw = registration_request_raw_and_username[: OPAQUE.registration_request_size]
-        username = registration_request_raw_and_username[OPAQUE.registration_request_size :].decode("utf-8")
+        # Wait for registration request
+        registration_request_raw = (await ws_manager.receive()).data
 
-        # Check username
-        user = get_user(username)
-        if user is not None:
-            await ws_manager.send(WebSocketMsg("User already exists", "ERR"))
-            await ws_manager.close()
-            return
+        # Get associated user
+        user = get_user_from_id(credentials.user_id)
 
         # Generate registration response
         registration_request = OPAQUE.deserialize_registration_request(registration_request_raw)
         registration_response = OPAQUE.create_registration_response(
             request=registration_request,
             server_public_key=_get_public_key(),
-            credential_identifier=_get_credential_identifier(username),
+            credential_identifier=_get_credential_identifier(user.username),
             oprf_seed=_get_oprf_seed(),
         )
         await ws_manager.send(WebSocketMsg(registration_response.serialize()))
 
-        # Wait for client to send registration record, AUK salt, and encrypted vault key
-        upload_data = (await ws_manager.receive()).data
-        registration_record_raw = upload_data[: OPAQUE.registration_record_size]
-        auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
-        key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
+        # Wait for client to send registration record
+        registration_record_raw = (await ws_manager.receive()).data
 
-        # Add the user
-        user = User(
-            username=username,
-            auth_protocol=AuthProtocol.OPAQUE_3DH,
-            registration_record=registration_record_raw,
-            auk_salt=auk_salt,
-            key_enc=key_enc,
-        )
-        add_user(user)
+        # Amend user's password
+        with get_session() as session:
+            with session.begin():
+                user = session.query(User).filter_by(username=user.username).first()
+                user.registration_record = registration_record_raw
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))
