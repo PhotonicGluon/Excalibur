@@ -39,7 +39,7 @@ class HKDF:
         """
 
         if len(salt) == 0:
-            salt = bytes([0] * self.hash_function().digest_size)
+            salt = b"\x00" * self.hash_function().digest_size
 
         return self.hmac_hash(salt, ikm)
 
