@@ -84,6 +84,28 @@ class TestCheckPath:
         )
         assert response.status_code == 404
 
+    def test_dot_slashes(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.head("/api/files/check/path/./file")
+        assert response.status_code == 200
+
+        response = auth_client.head("/api/files/check/path/./folder/././subfile/.")
+        assert response.status_code == 200
+
+    def test_dot_slashes_encrypted(self, auth_client: TestClient, dir_with_items):
+        from base64 import b64encode
+
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(b"./file")
+        response = auth_client.head(
+            f"/api/files/check/path/{b64encode(path_encrypted).decode('UTF-8')}", headers={"X-Encrypted": "true"}
+        )
+        assert response.status_code == 200
+
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(b"./folder/././subfile/.")
+        response = auth_client.head(
+            f"/api/files/check/path/{b64encode(path_encrypted).decode('UTF-8')}", headers={"X-Encrypted": "true"}
+        )
+        assert response.status_code == 200
+
 
 class TestCheckDir:
     def test_no_auth(self):
