@@ -268,7 +268,7 @@ const NewUser: React.FC = () => {
                             </div>
                             <hr />
 
-                            {/* Server Settings */}
+                            {/* Server Preferences */}
                             <IonCheckbox id="use-obfuscated-names" labelPlacement="end" checked={true}>
                                 <div className="w-full *:block *:leading-none">
                                     <IonLabel className="text-base">Use Obfuscated Names</IonLabel>

@@ -30,16 +30,17 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
+import PreferencesMenu from "@pages/Configuration/Preferences/PreferencesMenu";
+import ServerPreferences from "@pages/Configuration/Preferences/ServerPreferences";
+import CryptoSettings from "@pages/Configuration/Settings/CryptoSettings";
+import InterfaceSettings from "@pages/Configuration/Settings/InterfaceSettings";
+import SettingsMenu from "@pages/Configuration/Settings/SettingsMenu";
+import UpdateSettings from "@pages/Configuration/Settings/UpdateSettings";
 import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
 import ServerChoice from "@pages/ServerChoice";
-import CryptoSettings from "@pages/Settings/CryptoSettings";
-import InterfaceSettings from "@pages/Settings/InterfaceSettings";
-import ServerSettings from "@pages/Settings/ServerSettings";
-import SettingsMenu from "@pages/Settings/SettingsMenu";
-import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
 
 import "@theme";
@@ -145,12 +146,14 @@ const App: React.FC = () => {
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
 
-                    {/* Settings */}
+                    {/* Configuration pages */}
                     <Route exact path="/settings" component={SettingsMenu} />
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
                     <Route exact path="/settings/crypto" component={CryptoSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
-                    <PrivateRoute exact path="/settings/server" component={ServerSettings} />
+
+                    <Route exact path="/preferences" component={PreferencesMenu} />
+                    <PrivateRoute exact path="/preferences/server" component={ServerPreferences} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

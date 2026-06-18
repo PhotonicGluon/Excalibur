@@ -11,7 +11,6 @@ describe("Check Settings Page Contents", () => {
         cy.get("#settings-interface").should("exist");
         cy.get("#settings-crypto").should("exist");
         cy.get("#settings-update").should("exist");
-        cy.get("#settings-server").should("exist");
     });
 });
 

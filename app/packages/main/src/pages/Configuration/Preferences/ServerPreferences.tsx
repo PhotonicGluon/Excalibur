@@ -29,7 +29,7 @@ import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 import SettingsItem from "@components/settings/SettingsItem";
 
-const ServerSettings: React.FC = () => {
+const ServerPreferences: React.FC = () => {
     // Contexts
     const router = useIonRouter();
     const auth = useAuth();
@@ -115,7 +115,7 @@ const ServerSettings: React.FC = () => {
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
-                    <IonTitle>Server Settings</IonTitle>
+                    <IonTitle>Server Preferences</IonTitle>
                 </IonToolbar>
             </IonHeader>
 
@@ -214,4 +214,4 @@ const ServerSettings: React.FC = () => {
     );
 };
 
-export default ServerSettings;
+export default ServerPreferences;

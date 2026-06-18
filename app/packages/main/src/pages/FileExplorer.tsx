@@ -27,7 +27,15 @@ import {
     useIonToast,
     useIonViewWillEnter,
 } from "@ionic/react";
-import { add, documentOutline, ellipsisVertical, folderOutline, listOutline, searchOutline } from "ionicons/icons";
+import {
+    add,
+    documentOutline,
+    ellipsisVertical,
+    folderOutline,
+    listOutline,
+    personOutline,
+    searchOutline,
+} from "ionicons/icons";
 
 import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
@@ -350,6 +358,12 @@ const FileExplorer: React.FC = () => {
                             <IonLabel>
                                 <IonIcon icon={folderOutline} size="large" />
                                 <IonText className="pl-2">Open Excalibur Folder</IonText>
+                            </IonLabel>
+                        </IonItem>
+                        <IonItem button={true} routerLink="/preferences" routerDirection="forward">
+                            <IonLabel>
+                                <IonIcon icon={personOutline} size="large" />
+                                <IonText className="pl-2">Preferences</IonText>
                             </IonLabel>
                         </IonItem>
                     </IonList>
