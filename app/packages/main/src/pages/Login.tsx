@@ -53,7 +53,6 @@ const Login: React.FC = () => {
     /**
      * Validates the values from the form.
      *
-     * @param values The values from the form
      * @returns Whether the values are valid
      */
     function validateValues() {
@@ -78,7 +77,7 @@ const Login: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received username '${username}', password '${password}', savePassword: ${savePassword})`);
+        console.debug(`Received values: ${JSON.stringify({ username, password, savePassword })}`);
         setIsLoading(true);
 
         // Check whether user exists

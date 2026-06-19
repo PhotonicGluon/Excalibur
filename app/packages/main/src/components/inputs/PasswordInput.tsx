@@ -24,13 +24,17 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
 
     // Values
     const secondPasswordDisabled = !confirmation || isFirstInClear;
-    const passwordsMatch = !confirmation || isFirstInClear || password1 === password2;
+    const passwordsMatch = secondPasswordDisabled || password1 === password2;
 
     // State updates
     if (value !== prevValue) {
         setPrevValue(value as string);
         setPassword1((value as string) ?? "");
         setPassword2((value as string) ?? "");
+    }
+
+    if (secondPasswordDisabled && password2 !== "") {
+        setPassword2("");
     }
 
     // Hooks
@@ -68,16 +72,16 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
                     placeholder="My secure password!"
                     type="password"
                     disabled={secondPasswordDisabled}
-                    value={password2}
+                    value={secondPasswordDisabled ? "" : password2}
                     onKeyDown={props.onKeyDown}
                     onIonInput={(e) => setPassword2(e.detail.value!)}
                 >
                     <IonInputPasswordToggle slot="end" />
                 </IonInput>
             )}
-            <IonLabel color="danger" className="text-xs">
-                {capsLockOn && "Caps Lock is on!"}
-                {!secondPasswordDisabled && !passwordsMatch && "Passwords do not match!"}
+            <IonLabel color="danger" className="text-xs *:block">
+                {capsLockOn && <span>Caps Lock is on!</span>}
+                {!secondPasswordDisabled && !passwordsMatch && <span>Passwords do not match!</span>}
             </IonLabel>
         </div>
     );
