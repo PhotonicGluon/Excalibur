@@ -99,7 +99,7 @@ const BIP39MnemonicInput: React.FC<ContainerProps> = (props) => {
     // Render
     return (
         <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2">
+            <div className="grid grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
                 {Array.from({ length: props.numWords }).map((_, index) => (
                     <BIP39WordInput
                         // Making the key depend on the word's value will make React destroy and re-create the
