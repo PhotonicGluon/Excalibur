@@ -30,8 +30,9 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
+import AccountPreferences from "@pages/Configuration/Preferences/AccountPreferences";
+import DataPreferences from "@pages/Configuration/Preferences/DataPreferences";
 import PreferencesMenu from "@pages/Configuration/Preferences/PreferencesMenu";
-import ServerPreferences from "@pages/Configuration/Preferences/ServerPreferences";
 import CryptoSettings from "@pages/Configuration/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Configuration/Settings/InterfaceSettings";
 import SettingsMenu from "@pages/Configuration/Settings/SettingsMenu";
@@ -152,8 +153,9 @@ const App: React.FC = () => {
                     <Route exact path="/settings/crypto" component={CryptoSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
 
-                    <Route exact path="/preferences" component={PreferencesMenu} />
-                    <PrivateRoute exact path="/preferences/server" component={ServerPreferences} />
+                    <PrivateRoute exact path="/preferences" component={PreferencesMenu} />
+                    <PrivateRoute exact path="/preferences/account" component={AccountPreferences} />
+                    <PrivateRoute exact path="/preferences/data" component={DataPreferences} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

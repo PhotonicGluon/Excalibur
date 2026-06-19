@@ -29,7 +29,7 @@ import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 import SettingsItem from "@components/settings/SettingsItem";
 
-const ServerPreferences: React.FC = () => {
+const DataPreferences: React.FC = () => {
     // Contexts
     const router = useIonRouter();
     const auth = useAuth();
@@ -214,4 +214,4 @@ const ServerPreferences: React.FC = () => {
     );
 };
 
-export default ServerPreferences;
+export default DataPreferences;

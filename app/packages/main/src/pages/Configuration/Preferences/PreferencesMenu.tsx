@@ -38,10 +38,16 @@ const PreferencesMenu: React.FC<RouteComponentProps> = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 <IonList className="mt-2 rounded-lg bg-transparent pt-0 *:[--background:var(--ion-background-color)]">
-                    <IonItem id="preferences-server" routerLink="/preferences/server" routerDirection="forward">
+                    <IonItem id="preferences-account" routerLink="/preferences/account" routerDirection="forward">
                         <IonLabel>
-                            <h2>Server</h2>
-                            <p>Configure the preferences for server operations.</p>
+                            <h2>Account</h2>
+                            <p>Configure account options.</p>
+                        </IonLabel>
+                    </IonItem>
+                    <IonItem id="preferences-data" routerLink="/preferences/data" routerDirection="forward">
+                        <IonLabel>
+                            <h2>Data</h2>
+                            <p>Configure options for the data stored on the server.</p>
                         </IonLabel>
                     </IonItem>
                 </IonList>
