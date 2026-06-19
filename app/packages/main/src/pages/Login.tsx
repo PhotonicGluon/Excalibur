@@ -8,7 +8,6 @@ import {
     IonContent,
     IonHeader,
     IonInput,
-    IonInputPasswordToggle,
     IonLabel,
     IonLoading,
     IonMenuButton,
@@ -29,17 +28,9 @@ import { retrieveVaultKey } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";
+import PasswordInput from "@components/inputs/PasswordInput";
 
 import logo from "@assets/icon.png";
-
-interface LoginValues {
-    /** Username to log in as */
-    username: string;
-    /** Password for the user */
-    password: string;
-    /** Whether to save the password */
-    savePassword: boolean;
-}
 
 const Login: React.FC = () => {
     // Contexts
@@ -47,41 +38,25 @@ const Login: React.FC = () => {
     const router = useIonRouter();
 
     // States
-    const [presentAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
-
-    const [capslockIndicator, setCapslockIndicator] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [savePassword, setSavePassword] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
 
+    // Contexts
+    const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
+
     // Functions
-    /**
-     * Gets all values from the form.
-     *
-     * @returns The values from the form
-     */
-    function getAllValues(): LoginValues {
-        // Get raw inputs
-        const inputs = document.querySelectorAll("ion-input");
-        const checkboxes = document.querySelectorAll("ion-checkbox");
-
-        // Preprocess
-        const username = inputs[0].value! as string;
-        const password = inputs[1].value! as string;
-        const savePassword = checkboxes[0].checked! as boolean;
-
-        // Form values
-        return { username: username, password: password, savePassword: savePassword };
-    }
-
     /**
      * Validates the values from the form.
      *
      * @param values The values from the form
      * @returns Whether the values are valid
      */
-    function validateValues({ username, password }: LoginValues) {
+    function validateValues() {
         // Check all filled
         if (username === "" || password === "") {
             return false;
@@ -95,8 +70,7 @@ const Login: React.FC = () => {
      */
     async function onLoginButtonClick() {
         // Check values
-        const values = getAllValues();
-        if (!validateValues(values)) {
+        if (!validateValues()) {
             presentAlert({
                 header: "Invalid Values",
                 message: "Some values are missing or invalid.",
@@ -104,13 +78,13 @@ const Login: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received values: ${JSON.stringify(values)}`);
+        console.debug(`Received username '${username}', password '${password}', savePassword: ${savePassword})`);
         setIsLoading(true);
 
         // Check whether user exists
         setLoadingState("Finding user...");
         try {
-            if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
+            if (!(await checkUser(auth.serverInfo!.apiURL!, username))) {
                 setIsLoading(false);
                 presentAlert({
                     header: "User Not Found",
@@ -138,8 +112,8 @@ const Login: React.FC = () => {
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
             auth.serverInfo!.apiURL!,
-            values.username,
-            values.password,
+            username,
+            password,
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg, buttons) => {
@@ -210,7 +184,7 @@ const Login: React.FC = () => {
 
         // Set authentication info
         const authInfo: AuthInfo = {
-            username: values.username,
+            username: username,
             obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
             ...e2eeData,
         };
@@ -219,9 +193,9 @@ const Login: React.FC = () => {
 
         // Update preferences
         Preferences.set({
-            username: values.username,
-            password: values.savePassword ? values.password : "",
-            savePassword: values.savePassword,
+            username: username,
+            password: savePassword ? password : "",
+            savePassword: savePassword,
         });
 
         // Continue with files retrieval
@@ -242,20 +216,20 @@ const Login: React.FC = () => {
         Preferences.get("username").then((result) => {
             if (!result) return;
             console.debug(`Got existing username from preferences: ${result}`);
-            document.querySelector("#username-input")!.setAttribute("value", result!);
+            setUsername(result);
         });
         Preferences.get("password").then((result) => {
             if (!result) return;
             console.debug(`Got existing password from preferences: ${result}`);
-            document.querySelector("#password-input")!.setAttribute("value", result!);
+            setPassword(result);
         });
         Preferences.get("savePassword").then((rawResult) => {
             const result = rawResult === "true";
             console.debug(`Got existing save password from preferences: ${result}`);
             if (result) {
-                document.querySelector("#save-password-checkbox")!.setAttribute("checked", "checked");
+                setSavePassword(true);
             } else {
-                document.querySelector("#save-password-checkbox")!.removeAttribute("checked");
+                setSavePassword(false);
             }
         });
     });
@@ -301,46 +275,33 @@ const Login: React.FC = () => {
                                 <div className="flex flex-col gap-3">
                                     <div className="h-20">
                                         <IonInput
-                                            id="username-input"
                                             label="Username"
                                             labelPlacement="stacked"
                                             fill="solid"
                                             placeholder="MyCoolUsername"
                                             type="text"
+                                            value={username}
+                                            onIonInput={(e) => setUsername(e.detail.value!)}
                                         ></IonInput>
                                     </div>
                                     <div className="h-20">
-                                        <IonInput
-                                            id="password-input"
-                                            label="Password"
-                                            labelPlacement="stacked"
-                                            fill="solid"
-                                            placeholder="My secure password!"
-                                            type="password"
-                                            onKeyUp={(event) => {
-                                                if (event.getModifierState("CapsLock")) {
-                                                    setCapslockIndicator(true);
-                                                } else {
-                                                    setCapslockIndicator(false);
-                                                }
-                                            }}
+                                        <PasswordInput
+                                            value={password}
+                                            onPasswordChange={setPassword}
                                             onKeyDown={(event) => {
                                                 if (event.key === "Enter") {
                                                     event.preventDefault();
                                                     onLoginButtonClick();
                                                 }
                                             }}
-                                        >
-                                            <IonInputPasswordToggle slot="end" />
-                                        </IonInput>
-                                        {capslockIndicator && (
-                                            <IonLabel color="danger" className="text-xs">
-                                                Caps Lock is on!
-                                            </IonLabel>
-                                        )}
+                                        />
                                     </div>
 
-                                    <IonCheckbox id="save-password-checkbox" labelPlacement="end">
+                                    <IonCheckbox
+                                        labelPlacement="end"
+                                        checked={savePassword}
+                                        onIonChange={(e) => setSavePassword(e.detail.checked)}
+                                    >
                                         <div className="w-full *:block *:leading-none">
                                             <IonLabel className="text-base">Save password</IonLabel>
                                             <IonLabel color="danger" className="text-xs text-wrap">

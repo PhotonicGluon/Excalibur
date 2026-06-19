@@ -7,6 +7,11 @@ describe("<PasswordInput />", () => {
             cy.get("ion-input").should("have.attr", "placeholder", "My secure password!");
         });
 
+        it("renders with initial value", () => {
+            cy.mount(<PasswordInput value="initial" />);
+            cy.get("ion-input").should("have.value", "initial");
+        });
+
         it("triggers onPasswordChange when password is changed", () => {
             const PASSWORD = "Password!";
 
@@ -24,6 +29,12 @@ describe("<PasswordInput />", () => {
         it("renders two password fields", () => {
             cy.mount(<PasswordInput confirmation />);
             cy.get("ion-input").should("have.length", 2);
+        });
+
+        it("renders with initial values", () => {
+            cy.mount(<PasswordInput confirmation value="initial" />);
+            cy.get("ion-input").eq(0).should("have.value", "initial");
+            cy.get("ion-input").eq(1).should("have.value", "initial");
         });
 
         it("warns if passwords do not match", () => {

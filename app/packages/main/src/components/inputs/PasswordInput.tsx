@@ -11,12 +11,13 @@ interface ContainerProps extends HTMLProps<HTMLIonInputElement> {
     onPasswordChange?: (password: string) => void;
 }
 
-const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChange, ...props }) => {
+const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChange, value, ...props }) => {
     // States
-    const [password1, setPassword1] = useState("");
-    const [isFirstInClear, setIsFirstInClear] = useState(false);
+    const [password1, setPassword1] = useState((value as string) ?? "");
+    const [password2, setPassword2] = useState((value as string) ?? "");
+    const [prevValue, setPrevValue] = useState<string | undefined>(value as string);
 
-    const [password2, setPassword2] = useState("");
+    const [isFirstInClear, setIsFirstInClear] = useState(false);
 
     // Hooks
     const capsLockOn = useCapsLock();
@@ -24,6 +25,13 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
     // Values
     const secondPasswordDisabled = !confirmation || isFirstInClear;
     const passwordsMatch = !confirmation || isFirstInClear || password1 === password2;
+
+    // State updates
+    if (value !== prevValue) {
+        setPrevValue(value as string);
+        setPassword1((value as string) ?? "");
+        setPassword2((value as string) ?? "");
+    }
 
     // Hooks
     useEffect(() => {
@@ -41,6 +49,7 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
                 fill="solid"
                 placeholder="My secure password!"
                 type={isFirstInClear ? "text" : "password"}
+                value={password1}
                 onKeyDown={!confirmation ? props.onKeyDown : undefined}
                 onIonInput={(e) => setPassword1(e.detail.value!)}
             >
@@ -58,8 +67,9 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
                     fill="solid"
                     placeholder="My secure password!"
                     type="password"
-                    onKeyDown={props.onKeyDown}
                     disabled={secondPasswordDisabled}
+                    value={password2}
+                    onKeyDown={props.onKeyDown}
                     onIonInput={(e) => setPassword2(e.detail.value!)}
                 >
                     <IonInputPasswordToggle slot="end" />
