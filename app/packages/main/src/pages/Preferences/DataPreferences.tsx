@@ -153,9 +153,9 @@ const DataPreferences: React.FC = () => {
                                         ],
                                     });
                                 }}
-                            ></IonToggle>
+                            />
                         }
-                    ></SettingsItem>
+                    />
                     <hr />
                 </IonGrid>
 

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
     IonButton,
     IonButtons,
@@ -29,29 +31,32 @@ const UpdateSettings: React.FC = () => {
 
     const [presentAlert] = useIonAlert();
 
+    // States
+    const [checkUpdate, setCheckUpdate] = useState<boolean>(settings.checkUpdate);
+    const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(settings.checkUpdateInterval);
+
     // Functions
     /**
      * Handles any updates to the settings' values.
+     *
+     * @param newSettings the new settings' values
      */
-    function updateSettings() {
-        // Get final data
-        const checkUpdate = (document.getElementById("check-update")! as HTMLIonCheckboxElement).checked;
-        let checkUpdateInterval = parseInt(
-            (document.getElementById("check-update-interval")! as HTMLInputElement).value,
-        ) as number;
-
+    function updateSettings(newSettings: SettingsPreferenceValues) {
         // Validation
-        if (isNaN(checkUpdateInterval)) {
-            checkUpdateInterval = DEFAULT_SETTINGS_VALUES.checkUpdateInterval;
+        if (isNaN(newSettings.checkUpdateInterval)) {
+            newSettings.checkUpdateInterval = DEFAULT_SETTINGS_VALUES.checkUpdateInterval;
+            setCheckUpdateInterval(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
         }
 
         // Form new settings
-        const newSettings: Partial<SettingsPreferenceValues> = {
-            checkUpdate,
-            checkUpdateInterval,
+        const settingsToSave: Partial<SettingsPreferenceValues> = {
+            checkUpdate: newSettings.checkUpdate,
+            checkUpdateInterval: newSettings.checkUpdateInterval,
         };
-        console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
-        settings.save(newSettings);
+
+        console.log(`Got new settings' values: ${JSON.stringify(settingsToSave)}`);
+        settings.change(settingsToSave);
+        settings.save(settingsToSave);
     }
 
     // Render
@@ -78,17 +83,15 @@ const UpdateSettings: React.FC = () => {
                         input={
                             <IonToggle
                                 id="check-update"
-                                checked={settings.checkUpdate}
+                                checked={checkUpdate}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        checkUpdate: e.detail.checked,
-                                    });
-                                    updateSettings();
+                                    const newCheckUpdate = e.detail.checked;
+                                    setCheckUpdate(newCheckUpdate);
+                                    updateSettings({ ...settings, checkUpdate: newCheckUpdate });
                                 }}
                             ></IonToggle>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<IonLabel>Update Check Interval</IonLabel>}
                         input={
@@ -96,19 +99,17 @@ const UpdateSettings: React.FC = () => {
                                 id="check-update-interval"
                                 type="number"
                                 helperText="In hours"
-                                value={settings.checkUpdateInterval}
+                                value={checkUpdateInterval}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        checkUpdateInterval: parseInt(
-                                            e.detail.value ?? DEFAULT_SETTINGS_VALUES.checkUpdateInterval.toString(),
-                                        ),
-                                    });
-                                    updateSettings();
+                                    const newCheckUpdateInterval = parseInt(
+                                        e.detail.value ?? DEFAULT_SETTINGS_VALUES.checkUpdateInterval.toString(),
+                                    );
+                                    setCheckUpdateInterval(newCheckUpdateInterval);
+                                    updateSettings({ ...settings, checkUpdateInterval: newCheckUpdateInterval });
                                 }}
                             ></IonInput>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<></>}
                         input={
@@ -132,7 +133,7 @@ const UpdateSettings: React.FC = () => {
                                 Check for Update Now
                             </IonButton>
                         }
-                    ></SettingsItem>
+                    />
                 </IonGrid>
             </IonContent>
         </IonPage>

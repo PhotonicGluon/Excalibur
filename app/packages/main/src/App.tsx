@@ -30,18 +30,18 @@ import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
 import PrivateRoute from "@components/auth/PrivateRoute";
 import { useSettings } from "@components/settings/context";
 
-import AccountPreferences from "@pages/Configuration/Preferences/AccountPreferences";
-import DataPreferences from "@pages/Configuration/Preferences/DataPreferences";
-import PreferencesMenu from "@pages/Configuration/Preferences/PreferencesMenu";
-import CryptoSettings from "@pages/Configuration/Settings/CryptoSettings";
-import InterfaceSettings from "@pages/Configuration/Settings/InterfaceSettings";
-import SettingsMenu from "@pages/Configuration/Settings/SettingsMenu";
-import UpdateSettings from "@pages/Configuration/Settings/UpdateSettings";
 import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
+import AccountPreferences from "@pages/Preferences/AccountPreferences";
+import DataPreferences from "@pages/Preferences/DataPreferences";
+import PreferencesMenu from "@pages/Preferences/PreferencesMenu";
 import ServerChoice from "@pages/ServerChoice";
+import CryptoSettings from "@pages/Settings/CryptoSettings";
+import InterfaceSettings from "@pages/Settings/InterfaceSettings";
+import SettingsMenu from "@pages/Settings/SettingsMenu";
+import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
 
 import "@theme";

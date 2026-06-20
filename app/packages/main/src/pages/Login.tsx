@@ -246,7 +246,7 @@ const Login: React.FC = () => {
                     auth.logout(true); // Also remove saved API URL
                     router.push("/server-choice", "forward", "replace");
                 }}
-            ></SidebarMenu>
+            />
 
             <IonPage id="main-content">
                 {/* Header content */}

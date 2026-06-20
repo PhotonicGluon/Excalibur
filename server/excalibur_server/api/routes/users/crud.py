@@ -43,7 +43,7 @@ async def edit_password_endpoint(
     summary="Edit Username",
     responses={
         status.HTTP_200_OK: {"description": "Username updated", "content": None},
-        status.HTTP_409_CONFLICT: {"description": "User already exists"},
+        status.HTTP_409_CONFLICT: {"description": "User with username already exists"},
     },
 )
 def edit_username_endpoint(
