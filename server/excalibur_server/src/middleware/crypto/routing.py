@@ -112,18 +112,6 @@ USERS_ROUTING_TREE = RoutingTree(
                 ),
             },
         ),
-        "edit": RoutingTree(
-            segment="edit",
-            subtrees={
-                "username": RoutingTree(
-                    segment="username",
-                    has_path_param=True,
-                    encrypted_routes={
-                        "PUT": EncryptedRoute(),
-                    },
-                ),
-            },
-        ),
         "vault": RoutingTree(
             segment="vault",
             has_path_param=True,

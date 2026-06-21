@@ -11,17 +11,17 @@ from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
-from excalibur_server.src.users import get_user_from_id
+from excalibur_server.src.users import get_user, get_user_from_id
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
 
 
-@router.websocket("/opaque/change-password")
-async def change_password_endpoint(
+@router.websocket("/opaque/edit-record")
+async def edit_record_endpoint(
     websocket: WebSocket,
     credentials: Annotated[Credentials, Depends(get_credentials_ws)],
 ):
     """
-    Endpoint that handles the changing of existing users' passwords.
+    Endpoint that handles the editing of existing users' records.
 
     All messages should be encrypted with the current session key of the user.
     """
@@ -33,11 +33,19 @@ async def change_password_endpoint(
 
     await ws_manager.accept()
     try:
-        # Wait for registration request
-        registration_request_raw = (await ws_manager.receive()).data
+        # Wait for new username and registration request
+        registration_request_raw_and_username = (await ws_manager.receive()).data
+        registration_request_raw = registration_request_raw_and_username[: OPAQUE.registration_request_size]
+        new_username = registration_request_raw_and_username[OPAQUE.registration_request_size :].decode("utf-8")
 
-        # Get associated user
+        # Get current user
         user = get_user_from_id(credentials.user_id)
+
+        # Check if new username is already taken
+        if new_username != user.username and get_user(new_username) is not None:
+            await ws_manager.send(WebSocketMsg("Username already taken", "ERR"))
+            await ws_manager.close()
+            return
 
         # Generate registration response
         registration_request = OPAQUE.deserialize_registration_request(registration_request_raw)
@@ -52,11 +60,13 @@ async def change_password_endpoint(
         # Wait for client to send registration record
         registration_record_raw = (await ws_manager.receive()).data
 
-        # Amend user's password
+        # Amend user's record
         with get_session() as session:
             with session.begin():
-                user = session.query(User).filter_by(username=user.username).first()
+                user = session.get(User, credentials.user_id)
+                user.username = new_username
                 user.registration_record = registration_record_raw
+                session.add(user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))
