@@ -67,7 +67,7 @@ const CryptoSettings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal">
                     <SettingsItem
                         label={<IonLabel>Key Strength</IonLabel>}
                         input={

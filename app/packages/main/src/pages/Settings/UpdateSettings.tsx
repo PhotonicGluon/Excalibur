@@ -77,12 +77,11 @@ const UpdateSettings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal">
                     <SettingsItem
                         label={<IonLabel>Check for Updates?</IonLabel>}
                         input={
                             <IonToggle
-                                id="check-update"
                                 checked={checkUpdate}
                                 onIonChange={(e) => {
                                     const newCheckUpdate = e.detail.checked;
@@ -96,7 +95,7 @@ const UpdateSettings: React.FC = () => {
                         label={<IonLabel>Update Check Interval</IonLabel>}
                         input={
                             <IonInput
-                                id="check-update-interval"
+                                fill="outline"
                                 type="number"
                                 helperText="In hours"
                                 value={checkUpdateInterval}

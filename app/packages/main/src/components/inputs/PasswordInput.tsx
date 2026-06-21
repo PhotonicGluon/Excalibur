@@ -5,6 +5,8 @@ import { IonInput, IonInputPasswordToggle, IonLabel } from "@ionic/react";
 import { useCapsLock } from "@lib/hooks";
 
 interface ContainerProps extends HTMLProps<HTMLIonInputElement> {
+    /** Fill style of _both_ input fields */
+    fill?: "outline" | "solid";
     /** Whether to require confirmation of the password */
     confirmation?: boolean;
     /** Callback when password changes (or, if confirmation is true, when both passwords match) */
@@ -46,11 +48,11 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
 
     // Render
     return (
-        <div className="flex flex-col gap-y-2">
+        <div className={`flex flex-col gap-y-2 ${props.className}`}>
             <IonInput
                 label="Password"
                 labelPlacement="stacked"
-                fill="solid"
+                fill={props.fill ?? "solid"}
                 placeholder="My secure password!"
                 type={isFirstInClear ? "text" : "password"}
                 value={password1}
@@ -68,7 +70,7 @@ const PasswordInput: React.FC<ContainerProps> = ({ confirmation, onPasswordChang
                 <IonInput
                     label="Confirm Password"
                     labelPlacement="stacked"
-                    fill="solid"
+                    fill={props.fill ?? "solid"}
                     placeholder="My secure password!"
                     type="password"
                     disabled={secondPasswordDisabled}

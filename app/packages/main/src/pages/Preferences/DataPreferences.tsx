@@ -122,7 +122,7 @@ const DataPreferences: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal mt-2 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal mt-2">
                     <SettingsItem
                         label={<IonLabel className="text-base">Obfuscated Names</IonLabel>}
                         input={
