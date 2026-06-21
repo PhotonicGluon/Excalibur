@@ -1,4 +1,23 @@
+import { generatePoPHeader } from "@lib/auth/pop";
+import { getURLEncodedPath, quotePlus } from "@lib/url";
 import { b64decode, b64encode } from "@lib/util";
+
+import { AuthProvider } from "@components/auth/context";
+
+/**
+ * Creates an authenticated WebSocket connection.
+ *
+ * @param auth the current authentication provider
+ * @param path the path to the WebSocket endpoint
+ * @returns the authenticated websocket object
+ */
+export function getAuthenticatedWS(auth: AuthProvider, path: string): WebSocket {
+    const wsURL = `${auth.serverInfo!.apiURL!.replace("http", "ws")}${path}`;
+    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(wsURL));
+    const ws = new WebSocket(`${wsURL}?auth_token=${auth.getToken()}&hmac_validation=${quotePlus(popHeader)}`);
+
+    return ws;
+}
 
 /**
  * Generates a response object for the server.

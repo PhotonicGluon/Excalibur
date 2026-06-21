@@ -52,7 +52,7 @@ async def edit_record_endpoint(
         registration_response = OPAQUE.create_registration_response(
             request=registration_request,
             server_public_key=_get_public_key(),
-            credential_identifier=_get_credential_identifier(user.username),
+            credential_identifier=_get_credential_identifier(new_username),
             oprf_seed=_get_oprf_seed(),
         )
         await ws_manager.send(WebSocketMsg(registration_response.serialize()))
@@ -63,10 +63,10 @@ async def edit_record_endpoint(
         # Amend user's record
         with get_session() as session:
             with session.begin():
-                user = session.get(User, credentials.user_id)
-                user.username = new_username
-                user.registration_record = registration_record_raw
-                session.add(user)
+                db_user = session.get(User, credentials.user_id)
+                db_user.username = new_username
+                db_user.registration_record = registration_record_raw
+                session.add(db_user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))

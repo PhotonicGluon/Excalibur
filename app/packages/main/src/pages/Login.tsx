@@ -37,6 +37,9 @@ const Login: React.FC = () => {
     const auth = useAuth();
     const router = useIonRouter();
 
+    const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
+
     // States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -44,10 +47,6 @@ const Login: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
-
-    // Contexts
-    const [presentAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
 
     // Functions
     /**
@@ -183,7 +182,8 @@ const Login: React.FC = () => {
 
         // Set authentication info
         const authInfo: AuthInfo = {
-            username: username,
+            username,
+            password,
             obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
             ...e2eeData,
         };

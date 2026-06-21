@@ -159,7 +159,7 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set authentication info
-        const authInfo: AuthInfo = { username, obfuscatedNames, ...e2eeData };
+        const authInfo: AuthInfo = { username, password, obfuscatedNames, ...e2eeData };
         auth.setAuthInfo(authInfo);
         console.log(`Token for authentication: ${authInfo.token}`);
 

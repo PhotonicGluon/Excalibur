@@ -9,12 +9,17 @@ import {
     IonIcon,
     IonInput,
     IonLabel,
+    IonLoading,
     IonPage,
     IonTitle,
     IonToolbar,
+    useIonAlert,
     useIonRouter,
+    useIonToast,
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
+
+import { editRecord } from "@lib/users/api/edit-record";
 
 import { useAuth } from "@components/auth/context";
 import PasswordInput from "@components/inputs/PasswordInput";
@@ -25,39 +30,71 @@ const AccountPreferences: React.FC = () => {
     const auth = useAuth();
     const router = useIonRouter();
 
+    const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
+
     // States
     const [newUsername, setNewUsername] = useState<string>(auth.authInfo!.username!);
     const [newPassword, setNewPassword] = useState<string>("");
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingState, setLoadingState] = useState("Logging in...");
 
     // Functions
     /**
      * Handles any updates to the preferences' values.
      */
     async function updatePreferences() {
+        setIsLoading(true);
+
         // Process the new preferences
+        const oldPref = {
+            username: auth.authInfo!.username!,
+            password: auth.authInfo!.password!,
+        };
         const newPref = {
-            // username: newUsername && newUsername !== auth.authInfo!.username! ? newUsername : undefined,
-            username: newUsername ? newUsername : undefined,
-            password: newPassword ? newPassword : undefined,
+            username: newUsername ?? oldPref.username,
+            password: newPassword ?? oldPref.password,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
         // Handle new username
-        if (newPref.username) {
+        if (newPref.username !== oldPref.username) {
             console.debug(`Updating username to "${newPref.username}"...`);
-            // const response = await editUsername(auth, newPref.username);
-            // if (!response.success) {
-            //     console.error("Failed to update username:", response.error);
-            //     return;
-            // }
+            console.log(newPref.username, oldPref.password);
+            const response = await editRecord(
+                auth,
+                newPref.username,
+                oldPref.password,
+                () => setIsLoading(false),
+                setLoadingState,
+                (header, subheader, msg) => {
+                    presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
+                },
+            );
+            if (!response.success) {
+                console.error(response.error);
+                presentToast({
+                    message: `Failed to update username: ${response.error}`,
+                    duration: 2000,
+                    color: "danger",
+                });
+                setIsLoading(false);
+                return;
+            }
 
-            // auth.setAuthInfo({
-            //     ...auth.authInfo!,
-            //     token: auth.getToken()!,
-            //     username: newPref.username,
-            // });
-            console.debug("Username updated successfully");
+            auth.setAuthInfo({
+                ...auth.authInfo!,
+                token: auth.getToken()!,
+                username: newPref.username,
+            });
+            presentToast({
+                message: "Username updated successfully",
+                duration: 2000,
+                color: "success",
+            });
         }
+        setIsLoading(false);
     }
 
     // Render
@@ -113,6 +150,13 @@ const AccountPreferences: React.FC = () => {
                 <IonButton className="ion-padding-horizontal w-full" onClick={updatePreferences}>
                     Save Changes
                 </IonButton>
+
+                {/* Loading indicator */}
+                <IonLoading
+                    className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
+                    isOpen={isLoading}
+                    message={loadingState}
+                ></IonLoading>
             </IonContent>
         </IonPage>
     );

@@ -1,55 +1,45 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import ExEF from "@lib/crypto/exef";
-import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
+import { parseResponse as _parseResponse, generateResponse, getAuthenticatedWS } from "@lib/network/websocket";
 
-export enum RegistrationStage {
-    SENT_REGISTRATION_REQUEST,
-    SENT_REGISTRATION_RECORD,
-}
+import { AuthProvider } from "@components/auth/context";
 
-export interface RegistrationState {
-    /** Current stage of the negotiation */
-    stage: RegistrationStage;
-    /** OPRF blinding scalar */
-    blind?: bigint;
-}
+import { RegistrationStage, RegistrationState } from "./registration/opaque";
 
 /**
- * Registers a new user using the OPAQUE-3DH protocol.
+ * Updates a user's OPAQUE registration record.
  *
  * @param apiURL the URL of the API server to query
- * @param username the username to set up security details for
- * @param password the password to set up security details for
- * @param ack the Account Creation Key (ACK)
- * @param aukSalt the account unlock key (AUK) salt to set up
- * @param encryptedVaultKey the vault key that was encrypted using the AUK
+ * @param newUsername the new username of the user
+ * @param newPassword the new password of the user
  * @param stopLoading the function to call when any loading indicators needs to be stopped
  * @param setLoadingState the function to call to update the loading state with a message
  * @param showAlert the function to call if an error occurs, which takes a header and a message
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
-export async function registerUserOPAQUE(
-    apiURL: string,
-    username: string,
-    password: string,
-    ack: Buffer,
-    aukSalt: Buffer,
-    encryptedVaultKey: Buffer,
+export async function editRecord(
+    auth: AuthProvider,
+    newUsername: string,
+    newPassword: string,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
 ): Promise<{ success: boolean; error?: string }> {
+    console.log("INPUT, newUsername:", newUsername, "newPassword:", newPassword);
     // Create special request handling
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(ack).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(JSON.stringify(serializedData)));
         ws.send(encryptedData);
     }
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = ExEF.decrypt(ack, Buffer.from(await (eventData as Blob).arrayBuffer()));
+            const decryptedData = ExEF.decrypt(
+                auth.authInfo!.key!,
+                Buffer.from(await (eventData as Blob).arrayBuffer()),
+            );
             return _parseResponse(decryptedData.toString("utf-8"));
         } catch (_e) {
             // Did the server send it in plaintext?
@@ -57,37 +47,37 @@ export async function registerUserOPAQUE(
         }
     }
 
-    // Set up WebSockets
-    const wsURL = apiURL.replace("http", "ws");
-    const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
+    const ws = getAuthenticatedWS(auth, "/auth/opaque/edit-record");
 
-    // Perform OPAQUE-3DH registration
-    setLoadingState?.("Sending registration request...");
+    // Perform record updating
+    setLoadingState?.("Sending record updating request...");
     const state: RegistrationState = {
         stage: RegistrationStage.SENT_REGISTRATION_REQUEST,
     };
 
-    const registrationPromise = new Promise<void>((resolve, reject) => {
+    const recordUpdatePromise = new Promise<void>((resolve, reject) => {
         ws.addEventListener("error", (event) => {
             const e = event as ErrorEvent;
             ws.close();
             console.error(e);
             stopLoading?.();
-            showAlert?.("Registration Failed", undefined, "Could not complete registration. Please try again.");
+            showAlert?.("Record Update Failed", undefined, "Could not complete record update. Please try again.");
             reject(e);
         });
 
         ws.addEventListener("open", () => {
-            console.log(`Connected to server; sending username '${username}' and registration request`);
-            const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(new TextEncoder().encode(password));
+            console.log(`Connected to server; sending username '${newUsername}' and record update request`);
+            const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
+                new TextEncoder().encode(newPassword),
+            );
             const requestAndUsername = Buffer.concat([
                 registrationRequest.serialize(),
-                new TextEncoder().encode(username),
+                new TextEncoder().encode(newUsername),
             ]);
             sendResponse(ws, requestAndUsername);
 
             state.blind = blind;
-            setLoadingState?.("Waiting for registration response...");
+            setLoadingState?.("Waiting for record update response...");
         });
 
         ws.addEventListener("message", async (event: MessageEvent<Blob | string>) => {
@@ -97,25 +87,24 @@ export async function registerUserOPAQUE(
                     if (response.status === "ERR") {
                         ws.close();
                         stopLoading?.();
-                        showAlert?.("Registration Failed", undefined, response.data as string);
+                        showAlert?.("Record Update Failed", undefined, response.data as string);
                         reject("Server rejected username");
                         return;
                     }
 
                     const registrationResponse = OPAQUE.deserializeRegistrationResponse(response.data as Uint8Array);
 
-                    // Generate registration record
+                    // Generate new registration record
                     const [registrationRecord, _exportKey] = OPAQUE.finalizeRegistrationRequest(
-                        new TextEncoder().encode(password),
+                        new TextEncoder().encode(newPassword),
                         state.blind!,
                         registrationResponse,
                         SERVER_IDENTITY,
-                        new TextEncoder().encode(username),
+                        new TextEncoder().encode(newUsername),
                     );
 
-                    // Send registration record, AUK salt, and encrypted AUK
-                    const toSend = Buffer.concat([registrationRecord.serialize(), aukSalt, encryptedVaultKey]);
-                    sendResponse(ws, toSend);
+                    // Send new registration record
+                    sendResponse(ws, Buffer.from(registrationRecord.serialize()));
                     state.stage = RegistrationStage.SENT_REGISTRATION_RECORD;
                     setLoadingState?.("Waiting for server confirmation...");
                     return;
@@ -126,8 +115,8 @@ export async function registerUserOPAQUE(
                         ws.close();
 
                         stopLoading?.();
-                        showAlert?.("Registration Failed", undefined, "Server rejected registration.");
-                        reject("Server rejected registration");
+                        showAlert?.("Record Update Failed", undefined, "Server rejected record update.");
+                        reject("Server rejected record update");
                         return;
                     }
 
@@ -138,14 +127,14 @@ export async function registerUserOPAQUE(
                 ws.close();
                 console.error(e);
                 stopLoading?.();
-                showAlert?.("Registration Failed", undefined, "Could not complete registration. Please try again.");
+                showAlert?.("Record Update Failed", undefined, "Could not complete record update. Please try again.");
                 reject(e);
             }
         });
     });
 
     try {
-        await registrationPromise;
+        await recordUpdatePromise;
         return { success: true };
     } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
