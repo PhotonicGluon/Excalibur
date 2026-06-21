@@ -33,14 +33,31 @@ const AccountPreferences: React.FC = () => {
     /**
      * Handles any updates to the preferences' values.
      */
-    function updatePreferences() {
+    async function updatePreferences() {
+        // Process the new preferences
         const newPref = {
-            username: newUsername || undefined,
-            password: newPassword || undefined,
+            // username: newUsername && newUsername !== auth.authInfo!.username! ? newUsername : undefined,
+            username: newUsername ? newUsername : undefined,
+            password: newPassword ? newPassword : undefined,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
-        // TODO: Add
+        // Handle new username
+        if (newPref.username) {
+            console.debug(`Updating username to "${newPref.username}"...`);
+            // const response = await editUsername(auth, newPref.username);
+            // if (!response.success) {
+            //     console.error("Failed to update username:", response.error);
+            //     return;
+            // }
+
+            // auth.setAuthInfo({
+            //     ...auth.authInfo!,
+            //     token: auth.getToken()!,
+            //     username: newPref.username,
+            // });
+            console.debug("Username updated successfully");
+        }
     }
 
     // Render
@@ -93,7 +110,7 @@ const AccountPreferences: React.FC = () => {
                 </IonGrid>
 
                 {/* Confirmation */}
-                <IonButton className="ion-padding-horizontal w-full" onClick={() => updatePreferences()}>
+                <IonButton className="ion-padding-horizontal w-full" onClick={updatePreferences}>
                     Save Changes
                 </IonButton>
             </IonContent>
