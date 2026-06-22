@@ -39,7 +39,7 @@ const AccountPreferences: React.FC = () => {
     const [newPassword, setNewPassword] = useState<string>("");
 
     const [isLoading, setIsLoading] = useState(false);
-    const [loadingState, setLoadingState] = useState("Logging in...");
+    const [loadingState, setLoadingState] = useState("Sending request...");
 
     // Functions
     /**
@@ -49,62 +49,69 @@ const AccountPreferences: React.FC = () => {
         setIsLoading(true);
 
         // Process the new preferences
-        const oldPref = {
-            username: auth.authInfo!.username!,
-            password: auth.authInfo!.password!,
-        };
+        const oldUsername = auth.authInfo!.username!;
+        const oldPassword = auth.authInfo!.password!;
+
         const newPref = {
-            username: newUsername ?? oldPref.username,
-            password: newPassword ?? oldPref.password,
+            username: newUsername ?? oldUsername,
+            password: newPassword && newPassword !== "" ? newPassword : oldPassword,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
-        // Handle new username
-        if (newPref.username !== oldPref.username) {
-            console.debug(`Updating username to "${newPref.username}"...`);
-            console.log(newPref.username, oldPref.password);
-
-            // Regenerate AUK and encrypted vault key
-            const {
-                auk: { salt: newAUKSalt },
-                vault: { encryptedKey: newEncryptedVaultKey },
-            } = await generateVaultKeyData(oldPref.password, { username: newPref.username }, auth.vaultKey!);
-
-            // Send edit request
-            const response = await editRecord(
-                auth,
-                newPref.username,
-                oldPref.password,
-                newAUKSalt,
-                newEncryptedVaultKey,
-                () => setIsLoading(false),
-                setLoadingState,
-                (header, subheader, msg) => {
-                    presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
-                },
-            );
-            if (!response.success) {
-                console.error(response.error);
-                presentToast({
-                    message: `Failed to update username: ${response.error}`,
-                    duration: 2000,
-                    color: "danger",
-                });
-                setIsLoading(false);
-                return;
-            }
-
-            auth.setAuthInfo({
-                ...auth.authInfo!,
-                token: auth.getToken()!,
-                username: newPref.username,
-            });
+        if (newPref.username === oldUsername && newPref.password === oldPassword) {
+            // No changes needed
+            setIsLoading(false);
             presentToast({
-                message: "Username updated successfully",
+                message: "No changes",
                 duration: 2000,
-                color: "success",
+                color: "warning",
             });
+            return;
         }
+
+        // Regenerate AUK and encrypted vault key
+        const {
+            auk: { salt: newAUKSalt },
+            vault: { encryptedKey: newEncryptedVaultKey },
+        } = await generateVaultKeyData(newPref.password, { username: newPref.username }, auth.vaultKey!);
+
+        // Send edit request
+        const response = await editRecord(
+            auth,
+            newPref.username,
+            newPref.password,
+            newAUKSalt,
+            newEncryptedVaultKey,
+            () => setIsLoading(false),
+            setLoadingState,
+            (header, subheader, msg) => {
+                presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
+            },
+        );
+        if (!response.success) {
+            const errorMsg = `Failed to update account: ${response.error}`;
+            console.error(errorMsg);
+            presentToast({
+                message: errorMsg,
+                duration: 2000,
+                color: "danger",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        auth.setAuthInfo({
+            ...auth.authInfo!,
+            token: auth.getToken()!,
+            username: newPref.username,
+            password: newPref.password,
+        });
+
+        presentToast({
+            message: "Account updated successfully",
+            duration: 2000,
+            color: "success",
+        });
         setIsLoading(false);
     }
 

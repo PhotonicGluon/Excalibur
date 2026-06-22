@@ -30,7 +30,6 @@ export async function editRecord(
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
 ): Promise<{ success: boolean; error?: string }> {
-    console.log("INPUT, newUsername:", newUsername, "newPassword:", newPassword);
     // Create special request handling
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
