@@ -19,6 +19,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { generateVaultKeyData } from "@lib/crypto/keygen";
 import { editRecord } from "@lib/users/api/edit-record";
 
 import { useAuth } from "@components/auth/context";
@@ -62,10 +63,20 @@ const AccountPreferences: React.FC = () => {
         if (newPref.username !== oldPref.username) {
             console.debug(`Updating username to "${newPref.username}"...`);
             console.log(newPref.username, oldPref.password);
+
+            // Regenerate AUK and encrypted vault key
+            const {
+                auk: { salt: newAUKSalt },
+                vault: { encryptedKey: newEncryptedVaultKey },
+            } = await generateVaultKeyData(oldPref.password, { username: newPref.username }, auth.vaultKey!);
+
+            // Send edit request
             const response = await editRecord(
                 auth,
                 newPref.username,
                 oldPref.password,
+                newAUKSalt,
+                newEncryptedVaultKey,
                 () => setIsLoading(false),
                 setLoadingState,
                 (header, subheader, msg) => {

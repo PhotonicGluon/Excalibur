@@ -58,8 +58,8 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
         auth_protocol=AuthProtocol.OPAQUE_3DH,
         registration_record=b"Fake Registration Record",
         additional_info=f"Some Sample Info for {username}",
-        auk_salt=b"test_auk_salt_16_bytes",
-        key_enc=b"test_encrypted_vault_key",
+        auk_salt=b"Initial AUK Salt",
+        key_enc=b"Initial Encrypted Vault Key",
     )
     root_folder = FSItem(name=str(test_user.id), parent_id=None, is_folder=True)
     root_folder.root_id = root_folder.id
@@ -73,6 +73,8 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
     assert starting_test_user is not None
     assert starting_test_user.username == username
     assert starting_test_user.registration_record == b"Fake Registration Record"
+    assert starting_test_user.auk_salt == b"Initial AUK Salt"
+    assert starting_test_user.key_enc == b"Initial Encrypted Vault Key"
 
     # Create a new authenticated client
     MASTER_KEYS_CACHE[COMM_UUID] = COMM_MASTER_KEY
@@ -109,8 +111,13 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
         registration_response = b64decode(registration_response_raw["data"])
         assert registration_response == OPAQUETestVectors.REGISTRATION_RESPONSES[test_idx]
 
-        # Send registration record
-        to_send = OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]
+        # Send registration record, AUK salt, and encrypted vault key
+        to_send = (
+            OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]  # Registration record
+            + b"New AUK Salt, padded to 32 bytes"  # AUK salt
+            + b"New Encrypted Vault Key"  # key_enc
+        )
+        send_json({"data": b64encode(to_send).decode("utf-8"), "binary": True})
         send_json({"data": b64encode(to_send).decode("utf-8"), "binary": True})
 
         # Receive confirmation
@@ -121,6 +128,8 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
         assert ending_test_user is not None
         assert ending_test_user.username == NEW_USERNAMES[test_idx]
         assert ending_test_user.registration_record == OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]
+        assert ending_test_user.auk_salt == b"New AUK Salt, padded to 32 bytes"
+        assert ending_test_user.key_enc == b"New Encrypted Vault Key"
 
 
 @pytest.mark.parametrize("test_idx", range(len(OPAQUETestVectors.CONTEXTS)))

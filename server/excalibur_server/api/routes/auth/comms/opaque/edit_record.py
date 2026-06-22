@@ -57,8 +57,11 @@ async def edit_record_endpoint(
         )
         await ws_manager.send(WebSocketMsg(registration_response.serialize()))
 
-        # Wait for client to send registration record
-        registration_record_raw = (await ws_manager.receive()).data
+        # Wait for client to send registration record, AUK salt, and encrypted vault key
+        upload_data = (await ws_manager.receive()).data
+        registration_record_raw = upload_data[: OPAQUE.registration_record_size]
+        auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
+        key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
         # Amend user's record
         with get_session() as session:
@@ -66,6 +69,8 @@ async def edit_record_endpoint(
                 db_user = session.get(User, credentials.user_id)
                 db_user.username = new_username
                 db_user.registration_record = registration_record_raw
+                db_user.auk_salt = auk_salt
+                db_user.key_enc = key_enc
                 session.add(db_user)
 
         # Send confirmation

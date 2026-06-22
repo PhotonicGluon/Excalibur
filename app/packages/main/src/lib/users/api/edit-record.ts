@@ -12,6 +12,8 @@ import { RegistrationStage, RegistrationState } from "./registration/opaque";
  * @param apiURL the URL of the API server to query
  * @param newUsername the new username of the user
  * @param newPassword the new password of the user
+ * @param newAUKSalt the new AUK salt of the user
+ * @param newEncryptedVaultKey the new encrypted vault key of the user
  * @param stopLoading the function to call when any loading indicators needs to be stopped
  * @param setLoadingState the function to call to update the loading state with a message
  * @param showAlert the function to call if an error occurs, which takes a header and a message
@@ -22,6 +24,8 @@ export async function editRecord(
     auth: AuthProvider,
     newUsername: string,
     newPassword: string,
+    newAUKSalt: Buffer,
+    newEncryptedVaultKey: Buffer,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
@@ -103,8 +107,9 @@ export async function editRecord(
                         new TextEncoder().encode(newUsername),
                     );
 
-                    // Send new registration record
-                    sendResponse(ws, Buffer.from(registrationRecord.serialize()));
+                    // Send new registration record alongside the new AUK salt and new encrypted vault key
+                    const toSend = Buffer.concat([registrationRecord.serialize(), newAUKSalt, newEncryptedVaultKey]);
+                    sendResponse(ws, toSend);
                     state.stage = RegistrationStage.SENT_REGISTRATION_RECORD;
                     setLoadingState?.("Waiting for server confirmation...");
                     return;

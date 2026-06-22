@@ -1,4 +1,3 @@
-import randomBytes from "randombytes";
 import { useState } from "react";
 
 import {
@@ -22,8 +21,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import ExEF from "@lib/crypto/exef";
-import generateKey from "@lib/crypto/keygen";
+import { generateVaultKeyData } from "@lib/crypto/keygen";
 import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
 import { AdditionalUserInfo } from "@lib/users/structures";
 
@@ -86,15 +84,13 @@ const NewUser: React.FC = () => {
         setLoadingState("Creating new AUK and vault key...");
         const keygenAdditionalInfo = { username };
 
-        const aukSalt = randomBytes(32);
-        const auk = await generateKey(password, keygenAdditionalInfo, aukSalt);
-        console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
+        const {
+            auk: { key: auk, salt: aukSalt },
+            vault: { key: vaultKey, encryptedKey: encryptedVaultKey },
+        } = await generateVaultKeyData(password, keygenAdditionalInfo);
+        console.debug(`Generated AUK '${auk.toString("hex")}' and vault key '${vaultKey.toString("hex")}'`);
 
-        const vaultKey = randomBytes(32);
-        console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
         setLocalVaultKey(vaultKey);
-        const exef = new ExEF(auk);
-        const encryptedVaultKey = exef.encrypt(vaultKey);
 
         // Register new user
         setLoadingState("Registering user...");
