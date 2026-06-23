@@ -1,4 +1,4 @@
 🗃️ Modified the `User` table:
 
-- Added a new `id` field
+- Added new `id` and `keygen_function` fields
 - Changed the primary key of the table from `username` to `id`

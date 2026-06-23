@@ -26,7 +26,7 @@ client = TestClient(app)
 
 @pytest.mark.parametrize("test_idx", range(len(OPAQUETestVectors.CONTEXTS)))
 def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.MonkeyPatch):
-    EDIT_RECORD_PATH = "/api/auth/opaque/edit-record"
+    EDIT_RECORD_PATH = "/api/auth/opaque/edit-record?new_keygen_function=NEW_KEYGEN_FUNCTION"
     COMM_UUID = "edit-record-uuid"
     COMM_MASTER_KEY = b"demo 16B key!!!!"
     NEW_USERNAMES = ["a-new-username", OPAQUETestVectors.CLIENT_IDENTITIES[1].decode("utf-8")]
@@ -55,6 +55,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
     username = OPAQUETestVectors.CLIENT_IDENTITIES[test_idx].decode("utf-8")
     test_user = User(
         username=username,
+        keygen_function="Example Keygen Function",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
         registration_record=b"Fake Registration Record",
         additional_info=f"Some Sample Info for {username}",
@@ -72,6 +73,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
     starting_test_user = get_user_from_id(test_user.id)
     assert starting_test_user is not None
     assert starting_test_user.username == username
+    assert starting_test_user.keygen_function == "Example Keygen Function"
     assert starting_test_user.registration_record == b"Fake Registration Record"
     assert starting_test_user.auk_salt == b"Initial AUK Salt"
     assert starting_test_user.key_enc == b"Initial Encrypted Vault Key"
@@ -90,7 +92,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
 
     # Connect and change the record
     with auth_client.websocket_connect(
-        f"{EDIT_RECORD_PATH}?auth_token={token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
+        f"{EDIT_RECORD_PATH}&auth_token={token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
     ) as ws:
         # Helper functions for sending and receiving JSON messages
         def send_json(data: dict):
@@ -127,6 +129,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
         ending_test_user = get_user_from_id(test_user.id)
         assert ending_test_user is not None
         assert ending_test_user.username == NEW_USERNAMES[test_idx]
+        assert ending_test_user.keygen_function == "NEW_KEYGEN_FUNCTION"
         assert ending_test_user.registration_record == OPAQUETestVectors.REGISTRATION_UPLOADS[test_idx]
         assert ending_test_user.auk_salt == b"New AUK Salt, padded to 32 bytes"
         assert ending_test_user.key_enc == b"New Encrypted Vault Key"

@@ -16,6 +16,8 @@ class User(SQLModel, table=True):
     # Basic information
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True)
+    keygen_function: str = Field(nullable=False, default="argon2d")
+    "Key generation function for use on the client side"
     auth_protocol: AuthProtocol = Field(
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )

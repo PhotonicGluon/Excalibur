@@ -11,6 +11,7 @@ from excalibur_server.src.users import get_user, is_user
 
 class SecurityDetails(BaseModel):
     auk_salt: bytes
+    keygen_function: str
     auth_protocol: AuthProtocol
 
     @field_serializer("auk_salt")
