@@ -49,4 +49,25 @@ describe("Check Account Preferences", () => {
         cy.visit("/files/");
         cy.url().should("include", "/files");
     });
+
+    it("should be able to change password", () => {
+        const changedPassword = `password-${Date.now()}`;
+
+        // Fill in new password
+        cy.get("input").eq(1).type(`{selectAll}{backspace}${changedPassword}{enter}`);
+        cy.get("input").eq(2).type(`{selectAll}{backspace}${changedPassword}{enter}`);
+
+        cy.get("#save-changes-button").click();
+        cy.get("ion-toast").should("exist");
+
+        // Trying to log in with old password should fail
+        cy.login(SERVER_URL, oldUsername, oldPassword, true);
+        cy.visit("/files/");
+        cy.url().should("include", "/login");
+
+        // Check if we can login with the new password
+        cy.login(SERVER_URL, oldUsername, changedPassword);
+        cy.visit("/files/");
+        cy.url().should("include", "/files");
+    });
 });

@@ -32,7 +32,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
 
 Cypress.Commands.add("login", (serverURL: string, username: string, password: string, expectToFail?: boolean) => {
     cy.session(
-        ["login", serverURL, username],
+        ["login", serverURL, username, password],
         () => {
             cy.onboard(serverURL);
             cy.visit("/login");
@@ -72,7 +72,7 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
 
 Cypress.Commands.add("signup", (serverURL: string, username: string, password: string) => {
     cy.session(
-        ["signup", serverURL, username],
+        ["signup", serverURL, username, password],
         () => {
             let ack: string[];
 
