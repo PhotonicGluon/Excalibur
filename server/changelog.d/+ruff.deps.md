@@ -1,0 +1,1 @@
+⬆️ Updated `ruff` from `0.15.16` to `0.15.17`
