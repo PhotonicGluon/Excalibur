@@ -142,6 +142,7 @@ function serializeAuthInfo(data: AuthInfo): string {
         key: data.key.toString("hex"),
         token: data.token,
         auk: data.auk.toString("hex"),
+        keygenFunction: data.keygenFunction,
         obfuscatedNames: data.obfuscatedNames,
         username: data.username,
         password: data.password, // TODO: Is this safe?
@@ -154,6 +155,7 @@ function deserializeAuthInfo(data: string): AuthInfo {
         key: Buffer.from(parsed.key, "hex"),
         token: parsed.token,
         auk: Buffer.from(parsed.auk, "hex"),
+        keygenFunction: parsed.keygenFunction,
         obfuscatedNames: parsed.obfuscatedNames,
         username: parsed.username,
         password: parsed.password,

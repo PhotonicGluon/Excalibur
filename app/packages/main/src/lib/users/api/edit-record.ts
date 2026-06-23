@@ -12,6 +12,7 @@ import { RegistrationStage, RegistrationState } from "./registration/opaque";
  * @param apiURL the URL of the API server to query
  * @param newUsername the new username of the user
  * @param newPassword the new password of the user
+ * @param newKeygenFunction the new keygen function of the user
  * @param newAUKSalt the new AUK salt of the user
  * @param newEncryptedVaultKey the new encrypted vault key of the user
  * @param stopLoading the function to call when any loading indicators needs to be stopped
@@ -24,6 +25,7 @@ export async function editRecord(
     auth: AuthProvider,
     newUsername: string,
     newPassword: string,
+    newKeygenFunction: string,
     newAUKSalt: Buffer,
     newEncryptedVaultKey: Buffer,
     stopLoading?: () => void,
@@ -50,7 +52,9 @@ export async function editRecord(
         }
     }
 
-    const ws = getAuthenticatedWS(auth, "/auth/opaque/edit-record");
+    const ws = getAuthenticatedWS(auth, "/auth/opaque/edit-record", {
+        new_keygen_function: newKeygenFunction,
+    });
 
     // Perform record updating
     setLoadingState?.("Sending record updating request...");

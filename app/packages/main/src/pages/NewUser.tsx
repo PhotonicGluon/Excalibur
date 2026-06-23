@@ -21,7 +21,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import { generateVaultKeyData } from "@lib/crypto/keygen";
+import generateVaultKeyData from "@lib/crypto/keygen";
 import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
 import { AdditionalUserInfo } from "@lib/users/structures";
 

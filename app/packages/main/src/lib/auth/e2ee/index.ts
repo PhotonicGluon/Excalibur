@@ -2,7 +2,7 @@ import { AlertButton } from "@ionic/core";
 
 import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
-import generateKey from "@lib/crypto/keygen";
+import { generateKey } from "@lib/crypto/keygen";
 import { getSecurityDetails } from "@lib/users/api";
 
 import { handshakeOPAQUE } from "./opaque";
@@ -40,6 +40,7 @@ async function e2ee(
         return;
     }
     const aukSalt = securityDetailsResponse.aukSalt!;
+    const keygenFunction = securityDetailsResponse.keygenFunction!;
     const authProtocol = securityDetailsResponse.authProtocol!;
     console.debug(
         `Obtained security details: salt '${aukSalt.toString("hex")}' and authentication protocol '${authProtocol}'`,
@@ -47,8 +48,8 @@ async function e2ee(
 
     // Generate keys
     setLoadingState?.("Generating keys...");
-    const additionalInfo = { username }; // FIXME: We cannot rely on the username for the AUK
-    const auk = await generateKey(password, additionalInfo, aukSalt);
+    const additionalInfo = { username };
+    const auk = await generateKey(password, additionalInfo, aukSalt, keygenFunction);
     console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
 
     // Perform handshake
@@ -74,7 +75,7 @@ async function e2ee(
     }
 
     // Return E2EE data
-    return { auk, ...handshakeData! };
+    return { auk, keygenFunction, ...handshakeData! };
 }
 
 export { e2ee, type E2EEData };

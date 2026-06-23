@@ -9,7 +9,7 @@ import { xorBuffer } from "@lib/util";
 const DIGEST_ALGORITHM = "sha256";
 const KEY_LENGTH = 32; // In bytes
 
-type SlowHash = "pbkdf2" | "argon2d";
+export type SlowHashFunction = "pbkdf2" | "argon2d";
 
 export interface KeygenAdditionalInfo {
     /** Username of the user */
@@ -102,7 +102,7 @@ export async function generateKey(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     salt: Buffer,
-    slowHash: SlowHash = "pbkdf2",
+    slowHash: SlowHashFunction = "pbkdf2",
 ): Promise<Buffer> {
     const passwordBuf = normalizePassword(password);
     const iKey1 =
@@ -112,7 +112,8 @@ export async function generateKey(
 }
 
 /**
- * Generates a vault key data object containing the account unlock key (AUK) and the encrypted vault key.
+ * Generates a vault key data object containing the account unlock key (AUK) and the encrypted vault
+ * key.
  *
  * @param password the password to be used
  * @param additionalInfo additional information to be included in the key generation
@@ -120,11 +121,11 @@ export async function generateKey(
  * @param slowHash the slow hash function to use
  * @returns an object containing the AUK and the encrypted vault key
  */
-export async function generateVaultKeyData(
+export default async function generateVaultKeyData(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     existingVaultKey?: Buffer,
-    slowHash: SlowHash = "pbkdf2",
+    slowHash: SlowHashFunction = "pbkdf2",
 ): Promise<{
     auk: { key: Buffer; salt: Buffer };
     vault: { key: Buffer; encryptedKey: Buffer };
@@ -137,5 +138,3 @@ export async function generateVaultKeyData(
 
     return { auk: { key: auk, salt: aukSalt }, vault: { key: vaultKey, encryptedKey: encryptedVaultKey } };
 }
-
-export default generateKey;

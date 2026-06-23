@@ -1,5 +1,5 @@
 import { generatePoPHeader } from "@lib/auth/pop";
-import { getURLEncodedPath, quotePlus } from "@lib/url";
+import { getURLEncodedPath } from "@lib/url";
 import { b64decode, b64encode } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
@@ -9,14 +9,20 @@ import { AuthProvider } from "@components/auth/context";
  *
  * @param auth the current authentication provider
  * @param path the path to the WebSocket endpoint
+ * @param query optional query parameters to include in the WebSocket URL
  * @returns the authenticated websocket object
  */
-export function getAuthenticatedWS(auth: AuthProvider, path: string): WebSocket {
-    const wsURL = `${auth.serverInfo!.apiURL!.replace("http", "ws")}${path}`;
-    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(wsURL));
-    const ws = new WebSocket(`${wsURL}?auth_token=${auth.getToken()}&hmac_validation=${quotePlus(popHeader)}`);
+export function getAuthenticatedWS(auth: AuthProvider, path: string, query?: Record<string, string>): WebSocket {
+    const wsURL = new URL(`${auth.serverInfo!.apiURL!.replace("http", "ws")}${path}`);
+    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(wsURL.toString()));
 
-    return ws;
+    for (const [key, value] of Object.entries(query ?? {})) {
+        wsURL.searchParams.set(key, value);
+    }
+
+    wsURL.searchParams.set("auth_token", auth.getToken()!);
+    wsURL.searchParams.set("hmac_validation", popHeader);
+    return new WebSocket(wsURL.toString());
 }
 
 /**

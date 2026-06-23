@@ -11,6 +11,8 @@ import {
     IonLabel,
     IonLoading,
     IonPage,
+    IonSelect,
+    IonSelectOption,
     IonTitle,
     IonToolbar,
     useIonAlert,
@@ -19,7 +21,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { generateVaultKeyData } from "@lib/crypto/keygen";
+import generateVaultKeyData, { SlowHashFunction as KeyGenFunction } from "@lib/crypto/keygen";
 import { editRecord } from "@lib/users/api/edit-record";
 
 import { useAuth } from "@components/auth/context";
@@ -37,6 +39,7 @@ const AccountPreferences: React.FC = () => {
     // States
     const [newUsername, setNewUsername] = useState<string>(auth.authInfo!.username!);
     const [newPassword, setNewPassword] = useState<string>("");
+    const [keyGenFunction, setKeyGenFunction] = useState<KeyGenFunction>(auth.authInfo!.keygenFunction!);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Sending request...");
@@ -51,14 +54,20 @@ const AccountPreferences: React.FC = () => {
         // Process the new preferences
         const oldUsername = auth.authInfo!.username!;
         const oldPassword = auth.authInfo!.password!;
+        const oldKeyGenFunction = auth.authInfo!.keygenFunction!;
 
         const newPref = {
             username: newUsername ?? oldUsername,
             password: newPassword && newPassword !== "" ? newPassword : oldPassword,
+            keygenFunction: keyGenFunction ?? oldKeyGenFunction,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
-        if (newPref.username === oldUsername && newPref.password === oldPassword) {
+        if (
+            newPref.username === oldUsername &&
+            newPref.password === oldPassword &&
+            newPref.keygenFunction === oldKeyGenFunction
+        ) {
             // No changes needed
             setIsLoading(false);
             presentToast({
@@ -73,13 +82,19 @@ const AccountPreferences: React.FC = () => {
         const {
             auk: { salt: newAUKSalt },
             vault: { encryptedKey: newEncryptedVaultKey },
-        } = await generateVaultKeyData(newPref.password, { username: newPref.username }, auth.vaultKey!);
+        } = await generateVaultKeyData(
+            newPref.password,
+            { username: newPref.username },
+            auth.vaultKey!,
+            newPref.keygenFunction,
+        );
 
         // Send edit request
         const response = await editRecord(
             auth,
             newPref.username,
             newPref.password,
+            newPref.keygenFunction,
             newAUKSalt,
             newEncryptedVaultKey,
             () => setIsLoading(false),
@@ -105,6 +120,7 @@ const AccountPreferences: React.FC = () => {
             token: auth.getToken()!,
             username: newPref.username,
             password: newPref.password,
+            keygenFunction: newPref.keygenFunction,
         });
 
         presentToast({
@@ -160,6 +176,24 @@ const AccountPreferences: React.FC = () => {
                                     onPasswordChange={setNewPassword}
                                 />
                             </div>
+                        }
+                    />
+                    <SettingsItem
+                        label={<IonLabel>Key Generation Function</IonLabel>}
+                        input={
+                            <IonSelect
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select function"
+                                value={keyGenFunction}
+                                onIonChange={(e) => {
+                                    const newKeyGenFunction = e.detail.value as KeyGenFunction;
+                                    setKeyGenFunction(newKeyGenFunction);
+                                }}
+                            >
+                                <IonSelectOption value="argon2d">Argon2d (Recommended)</IonSelectOption>
+                                <IonSelectOption value="pbkdf2">PBKDF2</IonSelectOption>
+                            </IonSelect>
                         }
                     />
                 </IonGrid>

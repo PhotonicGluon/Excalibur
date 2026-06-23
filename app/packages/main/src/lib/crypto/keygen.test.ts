@@ -1,8 +1,9 @@
 import { expect } from "vitest";
 
-import generateKey, {
+import {
     KeygenAdditionalInfo,
     fastHash,
+    generateKey,
     normalizePassword,
     slowHashArgon2d,
     slowHashPBKDF2,
