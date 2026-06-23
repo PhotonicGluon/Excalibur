@@ -32,7 +32,7 @@ OKMS = [
 ]
 
 
-@pytest.mark.parametrize("ikm, salt, info, length, prk, okm", zip(IKMS, SALTS, INFOS, LENGTHS, PRKS, OKMS))
+@pytest.mark.parametrize("ikm, salt, info, length, prk, okm", list(zip(IKMS, SALTS, INFOS, LENGTHS, PRKS, OKMS)))
 def test_hkdf(ikm, salt, info, length, prk, okm):
 
     hkdf = HKDF("sha256")
