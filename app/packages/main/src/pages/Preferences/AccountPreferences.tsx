@@ -165,7 +165,11 @@ const AccountPreferences: React.FC = () => {
                 </IonGrid>
 
                 {/* Confirmation */}
-                <IonButton className="ion-padding-horizontal w-full" onClick={updatePreferences}>
+                <IonButton
+                    id="save-changes-button"
+                    className="ion-padding-horizontal w-full"
+                    onClick={updatePreferences}
+                >
                     Save Changes
                 </IonButton>
 

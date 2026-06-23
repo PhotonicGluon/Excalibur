@@ -30,9 +30,9 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
     );
 });
 
-Cypress.Commands.add("login", (serverURL: string, username: string, password: string) => {
+Cypress.Commands.add("login", (serverURL: string, username: string, password: string, expectToFail?: boolean) => {
     cy.session(
-        [serverURL, username],
+        ["login", serverURL, username],
         () => {
             cy.onboard(serverURL);
             cy.visit("/login");
@@ -42,8 +42,12 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
             cy.get("[label='Password']").type("{selectAll}" + password);
             cy.get("#login-button").click();
 
-            cy.url().should("include", "/files");
+            if (expectToFail) {
+                cy.url().should("not.include", "/files");
+                return;
+            }
 
+            cy.url().should("include", "/files");
             cy.window().should((win) => {
                 expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
                 expect(win.localStorage.getItem("authInfo"), "authInfo").to.not.be.null;
@@ -51,6 +55,9 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
         },
         {
             validate: () => {
+                if (expectToFail) {
+                    return;
+                }
                 cy.window().then((win) => {
                     const authInfo = win.localStorage.getItem("authInfo");
                     if (!authInfo) {
@@ -59,6 +66,62 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
                 });
             },
             cacheAcrossSpecs: true,
+        },
+    );
+});
+
+Cypress.Commands.add("signup", (serverURL: string, username: string, password: string) => {
+    cy.session(
+        ["signup", serverURL, username],
+        () => {
+            let ack: string[];
+
+            cy.onboard(serverURL);
+            cy.visit("/new-user");
+
+            // Initial checks
+            cy.get("#vault-key-modal").should("not.be.visible");
+
+            // Get ACK
+            cy.request({
+                url: `${serverURL}/api/auth/ack`,
+                method: "GET",
+            }).then((response) => {
+                expect(response.body).to.have.length(24);
+                ack = response.body;
+            });
+
+            // Fill in signup form
+            cy.get("[label='Username']").find("input").type(username);
+            cy.get("[label='Password']").find("input").type(password);
+            cy.get("[label='Confirm Password']").find("input").type(password);
+
+            // Fill in Account Creation Key (ACK) by pasting into the first input box
+            cy.get("#ack-input")
+                .find("input")
+                .eq(0)
+                .trigger("paste", {
+                    clipboardData: { getData: () => ack.join(" ") },
+                });
+
+            cy.contains("ion-button", "Confirm").click();
+
+            // Assert that the vault key dialog shows up
+            cy.get("#vault-key-modal").should("be.visible");
+            cy.get("#vault-key-modal-close").click();
+
+            // We should have been redirected to the files page (i.e., logged in successfully)
+            cy.url().should("include", "/files/");
+        },
+        {
+            validate: () => {
+                cy.request({
+                    url: `${serverURL}/api/users/check/${username}`,
+                    method: "HEAD",
+                }).then((response) => {
+                    expect(response.status).to.eq(200);
+                });
+            },
         },
     );
 });
@@ -83,7 +146,8 @@ declare global {
     namespace Cypress {
         interface Chainable {
             onboard(serverURL: string): Chainable<void>;
-            login(serverURL: string, username: string, password: string): Chainable<void>;
+            login(serverURL: string, username: string, password: string, expectToFail?: boolean): Chainable<void>;
+            signup(serverURL: string, username: string, password: string): Chainable<void>;
             pullRefresh(): Chainable<void>;
         }
     }
