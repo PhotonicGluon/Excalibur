@@ -38,6 +38,8 @@ const ServerSettings: React.FC = () => {
     const [presentToast] = useIonToast();
 
     // States
+    const [toggledObfuscation, setToggledObfuscation] = useState(false);
+
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Processing...");
 
@@ -48,6 +50,7 @@ const ServerSettings: React.FC = () => {
     async function toggleUseObfuscation() {
         const newObfuscation = !auth.authInfo!.obfuscatedNames;
 
+        setToggledObfuscation(true);
         setIsLoading(true);
         setLoadingState("Processing...");
 
@@ -111,7 +114,18 @@ const ServerSettings: React.FC = () => {
             <IonHeader>
                 <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
-                        <IonButton onClick={() => router.goBack()}>
+                        <IonButton
+                            onClick={() => {
+                                if (!toggledObfuscation) {
+                                    router.goBack();
+                                    return;
+                                }
+
+                                // Go back to the root file page
+                                // (This is to avoid issues when a subfolder was selected before toggling obfuscation)
+                                router.push("/files/", "back", "replace"); // Try to make it as seamless as possible
+                            }}
+                        >
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
