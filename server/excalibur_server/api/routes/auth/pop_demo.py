@@ -73,6 +73,6 @@ async def demo_websocket_endpoint(
     try:
         while True:
             text = await websocket.receive_text()
-            await websocket.send_text(f"{credentials.username}: {text}")
+            await websocket.send_text(f"{credentials.user_id}: {text}")
     except WebSocketDisconnect:
         pass

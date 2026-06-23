@@ -29,7 +29,7 @@ import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 import SettingsItem from "@components/settings/SettingsItem";
 
-const ServerSettings: React.FC = () => {
+const DataPreferences: React.FC = () => {
     // Contexts
     const router = useIonRouter();
     const auth = useAuth();
@@ -129,14 +129,14 @@ const ServerSettings: React.FC = () => {
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
-                    <IonTitle>Server Settings</IonTitle>
+                    <IonTitle>Server Preferences</IonTitle>
                 </IonToolbar>
             </IonHeader>
 
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal mt-2 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal mt-2">
                     <SettingsItem
                         label={<IonLabel className="text-base">Obfuscated Names</IonLabel>}
                         input={
@@ -167,9 +167,9 @@ const ServerSettings: React.FC = () => {
                                         ],
                                     });
                                 }}
-                            ></IonToggle>
+                            />
                         }
-                    ></SettingsItem>
+                    />
                     <hr />
                 </IonGrid>
 
@@ -228,4 +228,4 @@ const ServerSettings: React.FC = () => {
     );
 };
 
-export default ServerSettings;
+export default DataPreferences;

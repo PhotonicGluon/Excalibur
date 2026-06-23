@@ -1,3 +1,5 @@
+import { RouteComponentProps } from "react-router";
+
 import {
     IonButton,
     IonButtons,
@@ -14,12 +16,9 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { useAuth } from "@components/auth/context";
-
-const SettingsMenu: React.FC = () => {
+const SettingsMenu: React.FC<RouteComponentProps> = () => {
     // Contexts
     const router = useIonRouter();
-    const auth = useAuth();
 
     // Render
     return (
@@ -55,18 +54,6 @@ const SettingsMenu: React.FC = () => {
                         <IonLabel>
                             <h2>Update</h2>
                             <p>Modify how Excalibur checks for updates.</p>
-                        </IonLabel>
-                    </IonItem>
-
-                    <IonItem
-                        id="settings-server"
-                        routerLink="/settings/server"
-                        routerDirection="forward"
-                        disabled={!auth.getToken()}
-                    >
-                        <IonLabel>
-                            <h2>Server</h2>
-                            <p>Configure the settings for the current server.</p>
                         </IonLabel>
                     </IonItem>
                 </IonList>

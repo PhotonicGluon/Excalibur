@@ -1,5 +1,7 @@
 import { pbkdf2 } from "pbkdf2";
+import randomBytes from "randombytes";
 
+import ExEF from "@lib/crypto/exef";
 import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
 
@@ -72,7 +74,7 @@ export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Bu
  * @param salt A buffer representing the salt value
  * @returns A buffer containing the generated key
  */
-export default async function generateKey(
+export async function generateKey(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     salt: Buffer,
@@ -82,3 +84,30 @@ export default async function generateKey(
     const iKey2 = fastHash(additionalInfo, salt);
     return xorBuffer(iKey1, iKey2);
 }
+
+/**
+ * Generates a vault key data object containing the account unlock key (AUK) and the encrypted vault key.
+ *
+ * @param password the password to be used
+ * @param additionalInfo additional information to be included in the key generation
+ * @param existingVaultKey optional existing vault key to use instead of generating a new one
+ * @returns an object containing the AUK and the encrypted vault key
+ */
+export async function generateVaultKeyData(
+    password: string,
+    additionalInfo: KeygenAdditionalInfo,
+    existingVaultKey?: Buffer,
+): Promise<{
+    auk: { key: Buffer; salt: Buffer };
+    vault: { key: Buffer; encryptedKey: Buffer };
+}> {
+    const aukSalt = randomBytes(32);
+    const auk = await generateKey(password, additionalInfo, aukSalt);
+
+    const vaultKey = existingVaultKey ?? randomBytes(32);
+    const encryptedVaultKey = new ExEF(auk).encrypt(vaultKey);
+
+    return { auk: { key: auk, salt: aukSalt }, vault: { key: vaultKey, encryptedKey: encryptedVaultKey } };
+}
+
+export default generateKey;

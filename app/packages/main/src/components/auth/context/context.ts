@@ -4,8 +4,8 @@ import { E2EEData } from "@lib/auth/e2ee";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
 
 export interface AuthInfo extends E2EEData {
-    /** Username */
     username?: string;
+    password?: string;
     /** Whether file names are obfuscated */
     obfuscatedNames: boolean;
 }

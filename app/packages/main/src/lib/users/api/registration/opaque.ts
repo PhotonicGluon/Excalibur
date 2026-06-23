@@ -1,13 +1,13 @@
-import { parseResponse as _parseResponse, generateResponse } from "@lib/auth/e2ee/response-handling";
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import ExEF from "@lib/crypto/exef";
+import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
 
-enum RegistrationStage {
+export enum RegistrationStage {
     SENT_REGISTRATION_REQUEST,
     SENT_REGISTRATION_RECORD,
 }
 
-interface RegistrationState {
+export interface RegistrationState {
     /** Current stage of the negotiation */
     stage: RegistrationStage;
     /** OPRF blinding scalar */
@@ -17,16 +17,16 @@ interface RegistrationState {
 /**
  * Registers a new user using the OPAQUE-3DH protocol.
  *
- * @param apiURL The URL of the API server to query
- * @param username The username to set up security details for
- * @param password The password to set up security details for
- * @param ack Account Creation Key (ACK)
- * @param aukSalt The account unlock key (AUK) salt to set up
- * @param encryptedVaultKey The vault key that was encrypted using the AUK
- * @param stopLoading A function to call when any loading indicators needs to be stopped
- * @param setLoadingState A function to call to update the loading state with a message
- * @param showAlert A function to call if an error occurs, which takes a header and a message
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param apiURL the URL of the API server to query
+ * @param username the username to set up security details for
+ * @param password the password to set up security details for
+ * @param ack the Account Creation Key (ACK)
+ * @param aukSalt the account unlock key (AUK) salt to set up
+ * @param encryptedVaultKey the vault key that was encrypted using the AUK
+ * @param stopLoading the function to call when any loading indicators needs to be stopped
+ * @param setLoadingState the function to call to update the loading state with a message
+ * @param showAlert the function to call if an error occurs, which takes a header and a message
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function registerUserOPAQUE(

@@ -34,10 +34,12 @@ import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
+import AccountPreferences from "@pages/Preferences/AccountPreferences";
+import DataPreferences from "@pages/Preferences/DataPreferences";
+import PreferencesMenu from "@pages/Preferences/PreferencesMenu";
 import ServerChoice from "@pages/ServerChoice";
 import CryptoSettings from "@pages/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Settings/InterfaceSettings";
-import ServerSettings from "@pages/Settings/ServerSettings";
 import SettingsMenu from "@pages/Settings/SettingsMenu";
 import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
@@ -145,12 +147,15 @@ const App: React.FC = () => {
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
 
-                    {/* Settings */}
+                    {/* Configuration pages */}
                     <Route exact path="/settings" component={SettingsMenu} />
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
                     <Route exact path="/settings/crypto" component={CryptoSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
-                    <PrivateRoute exact path="/settings/server" component={ServerSettings} />
+
+                    <PrivateRoute exact path="/preferences" component={PreferencesMenu} />
+                    <PrivateRoute exact path="/preferences/account" component={AccountPreferences} />
+                    <PrivateRoute exact path="/preferences/data" component={DataPreferences} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

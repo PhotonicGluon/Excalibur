@@ -11,7 +11,6 @@ describe("Check Settings Page Contents", () => {
         cy.get("#settings-interface").should("exist");
         cy.get("#settings-crypto").should("exist");
         cy.get("#settings-update").should("exist");
-        cy.get("#settings-server").should("exist");
     });
 });
 
@@ -21,13 +20,13 @@ describe("Check Theme Changing", () => {
     });
 
     it("changing to light theme should disable dark mode", () => {
-        cy.get("#theme").click();
+        cy.get(".ion-padding-horizontal > :nth-child(1) > :nth-child(2)").click();
         cy.get("ion-select-popover ion-item").first().next().click(); // Light mode
         cy.get("html").should("not.have.class", "ion-palette-dark");
     });
 
     it("changing to dark theme should enable dark mode", () => {
-        cy.get("#theme").click();
+        cy.get(".ion-padding-horizontal > :nth-child(1) > :nth-child(2)").click();
         cy.get("ion-select-popover ion-item").first().next().next().click(); // Dark mode
         cy.get("html").should("have.class", "ion-palette-dark");
     });

@@ -12,8 +12,8 @@ class TestGetAll:
         response = TestClient(app).get("/api/files/all")
         assert response.status_code == 401
 
-    def test_get_all(self, auth_client_db: TestClient, test_user):
-        response = auth_client_db.get("/api/files/all")
+    def test_get_all(self, auth_client: TestClient, test_user):
+        response = auth_client.get("/api/files/all")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 

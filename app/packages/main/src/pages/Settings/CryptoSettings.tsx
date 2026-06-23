@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
     IonButton,
     IonButtons,
@@ -26,26 +28,25 @@ const CryptoSettings: React.FC = () => {
     const router = useIonRouter();
     const settings = useSettings();
 
+    // States
+    const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(settings.cryptoKeyStrength);
+    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(settings.cryptoChunkSize);
+
     // Functions
     /**
      * Handles any updates to the settings' values.
+     *
+     * @param newSettings the new settings' values
      */
-    function updateSettings() {
-        // Get final data
-        const cryptoKeyStrength = parseInt(
-            (document.getElementById("crypto-key-strength")! as HTMLIonSelectElement).value,
-        ) as KeyStrength;
-        const cryptoChunkSize = parseInt(
-            (document.getElementById("crypto-chunk-size")! as HTMLIonSelectElement).value,
-        ) as CryptoChunkSize;
-
-        // Form new settings
-        const newSettings: Partial<SettingsPreferenceValues> = {
-            cryptoKeyStrength,
-            cryptoChunkSize,
+    function updateSettings(newSettings: SettingsPreferenceValues) {
+        const settingsToSave: Partial<SettingsPreferenceValues> = {
+            cryptoKeyStrength: newSettings.cryptoKeyStrength,
+            cryptoChunkSize: newSettings.cryptoChunkSize,
         };
-        console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
-        settings.save(newSettings);
+
+        console.log(`Got new settings' values: ${JSON.stringify(settingsToSave)}`);
+        settings.change(settingsToSave);
+        settings.save(settingsToSave);
     }
 
     // Render
@@ -66,22 +67,19 @@ const CryptoSettings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal">
                     <SettingsItem
                         label={<IonLabel>Key Strength</IonLabel>}
                         input={
                             <IonSelect
-                                id="crypto-key-strength"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select key strength"
-                                value={settings.cryptoKeyStrength.toString()}
+                                value={cryptoKeyStrength.toString()}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        cryptoKeyStrength: parseInt(e.detail.value) as KeyStrength,
-                                    });
-                                    updateSettings();
+                                    const newCryptoKeyStrength = parseInt(e.detail.value) as KeyStrength;
+                                    setCryptoKeyStrength(newCryptoKeyStrength);
+                                    updateSettings({ ...settings, cryptoKeyStrength: newCryptoKeyStrength });
                                 }}
                             >
                                 <IonSelectOption value="128">128 bits (Strong, Fastest)</IonSelectOption>
@@ -89,22 +87,19 @@ const CryptoSettings: React.FC = () => {
                                 <IonSelectOption value="256">256 bits (Strongest, Fast)</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<IonLabel>Chunk Size</IonLabel>}
                         input={
                             <IonSelect
-                                id="crypto-chunk-size"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select chunk size"
-                                value={settings.cryptoChunkSize.toString()}
+                                value={cryptoChunkSize.toString()}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        cryptoChunkSize: parseInt(e.detail.value) as CryptoChunkSize,
-                                    });
-                                    updateSettings();
+                                    const newCryptoChunkSize = parseInt(e.detail.value) as CryptoChunkSize;
+                                    setCryptoChunkSize(newCryptoChunkSize);
+                                    updateSettings({ ...settings, cryptoChunkSize: newCryptoChunkSize });
                                 }}
                             >
                                 <IonSelectOption value="65536">64 KiB</IonSelectOption>
@@ -116,7 +111,7 @@ const CryptoSettings: React.FC = () => {
                                 <IonSelectOption value="4194304">4 MiB</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                 </IonGrid>
             </IonContent>
         </IonPage>

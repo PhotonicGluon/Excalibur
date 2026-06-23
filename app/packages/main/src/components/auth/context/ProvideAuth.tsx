@@ -112,15 +112,9 @@ function useProvideAuth(): AuthProvider {
         }
 
         // Get vault key
-        retrieveVaultKey(
-            serverInfo.apiURL!,
-            authInfo.token,
-            authInfo.key,
-            authInfo.auk,
-            (error) => {
-                console.error(error);
-            },
-        ).then((resp) => {
+        retrieveVaultKey(serverInfo.apiURL!, authInfo.token, authInfo.key, authInfo.auk, (error) => {
+            console.error(error);
+        }).then((resp) => {
             if (!resp) {
                 console.error("Failed to retrieve vault key");
                 return;
@@ -150,6 +144,7 @@ function serializeAuthInfo(data: AuthInfo): string {
         auk: data.auk.toString("hex"),
         obfuscatedNames: data.obfuscatedNames,
         username: data.username,
+        password: data.password, // TODO: Is this safe?
     });
 }
 
@@ -161,5 +156,6 @@ function deserializeAuthInfo(data: string): AuthInfo {
         auk: Buffer.from(parsed.auk, "hex"),
         obfuscatedNames: parsed.obfuscatedNames,
         username: parsed.username,
+        password: parsed.password,
     };
 }

@@ -1,7 +1,7 @@
-import { parseResponse, sendResponse } from "@lib/auth/e2ee/response-handling";
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
 import { GCMDecipher } from "@lib/crypto/cipher";
+import { parseResponse, sendResponse } from "@lib/network/websocket";
 import { b64decode } from "@lib/util";
 
 import { HandshakeData } from "./structures";
@@ -109,6 +109,7 @@ export async function handshakeOPAQUE(
                         }
 
                         // Likely due to incorrect client credentials
+                        console.error(e);
                         ws.close();
                         stopLoading?.();
                         showAlert?.(

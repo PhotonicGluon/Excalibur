@@ -1,10 +1,8 @@
-import shutil
-
-from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import add_item, get_item
 from excalibur_server.src.db.operations import add_user as _add_user
 from excalibur_server.src.db.operations import get_user as _get_user
-from excalibur_server.src.db.operations import remove_user as _remove_user
+from excalibur_server.src.db.operations import get_user_from_id as _get_user_from_id
+from excalibur_server.src.db.operations import remove_user_from_id as _remove_user_from_id
 from excalibur_server.src.db.tables import FSItem, User
 from excalibur_server.src.files.utils import rmitem
 
@@ -30,13 +28,10 @@ def add_user(user: User):
     """
 
     # Create new root folder for the user
-    root_item = FSItem(name=user.username, parent_id=None, root_id=None, is_folder=True)
+    root_item = FSItem(name=str(user.id), parent_id=None, is_folder=True)
     root_item.root_id = root_item.id
-
     user.fsitem_id = root_item.id
     add_item(root_item)
-
-    (CONFIG.storage.vault_folder / user.username).mkdir(parents=True, exist_ok=True)
 
     # Add user to database
     _add_user(user)
@@ -60,12 +55,11 @@ def remove_user(username: str):
     if root_item:
         rmitem(root_item)
 
-    shutil.rmtree(CONFIG.storage.vault_folder / username)
-
     # Remove user from database
-    _remove_user(username)
+    _remove_user_from_id(user.id)
 
 
 get_user = _get_user
+get_user_from_id = _get_user_from_id
 
-__all__ = ["is_user", "add_user", "get_user", "remove_user", "User"]
+__all__ = ["is_user", "add_user", "get_user_from_id", "remove_user", "User", "get_user"]

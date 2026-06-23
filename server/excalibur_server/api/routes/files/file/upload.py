@@ -1,6 +1,5 @@
 import os
 import tempfile
-import uuid
 from pathlib import Path as PathlibPath
 from typing import Annotated, Generator
 
@@ -15,7 +14,7 @@ from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import add_item, get_item_by_path
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.utils import rmitem
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTemporaryFile, None, None]:
@@ -73,9 +72,7 @@ async def upload_file_endpoint(
     """
 
     path = PathlibPath(processed_path).relative_to(".")
-    username = credentials.username
-
-    base_path = CONFIG.storage.vault_folder / username
+    user_id = credentials.user_id
 
     # Split path into directory and file name
     dir_path, name = os.path.split(path)
@@ -87,7 +84,7 @@ async def upload_file_endpoint(
         )
 
     # Get parent ID
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     parent = get_item_by_path(root_id, dir_path)
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
@@ -102,21 +99,26 @@ async def upload_file_endpoint(
 
         rmitem(existing_file)
 
-    # Save the file
-    new_file_id = uuid.uuid4()
-    size = 0
-    async with aiofiles.open(base_path / (str(new_file_id) + ".exef"), "wb") as out_file:
-        while content := file.read(CONFIG.storage.write_chunk_size):
-            size += await out_file.write(content)
-
-    # Create the file in the database
+    # Prepare a new `FSItem` instance
     new_file = FSItem(
-        id=new_file_id,
         parent_id=parent.id,
         root_id=parent.root_id,
         name=name,
         is_folder=False,
-        size=size,
+        size=0,  # Will be updated later
     )
+
+    # Create file paths
+    new_file_path = CONFIG.storage.vault_folder / new_file.system_path
+    new_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Save the file
+    size = 0
+    async with aiofiles.open(new_file_path, "wb") as out_file:
+        while content := file.read(CONFIG.storage.write_chunk_size):
+            size += await out_file.write(content)
+
+    # Create the file in the database
+    new_file.size = size
     add_item(new_file)
     background_tasks.add_task(add_folder_change, credentials, dir_path)

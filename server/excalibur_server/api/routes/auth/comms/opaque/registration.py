@@ -33,9 +33,7 @@ async def registration_endpoint(websocket: WebSocket):
 
         # Check username
         user = get_user(username)
-        if (
-            user is not None and key == CONFIG.security.account_creation_key
-        ):  # We'll allow overwriting if using an actual session key
+        if user is not None:
             await ws_manager.send(WebSocketMsg("User already exists", "ERR"))
             await ws_manager.close()
             return

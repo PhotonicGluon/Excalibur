@@ -1,7 +1,7 @@
 import json
 from base64 import b64encode
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from Crypto.Cipher import AES
 from fastapi import WebSocket, WebSocketDisconnect
@@ -86,7 +86,7 @@ async def comms_endpoint(websocket: WebSocket):
         MASTER_KEYS_CACHE[uuid] = master_key
 
         # Send the auth token for client to use
-        await _send_auth_token(ws_manager, user.username, uuid)
+        await _send_auth_token(ws_manager, user.id, uuid)
 
         # Finally, close connection
         await ws_manager.close()
@@ -94,19 +94,19 @@ async def comms_endpoint(websocket: WebSocket):
         pass
 
 
-async def _send_auth_token(ws_manager: WebSocketManager, username: str, comm_uuid: str) -> None:
+async def _send_auth_token(ws_manager: WebSocketManager, user_id: UUID, comm_uuid: str) -> None:
     """
     Send the authentication token to the client.
 
     Encrypts the authentication token using the master value and sends it to the client.
 
     :param ws_manager: the WebSocket manager
-    :param username: the username
+    :param user_id: the ID of the user
     :param comm_uuid: the UUID of the communication session
     """
 
     auth_token = generate_auth_token(
-        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
+        str(user_id), comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
     )
 
     cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)

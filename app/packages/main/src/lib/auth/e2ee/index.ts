@@ -47,7 +47,7 @@ async function e2ee(
 
     // Generate keys
     setLoadingState?.("Generating keys...");
-    const additionalInfo = { username };
+    const additionalInfo = { username }; // FIXME: We cannot rely on the username for the AUK
     const auk = await generateKey(password, additionalInfo, aukSalt);
     console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
 

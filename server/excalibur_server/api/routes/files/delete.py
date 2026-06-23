@@ -8,7 +8,7 @@ from excalibur_server.api.routes.files import add_folder_change, encrypted_route
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, is_dir_empty
 from excalibur_server.src.files.utils import rmitem
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 @encrypted_router.delete(
@@ -42,10 +42,10 @@ def delete_endpoint(
     """
 
     path = processed_path
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get item to delete
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")

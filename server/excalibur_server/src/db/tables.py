@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
@@ -13,7 +14,8 @@ class User(SQLModel, table=True):
     """
 
     # Basic information
-    username: str = Field(primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(unique=True)
     auth_protocol: AuthProtocol = Field(
         sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
     )
@@ -89,3 +91,21 @@ class FSItem(SQLModel, table=True):
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
+
+    @property
+    def system_path(self) -> Path:
+        """
+        Get the system path for this item. Only defined for files.
+
+        :return: path to the file, relative to the base directory
+        :raises NotImplementedError: if this is not a file
+        """
+
+        if self.is_folder:
+            raise NotImplementedError("System path is only defined for files")
+
+        file_id = str(self.id)
+        level_1 = file_id[:2]
+        level_2 = file_id[2:4]
+        rest = file_id[4:]
+        return Path(level_1, level_2, rest + ".exef")

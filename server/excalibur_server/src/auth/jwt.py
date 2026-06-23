@@ -1,8 +1,9 @@
-import hashlib
 from datetime import datetime, timedelta, timezone
 
 import jwt
 from jwt.exceptions import InvalidTokenError
+
+from excalibur_server.src.auth.hkdf import HKDF
 
 
 def _generate_key(username: str, key: bytes) -> bytes:
@@ -14,7 +15,8 @@ def _generate_key(username: str, key: bytes) -> bytes:
     :return: the generated key
     """
 
-    return hashlib.sha3_256(username.encode("utf-8") + key).digest()
+    hkdf = HKDF("sha256")
+    return hkdf.expand(hkdf.extract(b"", key), username.encode("utf-8"), hkdf.digest_size)
 
 
 def generate_token(sub: str, data: dict, key: bytes, expiry: int = 3600) -> str:

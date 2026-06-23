@@ -17,18 +17,18 @@ from .jwt import decode_token, generate_token
 API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
-def generate_auth_token(username: str, comm_uuid: str, expiry_timestamp: float) -> str:
+def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -> str:
     """
     Generates a JWT token for the given E2EE key and expiry timestamp.
 
-    :param username: the username
+    :param user_id: the user ID
     :param comm_uuid: the UUID of the communication session
     :param expiry_timestamp: the timestamp when the token expires
     :return: a serialized JWT
     """
 
     return generate_token(
-        sub=username,
+        sub=user_id,
         data={"uuid": comm_uuid},
         key=KEY,
         expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
@@ -59,7 +59,7 @@ class Credentials(BaseModel):
     The credentials of a user.
     """
 
-    username: str
+    user_id: str
     comm_uuid: str
     encrypted: bool = False
 
@@ -87,7 +87,7 @@ async def _verify_and_extract_credentials(
     decoded = decode_token(credentials.credentials, KEY)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
-    sub = decoded["sub"]
+    user_id = decoded["sub"]
     comm_uuid = decoded["uuid"]
 
     if comm_uuid not in MASTER_KEYS_CACHE:
@@ -95,7 +95,7 @@ async def _verify_and_extract_credentials(
 
     if not has_pop_checking():
         # No need to check header's PoP
-        return Credentials(username=sub, comm_uuid=comm_uuid)
+        return Credentials(user_id=user_id, comm_uuid=comm_uuid)
 
     # Check that the header is valid
     if not hmac_validation:
@@ -123,7 +123,7 @@ async def _verify_and_extract_credentials(
     if hmac_computed != hmac:
         raise raise_exception("Invalid PoP")
 
-    return Credentials(username=sub, comm_uuid=comm_uuid)
+    return Credentials(user_id=user_id, comm_uuid=comm_uuid)
 
 
 async def get_credentials(
