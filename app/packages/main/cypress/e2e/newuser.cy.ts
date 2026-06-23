@@ -20,8 +20,9 @@ describe("New User Page", () => {
 
     it("should have basic elements", () => {
         cy.get(".buttons-first-slot > .button").should("exist"); // Back button
-        cy.get("#new-username-input").should("exist");
-        cy.get("#new-password-input").should("exist");
+        cy.get("[label='Username']").should("exist");
+        cy.get("[label='Password']").should("exist");
+        cy.get("[label='Confirm Password']").should("exist");
         cy.get("#ack-input input").should("have.length", 24);
     });
 
@@ -31,8 +32,9 @@ describe("New User Page", () => {
 
         // Fill in signup form
         const username = `new-test-user-${Date.now()}`;
-        cy.get("#new-username-input").find("input").type(username);
-        cy.get("#new-password-input").find("input").type("Password123");
+        cy.get("[label='Username']").find("input").type(username);
+        cy.get("[label='Password']").find("input").type("Password123");
+        cy.get("[label='Confirm Password']").find("input").type("Password123");
 
         // Fill in Account Creation Key (ACK) by pasting into the first input box
         cy.get("#ack-input")
