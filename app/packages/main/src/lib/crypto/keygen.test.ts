@@ -1,6 +1,16 @@
 import { expect } from "vitest";
 
-import generateKey, { fastHash, normalizePassword, slowHash } from "./keygen";
+import generateKey, {
+    KeygenAdditionalInfo,
+    fastHash,
+    normalizePassword,
+    slowHashArgon2d,
+    slowHashPBKDF2,
+} from "./keygen";
+
+const ADDITIONAL_INFO: KeygenAdditionalInfo = { username: "test-user" };
+const PASSWORD = "password";
+const SALT = Buffer.from("0102030405060708", "hex");
 
 describe("normalizePassword", () => {
     it("removes leading and trailing whitespace", () => {
@@ -18,30 +28,39 @@ describe("normalizePassword", () => {
     });
 });
 
-test("slowHash", async () => {
-    const password = "password";
-    const salt = Buffer.from("deadbeef", "hex");
-    const result = await slowHash(new TextEncoder().encode(password), salt);
+test("slowHashPBKDF2", async () => {
+    const salt = Buffer.from("0102030405060708", "hex");
+    const result = await slowHashPBKDF2(new TextEncoder().encode(PASSWORD), salt);
 
     expect(result.length).toBe(32);
-    expect(result).toEqual(Buffer.from("9d6c8033fbdbdfa2fe3ffc4323c239b7aea51f59ae48923560886044983e9af9", "hex"));
+    expect(result.toString("hex")).toEqual("c17045dfbc41955502e082ef4cac0b718f9486a4e472db31006c0cba7fa1a4a8");
+});
+
+test("slowHashArgon2d", async () => {
+    const result = await slowHashArgon2d(new TextEncoder().encode(PASSWORD), SALT);
+
+    expect(result.length).toBe(32);
+    expect(result.toString("hex")).toEqual("dbd2835b3fd2a51c798d696839a00b06459499a0fc154159f6905257b81df226");
 });
 
 test("fastHash", () => {
     const additionalInfo = { username: "test-user" };
-    const salt = Buffer.from("deadbeef", "hex");
-    const result = fastHash(additionalInfo, salt);
+    const result = fastHash(additionalInfo, SALT);
 
     expect(result.length).toBe(32);
-    expect(result).toEqual(Buffer.from("2a729be3d3e50315c32e87d48c7be45db7059088d7ab1549ffb53cf500778ac6", "hex"));
+    expect(result.toString("hex")).toEqual("0357a5cee4ba51b77d30376f5a6e52c490cfeb67f6a7baf33e4088b7c9f879d9");
 });
 
-test("generateKey", async () => {
-    const password = "password";
-    const additionalInfo = { username: "test-user" };
-    const salt = Buffer.from("deadbeef", "hex");
-    const result = await generateKey(password, additionalInfo, salt);
+describe("generateKey", () => {
+    it("should work with PBKDF2", async () => {
+        const result = await generateKey(PASSWORD, ADDITIONAL_INFO, SALT, "pbkdf2");
+        expect(result.length).toBe(32);
+        expect(result.toString("hex")).toEqual("c227e01158fbc4e27fd0b58016c259b51f5b6dc312d561c23e2c840db659dd71");
+    });
 
-    expect(result.length).toBe(32);
-    expect(result).toEqual(Buffer.from("b71e1bd0283edcb73d117b97afb9ddea19a08fd179e3877c9f3d5cb19849103f", "hex"));
+    it("should work with Argon2d", async () => {
+        const result = await generateKey(PASSWORD, ADDITIONAL_INFO, SALT, "argon2d");
+        expect(result.length).toBe(32);
+        expect(result.toString("hex")).toEqual("d8852695db68f4ab04bd5e0763ce59c2d55b72c70ab2fbaac8d0dae071e58bff");
+    });
 });

@@ -1,3 +1,4 @@
+import { argon2dAsync } from "@noble/hashes/argon2.js";
 import { pbkdf2 } from "pbkdf2";
 import randomBytes from "randombytes";
 
@@ -7,7 +8,8 @@ import { xorBuffer } from "@lib/util";
 
 const DIGEST_ALGORITHM = "sha256";
 const KEY_LENGTH = 32; // In bytes
-const SLOW_HASH_NUM_ITER = 650_000;
+
+type SlowHash = "pbkdf2" | "argon2d";
 
 export interface KeygenAdditionalInfo {
     /** Username of the user */
@@ -20,8 +22,8 @@ export interface KeygenAdditionalInfo {
  * 2. Applying Unicode NFKD normalization
  * 3. Converting to UTF-8 byte array
  *
- * @param password The input password string
- * @returns UTF-8 byte array of the normalized password
+ * @param password the input password string
+ * @returns the UTF-8 byte array of the normalized password
  */
 export function normalizePassword(password: string): Uint8Array {
     const trimmed = password.trim();
@@ -33,13 +35,13 @@ export function normalizePassword(password: string): Uint8Array {
 /**
  * Performs a slow hash using PBKDF2.
  *
- * @param passwordBuf The password buffer to be hashed
- * @param salt The salt to be used
- * @returns A promise that resolves to the hashed password
+ * @param passwordBuf the password buffer to be hashed
+ * @param salt the salt to be used
+ * @returns a promise that resolves to the hashed password
  */
-export async function slowHash(passwordBuf: Uint8Array, salt: Buffer): Promise<Buffer> {
+export async function slowHashPBKDF2(passwordBuf: Uint8Array, salt: Buffer): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
-        pbkdf2(passwordBuf, salt, SLOW_HASH_NUM_ITER, KEY_LENGTH, DIGEST_ALGORITHM, (err, derivedKey) => {
+        pbkdf2(passwordBuf, salt, 650_000, KEY_LENGTH, DIGEST_ALGORITHM, (err, derivedKey) => {
             if (err) {
                 reject(err);
             } else {
@@ -50,11 +52,32 @@ export async function slowHash(passwordBuf: Uint8Array, salt: Buffer): Promise<B
 }
 
 /**
+ * Performs a slow hash using Argon2d.
+ *
+ * See https://www.dashlane.com/download/whitepaper-en.pdf, page 40 for the parameters used.
+ *
+ * @param passwordBuf the password buffer to be hashed
+ * @param salt the salt to be used
+ * @returns a promise that resolves to the hashed password
+ */
+export async function slowHashArgon2d(passwordBuf: Uint8Array, salt: Buffer): Promise<Buffer> {
+    return Buffer.from(
+        await argon2dAsync(passwordBuf, salt, {
+            version: 0x13,
+            m: 32768, // Memory cost in KiB
+            t: 3, // Iteration count
+            p: 2, // Parallelism
+            dkLen: KEY_LENGTH,
+        }),
+    );
+}
+
+/**
  * Performs a fast hash using HKDF.
  *
- * @param additionalInfo The additional information to be used
- * @param salt The salt to be used
- * @returns The hashed additional information
+ * @param additionalInfo the additional information to be used
+ * @param salt the salt to be used
+ * @returns the hashed additional information
  */
 export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Buffer {
     const key = new HKDF(DIGEST_ALGORITHM).hkdf(
@@ -69,18 +92,21 @@ export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Bu
 /**
  * Generates a cryptographic key using a combination of PBKDF2 and HKDF methods.
  *
- * @param password The password to be used
- * @param additionalInfo Additional information to be included in the key generation
- * @param salt A buffer representing the salt value
- * @returns A buffer containing the generated key
+ * @param password the password to be used
+ * @param additionalInfo additional information to be included in the key generation
+ * @param salt a buffer representing the salt value
+ * @param slowHash the slow hash function to use
+ * @returns a buffer containing the generated key
  */
 export async function generateKey(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     salt: Buffer,
+    slowHash: SlowHash = "pbkdf2",
 ): Promise<Buffer> {
     const passwordBuf = normalizePassword(password);
-    const iKey1 = await slowHash(passwordBuf, salt);
+    const iKey1 =
+        slowHash === "pbkdf2" ? await slowHashPBKDF2(passwordBuf, salt) : await slowHashArgon2d(passwordBuf, salt);
     const iKey2 = fastHash(additionalInfo, salt);
     return xorBuffer(iKey1, iKey2);
 }
@@ -91,18 +117,20 @@ export async function generateKey(
  * @param password the password to be used
  * @param additionalInfo additional information to be included in the key generation
  * @param existingVaultKey optional existing vault key to use instead of generating a new one
+ * @param slowHash the slow hash function to use
  * @returns an object containing the AUK and the encrypted vault key
  */
 export async function generateVaultKeyData(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     existingVaultKey?: Buffer,
+    slowHash: SlowHash = "pbkdf2",
 ): Promise<{
     auk: { key: Buffer; salt: Buffer };
     vault: { key: Buffer; encryptedKey: Buffer };
 }> {
     const aukSalt = randomBytes(32);
-    const auk = await generateKey(password, additionalInfo, aukSalt);
+    const auk = await generateKey(password, additionalInfo, aukSalt, slowHash);
 
     const vaultKey = existingVaultKey ?? randomBytes(32);
     const encryptedVaultKey = new ExEF(auk).encrypt(vaultKey);
