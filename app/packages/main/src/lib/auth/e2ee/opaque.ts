@@ -4,7 +4,7 @@ import { GCMDecipher } from "@lib/crypto/cipher";
 import { parseResponse, sendResponse } from "@lib/network/websocket";
 import { b64decode } from "@lib/util";
 
-import { HandshakeData } from "./structures";
+import { E2EEData } from "./structures";
 
 enum HandshakeStage {
     SENT_KE1_AND_USERNAME,
@@ -28,7 +28,7 @@ interface HandshakeState {
  * @param setLoadingState a function to call to update the loading state with a message
  * @param showAlert a function to call if an error occurs, which takes a header and a message
  * @throws if the handshake fails
- * @returns a promise which resolves to the handshake data
+ * @returns a promise which resolves to the E2EE data
  */
 export async function handshakeOPAQUE(
     apiURL: string,
@@ -37,7 +37,7 @@ export async function handshakeOPAQUE(
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
-): Promise<HandshakeData | undefined> {
+): Promise<E2EEData | undefined> {
     // Perform OPAQUE-3DH handshake
     const wsURL = apiURL.replace("http", "ws");
     const ws = new WebSocket(`${wsURL}/auth/opaque`);
@@ -47,7 +47,7 @@ export async function handshakeOPAQUE(
         stage: HandshakeStage.SENT_KE1_AND_USERNAME,
     };
 
-    return new Promise<HandshakeData>((resolve, reject) => {
+    return new Promise<E2EEData>((resolve, reject) => {
         ws.addEventListener("error", (event) => {
             const e = event as ErrorEvent;
             ws.close();

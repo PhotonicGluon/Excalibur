@@ -218,7 +218,9 @@ const FileExplorer: React.FC = () => {
     async function onRenameItem(path: string, isDir: boolean) {
         const rawName = path.split("/").pop();
         const baseName = !isDir ? rawName?.replace(/\.exef$/, "") : rawName;
-        const displayName = auth.authInfo!.obfuscatedNames ? auth.noc!.decipher(baseName!).toString("utf-8") : baseName;
+        const displayName = auth.vaultInfo!.info.obfuscatedNames
+            ? auth.noc!.decipher(baseName!).toString("utf-8")
+            : baseName;
 
         // Ask for user input
         presentAlert({
@@ -242,7 +244,7 @@ const FileExplorer: React.FC = () => {
                             return;
                         }
 
-                        let newName = auth.authInfo!.obfuscatedNames
+                        let newName = auth.vaultInfo!.info.obfuscatedNames
                             ? (auth.noc!.encipher(Buffer.from(newDisplayName, "utf-8")) as string)
                             : newDisplayName;
                         if (!isDir) {
@@ -431,7 +433,7 @@ const FileExplorer: React.FC = () => {
                                 <DirectoryBreadcrumbs
                                     className="flex-nowrap"
                                     path={requestedPath}
-                                    noc={auth.authInfo!.obfuscatedNames ? auth.noc! : undefined}
+                                    noc={auth.vaultInfo!.info.obfuscatedNames ? auth.noc! : undefined}
                                 />
                             </div>
 

@@ -45,8 +45,8 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
     if (props.vaultKey) {
         localVaultKey = props.vaultKey!;
     }
-    if (auth.vaultKey) {
-        localVaultKey = auth.vaultKey;
+    if (auth.vaultInfo) {
+        localVaultKey = auth.vaultInfo.key;
     }
 
     // Render
@@ -109,7 +109,7 @@ const VaultKeyDialog: React.FC<VaultKeyDialogProps> = (props) => {
                                 initialWords={localVaultKeyMnemonic}
                                 maxSuggestions={5}
                                 onEntropy={(entropy) => {
-                                    auth.setVaultKey(entropy);
+                                    auth.setVaultInfo({ ...auth.vaultInfo!, key: entropy });
                                     console.debug(`Changed vault key to ${entropy.toString("hex")}`);
                                     setIsValid(true);
                                     setTimeout(() => {

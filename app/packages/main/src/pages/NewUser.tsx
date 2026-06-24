@@ -22,8 +22,8 @@ import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
 import { generateVaultKeyData } from "@lib/crypto/keygen";
-import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
+import { editVaultInfo, registerUser } from "@lib/users/api";
+import { UserVaultInfo } from "@lib/users/structures";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
@@ -130,13 +130,15 @@ const NewUser: React.FC = () => {
             return;
         }
 
-        // Set vault key for auth
-        auth.setVaultKey(vaultKey);
+        // Set authentication info
+        const authInfo: AuthInfo = { username, password, ...e2eeData };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update user additional info
-        const additionalInfo: AdditionalUserInfo = { obfuscatedNames };
+        const additionalInfo: UserVaultInfo = { obfuscatedNames };
 
-        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+        const setAdditionalInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
             e2eeData.token,
             e2eeData.key,
@@ -154,10 +156,8 @@ const NewUser: React.FC = () => {
         }
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
-        // Set authentication info
-        const authInfo: AuthInfo = { username, password, obfuscatedNames, ...e2eeData };
-        auth.setAuthInfo(authInfo);
-        console.log(`Token for authentication: ${authInfo.token}`);
+        // Set vault info for auth
+        auth.setVaultInfo({ auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);

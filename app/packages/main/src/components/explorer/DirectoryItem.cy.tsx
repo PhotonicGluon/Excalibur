@@ -59,6 +59,7 @@ describe("<DirectoryItem />", () => {
                             updateProgress: (_id: string, _newProgress: number | null) => {},
                             cancelJob: (_id: string) => {},
                             deleteJob: (_id: string) => {},
+                            clearComplete: () => {},
                         }}
                     >
                         <explorerContext.Provider

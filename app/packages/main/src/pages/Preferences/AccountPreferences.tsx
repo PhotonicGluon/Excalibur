@@ -73,7 +73,7 @@ const AccountPreferences: React.FC = () => {
         const {
             auk: { salt: newAUKSalt },
             vault: { encryptedKey: newEncryptedVaultKey },
-        } = await generateVaultKeyData(newPref.password, { username: newPref.username }, auth.vaultKey!);
+        } = await generateVaultKeyData(newPref.password, { username: newPref.username }, auth.vaultInfo!.key);
 
         // Send edit request
         const response = await editRecord(

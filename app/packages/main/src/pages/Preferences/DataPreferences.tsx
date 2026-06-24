@@ -22,8 +22,8 @@ import { arrowBack, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/auth/bip39";
 import { toggleObfuscationForAllFiles } from "@lib/files/obfuscation";
-import { editAdditionalUserInfo } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
+import { editVaultInfo } from "@lib/users/api";
+import { UserVaultInfo } from "@lib/users/structures";
 
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
@@ -48,7 +48,7 @@ const DataPreferences: React.FC = () => {
      * Toggles the use of obfuscation for all files.
      */
     async function toggleUseObfuscation() {
-        const newObfuscation = !auth.authInfo!.obfuscatedNames;
+        const newObfuscation = !auth.vaultInfo!.info.obfuscatedNames;
 
         setToggledObfuscation(true);
         setIsLoading(true);
@@ -68,32 +68,31 @@ const DataPreferences: React.FC = () => {
         }
 
         // Toggle obfuscation state
-        const additionalInfo: AdditionalUserInfo = {
+        const userVaultInfo: UserVaultInfo = {
             obfuscatedNames: newObfuscation,
         };
 
-        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+        const editVaultInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
             auth.getToken()!,
             auth.authInfo!.key,
-            additionalInfo,
+            userVaultInfo,
         );
-        if (!setAdditionalInfoResponse.success) {
-            console.error(`Could not update user additional info: ${setAdditionalInfoResponse.error}`);
+        if (!editVaultInfoResponse.success) {
+            console.error(`Could not update user vault info: ${editVaultInfoResponse.error}`);
             setIsLoading(false);
             presentAlert({
                 header: "Update Failure",
-                message: `Could not update user additional info: ${setAdditionalInfoResponse.error}`,
+                message: `Could not update user vault info: ${editVaultInfoResponse.error}`,
                 buttons: ["OK"],
             });
             return;
         }
-        console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
+        console.debug(`Set user vault info: ${JSON.stringify(userVaultInfo)}`);
 
-        auth.setAuthInfo({
-            ...auth.authInfo!,
-            token: auth.getToken()!,
-            obfuscatedNames: newObfuscation,
+        auth.setVaultInfo({
+            ...auth.vaultInfo!,
+            info: userVaultInfo,
         });
 
         // Report success
@@ -107,7 +106,7 @@ const DataPreferences: React.FC = () => {
     }
 
     // Render
-    const localVaultKeyMnemonic = auth.vaultKey ? toMnemonic(auth.vaultKey) : undefined;
+    const localVaultKeyMnemonic = auth.vaultInfo ? toMnemonic(auth.vaultInfo!.key) : undefined;
     return (
         <IonPage>
             {/* Header content */}
@@ -142,7 +141,7 @@ const DataPreferences: React.FC = () => {
                         input={
                             <IonToggle
                                 id="use-obfuscated-names"
-                                checked={auth.authInfo!.obfuscatedNames}
+                                checked={auth.vaultInfo!.info.obfuscatedNames}
                                 onIonChange={() => {
                                     presentAlert({
                                         header: "Warning",
@@ -155,7 +154,7 @@ const DataPreferences: React.FC = () => {
                                                 handler: () => {
                                                     document.getElementById("use-obfuscated-names")!.setAttribute(
                                                         "checked",
-                                                        auth.authInfo!.obfuscatedNames.toString(), // Set back to what it is currently
+                                                        auth.vaultInfo!.info.obfuscatedNames!.toString(), // Set back to what it is currently
                                                     );
                                                 },
                                             },

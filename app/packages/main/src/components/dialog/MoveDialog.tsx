@@ -54,7 +54,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
             let directory = response.directory!;
 
             // Deobfuscate the names, if necessary
-            if (auth.authInfo!.obfuscatedNames && directory.items && auth.noc) {
+            if (auth.vaultInfo!.info.obfuscatedNames && directory.items && auth.noc) {
                 directory = deobfuscateDirectoryItems(directory, auth.noc);
             }
 

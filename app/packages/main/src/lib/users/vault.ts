@@ -1,37 +1,62 @@
 import ExEF from "@lib/crypto/exef";
-import { getVaultKey } from "@lib/users/api";
+import generateKey, { KeygenAdditionalInfo } from "@lib/crypto/keygen";
+import { getVaultInfo } from "@lib/users/api";
+
+import { VaultInfo } from "./structures";
 
 /**
- * Retrieves the vault key from the server.
+ * Retrieves the vault info from the server.
  *
- * @param apiURL The URL of the API server to query
- * @param token Authentication token for accessing the server
- * @param e2eeKey The key used to decrypt the end-to-end encrypted communications
- * @param auk The account unlock key
- * @param onError A function to call if an error occurs, which takes a string argument. The string
+ * @param apiURL the URL of the API server to query
+ * @param token authentication token for accessing the server
+ * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
+ * @param onError a function to call if an error occurs, which takes a string argument. The string
  *      will be the error message
- * @returns A promise which resolves to the decrypted vault key, or null if an error occurs
+ * @param password the password to use for deriving the AUK (if not provided, `auk` must be
+ *      provided)
+ * @param additionalInfo additional information to use for deriving the AUK (if not provided, `auk`
+ *      must be provided)
+ * @param auk the AUK to use for decrypting the vault key (if not provided, `password` and
+ *      `additionalInfo` must be provided)
+ * @returns a promise which resolves to the vault information, or null if an error occurs
  */
-export async function retrieveVaultKey(
+export async function retrieveVaultInfo(
     apiURL: string,
     token: string,
     e2eeKey: Buffer,
-    auk: Buffer,
     onError: (error: string) => void,
-): Promise<Buffer<ArrayBufferLike> | null> {
-    console.debug("Retrieving vault key");
-    const vaultKeyResponse = await getVaultKey(apiURL, token, e2eeKey);
-    if (!vaultKeyResponse.success) {
-        onError(`Could not retrieve vault key: ${vaultKeyResponse.error}`);
+    password?: string,
+    additionalInfo?: KeygenAdditionalInfo,
+    auk?: Buffer,
+): Promise<VaultInfo | null> {
+    // Get the vault info
+    console.debug("Retrieving vault info");
+    const vaultInfoResponse = await getVaultInfo(apiURL, token, e2eeKey);
+    if (!vaultInfoResponse.success) {
+        onError(`Could not retrieve vault info: ${vaultInfoResponse.error}`);
         return null;
     }
-    const encryptedVaultKey = vaultKeyResponse.encryptedKey!;
 
+    const aukSalt = vaultInfoResponse.aukSalt!;
+    const encryptedVaultKey = vaultInfoResponse.encryptedKey!;
+    const vaultInfo = vaultInfoResponse.vaultInfo!;
+
+    // Derive AUK
+    if (!auk) {
+        console.debug("Deriving AUK...");
+        auk = await generateKey(password!, additionalInfo!, aukSalt);
+    }
+
+    // Recover vault key
     console.debug("Decrypting obtained vault key...");
     try {
         const vaultKey = ExEF.decrypt(auk, encryptedVaultKey);
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
-        return vaultKey;
+        return {
+            auk,
+            key: vaultKey,
+            info: vaultInfo,
+        };
     } catch (error: unknown) {
         onError(`Could not decrypt vault key: ${(error as Error).message}`);
         return null;

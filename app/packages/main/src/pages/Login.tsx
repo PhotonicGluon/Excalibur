@@ -22,9 +22,8 @@ import {
 import { e2ee } from "@lib/auth/e2ee";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { checkUser, getAdditionalUserInfo } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
-import { retrieveVaultKey } from "@lib/users/vault";
+import { checkUser } from "@lib/users/api";
+import { retrieveVaultInfo } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";
@@ -123,72 +122,46 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Retrieve the vault key
+        // Set authentication info
+        const authInfo: AuthInfo = {
+            username,
+            password,
+            ...e2eeData,
+        };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
+
+        // Retrieve the vault info
         try {
-            const vaultKey = await retrieveVaultKey(
+            const vaultInfo = await retrieveVaultInfo(
                 auth.serverInfo!.apiURL!,
                 e2eeData.token,
                 e2eeData.key,
-                e2eeData.auk,
                 (error) => {
                     console.error(error);
                     setIsLoading(false);
                     presentAlert({
-                        header: "Vault Key Failure",
+                        header: "Vault Info Failure",
                         message: error,
                         buttons: ["OK"],
                     });
                 },
             );
-            if (!vaultKey) {
+            if (!vaultInfo) {
                 // Errors already handled in `retrieveVaultKey()`
                 return;
             }
-            auth.setVaultKey(vaultKey);
+            auth.setVaultInfo(vaultInfo);
         } catch (error: unknown) {
             console.error(error);
             setIsLoading(false);
             presentAlert({
-                header: "Vault Key Failure",
-                message: `Could not retrieve vault key: ${error}`,
+                header: "Vault Info Failure",
+                message: `Could not retrieve vault info: ${error}`,
                 buttons: ["OK"],
             });
             return;
         }
-
-        // Obtain any additional information
-        let additionalInfo: AdditionalUserInfo;
-        try {
-            const additionalInfoResponse = await getAdditionalUserInfo(
-                auth.serverInfo!.apiURL!,
-                e2eeData.token,
-                e2eeData.key,
-            );
-            if (!additionalInfoResponse.success) {
-                throw new Error(additionalInfoResponse.error);
-            }
-            additionalInfo = additionalInfoResponse.info!;
-        } catch (error: unknown) {
-            console.error(error);
-            setIsLoading(false);
-            presentAlert({
-                header: "Additional Info Failure",
-                message: `Could not retrieve additional info: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.debug(`Got additional info: ${JSON.stringify(additionalInfo)}`);
-
-        // Set authentication info
-        const authInfo: AuthInfo = {
-            username,
-            password,
-            obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
-            ...e2eeData,
-        };
-        auth.setAuthInfo(authInfo);
-        console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update preferences
         Preferences.set({

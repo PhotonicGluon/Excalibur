@@ -1,9 +1,8 @@
 import { AlertButton } from "@ionic/core";
 
-import { E2EEData, HandshakeData } from "@lib/auth/e2ee/structures";
+import { E2EEData } from "@lib/auth/e2ee/structures";
 import { AuthProtocol } from "@lib/auth/enums";
-import generateKey from "@lib/crypto/keygen";
-import { getSecurityDetails } from "@lib/users/api";
+import { getAuthInfo } from "@lib/users/api";
 
 import { handshakeOPAQUE } from "./opaque";
 
@@ -33,37 +32,21 @@ async function e2ee(
 ): Promise<E2EEData | undefined> {
     // Get security details
     setLoadingState?.("Getting user security details...");
-    const securityDetailsResponse = await getSecurityDetails(apiURL, username);
+    const securityDetailsResponse = await getAuthInfo(apiURL, username);
     if (!securityDetailsResponse.success) {
         stopLoading?.();
         showAlert?.("Security Details Not Found", undefined, securityDetailsResponse.error);
         return;
     }
-    const aukSalt = securityDetailsResponse.aukSalt!;
     const authProtocol = securityDetailsResponse.authProtocol!;
-    console.debug(
-        `Obtained security details: salt '${aukSalt.toString("hex")}' and authentication protocol '${authProtocol}'`,
-    );
-
-    // Generate keys
-    setLoadingState?.("Generating keys...");
-    const additionalInfo = { username }; // FIXME: We cannot rely on the username for the AUK
-    const auk = await generateKey(password, additionalInfo, aukSalt);
-    console.log(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
+    console.debug(`Obtained authentication info: protocol '${authProtocol}'`);
 
     // Perform handshake
-    let handshakeData: HandshakeData | undefined;
+    let e2eeData: E2EEData | undefined;
     try {
         switch (authProtocol) {
             case AuthProtocol.OPAQUE_3DH:
-                handshakeData = await handshakeOPAQUE(
-                    apiURL,
-                    username,
-                    password,
-                    stopLoading,
-                    setLoadingState,
-                    showAlert,
-                );
+                e2eeData = await handshakeOPAQUE(apiURL, username, password, stopLoading, setLoadingState, showAlert);
                 break;
             default:
                 throw new Error(`Unknown auth protocol: ${authProtocol}`);
@@ -74,7 +57,7 @@ async function e2ee(
     }
 
     // Return E2EE data
-    return { auk, ...handshakeData! };
+    return e2eeData!;
 }
 
 export { e2ee, type E2EEData };
