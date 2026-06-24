@@ -8,7 +8,6 @@ import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
-import EncryptionProcessorWorker from "@lib/workers/encrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -95,7 +94,7 @@ export function useUploadFile() {
 
                 // Create worker that handles the encryption and updates the progress
                 jobsManager.updateJob(jobID, "Encrypting...");
-                const worker = new EncryptionProcessorWorker();
+                const worker = new Worker(new URL("@lib/workers/encrypt-stream", import.meta.url), { type: "module" });
                 const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
                 const abortHandler = () => {

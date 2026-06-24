@@ -33,7 +33,6 @@ import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
 import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
-import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -132,7 +131,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 if (signal.aborted) throw new Error("Cancelled");
 
                 // Create stream that handles the decryption and updates the progress
-                const worker = new DecryptionProcessorWorker();
+                const worker = new Worker(new URL("@lib/workers/decrypt-stream", import.meta.url), { type: "module" });
                 const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
                 jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
