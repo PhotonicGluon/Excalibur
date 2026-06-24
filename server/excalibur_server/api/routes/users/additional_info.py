@@ -21,7 +21,7 @@ def get_additional_user_info_endpoint(credentials: Annotated[Credentials, Depend
     """
 
     user = get_user_from_id(credentials.user_id)
-    return user.additional_info
+    return user.vault_info
 
 
 @encrypted_router.post(
@@ -41,5 +41,5 @@ def edit_additional_user_info_endpoint(
 
     with get_session() as session:
         db_user = session.get(User, credentials.user_id)
-        db_user.additional_info = info
+        db_user.vault_info = info
         session.commit()

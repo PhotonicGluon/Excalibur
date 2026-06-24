@@ -16,10 +16,6 @@ class User(SQLModel, table=True):
     # Basic information
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True)
-    auth_protocol: AuthProtocol = Field(
-        sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
-    )
-    "Authentication protocol to use"
     fsitem_id: uuid.UUID = Field(nullable=True)  # TODO: Remove nullable in next version
     """
     ID of the user's root filesystem item.
@@ -31,14 +27,18 @@ class User(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
-    additional_info: str = Field(default="", nullable=False)
-    "Additional information about the user, accessible only after authentication"
+
+    # Authentication info
+    auth_protocol: AuthProtocol = Field(
+        sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
+    )
+    "Authentication protocol to use"
 
     # OPAQUE
     registration_record: bytes = Field(nullable=True)  # TODO: Set maximum length
     "Client's serialized registration record for use in the OPAQUE protocol"
 
-    # Vault key
+    # Vault info
     auk_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=False))
     "Salt for the Account Unlock Key (AUK)"
     key_enc: bytes = Field(
@@ -51,6 +51,8 @@ class User(SQLModel, table=True):
     Encrypted vault key as an ExEF stream.
     The vault key should have been encrypted using the Account Unlock Key (AUK).
     """
+    vault_info: str = Field(default="", nullable=False)
+    "Additional information about the user's vault"
 
 
 class FSItem(SQLModel, table=True):

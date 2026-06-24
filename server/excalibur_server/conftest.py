@@ -69,7 +69,7 @@ def test_user(db_session: Session):
         id=UUID("01234567-89ab-dcef-0123-456789abcdef"),
         username="test-user",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
-        additional_info="Some Sample Info",
+        vault_info="Some Sample Info",
         auk_salt=b"test_auk_salt_16_bytes",
         key_enc=b"test_encrypted_vault_key",
     )

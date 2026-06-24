@@ -14,7 +14,7 @@ def _create_temp_user(db_session: Session, username: str):
     user = User(
         username=username,
         auth_protocol=AuthProtocol.OPAQUE_3DH,
-        additional_info=f"Some Sample Info for {username}",
+        vault_info=f"Some Sample Info for {username}",
         auk_salt=b"test_auk_salt_16_bytes",
         key_enc=b"test_encrypted_vault_key",
     )
