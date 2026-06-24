@@ -61,6 +61,7 @@ export async function getVaultInfo(
  * @param apiURL the URL of the API server to query
  * @param token authentication token for accessing the server
  * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
+ * @param keygenFunction the new key generation function
  * @param info the new user vault information to set
  * @returns a promise which resolves to an object containing the success status, an optional error
  *      message
@@ -69,9 +70,10 @@ export async function editVaultInfo(
     apiURL: string,
     token: string,
     e2eeKey: Buffer,
+    keygenFunction: KeyGenFunction,
     info: UserVaultInfo,
 ): Promise<{ success: boolean; error?: string }> {
-    const rawInfo = JSON.stringify(info);
+    const rawBody = { keygen_function: keygenFunction, vault_info: JSON.stringify(info) };
     const response = await popFetch(`${apiURL}/users/vault`, e2eeKey, {
         method: "PUT",
         headers: {
@@ -81,7 +83,7 @@ export async function editVaultInfo(
             "X-Content-Type": "application/json",
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-        body: new ExEF(e2eeKey).encrypt(Buffer.from(rawInfo, "utf-8")),
+        body: new ExEF(e2eeKey).encrypt(Buffer.from(JSON.stringify(rawBody), "utf-8")),
     });
     switch (response.status) {
         case 200:

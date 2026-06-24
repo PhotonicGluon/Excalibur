@@ -23,6 +23,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { KeyGenFunction } from "@lib/crypto/keygen";
+import { editVaultInfo } from "@lib/users/api";
 import { editRecord } from "@lib/users/api/edit-record";
 import { VaultKeyGenerationProcessor } from "@lib/workers/generate-vault-keys";
 
@@ -103,11 +104,10 @@ const AccountPreferences: React.FC = () => {
         } = vaultKeysData;
 
         // Send edit request
-        const response = await editRecord(
+        const editRecordResponse = await editRecord(
             auth,
             newPref.username,
             newPref.password,
-            newPref.keygenFunction,
             newAUKSalt,
             newEncryptedVaultKey,
             () => setIsLoading(false),
@@ -116,8 +116,8 @@ const AccountPreferences: React.FC = () => {
                 presentAlert({ header: header, subHeader: subheader, message: msg, buttons: ["OK"] });
             },
         );
-        if (!response.success) {
-            const errorMsg = `Failed to update account: ${response.error}`;
+        if (!editRecordResponse.success) {
+            const errorMsg = `Failed to update account: ${editRecordResponse.error}`;
             console.error(errorMsg);
             presentToast({
                 message: errorMsg,
@@ -128,6 +128,28 @@ const AccountPreferences: React.FC = () => {
             return;
         }
 
+        if (newPref.keygenFunction !== oldPref.keygenFunction) {
+            const editVaultInfoResponse = await editVaultInfo(
+                auth.serverInfo!.apiURL!,
+                auth.getToken()!,
+                auth.authInfo!.key,
+                newPref.keygenFunction,
+                auth.vaultInfo!.info,
+            );
+            if (!editVaultInfoResponse.success) {
+                const errorMsg = `Failed to update vault info: ${editVaultInfoResponse.error}`;
+                console.error(errorMsg);
+                presentToast({
+                    message: errorMsg,
+                    duration: 2000,
+                    color: "danger",
+                });
+                setIsLoading(false);
+                return;
+            }
+        }
+
+        // Update auth context
         auth.setAuthInfo({
             ...auth.authInfo!,
             token: auth.getToken()!,

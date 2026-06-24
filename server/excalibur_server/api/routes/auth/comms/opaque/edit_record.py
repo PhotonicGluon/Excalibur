@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
@@ -19,9 +19,6 @@ from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketM
 async def edit_record_endpoint(
     websocket: WebSocket,
     credentials: Annotated[Credentials, Depends(get_credentials_ws)],
-    new_keygen_function: Annotated[
-        str, Query(description="New key generation function. Will not change if empty")
-    ] = "",
 ):
     """
     Endpoint that handles the editing of existing users' records.
@@ -74,10 +71,6 @@ async def edit_record_endpoint(
                 db_user.registration_record = registration_record_raw
                 db_user.auk_salt = auk_salt
                 db_user.key_enc = key_enc
-
-                if new_keygen_function:
-                    db_user.keygen_function = new_keygen_function
-
                 session.add(db_user)
 
         # Send confirmation

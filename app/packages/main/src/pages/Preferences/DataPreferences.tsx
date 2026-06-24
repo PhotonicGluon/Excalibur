@@ -76,6 +76,7 @@ const DataPreferences: React.FC = () => {
             auth.serverInfo!.apiURL!,
             auth.getToken()!,
             auth.authInfo!.key,
+            auth.vaultInfo!.keygenFunction,
             userVaultInfo,
         );
         if (!editVaultInfoResponse.success) {

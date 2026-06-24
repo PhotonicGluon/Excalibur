@@ -50,16 +50,20 @@ def get_user_vault_info_endpoint(credentials: Annotated[Credentials, Depends(get
     tags=["encrypted"],
 )
 def edit_user_vault_info_endpoint(
-    credentials: Annotated[Credentials, Depends(get_credentials)], info: Annotated[str, Body()]
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    keygen_function: Annotated[str, Body()],
+    vault_info: Annotated[str, Body()],
 ):
     """
-    Edits the additional information stored in the user's vault.
+    Edits the vault information stored in the user's vault.
 
-    The `auk_salt` and `key_enc` fields are not modified by this endpoint. Use the specialised
+    Specifically, the `keygen_function` and `vault_info` fields are modified by this endpoint. The
+    `auk_salt` and `key_enc` fields are not modified by this endpoint. Use the specialised
     `/api/auth/opaque/edit-record` WebSocket endpoint to edit them instead.
     """
 
     with get_session() as session:
         db_user = session.get(User, credentials.user_id)
-        db_user.vault_info = info
+        db_user.keygen_function = keygen_function
+        db_user.vault_info = vault_info
         session.commit()

@@ -82,6 +82,8 @@ const NewUser: React.FC = () => {
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key using a worker
+        const keygenFunction = "argon2d"; // TODO: Allow configuring the default keygen
+
         const worker = new Worker(new URL("@lib/workers/generate-vault-keys", import.meta.url), { type: "module" });
         const processor = Comlink.wrap<VaultKeyGenerationProcessor>(worker);
 
@@ -91,7 +93,7 @@ const NewUser: React.FC = () => {
                 password,
                 { username },
                 auth.vaultInfo!.key,
-                "argon2d", // TODO: Allow configuring the default keygen
+                keygenFunction,
                 // `proxy()` ensures the callback function works across threads
                 Comlink.proxy((progress: number) => {
                     setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
@@ -161,6 +163,7 @@ const NewUser: React.FC = () => {
             auth.serverInfo!.apiURL!,
             e2eeData.token,
             e2eeData.key,
+            keygenFunction,
             additionalInfo,
         );
         if (!setAdditionalInfoResponse.success) {
@@ -176,7 +179,7 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenFunction: "argon2d", auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({ keygenFunction: keygenFunction, auk: auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);
