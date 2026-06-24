@@ -1,4 +1,3 @@
-import * as Comlink from "comlink";
 import { useState } from "react";
 
 import {
@@ -22,10 +21,9 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { KeyGenFunction } from "@lib/crypto/keygen";
+import { KeyGenFunction, generateVaultKeys } from "@lib/crypto/keygen";
 import { editVaultInfo } from "@lib/users/api";
 import { editRecord } from "@lib/users/api/edit-record";
-import { VaultKeyGenerationProcessor } from "@lib/workers/generate-vault-keys";
 
 import { useAuth } from "@components/auth/context";
 import PasswordInput from "@components/inputs/PasswordInput";
@@ -77,31 +75,19 @@ const AccountPreferences: React.FC = () => {
 
         setIsLoading(true);
 
-        // Regenerate AUK and encrypted vault key using a worker
-        const worker = new Worker(new URL("@lib/workers/generate-vault-keys", import.meta.url), { type: "module" });
-        const processor = Comlink.wrap<VaultKeyGenerationProcessor>(worker);
-
-        let vaultKeysData;
-        try {
-            vaultKeysData = await processor.generateVaultKeys(
-                newPref.password,
-                { username: newPref.username },
-                auth.vaultInfo!.key,
-                newPref.keygenFunction,
-                // `proxy()` ensures the callback function works across threads
-                Comlink.proxy((progress: number) => {
-                    setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
-                }),
-            );
-        } finally {
-            // Free up resources
-            worker.terminate();
-        }
-
+        // Regenerate AUK and encrypted vault key
         const {
             auk: { salt: newAUKSalt },
             vault: { encryptedKey: newEncryptedVaultKey },
-        } = vaultKeysData;
+        } = await generateVaultKeys(
+            newPref.password,
+            { username: newPref.username },
+            auth.vaultInfo!.key,
+            newPref.keygenFunction,
+            (progress: number) => {
+                setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+            },
+        );
 
         // Send edit request
         const editRecordResponse = await editRecord(

@@ -117,9 +117,12 @@ const Login: React.FC = () => {
                         buttons: ["OK"],
                     });
                 },
+                (progress) => {
+                    setLoadingState(`Deriving AUK and vault key (${Math.round(progress * 100)}%)`);
+                },
             );
             if (!vaultInfo) {
-                // Errors already handled in `retrieveVaultKey()`
+                // Errors already handled in `retrieveVaultInfo()`
                 return;
             }
             auth.setVaultInfo(vaultInfo);

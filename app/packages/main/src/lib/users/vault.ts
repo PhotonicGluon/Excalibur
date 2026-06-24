@@ -1,6 +1,9 @@
+import * as Comlink from "comlink";
+
 import ExEF from "@lib/crypto/exef";
-import generateKey, { KeygenAdditionalInfo } from "@lib/crypto/keygen";
+import { KeygenAdditionalInfo } from "@lib/crypto/keygen";
 import { getVaultInfo } from "@lib/users/api";
+import { AUKGenerationProcessor } from "@lib/workers/generate-auk";
 
 import { VaultInfo } from "./structures";
 
@@ -14,6 +17,8 @@ import { VaultInfo } from "./structures";
  * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
  * @param onError a function to call if an error occurs, which takes a string argument. The string
  *      will be the error message
+ * @param onProgress a function to call to report progress, which takes a number argument. The number
+ *      will be the progress percentage
  * @returns a promise which resolves to the vault information, or null if an error occurs
  */
 export async function retrieveVaultInfo(
@@ -23,7 +28,7 @@ export async function retrieveVaultInfo(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     onError: (error: string) => void,
-    // TODO: Accept onProgress() function
+    onProgress?: (progress: number) => void,
 ): Promise<VaultInfo | null> {
     // Get the vault info
     console.debug("Retrieving vault info");
@@ -38,9 +43,26 @@ export async function retrieveVaultInfo(
     const encryptedVaultKey = vaultInfoResponse.encryptedKey!;
     const vaultInfo = vaultInfoResponse.vaultInfo!;
 
-    // Derive AUK
-    console.debug("Deriving AUK...");
-    const auk = await generateKey(password, additionalInfo, aukSalt, keygenFunction);
+    // Derive the AUK
+    const worker = new Worker(new URL("@lib/workers/generate-auk", import.meta.url), { type: "module" });
+    const processor = Comlink.wrap<AUKGenerationProcessor>(worker);
+
+    let aukData;
+    try {
+        aukData = await processor.generateAUK(
+            password,
+            additionalInfo,
+            aukSalt,
+            keygenFunction,
+            // `proxy()` ensures the callback function works across threads
+            onProgress ? Comlink.proxy(onProgress) : undefined,
+        );
+    } finally {
+        // Free up resources
+        worker.terminate();
+    }
+
+    const { key: auk } = aukData;
 
     // Recover vault key
     console.debug("Decrypting obtained vault key...");

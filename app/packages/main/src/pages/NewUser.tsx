@@ -1,4 +1,3 @@
-import * as Comlink from "comlink";
 import { useState } from "react";
 
 import {
@@ -22,9 +21,9 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
+import { generateVaultKeys } from "@lib/crypto/keygen";
 import { editVaultInfo, registerUser } from "@lib/users/api";
 import { UserVaultInfo } from "@lib/users/structures";
-import { VaultKeyGenerationProcessor } from "@lib/workers/generate-vault-keys";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
@@ -81,34 +80,14 @@ const NewUser: React.FC = () => {
         console.debug(`Received values: ${JSON.stringify({ username, password, obfuscatedNames })}`);
         setIsLoading(true);
 
-        // Set up account unlock key (AUK) and vault key using a worker
+        // Set up account unlock key (AUK) and vault key
         const keygenFunction = "argon2d"; // TODO: Allow configuring the default keygen
-
-        const worker = new Worker(new URL("@lib/workers/generate-vault-keys", import.meta.url), { type: "module" });
-        const processor = Comlink.wrap<VaultKeyGenerationProcessor>(worker);
-
-        let vaultKeysData;
-        try {
-            vaultKeysData = await processor.generateVaultKeys(
-                password,
-                { username },
-                auth.vaultInfo!.key,
-                keygenFunction,
-                // `proxy()` ensures the callback function works across threads
-                Comlink.proxy((progress: number) => {
-                    setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
-                }),
-            );
-        } finally {
-            // Free up resources
-            worker.terminate();
-        }
-
         const {
             auk: { key: auk, salt: aukSalt },
             vault: { key: vaultKey, encryptedKey: encryptedVaultKey },
-        } = vaultKeysData;
-
+        } = await generateVaultKeys(password, { username }, auth.vaultInfo!.key, keygenFunction, (progress: number) => {
+            setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+        });
         console.debug(`Generated AUK '${auk.toString("hex")}' and vault key '${vaultKey.toString("hex")}'`);
 
         setLocalVaultKey(vaultKey);
