@@ -59,8 +59,10 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
         }
 
         // Obfuscate the query, if necessary
-        const query = auth.authInfo!.obfuscatedNames ? auth.noc!.encipher(Buffer.from(rawQuery, "utf-8")) : rawQuery;
-        console.debug(`Searching for '${rawQuery}'${auth.authInfo!.obfuscatedNames ? ` ('${query}')` : ""}`);
+        const query = auth.vaultInfo!.info.obfuscatedNames
+            ? auth.noc!.encipher(Buffer.from(rawQuery, "utf-8"))
+            : rawQuery;
+        console.debug(`Searching for '${rawQuery}'${auth.vaultInfo!.info.obfuscatedNames ? ` ('${query}')` : ""}`);
 
         // Search for files
         setSearchResults(null);
@@ -116,7 +118,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                         searchResults.map(({ file, similarity: _similarity }, idx) => {
                             // Deobfuscate name if needed
                             const rawName = file.name;
-                            const name = auth.authInfo!.obfuscatedNames
+                            const name = auth.vaultInfo!.info.obfuscatedNames
                                 ? auth.noc!.decipher(rawName).toString("utf-8")
                                 : rawName;
 

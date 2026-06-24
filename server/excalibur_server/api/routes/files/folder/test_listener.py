@@ -60,7 +60,8 @@ class TestDirectoryChangesListener:
         yield from _make_websocket("01234567-89ab-dcef-0123-456789abcdef", LISTENER_PATH, encrypted=True)
 
     @pytest.fixture(scope="class")
-    def example_file(self, test_user, db_session: Session) -> Path:
+    @classmethod
+    def example_file(cls, test_user, db_session: Session) -> Path:
         root_id = test_user["root_id"]
 
         file_id = uuid4()

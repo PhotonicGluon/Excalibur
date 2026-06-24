@@ -8,13 +8,14 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
+from excalibur_server.consts import FAKE_USER_UUID
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
 from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user, get_user_from_id
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 
 
@@ -29,6 +30,10 @@ async def comms_endpoint(websocket: WebSocket):
 
     await ws_manager.accept()
     try:
+        # Pre-get the fake user
+        # (This is to prevent side-channel client enumeration attacks. See RFC9807 Section 10.9)
+        fake_user = get_user_from_id(FAKE_USER_UUID)
+
         # Wait for username and first key exchange message
         ke1_raw_and_username = (await ws_manager.receive()).data
         ke1_raw = ke1_raw_and_username[: OPAQUE.ke1_size]
@@ -37,10 +42,9 @@ async def comms_endpoint(websocket: WebSocket):
         # Check username
         user = get_user(username)
         if user is None:
-            # TODO: Do we send a fake vector instead of explicitly saying the user doesn't exist (cf. RFC9807)?
-            await ws_manager.send(WebSocketMsg("User does not exist", "ERR"))
-            await ws_manager.close()
-            return
+            # Use fake user's data
+            # (We fully expect that the authentication fails)
+            user = fake_user
 
         # Generate second key exchange message
         ke1 = OPAQUE.deserialize_ke1(ke1_raw)

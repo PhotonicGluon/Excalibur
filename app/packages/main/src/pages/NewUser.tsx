@@ -22,8 +22,8 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
+import { editVaultInfo, registerUser } from "@lib/users/api";
+import { UserVaultInfo } from "@lib/users/structures";
 import { VaultKeyGenerationProcessor } from "@lib/workers/generate-vault-keys";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
@@ -90,7 +90,7 @@ const NewUser: React.FC = () => {
             vaultKeysData = await processor.generateVaultKeys(
                 password,
                 { username },
-                auth.vaultKey!,
+                auth.vaultInfo!.key,
                 "argon2d", // TODO: Allow configuring the default keygen
                 // `proxy()` ensures the callback function works across threads
                 Comlink.proxy((progress: number) => {
@@ -149,13 +149,15 @@ const NewUser: React.FC = () => {
             return;
         }
 
-        // Set vault key for auth
-        auth.setVaultKey(vaultKey);
+        // Set authentication info
+        const authInfo: AuthInfo = { username, password, ...e2eeData };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update user additional info
-        const additionalInfo: AdditionalUserInfo = { obfuscatedNames };
+        const additionalInfo: UserVaultInfo = { obfuscatedNames };
 
-        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+        const setAdditionalInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
             e2eeData.token,
             e2eeData.key,
@@ -173,10 +175,8 @@ const NewUser: React.FC = () => {
         }
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
-        // Set authentication info
-        const authInfo: AuthInfo = { username, password, obfuscatedNames, ...e2eeData };
-        auth.setAuthInfo(authInfo);
-        console.log(`Token for authentication: ${authInfo.token}`);
+        // Set vault info for auth
+        auth.setVaultInfo({ keygenFunction: "argon2d", auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);

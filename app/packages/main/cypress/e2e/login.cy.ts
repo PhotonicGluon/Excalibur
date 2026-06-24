@@ -38,7 +38,7 @@ describe("Handle Auth Process", () => {
 
             cy.url().should("include", "/login"); // Did not move into files page
             cy.get(".alert-wrapper").should("be.visible");
-            cy.get(".alert-title").should("contain.text", "User Not Found");
+            cy.get(".alert-title").should("contain.text", "Handshake Failed");
         });
 
         it("should show error if password is incorrect", () => {
@@ -48,7 +48,7 @@ describe("Handle Auth Process", () => {
 
             cy.url().should("include", "/login"); // Did not move into files page
             cy.get(".alert-wrapper").should("be.visible");
-            cy.get(".alert-title").should("contain.text", "Authentication Failed");
+            cy.get(".alert-title").should("contain.text", "Handshake Failed");
         });
     });
 });

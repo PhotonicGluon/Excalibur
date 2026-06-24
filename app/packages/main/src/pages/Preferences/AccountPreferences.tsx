@@ -39,9 +39,9 @@ const AccountPreferences: React.FC = () => {
     const [presentToast] = useIonToast();
 
     // States
-    const [newUsername, setNewUsername] = useState<string>(auth.authInfo!.username!);
+    const [newUsername, setNewUsername] = useState<string>(auth.authInfo!.username);
     const [newPassword, setNewPassword] = useState<string>("");
-    const [keyGenFunction, setKeyGenFunction] = useState<KeyGenFunction>(auth.authInfo!.keygenFunction!);
+    const [keyGenFunction, setKeyGenFunction] = useState<KeyGenFunction>(auth.vaultInfo!.keygenFunction);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Sending request...");
@@ -55,7 +55,7 @@ const AccountPreferences: React.FC = () => {
         const oldPref = {
             username: auth.authInfo!.username!,
             password: auth.authInfo!.password!,
-            keygenFunction: auth.authInfo!.keygenFunction!,
+            keygenFunction: auth.vaultInfo!.keygenFunction,
         };
 
         const newPref = {
@@ -85,7 +85,7 @@ const AccountPreferences: React.FC = () => {
             vaultKeysData = await processor.generateVaultKeys(
                 newPref.password,
                 { username: newPref.username },
-                auth.vaultKey!,
+                auth.vaultInfo!.key,
                 newPref.keygenFunction,
                 // `proxy()` ensures the callback function works across threads
                 Comlink.proxy((progress: number) => {
@@ -133,6 +133,9 @@ const AccountPreferences: React.FC = () => {
             token: auth.getToken()!,
             username: newPref.username,
             password: newPref.password,
+        });
+        auth.setVaultInfo({
+            ...auth.vaultInfo!,
             keygenFunction: newPref.keygenFunction,
         });
 

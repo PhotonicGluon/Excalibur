@@ -23,7 +23,8 @@ def _decrypt_response(response: httpx2.Response) -> list[tuple[dict, float]]:
 
 class TestSearch:
     @pytest.fixture(scope="class")
-    def search_folder(self, test_user, db_session: Session) -> FSItem:
+    @classmethod
+    def search_folder(cls, test_user, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
         # Create search folders

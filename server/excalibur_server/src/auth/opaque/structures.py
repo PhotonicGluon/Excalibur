@@ -1,3 +1,5 @@
+from typing import Self
+
 from pydantic import BaseModel, ConfigDict, model_serializer
 
 from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
@@ -36,6 +38,8 @@ class Envelope(BaseModel):
     envelope_nonce: bytes
     auth_tag: bytes
 
+    FAKE: Self = None  # Defined below
+
     @model_serializer
     def serialize(self):
         return self.envelope_nonce + self.auth_tag
@@ -43,6 +47,9 @@ class Envelope(BaseModel):
     @classmethod
     def deserialize(cls, data: bytes, nonce_length: int):
         return cls(envelope_nonce=data[:nonce_length], auth_tag=data[nonce_length:])
+
+
+Envelope.FAKE = Envelope(envelope_nonce=b"\x00" * 32, auth_tag=b"\x00" * 32)
 
 
 class RegistrationRequest(BaseModel):
@@ -85,9 +92,18 @@ class RegistrationRecord(BaseModel):
     masking_key: bytes
     envelope: Envelope
 
+    FAKE: Self = None  # Defined below
+
     @model_serializer
     def serialize(self):
         return self.client_public_key.to_bytes() + self.masking_key + self.envelope.serialize()
+
+
+RegistrationRecord.FAKE = RegistrationRecord(
+    client_public_key=Ristretto255.GENERATOR,
+    masking_key=b"\x00" * 32,
+    envelope=Envelope.FAKE,
+)
 
 
 class AuthRequest(BaseModel):

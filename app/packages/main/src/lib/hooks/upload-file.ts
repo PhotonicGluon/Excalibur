@@ -109,7 +109,7 @@ export function useUploadFile() {
                     blob = await processor.processStream(
                         // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                         Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
-                        auth.vaultKey!, // FIXME: Sometimes, in Cypress, this is undefined
+                        auth.vaultInfo!.key,
                         auth.authInfo!.key!,
                         rawFileSize,
                         settings.cryptoKeyStrength,
@@ -175,7 +175,7 @@ export function useUploadFile() {
             try {
                 const pickedFiles = (await FilePicker.pickFiles()).files;
                 files = pickedFiles.map((item) => {
-                    const name = auth.authInfo!.obfuscatedNames
+                    const name = auth.vaultInfo!.info.obfuscatedNames
                         ? auth.noc!.encipher(Buffer.from(item.name, "utf-8"))
                         : item.name;
                     return { ...item, name, rawName: item.name };
@@ -333,7 +333,7 @@ export function useUploadFile() {
                 // Handle name obfuscation as necessary
                 let fileName = item.file.name;
                 let fileDirectory = item.path ? getParent(item.path.replace(/^\//, "")) : undefined;
-                if (auth.authInfo!.obfuscatedNames) {
+                if (auth.vaultInfo!.info.obfuscatedNames) {
                     fileName = auth.noc!.encipher(Buffer.from(fileName, "utf-8"));
                     if (fileDirectory) {
                         const slashObfuscated = auth.noc!.encipher(Buffer.from("/", "utf-8"));

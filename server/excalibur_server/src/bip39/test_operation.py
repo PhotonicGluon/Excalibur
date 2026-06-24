@@ -66,7 +66,7 @@ MNEMONICS = [
 ]
 
 
-@pytest.mark.parametrize("buffer, mnemonic", zip(BUFFERS, MNEMONICS))
+@pytest.mark.parametrize("buffer, mnemonic", list(zip(BUFFERS, MNEMONICS)))
 def test_normal(buffer: str, mnemonic: str):
     buffer = bytes.fromhex(buffer)
     mnemonic = mnemonic.split(" ")

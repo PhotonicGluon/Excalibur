@@ -58,7 +58,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
         keygen_function="Example Keygen Function",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
         registration_record=b"Fake Registration Record",
-        additional_info=f"Some Sample Info for {username}",
+        vault_info=f"Some Sample Info for {username}",
         auk_salt=b"Initial AUK Salt",
         key_enc=b"Initial Encrypted Vault Key",
     )

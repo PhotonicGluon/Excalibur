@@ -2,9 +2,9 @@ import { useState } from "react";
 
 import HKDF from "@lib/crypto/hkdf";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
-import { useEffectOnce, useMount } from "@lib/hooks";
+import { useEffectOnce } from "@lib/hooks";
 import { checkAPIUrl, getServerInfo } from "@lib/network";
-import { retrieveVaultKey } from "@lib/users/vault";
+import { VaultInfo } from "@lib/users/structures";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
@@ -39,10 +39,20 @@ function useProvideAuth(): AuthProvider {
 
         return JSON.parse(storedServerInfo);
     });
-    const [vaultKey, setVaultKey] = useState<Buffer | null>(null);
+    const [vaultInfo, setVaultInfo] = useState<VaultInfo | null>(() => {
+        // Check if local storage has vault info
+        const storedVaultInfo = localStorage.getItem("vaultInfo");
+        if (!storedVaultInfo) {
+            return null;
+        }
 
-    const noc = vaultKey
-        ? new SubstitutionCipher(new HKDF("sha256").hkdf(vaultKey, null, Buffer.from("Name Obfuscation Cipher"), 32))
+        return deserializeVaultInfo(storedVaultInfo);
+    });
+
+    const noc = vaultInfo
+        ? new SubstitutionCipher(
+              new HKDF("sha256").hkdf(vaultInfo.key, null, Buffer.from("Name Obfuscation Cipher"), 32),
+          )
         : null;
 
     // Handlers
@@ -65,6 +75,11 @@ function useProvideAuth(): AuthProvider {
         localStorage.setItem("serverInfo", JSON.stringify(serverInfo));
     }
 
+    function setVaultInfoFunc(vaultInfo: VaultInfo) {
+        setVaultInfo(vaultInfo);
+        localStorage.setItem("vaultInfo", serializeVaultInfo(vaultInfo));
+    }
+
     async function logoutFunc(full: boolean = false) {
         if (full) {
             setServerInfo(null);
@@ -72,9 +87,9 @@ function useProvideAuth(): AuthProvider {
         }
 
         setAuthInfo(null);
+        setVaultInfo(null);
         localStorage.removeItem("authInfo");
-
-        setVaultKey(null);
+        localStorage.removeItem("vaultInfo");
     }
 
     // Effects
@@ -106,34 +121,17 @@ function useProvideAuth(): AuthProvider {
         });
     });
 
-    useMount(() => {
-        if (!authInfo || !serverInfo) {
-            return;
-        }
-
-        // Get vault key
-        retrieveVaultKey(serverInfo.apiURL!, authInfo.token, authInfo.key, authInfo.auk, (error) => {
-            console.error(error);
-        }).then((resp) => {
-            if (!resp) {
-                console.error("Failed to retrieve vault key");
-                return;
-            }
-            setVaultKey(resp);
-        });
-    });
-
     // Return data
     return {
         authInfo: authInfo!,
         serverInfo: serverInfo!,
-        vaultKey: vaultKey!,
+        vaultInfo: vaultInfo!,
         noc: noc!,
         getToken: getToken,
         setAuthInfo: setAuthInfoFunc,
         setServerInfo: setServerInfoFunc,
+        setVaultInfo: setVaultInfoFunc,
         logout: logoutFunc,
-        setVaultKey: (vaultKey: Buffer) => setVaultKey(vaultKey),
     };
 }
 
@@ -141,11 +139,8 @@ function serializeAuthInfo(data: AuthInfo): string {
     return JSON.stringify({
         key: data.key.toString("hex"),
         token: data.token,
-        auk: data.auk.toString("hex"),
-        keygenFunction: data.keygenFunction,
-        obfuscatedNames: data.obfuscatedNames,
         username: data.username,
-        password: data.password, // TODO: Is this safe?
+        password: data.password,
     });
 }
 
@@ -154,10 +149,26 @@ function deserializeAuthInfo(data: string): AuthInfo {
     return {
         key: Buffer.from(parsed.key, "hex"),
         token: parsed.token,
-        auk: Buffer.from(parsed.auk, "hex"),
-        keygenFunction: parsed.keygenFunction,
-        obfuscatedNames: parsed.obfuscatedNames,
         username: parsed.username,
         password: parsed.password,
+    };
+}
+
+function serializeVaultInfo(data: VaultInfo): string {
+    return JSON.stringify({
+        keygenFunction: data.keygenFunction,
+        auk: data.auk.toString("hex"),
+        key: data.key.toString("hex"),
+        info: JSON.stringify(data.info),
+    });
+}
+
+function deserializeVaultInfo(data: string): VaultInfo {
+    const parsed = JSON.parse(data);
+    return {
+        keygenFunction: parsed.keygenFunction,
+        auk: Buffer.from(parsed.auk, "hex"),
+        key: Buffer.from(parsed.key, "hex"),
+        info: JSON.parse(parsed.info),
     };
 }

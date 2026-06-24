@@ -141,7 +141,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     fileDataBlob = await processor.processStream(
                         // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                         Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                        auth.vaultKey!,
+                        auth.vaultInfo!.key,
                         response.e2ee ? auth.authInfo!.key! : null,
                         fileSize,
                         settings.cryptoChunkSize,

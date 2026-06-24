@@ -2,8 +2,8 @@
 Add `keygen_function` field to 'User' table
 
 Revision ID: f92a6f1b79d9
-Revises: 4d8b5384df3c
-Create Date: 2026-06-23 22:16:11.020342
+Revises: e7e550fa60ed
+Create Date: 2026-06-24 21:36:44.020342
 """
 
 from typing import Sequence
@@ -14,7 +14,7 @@ from alembic import op
 
 # Revision identifiers used by Alembic
 revision: str = "f92a6f1b79d9"
-down_revision: str | Sequence[str] | None = "4d8b5384df3c"
+down_revision: str | Sequence[str] | None = "e7e550fa60ed"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

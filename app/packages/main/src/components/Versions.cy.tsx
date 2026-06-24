@@ -18,12 +18,16 @@ describe("<Versions />", () => {
                             deltaTime: 0,
                             maxUploadSize: 0,
                         },
-                        vaultKey: null,
+                        vaultInfo: {
+                            auk: Buffer.alloc(0),
+                            key: Buffer.alloc(0),
+                            info: {},
+                        },
                         noc: null,
                         getToken: () => null,
                         setAuthInfo: () => {},
                         setServerInfo: () => {},
-                        setVaultKey: () => {},
+                        setVaultInfo: () => {},
                         logout: () => Promise.resolve(),
                     }}
                 >
