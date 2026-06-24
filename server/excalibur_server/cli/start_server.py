@@ -81,8 +81,11 @@ def start_server(
     import uvicorn
     from uvicorn.config import LOGGING_CONFIG
 
-    from excalibur_server.consts import ROOT_FOLDER
+    from excalibur_server.consts import FAKE_USER_UUID, ROOT_FOLDER
+    from excalibur_server.src.auth.opaque.structures import RegistrationRecord
     from excalibur_server.src.config import CONFIG
+    from excalibur_server.src.db.tables import User
+    from excalibur_server.src.users import add_user, get_user_from_id
 
     # Set environment variables
     os.environ["EXCALIBUR_SERVER_DEBUG"] = "1" if debug else "0"
@@ -97,6 +100,20 @@ def start_server(
     os.makedirs(ROOT_FOLDER, exist_ok=True)
     os.makedirs(CONFIG.logging.directory, exist_ok=True)
     os.makedirs(CONFIG.storage.vault_folder, exist_ok=True)
+
+    # Create fake user if it doesn't exist
+    if not get_user_from_id(FAKE_USER_UUID):
+        add_user(
+            User(
+                id=FAKE_USER_UUID,
+                username="",
+                fsitem_id=FAKE_USER_UUID,
+                registration_record=RegistrationRecord.FAKE.serialize(),
+                vault_info="",
+                auk_salt=b"\x00" * 32,
+                key_enc=b"\x00" * 32,
+            )
+        )
 
     # Clean up logs
     if cleanup_logs:
