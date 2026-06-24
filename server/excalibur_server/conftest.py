@@ -10,6 +10,7 @@ from sqlmodel import Session, SQLModel
 
 from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.cli.start_server import _create_fake_user
 from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.enums import AuthProtocol
@@ -37,6 +38,9 @@ def test_database():
     # Create all tables in the test database
     engine = create_engine(f"duckdb:///{db_path}")
     SQLModel.metadata.create_all(engine)
+
+    # Create fake user
+    _create_fake_user()
 
     try:
         yield engine

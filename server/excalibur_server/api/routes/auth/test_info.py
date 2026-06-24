@@ -10,3 +10,10 @@ class TestGetUserAuthInfo:
 
         response = response.json()
         assert "auth_protocol" in response
+
+    def test_get_non_existent_user_auth_info(self):
+        response = TestClient(app).get("/api/auth/info/fake-user")
+        assert response.status_code == 200
+
+        response = response.json()
+        assert "auth_protocol" in response

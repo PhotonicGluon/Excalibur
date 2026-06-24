@@ -16,13 +16,11 @@ import {
     IonToolbar,
     useIonAlert,
     useIonRouter,
-    useIonToast,
 } from "@ionic/react";
 
 import { e2ee } from "@lib/auth/e2ee";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { checkUser } from "@lib/users/api";
 import { retrieveVaultInfo } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
@@ -37,7 +35,6 @@ const Login: React.FC = () => {
     const router = useIonRouter();
 
     const [presentAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
 
     // States
     const [username, setUsername] = useState("");
@@ -77,34 +74,6 @@ const Login: React.FC = () => {
         }
         console.debug(`Received values: ${JSON.stringify({ username, password, savePassword })}`);
         setIsLoading(true);
-
-        // Check whether user exists
-        setLoadingState("Finding user...");
-        try {
-            if (!(await checkUser(auth.serverInfo!.apiURL!, username))) {
-                setIsLoading(false);
-                presentAlert({
-                    header: "User Not Found",
-                    message: "Please create the user first.",
-                    buttons: [
-                        {
-                            text: "OK",
-                            role: "cancel",
-                        },
-                    ],
-                });
-                return;
-            }
-        } catch (error: unknown) {
-            console.error(error);
-            presentToast({
-                message: `An error occurred: ${error}`,
-                duration: 2000,
-                color: "danger",
-            });
-            setIsLoading(false);
-            return;
-        }
 
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(

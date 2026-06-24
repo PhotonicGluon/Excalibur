@@ -113,7 +113,7 @@ export async function handshakeOPAQUE(
                         ws.close();
                         stopLoading?.();
                         showAlert?.(
-                            "Authentication Failed",
+                            "Handshake Failed",
                             "Invalid username or password",
                             "Please check your credentials and try again",
                         );
@@ -168,7 +168,11 @@ export async function handshakeOPAQUE(
                 ws.close();
                 console.error(e);
                 stopLoading?.();
-                showAlert?.("Handshake Failed", undefined, "Could not complete handshake. Please try again.");
+                showAlert?.(
+                    "Handshake Failed",
+                    "Invalid username or password",
+                    "Please check your credentials and try again",
+                );
                 reject(e);
             }
         });

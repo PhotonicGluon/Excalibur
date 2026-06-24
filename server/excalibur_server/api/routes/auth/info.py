@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Path, status
+from fastapi import Path
 from pydantic import BaseModel
 
 from excalibur_server.api.routes.auth import router
+from excalibur_server.consts import FAKE_USER_UUID
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user, get_user_from_id
 
 
 class AuthInfo(BaseModel):
@@ -15,9 +16,6 @@ class AuthInfo(BaseModel):
 @router.get(
     "/info/{username}",
     name="Get User Authentication Info",
-    responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
-    },
     response_model=AuthInfo,
 )
 def get_user_auth_info_endpoint(username: Annotated[str, Path()]):
@@ -25,8 +23,12 @@ def get_user_auth_info_endpoint(username: Annotated[str, Path()]):
     Returns the security details of a user with the specified username.
     """
 
+    # Pre-get the fake user
+    # (This is to prevent side-channel client enumeration attacks. See RFC9807 Section 10.9)
+    fake_user = get_user_from_id(FAKE_USER_UUID)
+
     user = get_user(username)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        user = fake_user
 
     return AuthInfo.model_validate(user.model_dump())

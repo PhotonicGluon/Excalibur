@@ -100,7 +100,7 @@ class RegistrationRecord(BaseModel):
 
 
 RegistrationRecord.FAKE = RegistrationRecord(
-    client_public_key=Ristretto255.IDENTITY,
+    client_public_key=Ristretto255.GENERATOR,
     masking_key=b"\x00" * 32,
     envelope=Envelope.FAKE,
 )
