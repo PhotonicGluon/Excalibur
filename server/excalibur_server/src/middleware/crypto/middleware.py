@@ -180,6 +180,8 @@ class EncryptionHandler:
         # Update headers
         headers = MutableHeaders(raw=self._scope["headers"])
         headers["Content-Length"] = str(len(decrypted_body))
+        if original_content_type := headers.get("X-Content-Type"):
+            headers["Content-Type"] = original_content_type
 
         self._scope["headers"] = headers.raw
 
