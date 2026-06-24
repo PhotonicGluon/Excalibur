@@ -93,30 +93,12 @@ FILES_ROUTING_TREE = RoutingTree(
 USERS_ROUTING_TREE = RoutingTree(
     segment="users",
     subtrees={
-        "info": RoutingTree(
-            segment="info",
-            subtrees={
-                "get": RoutingTree(
-                    segment="get",
-                    has_path_param=True,
-                    encrypted_routes={
-                        "GET": EncryptedRoute(),
-                    },
-                ),
-                "edit": RoutingTree(
-                    segment="edit",
-                    has_path_param=True,
-                    encrypted_routes={
-                        "POST": EncryptedRoute(),
-                    },
-                ),
-            },
-        ),
         "vault": RoutingTree(
             segment="vault",
             has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
+                "PUT": EncryptedRoute(),
             },
         ),
     },
