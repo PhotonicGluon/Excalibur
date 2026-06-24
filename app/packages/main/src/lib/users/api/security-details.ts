@@ -1,5 +1,5 @@
 import { AuthProtocol } from "@lib/auth/enums";
-import { SlowHashFunction } from "@lib/crypto/keygen";
+import { KeyGenFunction } from "@lib/crypto/keygen";
 import { timedFetch } from "@lib/network";
 import { b64decode } from "@lib/util";
 
@@ -18,7 +18,7 @@ export async function getSecurityDetails(
 ): Promise<{
     success: boolean;
     aukSalt?: Buffer;
-    keygenFunction?: SlowHashFunction;
+    keygenFunction?: KeyGenFunction;
     authProtocol?: AuthProtocol;
     error?: string;
 }> {
@@ -38,7 +38,7 @@ export async function getSecurityDetails(
     return {
         success: true,
         aukSalt: b64decode(data["auk_salt"]),
-        keygenFunction: data["keygen_function"] as SlowHashFunction,
+        keygenFunction: data["keygen_function"] as KeyGenFunction,
         authProtocol: data["auth_protocol"] as AuthProtocol,
     };
 }

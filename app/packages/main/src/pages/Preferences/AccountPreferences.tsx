@@ -1,3 +1,4 @@
+import * as Comlink from "comlink";
 import { useState } from "react";
 
 import {
@@ -21,8 +22,9 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import generateVaultKeyData, { SlowHashFunction as KeyGenFunction } from "@lib/crypto/keygen";
+import { KeyGenFunction } from "@lib/crypto/keygen";
 import { editRecord } from "@lib/users/api/edit-record";
+import { VaultKeyGenerationProcessor } from "@lib/workers/generate-vault-keys";
 
 import { useAuth } from "@components/auth/context";
 import PasswordInput from "@components/inputs/PasswordInput";
@@ -49,27 +51,21 @@ const AccountPreferences: React.FC = () => {
      * Handles any updates to the preferences' values.
      */
     async function updatePreferences() {
-        setIsLoading(true);
-
         // Process the new preferences
-        const oldUsername = auth.authInfo!.username!;
-        const oldPassword = auth.authInfo!.password!;
-        const oldKeyGenFunction = auth.authInfo!.keygenFunction!;
+        const oldPref = {
+            username: auth.authInfo!.username!,
+            password: auth.authInfo!.password!,
+            keygenFunction: auth.authInfo!.keygenFunction!,
+        };
 
         const newPref = {
-            username: newUsername ?? oldUsername,
-            password: newPassword && newPassword !== "" ? newPassword : oldPassword,
-            keygenFunction: keyGenFunction ?? oldKeyGenFunction,
+            username: newUsername ?? oldPref.username,
+            password: newPassword && newPassword !== "" ? newPassword : oldPref.password,
+            keygenFunction: keyGenFunction ?? oldPref.keygenFunction,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
-        if (
-            newPref.username === oldUsername &&
-            newPref.password === oldPassword &&
-            newPref.keygenFunction === oldKeyGenFunction
-        ) {
-            // No changes needed
-            setIsLoading(false);
+        if (JSON.stringify(newPref) === JSON.stringify(oldPref)) {
             presentToast({
                 message: "No changes",
                 duration: 2000,
@@ -78,16 +74,33 @@ const AccountPreferences: React.FC = () => {
             return;
         }
 
-        // Regenerate AUK and encrypted vault key
+        setIsLoading(true);
+
+        // Regenerate AUK and encrypted vault key using a worker
+        const worker = new Worker(new URL("@lib/workers/generate-vault-keys", import.meta.url), { type: "module" });
+        const processor = Comlink.wrap<VaultKeyGenerationProcessor>(worker);
+
+        let vaultKeysData;
+        try {
+            vaultKeysData = await processor.generateVaultKeys(
+                newPref.password,
+                { username: newPref.username },
+                auth.vaultKey!,
+                newPref.keygenFunction,
+                // `proxy()` ensures the callback function works across threads
+                Comlink.proxy((progress: number) => {
+                    setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+                }),
+            );
+        } finally {
+            // Free up resources
+            worker.terminate();
+        }
+
         const {
             auk: { salt: newAUKSalt },
             vault: { encryptedKey: newEncryptedVaultKey },
-        } = await generateVaultKeyData(
-            newPref.password,
-            { username: newPref.username },
-            auth.vaultKey!,
-            newPref.keygenFunction,
-        );
+        } = vaultKeysData;
 
         // Send edit request
         const response = await editRecord(

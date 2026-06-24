@@ -1,4 +1,4 @@
-import { SlowHashFunction } from "@lib/crypto/keygen";
+import { KeyGenFunction } from "@lib/crypto/keygen";
 
 export interface HandshakeData {
     /** Bilaterally agreed symmetric key to encrypt communications */
@@ -9,7 +9,7 @@ export interface HandshakeData {
 
 export interface E2EEData extends HandshakeData {
     /** Key generation function used to generate the AUK */
-    keygenFunction: SlowHashFunction;
+    keygenFunction: KeyGenFunction;
     /** Account unlock key (AUK) */
     auk: Buffer;
 }

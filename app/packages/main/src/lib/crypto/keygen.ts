@@ -1,15 +1,13 @@
-import { argon2dAsync } from "@noble/hashes/argon2.js";
+import { argon2d } from "@noble/hashes/argon2.js";
 import { pbkdf2 } from "pbkdf2";
-import randomBytes from "randombytes";
 
-import ExEF from "@lib/crypto/exef";
 import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
 
 const DIGEST_ALGORITHM = "sha256";
 const KEY_LENGTH = 32; // In bytes
 
-export type SlowHashFunction = "pbkdf2" | "argon2d";
+export type KeyGenFunction = "pbkdf2" | "argon2d";
 
 export interface KeygenAdditionalInfo {
     /** Username of the user */
@@ -58,16 +56,22 @@ export async function slowHashPBKDF2(passwordBuf: Uint8Array, salt: Buffer): Pro
  *
  * @param passwordBuf the password buffer to be hashed
  * @param salt the salt to be used
- * @returns a promise that resolves to the hashed password
+ * @param onProgress optional callback to report progress
+ * @returns the hashed password
  */
-export async function slowHashArgon2d(passwordBuf: Uint8Array, salt: Buffer): Promise<Buffer> {
+export function slowHashArgon2d(
+    passwordBuf: Uint8Array,
+    salt: Buffer,
+    onProgress?: (progress: number) => void,
+): Buffer {
     return Buffer.from(
-        await argon2dAsync(passwordBuf, salt, {
+        argon2d(passwordBuf, salt, {
             version: 0x13,
             m: 32768, // Memory cost in KiB
             t: 3, // Iteration count
             p: 2, // Parallelism
             dkLen: KEY_LENGTH,
+            onProgress,
         }),
     );
 }
@@ -96,45 +100,21 @@ export function fastHash(additionalInfo: KeygenAdditionalInfo, salt: Buffer): Bu
  * @param additionalInfo additional information to be included in the key generation
  * @param salt a buffer representing the salt value
  * @param slowHash the slow hash function to use
+ * @param onProgress optional callback to report progress
  * @returns a buffer containing the generated key
  */
-export async function generateKey(
+export default async function generateKey(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     salt: Buffer,
-    slowHash: SlowHashFunction = "pbkdf2",
+    slowHash: KeyGenFunction = "pbkdf2",
+    onProgress?: (progress: number) => void,
 ): Promise<Buffer> {
     const passwordBuf = normalizePassword(password);
     const iKey1 =
-        slowHash === "pbkdf2" ? await slowHashPBKDF2(passwordBuf, salt) : await slowHashArgon2d(passwordBuf, salt);
+        slowHash === "pbkdf2"
+            ? await slowHashPBKDF2(passwordBuf, salt)
+            : slowHashArgon2d(passwordBuf, salt, onProgress);
     const iKey2 = fastHash(additionalInfo, salt);
     return xorBuffer(iKey1, iKey2);
-}
-
-/**
- * Generates a vault key data object containing the account unlock key (AUK) and the encrypted vault
- * key.
- *
- * @param password the password to be used
- * @param additionalInfo additional information to be included in the key generation
- * @param existingVaultKey optional existing vault key to use instead of generating a new one
- * @param slowHash the slow hash function to use
- * @returns an object containing the AUK and the encrypted vault key
- */
-export default async function generateVaultKeyData(
-    password: string,
-    additionalInfo: KeygenAdditionalInfo,
-    existingVaultKey?: Buffer,
-    slowHash: SlowHashFunction = "pbkdf2",
-): Promise<{
-    auk: { key: Buffer; salt: Buffer };
-    vault: { key: Buffer; encryptedKey: Buffer };
-}> {
-    const aukSalt = randomBytes(32);
-    const auk = await generateKey(password, additionalInfo, aukSalt, slowHash);
-
-    const vaultKey = existingVaultKey ?? randomBytes(32);
-    const encryptedVaultKey = new ExEF(auk).encrypt(vaultKey);
-
-    return { auk: { key: auk, salt: aukSalt }, vault: { key: vaultKey, encryptedKey: encryptedVaultKey } };
 }
