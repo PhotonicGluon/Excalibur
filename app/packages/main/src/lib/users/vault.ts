@@ -9,25 +9,20 @@ import { VaultInfo } from "./structures";
  *
  * @param apiURL the URL of the API server to query
  * @param token authentication token for accessing the server
+ * @param password the password to use for deriving the AUK
+ * @param additionalInfo additional information to use for deriving the AUK
  * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
  * @param onError a function to call if an error occurs, which takes a string argument. The string
  *      will be the error message
- * @param password the password to use for deriving the AUK (if not provided, `auk` must be
- *      provided)
- * @param additionalInfo additional information to use for deriving the AUK (if not provided, `auk`
- *      must be provided)
- * @param auk the AUK to use for decrypting the vault key (if not provided, `password` and
- *      `additionalInfo` must be provided)
  * @returns a promise which resolves to the vault information, or null if an error occurs
  */
 export async function retrieveVaultInfo(
     apiURL: string,
     token: string,
     e2eeKey: Buffer,
+    password: string,
+    additionalInfo: KeygenAdditionalInfo,
     onError: (error: string) => void,
-    password?: string,
-    additionalInfo?: KeygenAdditionalInfo,
-    auk?: Buffer,
 ): Promise<VaultInfo | null> {
     // Get the vault info
     console.debug("Retrieving vault info");
@@ -42,10 +37,8 @@ export async function retrieveVaultInfo(
     const vaultInfo = vaultInfoResponse.vaultInfo!;
 
     // Derive AUK
-    if (!auk) {
-        console.debug("Deriving AUK...");
-        auk = await generateKey(password!, additionalInfo!, aukSalt);
-    }
+    console.debug("Deriving AUK...");
+    const auk = await generateKey(password, additionalInfo, aukSalt);
 
     // Recover vault key
     console.debug("Decrypting obtained vault key...");

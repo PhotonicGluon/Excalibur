@@ -137,6 +137,8 @@ const Login: React.FC = () => {
                 auth.serverInfo!.apiURL!,
                 e2eeData.token,
                 e2eeData.key,
+                password,
+                { username },
                 (error) => {
                     console.error(error);
                     setIsLoading(false);

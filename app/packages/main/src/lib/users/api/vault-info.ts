@@ -40,7 +40,7 @@ export async function getVaultInfo(
         success: true,
         aukSalt: Buffer.from(data.auk_salt, "base64"),
         encryptedKey: Buffer.from(data.key_enc, "base64"),
-        vaultInfo: JSON.parse(data.vault_info) as UserVaultInfo,
+        vaultInfo: data.vault_info ? (JSON.parse(data.vault_info) as UserVaultInfo) : {},
     };
 }
 
