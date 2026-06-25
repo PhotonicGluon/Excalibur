@@ -49,6 +49,8 @@ def add_user(
     Adds a user to the API server.
 
     Assumes the server has been initialized.
+
+    Only supports the PBKDF2-based key generation algorithm.
     """
 
     from base64 import b64decode
@@ -99,6 +101,7 @@ def add_user(
                 username=username,
                 auth_protocol=auth_protocol,
                 registration_record=registration_record.serialize(),
+                keygen_algorithm="pbkdf2",
                 auk_salt=auk_salt,
                 key_enc=vault_key_enc,
             )

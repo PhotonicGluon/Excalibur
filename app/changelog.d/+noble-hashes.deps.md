@@ -1,0 +1,1 @@
+➕ Added `@noble/hashes` dependency

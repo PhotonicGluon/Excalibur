@@ -35,6 +35,9 @@ export const viteConfig: UserConfig = {
         }),
         syncTheme(),
     ],
+    define: {
+        global: "globalThis",
+    },
     resolve: {
         alias: getAliasesFromTSConfig(),
     },

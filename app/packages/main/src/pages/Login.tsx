@@ -118,7 +118,7 @@ const Login: React.FC = () => {
                     });
                 },
                 (progress) => {
-                    setLoadingState(`Deriving AUK and vault key (${Math.round(progress * 100)}%)`);
+                    setLoadingState(`Deriving keys... ${Math.round(progress * 100)}%`);
                 },
             );
             if (!vaultInfo) {

@@ -85,7 +85,7 @@ const AccountPreferences: React.FC = () => {
             auth.vaultInfo!.key,
             newPref.keygenAlgorithm,
             (progress: number) => {
-                setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+                setLoadingState(`Deriving keys... ${Math.round(progress * 100)}%`);
             },
         );
 

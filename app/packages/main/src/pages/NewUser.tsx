@@ -30,6 +30,8 @@ import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 import PasswordInput from "@components/inputs/PasswordInput";
 
+const DEFAULT_KEYGEN_ALGORITHM = KeyGenAlgorithm.Argon2d;
+
 const NewUser: React.FC = () => {
     // States
     const [username, setUsername] = useState("");
@@ -81,17 +83,16 @@ const NewUser: React.FC = () => {
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key
-        const keygenAlgorithm = KeyGenAlgorithm.Argon2d; // TODO: Allow configuring the default keygen
         const {
             auk: { key: auk, salt: aukSalt },
             vault: { key: vaultKey, encryptedKey: encryptedVaultKey },
         } = await generateVaultKeys(
             password,
             { username },
-            auth.vaultInfo!.key,
-            keygenAlgorithm,
+            undefined, // No existing vault key
+            DEFAULT_KEYGEN_ALGORITHM,
             (progress: number) => {
-                setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+                setLoadingState(`Deriving keys... ${Math.round(progress * 100)}%`);
             },
         );
         console.debug(`Generated AUK '${auk.toString("hex")}' and vault key '${vaultKey.toString("hex")}'`);
@@ -148,7 +149,7 @@ const NewUser: React.FC = () => {
             auth.serverInfo!.apiURL!,
             e2eeData.token,
             e2eeData.key,
-            keygenAlgorithm,
+            DEFAULT_KEYGEN_ALGORITHM,
             additionalInfo,
         );
         if (!setAdditionalInfoResponse.success) {
@@ -164,7 +165,7 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenAlgorithm, auk: auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({ keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM, auk: auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);
@@ -271,7 +272,7 @@ const NewUser: React.FC = () => {
                         className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
                         isOpen={isLoading}
                         message={loadingState}
-                    ></IonLoading>
+                    />
                 </div>
             </IonContent>
         </IonPage>
