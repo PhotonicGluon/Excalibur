@@ -1,4 +1,4 @@
-import { KeyGenFunction } from "@lib/crypto/keygen";
+import { KeyGenAlgorithm } from "@lib/crypto/keygen";
 
 interface RawUserVaultInfo {
     /** Whether item names are obfuscated */
@@ -8,8 +8,8 @@ interface RawUserVaultInfo {
 export type UserVaultInfo = Partial<RawUserVaultInfo>;
 
 export interface VaultInfo {
-    /** Key generation function */
-    keygenFunction: KeyGenFunction;
+    /** Key generation algorithm */
+    keygenAlgorithm: KeyGenAlgorithm;
     /** Account unlock key */
     auk: Buffer;
     /** Vault key */

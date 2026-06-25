@@ -12,7 +12,7 @@ from excalibur_server.src.users import get_user_from_id
 
 
 class VaultInfo(BaseModel):
-    keygen_function: str
+    keygen_algorithm: str
     auk_salt: bytes
     key_enc: bytes
     vault_info: str
@@ -51,19 +51,19 @@ def get_user_vault_info_endpoint(credentials: Annotated[Credentials, Depends(get
 )
 def edit_user_vault_info_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    keygen_function: Annotated[str, Body()],
+    keygen_algorithm: Annotated[str, Body()],
     vault_info: Annotated[str, Body()],
 ):
     """
     Edits the vault information stored in the user's vault.
 
-    Specifically, the `keygen_function` and `vault_info` fields are modified by this endpoint. The
+    Specifically, the `keygen_algorithm` and `vault_info` fields are modified by this endpoint. The
     `auk_salt` and `key_enc` fields are not modified by this endpoint. Use the specialised
     `/api/auth/opaque/edit-record` WebSocket endpoint to edit them instead.
     """
 
     with get_session() as session:
         db_user = session.get(User, credentials.user_id)
-        db_user.keygen_function = keygen_function
+        db_user.keygen_algorithm = keygen_algorithm
         db_user.vault_info = vault_info
         session.commit()

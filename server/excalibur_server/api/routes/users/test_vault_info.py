@@ -17,14 +17,14 @@ class TestGetUserVaultInfo:
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 
         response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
-        assert response["keygen_function"] == "Example Keygen Function"
+        assert response["keygen_algorithm"] == "Example Keygen Function"
         assert "auk_salt" in response
         assert "key_enc" in response
         assert response["vault_info"] == "Some Sample Info"
 
 
 class TestEditUserVaultInfo:
-    DATA = {"keygen_function": "New Keygen Function", "vault_info": "New Info"}
+    DATA = {"keygen_algorithm": "New Keygen Function", "vault_info": "New Info"}
 
     def test_no_auth(self):
         response = TestClient(app).put(
@@ -45,7 +45,7 @@ class TestEditUserVaultInfo:
         assert response.status_code == 200
         response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
         assert response["vault_info"] == self.DATA["vault_info"]
-        assert response["keygen_function"] == self.DATA["keygen_function"]
+        assert response["keygen_algorithm"] == self.DATA["keygen_algorithm"]
 
     def test_edit_info_transit_encryption(self, auth_client: TestClient):
         headers = {
@@ -67,4 +67,4 @@ class TestEditUserVaultInfo:
         assert response.status_code == 200
         response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
         assert response["vault_info"] == self.DATA["vault_info"]
-        assert response["keygen_function"] == self.DATA["keygen_function"]
+        assert response["keygen_algorithm"] == self.DATA["keygen_algorithm"]

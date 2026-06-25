@@ -21,7 +21,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import { generateVaultKeys } from "@lib/crypto/keygen";
+import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
 import { editVaultInfo, registerUser } from "@lib/users/api";
 import { UserVaultInfo } from "@lib/users/structures";
 
@@ -81,13 +81,19 @@ const NewUser: React.FC = () => {
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key
-        const keygenFunction = "argon2d"; // TODO: Allow configuring the default keygen
+        const keygenAlgorithm = KeyGenAlgorithm.Argon2d; // TODO: Allow configuring the default keygen
         const {
             auk: { key: auk, salt: aukSalt },
             vault: { key: vaultKey, encryptedKey: encryptedVaultKey },
-        } = await generateVaultKeys(password, { username }, auth.vaultInfo!.key, keygenFunction, (progress: number) => {
-            setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
-        });
+        } = await generateVaultKeys(
+            password,
+            { username },
+            auth.vaultInfo!.key,
+            keygenAlgorithm,
+            (progress: number) => {
+                setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
+            },
+        );
         console.debug(`Generated AUK '${auk.toString("hex")}' and vault key '${vaultKey.toString("hex")}'`);
 
         setLocalVaultKey(vaultKey);
@@ -142,7 +148,7 @@ const NewUser: React.FC = () => {
             auth.serverInfo!.apiURL!,
             e2eeData.token,
             e2eeData.key,
-            keygenFunction,
+            keygenAlgorithm,
             additionalInfo,
         );
         if (!setAdditionalInfoResponse.success) {
@@ -158,7 +164,7 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenFunction: keygenFunction, auk: auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({ keygenAlgorithm, auk: auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);

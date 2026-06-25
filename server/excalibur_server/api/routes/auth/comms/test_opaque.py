@@ -55,7 +55,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
     username = OPAQUETestVectors.CLIENT_IDENTITIES[test_idx].decode("utf-8")
     test_user = User(
         username=username,
-        keygen_function="Example Keygen Function",
+        keygen_algorithm="Example Keygen Function",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
         registration_record=b"Fake Registration Record",
         vault_info=f"Some Sample Info for {username}",

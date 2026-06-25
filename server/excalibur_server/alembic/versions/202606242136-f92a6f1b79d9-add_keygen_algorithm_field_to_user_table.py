@@ -1,5 +1,5 @@
 """
-Add `keygen_function` field to 'User' table
+Add `keygen_algorithm` field to 'User' table
 
 Revision ID: f92a6f1b79d9
 Revises: e7e550fa60ed
@@ -24,8 +24,8 @@ def upgrade() -> None:
     Upgrade schema.
     """
 
-    op.add_column("user", sa.Column("keygen_function", sqlmodel.sql.sqltypes.AutoString(), server_default="pbkdf2"))
-    op.alter_column("user", "keygen_function", nullable=False)
+    op.add_column("user", sa.Column("keygen_algorithm", sqlmodel.sql.sqltypes.AutoString(), server_default="pbkdf2"))
+    op.alter_column("user", "keygen_algorithm", nullable=False)
 
 
 def downgrade() -> None:
@@ -33,4 +33,4 @@ def downgrade() -> None:
     Downgrade schema.
     """
 
-    op.drop_column("user", "keygen_function")
+    op.drop_column("user", "keygen_algorithm")

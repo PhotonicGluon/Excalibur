@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { expose } from "comlink";
 import randomBytes from "randombytes";
 
-import generateKey, { KeyGenFunction, KeygenAdditionalInfo } from "@lib/crypto/keygen";
+import generateKey, { KeyGenAlgorithm, KeygenAdditionalInfo } from "@lib/crypto/keygen";
 
 globalThis.Buffer = Buffer;
 
@@ -21,7 +21,7 @@ const generationProcessor = {
         password: string,
         additionalInfo: KeygenAdditionalInfo,
         salt?: Buffer,
-        slowHash: KeyGenFunction = "pbkdf2",
+        slowHash: KeyGenAlgorithm = KeyGenAlgorithm.Argon2d,
         onProgress?: (progress: number) => void,
     ): Promise<{
         key: Buffer;

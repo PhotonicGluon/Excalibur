@@ -21,7 +21,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { KeyGenFunction, generateVaultKeys } from "@lib/crypto/keygen";
+import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
 import { editVaultInfo } from "@lib/users/api";
 import { editRecord } from "@lib/users/api/edit-record";
 
@@ -40,7 +40,7 @@ const AccountPreferences: React.FC = () => {
     // States
     const [newUsername, setNewUsername] = useState<string>(auth.authInfo!.username);
     const [newPassword, setNewPassword] = useState<string>("");
-    const [keyGenFunction, setKeyGenFunction] = useState<KeyGenFunction>(auth.vaultInfo!.keygenFunction);
+    const [keygenAlgorithm, setKeygenAlgorithm] = useState<KeyGenAlgorithm>(auth.vaultInfo!.keygenAlgorithm);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Sending request...");
@@ -54,13 +54,13 @@ const AccountPreferences: React.FC = () => {
         const oldPref = {
             username: auth.authInfo!.username!,
             password: auth.authInfo!.password!,
-            keygenFunction: auth.vaultInfo!.keygenFunction,
+            keygenAlgorithm: auth.vaultInfo!.keygenAlgorithm,
         };
 
         const newPref = {
             username: newUsername ?? oldPref.username,
             password: newPassword && newPassword !== "" ? newPassword : oldPref.password,
-            keygenFunction: keyGenFunction ?? oldPref.keygenFunction,
+            keygenAlgorithm: keygenAlgorithm ?? oldPref.keygenAlgorithm,
         };
         console.log(`Got new preferences' values: ${JSON.stringify(newPref)}`);
 
@@ -83,7 +83,7 @@ const AccountPreferences: React.FC = () => {
             newPref.password,
             { username: newPref.username },
             auth.vaultInfo!.key,
-            newPref.keygenFunction,
+            newPref.keygenAlgorithm,
             (progress: number) => {
                 setLoadingState(`Creating new AUK and vault key (${Math.round(progress * 100)}%)`);
             },
@@ -114,12 +114,12 @@ const AccountPreferences: React.FC = () => {
             return;
         }
 
-        if (newPref.keygenFunction !== oldPref.keygenFunction) {
+        if (newPref.keygenAlgorithm !== oldPref.keygenAlgorithm) {
             const editVaultInfoResponse = await editVaultInfo(
                 auth.serverInfo!.apiURL!,
                 auth.getToken()!,
                 auth.authInfo!.key,
-                newPref.keygenFunction,
+                newPref.keygenAlgorithm,
                 auth.vaultInfo!.info,
             );
             if (!editVaultInfoResponse.success) {
@@ -144,7 +144,7 @@ const AccountPreferences: React.FC = () => {
         });
         auth.setVaultInfo({
             ...auth.vaultInfo!,
-            keygenFunction: newPref.keygenFunction,
+            keygenAlgorithm: newPref.keygenAlgorithm,
         });
 
         presentToast({
@@ -203,16 +203,16 @@ const AccountPreferences: React.FC = () => {
                         }
                     />
                     <SettingsItem
-                        label={<IonLabel>Key Generation Function</IonLabel>}
+                        label={<IonLabel>Key Generation Algorithm</IonLabel>}
                         input={
                             <IonSelect
                                 interface="popover"
                                 fill="outline"
-                                placeholder="Select function"
-                                value={keyGenFunction}
+                                placeholder="Select algorithm"
+                                value={keygenAlgorithm}
                                 onIonChange={(e) => {
-                                    const newKeyGenFunction = e.detail.value as KeyGenFunction;
-                                    setKeyGenFunction(newKeyGenFunction);
+                                    const newKeygenAlgorithm = e.detail.value as KeyGenAlgorithm;
+                                    setKeygenAlgorithm(newKeygenAlgorithm);
                                 }}
                             >
                                 <IonSelectOption value="argon2d">Argon2d (Recommended)</IonSelectOption>

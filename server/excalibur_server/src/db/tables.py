@@ -39,7 +39,7 @@ class User(SQLModel, table=True):
     "Client's serialized registration record for use in the OPAQUE protocol"
 
     # Vault info
-    keygen_function: str = Field(nullable=False, default="argon2d")
+    keygen_algorithm: str = Field(nullable=False, default="argon2d")
     "Key generation function for the Account Unlock Key (AUK)"
     auk_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=False))
     "Salt for the Account Unlock Key (AUK)"

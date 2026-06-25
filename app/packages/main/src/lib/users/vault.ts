@@ -38,7 +38,7 @@ export async function retrieveVaultInfo(
         return null;
     }
 
-    const keygenFunction = vaultInfoResponse.keygenFunction!;
+    const keygenAlgorithm = vaultInfoResponse.keygenAlgorithm!;
     const aukSalt = vaultInfoResponse.aukSalt!;
     const encryptedVaultKey = vaultInfoResponse.encryptedKey!;
     const vaultInfo = vaultInfoResponse.vaultInfo!;
@@ -53,7 +53,7 @@ export async function retrieveVaultInfo(
             password,
             additionalInfo,
             aukSalt,
-            keygenFunction,
+            keygenAlgorithm,
             // `proxy()` ensures the callback function works across threads
             onProgress ? Comlink.proxy(onProgress) : undefined,
         );
@@ -71,7 +71,7 @@ export async function retrieveVaultInfo(
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
         return {
             auk,
-            keygenFunction,
+            keygenAlgorithm,
             key: vaultKey,
             info: vaultInfo,
         };

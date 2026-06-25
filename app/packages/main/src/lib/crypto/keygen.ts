@@ -11,7 +11,10 @@ import { AUKGenerationProcessor } from "@lib/workers/generate-auk";
 const DIGEST_ALGORITHM = "sha256";
 const KEY_LENGTH = 32; // In bytes
 
-export type KeyGenFunction = "pbkdf2" | "argon2d";
+export enum KeyGenAlgorithm {
+    PBKDF2 = "pbkdf2",
+    Argon2d = "argon2d",
+}
 
 export interface KeygenAdditionalInfo {
     /** Username of the user */
@@ -111,12 +114,12 @@ export async function generateKey(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     salt: Buffer,
-    slowHash: KeyGenFunction = "pbkdf2",
+    slowHash: KeyGenAlgorithm = KeyGenAlgorithm.Argon2d,
     onProgress?: (progress: number) => void,
 ): Promise<Buffer> {
     const passwordBuf = normalizePassword(password);
     const iKey1 =
-        slowHash === "pbkdf2"
+        slowHash === KeyGenAlgorithm.PBKDF2
             ? await slowHashPBKDF2(passwordBuf, salt)
             : slowHashArgon2d(passwordBuf, salt, onProgress);
     const iKey2 = fastHash(additionalInfo, salt);
@@ -137,7 +140,7 @@ export async function generateVaultKeys(
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     existingVaultKey?: Buffer,
-    slowHash: KeyGenFunction = "pbkdf2",
+    slowHash: KeyGenAlgorithm = KeyGenAlgorithm.Argon2d,
     onProgress?: (progress: number) => void,
 ) {
     // Generate the AUK

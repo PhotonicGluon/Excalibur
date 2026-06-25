@@ -143,7 +143,7 @@ def _create_fake_user():
                 id=FAKE_USER_UUID,
                 username=b"\x00" * 16,
                 fsitem_id=FAKE_USER_UUID,
-                keygen_function="argon2d",
+                keygen_algorithm="argon2d",
                 auth_protocol=AuthProtocol.OPAQUE_3DH,
                 registration_record=RegistrationRecord.FAKE.serialize(),
                 vault_info="",
