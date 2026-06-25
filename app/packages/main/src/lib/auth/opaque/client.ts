@@ -15,11 +15,11 @@ import {
     RegistrationResponse,
 } from "@lib/auth/opaque/structures";
 import HKDF from "@lib/crypto/hkdf";
+import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";
 import { OPRFRistrettoSHA512, OPRFType } from "./oprf";
-import { Ristretto255 } from "./ristretto255";
 
 export class OPAQUEAuthError extends Error {
     constructor(message: string) {

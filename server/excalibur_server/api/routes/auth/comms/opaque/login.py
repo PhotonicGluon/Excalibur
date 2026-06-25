@@ -13,8 +13,8 @@ from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
 from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.ristretto255 import Ristretto255
 from excalibur_server.src.users import get_user, get_user_from_id
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 

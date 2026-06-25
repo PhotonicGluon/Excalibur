@@ -4,8 +4,8 @@ from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.ristretto255 import Ristretto255
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg

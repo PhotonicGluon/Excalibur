@@ -2,7 +2,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, model_serializer
 
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.ristretto255 import Ristretto255
 
 
 class CleartextCredentials(BaseModel):

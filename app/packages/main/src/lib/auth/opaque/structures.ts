@@ -1,5 +1,6 @@
+import { Ristretto255 } from "@lib/crypto/ristretto255";
+
 import { i2osp } from "./misc";
-import { Ristretto255 } from "./ristretto255";
 
 export class CleartextCredentials {
     serverPublicKey: Ristretto255;

@@ -1,9 +1,9 @@
 import createHash from "create-hash";
 
+import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { bigIntToBytes, bytesToBigInt, modulo, xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";
-import { Ristretto255 } from "./ristretto255";
 
 /**
  * Base class for an Oblivious Pseudo-Random Function (OPRF) implementation using the Ristretto255

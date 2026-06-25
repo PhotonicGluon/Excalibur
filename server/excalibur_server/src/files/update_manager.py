@@ -11,7 +11,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.credentials import Credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 class Socket(BaseModel):

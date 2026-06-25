@@ -251,7 +251,7 @@ def test_get(auth_client: TestClient):
 def test_get_with_path(auth_client: TestClient):
     import time
 
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     # Non-encrypted path parameter
     response = auth_client.get(
@@ -315,7 +315,7 @@ def test_post_encrypted(auth_client: TestClient):
     import json
     import time
 
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(b"hello world")
     hmac_header = generate_pop_header(

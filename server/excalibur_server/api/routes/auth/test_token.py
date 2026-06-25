@@ -29,7 +29,7 @@ def test_get_token():
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
     from excalibur_server.src.auth.credentials import generate_auth_token
     from excalibur_server.src.auth.pop import generate_pop_header
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     uuid = "00000000000000000000000000000000"
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"

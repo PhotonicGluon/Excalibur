@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from jwt.exceptions import InvalidTokenError
 
-from excalibur_server.src.auth.hkdf import HKDF
+from excalibur_server.src.crypto.hkdf import HKDF
 
 
 def _generate_key(username: str, key: bytes) -> bytes:

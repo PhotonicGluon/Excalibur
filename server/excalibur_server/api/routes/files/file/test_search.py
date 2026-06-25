@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.exef import ExEF
 
 
 def _decrypt_response(response: httpx2.Response) -> list[tuple[dict, float]]:

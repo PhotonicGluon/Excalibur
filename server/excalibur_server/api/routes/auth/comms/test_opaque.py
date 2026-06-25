@@ -17,8 +17,8 @@ from excalibur_server.src.auth.opaque import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
 from excalibur_server.src.auth.pop import generate_pop_header
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.tables import FSItem, User
-from excalibur_server.src.exef import ExEF
 from excalibur_server.src.users import get_user_from_id
 
 client = TestClient(app)

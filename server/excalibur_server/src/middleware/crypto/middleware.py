@@ -10,7 +10,7 @@ from excalibur_server.api.logging import logger
 from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.credentials import decode_token
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
 

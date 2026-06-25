@@ -15,9 +15,9 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.pop import generate_pop_header
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.exef import ExEF
 
 LISTENER_PATH = "/api/files/listen"
 

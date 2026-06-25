@@ -1,9 +1,9 @@
 import { expect } from "vitest";
 
+import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { bytesToBigInt } from "@lib/util";
 
 import { OPAQUEAuthError, OPAQUEClient } from "./client";
-import { Ristretto255 } from "./ristretto255";
 
 describe("OPAQUE Validation Tests", () => {
     it("should reject Diffie-Hellman point at infinity", () => {

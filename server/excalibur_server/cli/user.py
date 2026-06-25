@@ -58,9 +58,9 @@ def add_user(
     import typer
     from Crypto.Random import get_random_bytes
 
-    from excalibur_server.src.auth.keygen import generate_key
     from excalibur_server.src.config import CONFIG
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
+    from excalibur_server.src.crypto.keygen import generate_key
     from excalibur_server.src.users import User, add_user
 
     # Generate account unlock key (AUK) values

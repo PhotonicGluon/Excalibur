@@ -1,6 +1,6 @@
 import pytest
 
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.ristretto255 import Ristretto255
 
 # Test vectors from RFC9496, Appendix A
 EXPECTED_A1_RAW = [  # Multiples of the generator

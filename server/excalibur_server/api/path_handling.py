@@ -5,7 +5,7 @@ from fastapi import Depends, Request
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.exef.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 def handle_path_param(param_value: str, credentials: Credentials) -> str:

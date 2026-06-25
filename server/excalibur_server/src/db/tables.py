@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 class User(SQLModel, table=True):
