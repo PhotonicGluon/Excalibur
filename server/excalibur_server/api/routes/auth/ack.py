@@ -16,7 +16,7 @@ def get_account_creation_key(
     Debug endpoint to get the account creation key (ACK).
     """
 
-    mnemonic = to_mnemonic(CONFIG.security.account_creation_key)
+    mnemonic = to_mnemonic(CONFIG.security.opaque.public_key.to_bytes())
 
     if as_string:
         return PlainTextResponse(" ".join(mnemonic))

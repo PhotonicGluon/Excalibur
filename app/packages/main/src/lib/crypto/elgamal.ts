@@ -1,6 +1,6 @@
 import { Ristretto255 } from "./ristretto255";
 
-export class ElGamal {
+export default class ElGamal {
     static encrypt(publicKey: Ristretto255, m: Ristretto255, blindScalar?: bigint): Buffer {
         const y = blindScalar ?? Ristretto255.randomScalar();
 

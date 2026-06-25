@@ -5,10 +5,11 @@ from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.elgamal import ElGamal
 from excalibur_server.src.crypto.ristretto255 import Ristretto255
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
-from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
+from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketManager, WebSocketMsg
 
 
 @router.websocket("/opaque/register")
@@ -20,12 +21,19 @@ async def registration_endpoint(websocket: WebSocket):
     """
 
     OPAQUE = _get_opaque()
-
-    key = CONFIG.security.account_creation_key
-    ws_manager = EncryptedWebSocketManager(websocket, key)
+    ws_manager = WebSocketManager(websocket)
 
     await ws_manager.accept()
     try:
+        # Get symmetric key that will be used for encrypted communications
+        encrypted_key = (await ws_manager.receive()).data
+        key_elem = ElGamal.decrypt(CONFIG.security.opaque.private_key, encrypted_key)
+        key = key_elem.to_bytes()
+
+        # Upgrade manager to handle encrypted communications
+        ws_manager = EncryptedWebSocketManager(ws_manager._ws, key)
+        await ws_manager.send(WebSocketMsg(status="OK"))
+
         # Wait for username and registration request
         registration_request_raw_and_username = (await ws_manager.receive()).data
         registration_request_raw = registration_request_raw_and_username[: OPAQUE.registration_request_size]

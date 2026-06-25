@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { ElGamal } from "./elgamal";
+import ElGamal from "./elgamal";
 import { Ristretto255 } from "./ristretto255";
 
 const PRIV_KEY = 112358n;

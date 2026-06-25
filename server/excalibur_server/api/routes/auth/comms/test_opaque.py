@@ -17,7 +17,9 @@ from excalibur_server.src.auth.opaque import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
 from excalibur_server.src.auth.pop import generate_pop_header
 from excalibur_server.src.config import CONFIG
+from excalibur_server.src.crypto.elgamal import ElGamal
 from excalibur_server.src.crypto.exef import ExEF
+from excalibur_server.src.crypto.ristretto255 import Ristretto255
 from excalibur_server.src.db.tables import FSItem, User
 from excalibur_server.src.users import get_user_from_id
 
@@ -256,14 +258,23 @@ def test_registration(test_idx: int, monkeypatch: pytest.MonkeyPatch):
 
     # Connect and register
     with client.websocket_connect("/api/auth/opaque/register") as ws:
+        # Define a symmetric key for encryption
+        key_elem = 112358 * Ristretto255.GENERATOR
+        encrypted_key = ElGamal.encrypt(CONFIG.security.opaque.public_key, key_elem, blind_scalar=1234)
+        ws.send_json({"data": b64encode(encrypted_key).decode("utf-8"), "binary": True})
+        key = key_elem.to_bytes()
+
         # Helper functions for sending and receiving JSON messages
         def send_json(data: dict):
-            encrypted_data = ExEF(CONFIG.security.account_creation_key).encrypt(json.dumps(data).encode("utf-8"))
+            encrypted_data = ExEF(key).encrypt(json.dumps(data).encode("utf-8"))
             ws.send_bytes(encrypted_data)
 
         def recv_json() -> dict:
             encrypted_data = ws.receive_bytes()
-            return json.loads(ExEF(CONFIG.security.account_creation_key).decrypt(encrypted_data))
+            return json.loads(ExEF(key).decrypt(encrypted_data))
+
+        # Receive confirmation
+        assert recv_json()["status"] == "OK"
 
         # Send registration request and username
         to_send = OPAQUETestVectors.REGISTRATION_REQUESTS[test_idx] + username.encode("utf-8")

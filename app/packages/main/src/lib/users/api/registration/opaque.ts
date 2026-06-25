@@ -1,8 +1,11 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
+import ElGamal from "@lib/crypto/elgamal";
 import ExEF from "@lib/crypto/exef";
+import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
 
 export enum RegistrationStage {
+    SENT_ENCRYPTION_KEY,
     SENT_REGISTRATION_REQUEST,
     SENT_REGISTRATION_RECORD,
 }
@@ -20,7 +23,7 @@ export interface RegistrationState {
  * @param apiURL the URL of the API server to query
  * @param username the username to set up security details for
  * @param password the password to set up security details for
- * @param ack the Account Creation Key (ACK)
+ * @param ack the public key of the server
  * @param aukSalt the account unlock key (AUK) salt to set up
  * @param encryptedVaultKey the vault key that was encrypted using the AUK
  * @param stopLoading the function to call when any loading indicators needs to be stopped
@@ -33,23 +36,34 @@ export async function registerUserOPAQUE(
     apiURL: string,
     username: string,
     password: string,
-    ack: Buffer,
+    ack: Buffer, // TODO: Edit
     aukSalt: Buffer,
     encryptedVaultKey: Buffer,
     stopLoading?: () => void,
     setLoadingState?: (message: string) => void,
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
 ): Promise<{ success: boolean; error?: string }> {
+    // Set up WebSockets
+    const wsURL = apiURL.replace("http", "ws");
+    const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
+
+    // Generate a symmetric key for encrypting communications
+    const publicKey = Ristretto255.fromBytes(ack);
+
+    const keyElem = Ristretto255.GENERATOR.mul(Ristretto255.randomScalar());
+    const encryptedKey = ElGamal.encrypt(publicKey, keyElem);
+    const key = Buffer.from(keyElem.toBytes());
+
     // Create special request handling
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(ack).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = new ExEF(key).encrypt(Buffer.from(JSON.stringify(serializedData)));
         ws.send(encryptedData);
     }
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = ExEF.decrypt(ack, Buffer.from(await (eventData as Blob).arrayBuffer()));
+            const decryptedData = ExEF.decrypt(key, Buffer.from(await (eventData as Blob).arrayBuffer()));
             return _parseResponse(decryptedData.toString("utf-8"));
         } catch (_e) {
             // Did the server send it in plaintext?
@@ -57,14 +71,10 @@ export async function registerUserOPAQUE(
         }
     }
 
-    // Set up WebSockets
-    const wsURL = apiURL.replace("http", "ws");
-    const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
-
-    // Perform OPAQUE-3DH registration
-    setLoadingState?.("Sending registration request...");
+    // Perform registration
+    setLoadingState?.("Sending encryption key...");
     const state: RegistrationState = {
-        stage: RegistrationStage.SENT_REGISTRATION_REQUEST,
+        stage: RegistrationStage.SENT_ENCRYPTION_KEY,
     };
 
     const registrationPromise = new Promise<void>((resolve, reject) => {
@@ -78,21 +88,33 @@ export async function registerUserOPAQUE(
         });
 
         ws.addEventListener("open", () => {
-            console.log(`Connected to server; sending username '${username}' and registration request`);
-            const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(new TextEncoder().encode(password));
-            const requestAndUsername = Buffer.concat([
-                registrationRequest.serialize(),
-                new TextEncoder().encode(username),
-            ]);
-            sendResponse(ws, requestAndUsername);
-
-            state.blind = blind;
-            setLoadingState?.("Waiting for registration response...");
+            console.log(`Sending encryption key '${key.toString("hex")}' to server`);
+            const serializedData = generateResponse(encryptedKey);
+            ws.send(JSON.stringify(serializedData));
+            setLoadingState?.("Waiting for server acceptance...");
         });
 
         ws.addEventListener("message", async (event: MessageEvent<Blob | string>) => {
             const response = await parseResponse(event.data);
             try {
+                if (state.stage === RegistrationStage.SENT_ENCRYPTION_KEY) {
+                    console.log(`Connected to server; sending username '${username}' and registration request`);
+                    const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
+                        new TextEncoder().encode(password),
+                    );
+                    const requestAndUsername = Buffer.concat([
+                        registrationRequest.serialize(),
+                        new TextEncoder().encode(username),
+                    ]);
+                    sendResponse(ws, requestAndUsername);
+
+                    state.stage = RegistrationStage.SENT_REGISTRATION_REQUEST;
+                    state.blind = blind;
+                    setLoadingState?.("Waiting for registration response...");
+
+                    return;
+                }
+
                 if (state.stage === RegistrationStage.SENT_REGISTRATION_REQUEST) {
                     if (response.status === "ERR") {
                         ws.close();
