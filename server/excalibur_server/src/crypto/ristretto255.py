@@ -29,10 +29,10 @@ class Ristretto255:
         """
         Initializes a point with the given coordinates.
 
-        :param x: The x-coordinate of the point
-        :param y: The y-coordinate of the point
-        :param z: The z-coordinate of the point
-        :param t: The t-coordinate of the point
+        :param x: the x-coordinate of the point
+        :param y: the y-coordinate of the point
+        :param z: the z-coordinate of the point
+        :param t: the t-coordinate of the point
         """
 
         self.x = x % self.P
@@ -42,7 +42,7 @@ class Ristretto255:
 
     # Magic methods
     def __neg__(self) -> Self:
-        return self.__class__(((-self.x) % self.P, self.y, self.z, (-self.t) % self.P))
+        return self.__class__((-self.x) % self.P, self.y, self.z, (-self.t) % self.P)
 
     def __add__(self, other: Self) -> Self:
         if self.P != other.P or self.D != other.D:
@@ -99,6 +99,9 @@ class Ristretto255:
             (self.y * other.y) % self.P == (self.x * other.x) % self.P
         )
 
+    def __repr__(self) -> str:
+        return f"Ristretto255(x={self.x}, y={self.y}, z={self.z}, t={self.t})"
+
     # Helper methods
     @classmethod
     def _is_negative(cls, e: int) -> bool:
@@ -128,8 +131,8 @@ class Ristretto255:
         """
         The `SQRT_RATIO_M1` function from section 4.2.
 
-        :param u: The numerator
-        :param v: The denominator
+        :param u: the numerator
+        :param v: the denominator
         :returns: a tuple of two elements. The first is a boolean indicating whether `u/v` is a
             square in the field GF(P). The second depends:
             - `+sqrt(u/v)` if `u` and `v` are nonzero and `u/v` is square in the field
@@ -324,9 +327,9 @@ class Ristretto255:
     @classmethod
     def derive(cls, b: bytes) -> Self:
         """
-        Derives a point on the curve from a `KEY_LENGTH`-byte string.
+        Derives a point on the curve from a `2*KEY_LENGTH`-byte string.
 
-        :param b: a `KEY_LENGTH`-byte string
+        :param b: a `2*KEY_LENGTH`-byte string
         :returns: a point on the curve
         """
 
