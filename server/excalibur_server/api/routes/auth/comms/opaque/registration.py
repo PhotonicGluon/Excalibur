@@ -16,8 +16,6 @@ from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketM
 async def registration_endpoint(websocket: WebSocket):
     """
     Endpoint that handles the registration communication of incoming requests.
-
-    All messages should be encrypted with the Account Creation Key (ACK).
     """
 
     OPAQUE = _get_opaque()
@@ -27,7 +25,7 @@ async def registration_endpoint(websocket: WebSocket):
     try:
         # Get symmetric key that will be used for encrypted communications
         encrypted_key = (await ws_manager.receive()).data
-        key_elem = ElGamal.decrypt(CONFIG.security.opaque.private_key, encrypted_key)
+        key_elem = ElGamal.decrypt(CONFIG.security.crypto.private_key, encrypted_key)
         key = key_elem.to_bytes()
 
         # Upgrade manager to handle encrypted communications
@@ -104,7 +102,7 @@ def _get_oprf_seed() -> bytes:
     :return: the OPRF seed
     """
 
-    return CONFIG.security.opaque.oprf_seed
+    return CONFIG.security.crypto.oprf_seed
 
 
 def _get_public_key() -> Ristretto255:
@@ -116,7 +114,7 @@ def _get_public_key() -> Ristretto255:
     :return: the server public key
     """
 
-    return CONFIG.security.opaque.public_key
+    return CONFIG.security.crypto.public_key
 
 
 def _get_credential_identifier(username: str) -> bytes:

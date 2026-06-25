@@ -19,8 +19,6 @@ def init_server(
     import shutil
     from base64 import b64encode
 
-    from Crypto.Random import get_random_bytes
-
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
     from excalibur_server.src.auth.opaque import OPAQUE
     from excalibur_server.src.bip39 import to_mnemonic
@@ -45,28 +43,22 @@ def init_server(
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
         # Replace the default parameters
-        account_creation_key = get_random_bytes(32)
         oprf_seed = OPAQUE.generate_seed()
         private_key, public_key = OPAQUE.generate_keys(for_export=True)
 
         with config_path.open("r+") as f:
             contents = f.read()
-            contents = contents.replace("Account Creation Key Goes Here!!", account_creation_key.hex())
             contents = contents.replace("OPRF seed goes here!", oprf_seed.hex())
-            contents = contents.replace(
-                "Public key for the OPAQUE protocol goes here", b64encode(public_key).decode("utf-8")
-            )
-            contents = contents.replace(
-                "Private key for OPAQUE protocol goes here", b64encode(private_key).decode("utf-8")
-            )
+            contents = contents.replace("Public key for the server goes here", b64encode(public_key).decode("utf-8"))
+            contents = contents.replace("Private key for the server goes here", b64encode(private_key).decode("utf-8"))
             f.seek(0)
             f.write(contents)
             f.truncate()
 
         # Report completion
         typer.secho("done.", fg="green")
-        typer.secho("Account Creation Key Mnemonic:", fg="cyan")
-        typer.secho("    " + " ".join(to_mnemonic(account_creation_key)), fg="cyan")
+        typer.secho("Server Public Key Mnemonic:", fg="cyan")
+        typer.secho("    " + " ".join(to_mnemonic(public_key)), fg="cyan")
     else:
         typer.secho("Config file already exists; not changing", fg="yellow")
 

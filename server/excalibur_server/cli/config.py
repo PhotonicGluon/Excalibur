@@ -90,7 +90,6 @@ def update_config():
                 path = f"{current_path}.{key}" if current_path else key
 
                 # Handle mappings of keys
-                print(path, path in key_mapping)
                 if path in key_mapping:
                     old_val = _get_value_by_path(src_doc, key_mapping[path])
                     if old_val is not None:
@@ -218,6 +217,12 @@ def update_config():
         new_config = _migrate_config(
             config,
             new_config,
+            key_mapping={
+                "security.crypto": "security.opaque",
+                "security.crypto.oprf_seed": "security.opaque.oprf_seed",
+                "security.crypto.public_key": "security.opaque.public_key",
+                "security.crypto.private_key": "security.opaque.private_key",
+            },
         )
 
         new_config["version"] = 6
@@ -297,3 +302,17 @@ def generate_keys():
         dump(config, f)
 
     typer.secho("Keys (re)generated!", fg="green")
+
+
+@config_app.command("public-key")
+def get_server_public_key():
+    """
+    Print the server's public key.
+
+    Assumes the server has been initialized.
+    """
+
+    from excalibur_server.src.bip39 import to_mnemonic
+    from excalibur_server.src.config import CONFIG
+
+    typer.secho(" ".join(to_mnemonic(CONFIG.security.crypto.public_key)))

@@ -9,7 +9,7 @@ from excalibur_server.src.crypto.ristretto255 import Ristretto255
 
 
 class Security(BaseModel):
-    class OPAQUE(BaseModel):
+    class Crypto(BaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
         oprf_seed: bytes
@@ -55,9 +55,8 @@ class Security(BaseModel):
             return value
 
     session_duration: int
-    account_creation_key: bytes
     key_strength: KeyStrength
-    opaque: OPAQUE
+    crypto: Crypto
     e2ee: E2EE
     pop: PoP
 
@@ -65,14 +64,4 @@ class Security(BaseModel):
     def validate_positive(cls, value: int) -> int:
         if value <= 0:
             raise ValueError("must be greater than 0")
-        return value
-
-    @field_validator("account_creation_key", mode="before")
-    def validate_account_creation_key(cls, value: str) -> bytes:
-        try:
-            value = bytes.fromhex(value)
-        except ValueError:
-            raise ValueError("must be a valid hex string")
-        if len(value) != 32:
-            raise ValueError("must be 32 bytes long")
         return value

@@ -9,7 +9,7 @@ describe("New User Page", () => {
         cy.get("[label='Username']").should("exist");
         cy.get("[label='Password']").should("exist");
         cy.get("[label='Confirm Password']").should("exist");
-        cy.get("#ack-input input").should("have.length", 24);
+        cy.get("#public-key-input input").should("have.length", 24);
     });
 
     it("should handle initial signup gracefully", () => {

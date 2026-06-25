@@ -37,7 +37,7 @@ const NewUser: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [obfuscatedNames, setObfuscatedNames] = useState(true);
-    const [ackState, setACKState] = useState<boolean | null>(null);
+    const [pubKeyState, setPubKeyState] = useState<boolean | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Signing up...");
@@ -69,7 +69,7 @@ const NewUser: React.FC = () => {
     /**
      * Handles the confirmation of the registration values.
      */
-    async function onConfirm(ack: Buffer) {
+    async function onConfirm(publicKey: Buffer) {
         // Check values
         if (!validateValues()) {
             presentAlert({
@@ -105,7 +105,7 @@ const NewUser: React.FC = () => {
             auth.serverInfo!.apiURL!,
             username,
             password,
-            ack,
+            publicKey,
             aukSalt,
             encryptedVaultKey,
             () => setIsLoading(false),
@@ -242,9 +242,9 @@ const NewUser: React.FC = () => {
                             </IonCheckbox>
                             <hr className="mt-2" />
 
-                            {/* Account creation key & signup button */}
-                            <div id="ack-input">
-                                <IonLabel>Account Creation Key</IonLabel>
+                            {/* Server public key & signup button */}
+                            <div id="public-key-input">
+                                <IonLabel>Server Public Key</IonLabel>
                                 <BIP39MnemonicInput
                                     numWords={24}
                                     maxSuggestions={5}
@@ -252,15 +252,15 @@ const NewUser: React.FC = () => {
                                         onConfirm(ack); // Triggers the registration process
                                     }}
                                     onError={() => {
-                                        setACKState(false);
+                                        setPubKeyState(false);
                                         setTimeout(() => {
-                                            setACKState(null);
+                                            setPubKeyState(null);
                                         }, 2000);
                                     }}
                                 />
                                 <div className="mb-2 h-8 text-center">
-                                    {ackState === false && (
-                                        <IonText color="danger">Invalid account creation key</IonText>
+                                    {pubKeyState === false && (
+                                        <IonText color="danger">Invalid server public key</IonText>
                                     )}
                                 </div>
                             </div>

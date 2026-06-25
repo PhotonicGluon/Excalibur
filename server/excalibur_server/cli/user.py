@@ -83,9 +83,9 @@ def add_user(
         registration_request, blind = opaque_client.create_registration_request(password)
         registration_response = opaque_server.create_registration_response(
             registration_request,
-            CONFIG.security.opaque.public_key,
+            CONFIG.security.crypto.public_key,
             username.encode("utf-8"),
-            CONFIG.security.opaque.oprf_seed,
+            CONFIG.security.crypto.oprf_seed,
         )
         registration_record, _ = opaque_client.finalize_registration_request(
             password,
@@ -127,18 +127,3 @@ def remove_user(username: Annotated[str, typer.Option(help="Username for the API
         return
 
     typer.secho(f"Removed '{username}' from the database.", fg="green")
-
-
-@user_app.command("ack")
-def get_account_creation_key():
-    """
-    Print the account creation key.
-
-    Assumes the server has been initialized.
-    """
-
-    from excalibur_server.src.bip39 import to_mnemonic
-    from excalibur_server.src.config import CONFIG
-
-    # TODO: Update this
-    typer.secho(" ".join(to_mnemonic(CONFIG.security.opaque.public_key)))
