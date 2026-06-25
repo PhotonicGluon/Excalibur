@@ -26,11 +26,43 @@ def update_config():
 
     from tomlkit import TOMLDocument, dump, dumps, load, loads
     from tomlkit.exceptions import ParseError
-    from tomlkit.items import Table
+    from tomlkit.items import Item, Table
 
-    from excalibur_server.consts import CONFIG_FILE
+    from excalibur_server.consts import CONFIG_FILE, CONFIG_TEMPLATE_FILE
+
+    # Read the config
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            config = load(f)
+    except FileNotFoundError:
+        typer.secho("Config file not found!", fg="red")
+        raise typer.Exit(1)
+    except ParseError as e:
+        typer.secho(f"Config file is invalid: {e}", fg="red")
+        raise typer.Exit(1)
+
+    # Get the template config file
+    try:
+        with open(CONFIG_TEMPLATE_FILE, "r") as f:
+            template_config = load(f)
+    except FileNotFoundError:
+        typer.secho("Template config file not found!", fg="red")
+        raise typer.Exit(1)
 
     # Helpers
+    def _is_table(obj: Item) -> bool:
+        return hasattr(obj, "items") and hasattr(obj, "keys")
+
+    def _get_value_by_path(config: Table, path: str):
+        keys = path.split(".")
+        current = config
+        for key in keys:
+            if _is_table(current) and key in current:
+                current = current[key]
+            else:
+                return None
+        return current
+
     def _add_new_field(table: Table, key: str, value: Any, top_comment: str = "", side_comment: str = "") -> Table:
         """
         Helper method that adds a new field to a TOML table.
@@ -48,6 +80,34 @@ def update_config():
 
         table = loads(new_table_str)[table.name]
         return table
+
+    def _migrate_config(src_doc: TOMLDocument, dst_doc: TOMLDocument, key_mapping: dict[str, str] | None = None):
+        if key_mapping is None:
+            key_mapping = {}
+
+        def recursive_update(dst_table: Table, current_path=""):
+            for key, new_value in dst_table.items():
+                path = f"{current_path}.{key}" if current_path else key
+
+                # Handle mappings of keys
+                print(path, path in key_mapping)
+                if path in key_mapping:
+                    old_val = _get_value_by_path(src_doc, key_mapping[path])
+                    if old_val is not None:
+                        dst_table[key] = old_val
+                    continue
+
+                # Otherwise, copy over old value
+                old_table = _get_value_by_path(src_doc, current_path) if current_path else src_doc
+                if old_table is not None and key in old_table:
+                    old_value = old_table[key]
+                    if _is_table(new_value) and _is_table(old_value):
+                        recursive_update(new_value, path)
+                    else:
+                        dst_table[key] = old_value
+
+        recursive_update(dst_doc)
+        return dst_doc
 
     # Updaters
     def v1_to_v2(config: TOMLDocument) -> TOMLDocument:
@@ -153,13 +213,15 @@ def update_config():
 
         return config
 
-    def v5_to_v6(config: dict) -> dict:
-        config["version"] = 6
+    def v5_to_v6(config: TOMLDocument) -> TOMLDocument:
+        new_config = template_config.copy()
+        new_config = _migrate_config(
+            config,
+            new_config,
+        )
 
-        # Remove the SRP table
-        del config["security"]["srp"]
-
-        return config
+        new_config["version"] = 6
+        return new_config
 
     SETTINGS_VERSION = 6
     UPDATERS = {
@@ -169,17 +231,6 @@ def update_config():
         4: v4_to_v5,
         5: v5_to_v6,
     }
-
-    # Read the config
-    try:
-        with open(CONFIG_FILE, "r") as f:
-            config = load(f)
-    except FileNotFoundError:
-        typer.secho("Config file not found!", fg="red")
-        raise typer.Exit(1)
-    except ParseError as e:
-        typer.secho(f"Config file is invalid: {e}", fg="red")
-        raise typer.Exit(1)
 
     # Determine what updaters to run
     curr_version = config["version"]
