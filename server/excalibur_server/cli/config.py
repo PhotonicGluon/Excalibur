@@ -1,3 +1,5 @@
+from typing import Annotated
+
 import typer
 
 config_app = typer.Typer(no_args_is_help=True, help="Commands relating to configuration.")
@@ -213,19 +215,19 @@ def update_config():
         return config
 
     def v5_to_v6(config: TOMLDocument) -> TOMLDocument:
-        new_config = template_config.copy()
-        new_config = _migrate_config(
-            config,
-            new_config,
-            key_mapping={
-                "security.crypto": "security.opaque",
-                "security.crypto.oprf_seed": "security.opaque.oprf_seed",
-                "security.crypto.public_key": "security.opaque.public_key",
-                "security.crypto.private_key": "security.opaque.private_key",
-            },
-        )
+        from base64 import b64encode
 
+        from excalibur_server.src.auth.opaque import OPAQUE
+
+        new_config = template_config.copy()
+        new_config = _migrate_config(config, new_config)
         new_config["version"] = 6
+
+        # Generate new account creation keys
+        private_key, public_key = OPAQUE.generate_keys(for_export=True)
+        new_config["security"]["account_creation"]["public_key"] = b64encode(public_key).decode("utf-8")
+        new_config["security"]["account_creation"]["private_key"] = b64encode(private_key).decode("utf-8")
+
         return new_config
 
     SETTINGS_VERSION = 6
@@ -258,9 +260,14 @@ def update_config():
 
 
 @config_app.command(name="generate-keys")
-def generate_keys():
+def generate_keys(
+    validate_config: Annotated[
+        bool, typer.Option("--validate-config", "-v", help="Whether to validate the config before generating keys.")
+    ] = True,
+    silent: Annotated[bool, typer.Option("-s", "--silent", help="Whether to silence all output.")] = False,
+):
     """
-    Generate Curve25519 keys for OPAQUE protocol.
+    Generate keys for account creation and for the OPAQUE protocol.
     """
 
     from base64 import b64encode
@@ -271,13 +278,14 @@ def generate_keys():
     from excalibur_server.consts import CONFIG_FILE
     from excalibur_server.src.auth.opaque import OPAQUE
 
-    # Check if the config is valid
-    # (Just importing is enough to validate the config)
-    try:
-        from excalibur_server.src.config import CONFIG as CONFIG
-    except Exception as e:
-        typer.secho(f"Config is invalid: {e}", fg="red")
-        raise typer.Exit(1)
+    if validate_config:
+        # Check if the config is valid
+        # (Just importing is enough to validate the config)
+        try:
+            from excalibur_server.src.config import CONFIG as CONFIG
+        except Exception as e:
+            typer.secho(f"Config is invalid: {e}", fg="red")
+            raise typer.Exit(1)
 
     # Read the config
     try:
@@ -291,28 +299,20 @@ def generate_keys():
         raise typer.Exit(1)
 
     # Generate new keys
-    typer.secho("Generating new keys...", fg="yellow")
-    private_key, public_key = OPAQUE.generate_keys(for_export=True)
+    if not silent:
+        typer.secho("Generating new keys...", fg="yellow")
 
-    config["security"]["opaque"]["private_key"] = b64encode(private_key).decode("utf-8")
-    config["security"]["opaque"]["public_key"] = b64encode(public_key).decode("utf-8")
+    account_creation_private_key, account_creation_public_key = OPAQUE.generate_keys(for_export=True)
+    opaque_private_key, opaque_public_key = OPAQUE.generate_keys(for_export=True)
+
+    config["security"]["account_creation"]["private_key"] = b64encode(account_creation_private_key).decode("utf-8")
+    config["security"]["account_creation"]["public_key"] = b64encode(account_creation_public_key).decode("utf-8")
+    config["security"]["opaque"]["private_key"] = b64encode(opaque_private_key).decode("utf-8")
+    config["security"]["opaque"]["public_key"] = b64encode(opaque_public_key).decode("utf-8")
 
     # Write the config
     with open(CONFIG_FILE, "w") as f:
         dump(config, f)
 
-    typer.secho("Keys (re)generated!", fg="green")
-
-
-@config_app.command("public-key")
-def get_server_public_key():
-    """
-    Print the server's public key.
-
-    Assumes the server has been initialized.
-    """
-
-    from excalibur_server.src.bip39 import to_mnemonic
-    from excalibur_server.src.config import CONFIG
-
-    typer.secho(" ".join(to_mnemonic(CONFIG.security.crypto.public_key)))
+    if not silent:
+        typer.secho("Keys (re)generated!", fg="green")

@@ -23,7 +23,7 @@ export interface RegistrationState {
  * @param apiURL the URL of the API server to query
  * @param username the username to set up security details for
  * @param password the password to set up security details for
- * @param publicKey the public key of the server
+ * @param ack the account creation key (ACK) of the server
  * @param aukSalt the account unlock key (AUK) salt to set up
  * @param encryptedVaultKey the vault key that was encrypted using the AUK
  * @param stopLoading the function to call when any loading indicators needs to be stopped
@@ -36,7 +36,7 @@ export async function registerUserOPAQUE(
     apiURL: string,
     username: string,
     password: string,
-    publicKey: Buffer,
+    ack: Buffer,
     aukSalt: Buffer,
     encryptedVaultKey: Buffer,
     stopLoading?: () => void,
@@ -48,7 +48,7 @@ export async function registerUserOPAQUE(
     const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
 
     // Generate a symmetric key for encrypting communications
-    const publicKeyElem = Ristretto255.fromBytes(publicKey);
+    const publicKeyElem = Ristretto255.fromBytes(ack);
 
     const keyElem = Ristretto255.GENERATOR.mul(Ristretto255.randomScalar());
     const encryptedKey = ElGamal.encrypt(publicKeyElem, keyElem);

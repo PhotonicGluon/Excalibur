@@ -260,7 +260,7 @@ def test_registration(test_idx: int, monkeypatch: pytest.MonkeyPatch):
     with client.websocket_connect("/api/auth/opaque/register") as ws:
         # Define a symmetric key for encryption
         key_elem = 112358 * Ristretto255.GENERATOR
-        encrypted_key = ElGamal.encrypt(CONFIG.security.crypto.public_key, key_elem, blind_scalar=1234)
+        encrypted_key = ElGamal.encrypt(CONFIG.security.account_creation.public_key, key_elem, blind_scalar=1234)
         ws.send_json({"data": b64encode(encrypted_key).decode("utf-8"), "binary": True})
         key = key_elem.to_bytes()
 

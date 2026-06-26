@@ -151,7 +151,7 @@ def _get_oprf_seed() -> bytes:
     :return: the OPRF seed
     """
 
-    return CONFIG.security.crypto.oprf_seed
+    return CONFIG.security.opaque.oprf_seed
 
 
 def _get_public_key() -> Ristretto255:
@@ -163,7 +163,7 @@ def _get_public_key() -> Ristretto255:
     :return: the server public key
     """
 
-    return CONFIG.security.crypto.public_key
+    return CONFIG.security.opaque.public_key
 
 
 def _get_private_key() -> int:
@@ -175,7 +175,7 @@ def _get_private_key() -> int:
     :return: the server private key
     """
 
-    return CONFIG.security.crypto.private_key
+    return CONFIG.security.opaque.private_key
 
 
 def _get_client_identity(username: str) -> bytes:

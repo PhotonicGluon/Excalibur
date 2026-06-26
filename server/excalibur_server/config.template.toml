@@ -79,18 +79,26 @@ session_duration = 3600 # 1 hour
 # Valid values: 128, 192, 256
 key_strength = 128
 
-[security.crypto]
+[security.account_creation]
+# Public key for account creation
+# SECURITY NOTE: Only reveal this value to people who want access to the server!
+public_key = "Public key for account creation goes here"
+
+# Private key for account creation
+# SECURITY NOTE: Keep this value secret and secure!
+private_key = "Private key for account creation goes here"
+
+[security.opaque]
 # The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal format
 # SECURITY NOTE: Keep this value secret and secure!
 oprf_seed = "OPRF seed goes here!"
 
-# Public key of the server
-# SECURITY NOTE: Only reveal this value to people who want access to the server!
-public_key = "Public key for the server goes here"
+# Public key for OPAQUE protocol
+public_key = "Public key for the OPAQUE protocol goes here"
 
-# Private key of the server
+# Private key for OPAQUE protocol
 # SECURITY NOTE: Keep this value secret and secure!
-private_key = "Private key for the server goes here"
+private_key = "Private key for OPAQUE protocol goes here"
 
 [security.e2ee]
 # The maximum number of end-to-end encryption communication sessions to cache

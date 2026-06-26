@@ -74,7 +74,7 @@ Cypress.Commands.add("signup", (serverURL: string, username: string, password: s
     cy.session(
         ["signup", serverURL, username, password],
         () => {
-            let pubKey: string[];
+            let ack: string[];
 
             cy.onboard(serverURL);
             cy.visit("/new-user");
@@ -82,13 +82,13 @@ Cypress.Commands.add("signup", (serverURL: string, username: string, password: s
             // Initial checks
             cy.get("#vault-key-modal").should("not.be.visible");
 
-            // Get server public key
+            // Get ACK
             cy.request({
-                url: `${serverURL}/api/auth/public-key`,
+                url: `${serverURL}/api/auth/ack`,
                 method: "GET",
             }).then((response) => {
                 expect(response.body).to.have.length(24);
-                pubKey = response.body;
+                ack = response.body;
             });
 
             // Fill in signup form
@@ -96,12 +96,12 @@ Cypress.Commands.add("signup", (serverURL: string, username: string, password: s
             cy.get("[label='Password']").find("input").type(password);
             cy.get("[label='Confirm Password']").find("input").type(password);
 
-            // Fill in public key by pasting into the first input box
-            cy.get("#public-key-input")
+            // Fill in Account Creation Key (ACK) by pasting into the first input box
+            cy.get("#ack-input")
                 .find("input")
                 .eq(0)
                 .trigger("paste", {
-                    clipboardData: { getData: () => pubKey.join(" ") },
+                    clipboardData: { getData: () => ack.join(" ") },
                 });
 
             cy.contains("ion-button", "Confirm").click();

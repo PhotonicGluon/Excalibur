@@ -8,15 +8,15 @@ from excalibur_server.src.bip39.operation import to_mnemonic
 from excalibur_server.src.config import CONFIG
 
 
-@router.get("/public-key", tags=["debug"], response_class=JSONResponse)
-def get_server_public_key_endpoint(
-    as_string: Annotated[bool, Query(description="Whether to return the public key as a string")] = False,
+@router.get("/ack", tags=["debug"], response_class=JSONResponse)
+def get_account_creation_key(
+    as_string: Annotated[bool, Query(description="Whether to return the ACK as a string")] = False,
 ):
     """
-    Debug endpoint to get the server's public key.
+    Debug endpoint to get the account creation key (ACK).
     """
 
-    mnemonic = to_mnemonic(CONFIG.security.crypto.public_key.to_bytes())
+    mnemonic = to_mnemonic(CONFIG.security.account_creation.public_key.to_bytes())
 
     if as_string:
         return PlainTextResponse(" ".join(mnemonic))

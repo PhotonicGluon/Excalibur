@@ -9,7 +9,23 @@ from excalibur_server.src.crypto.ristretto255 import Ristretto255
 
 
 class Security(BaseModel):
-    class Crypto(BaseModel):
+    class AccountCreation(BaseModel):
+        model_config = ConfigDict(arbitrary_types_allowed=True)
+
+        public_key: Ristretto255
+        private_key: int
+
+        @field_validator("public_key", mode="before")
+        def edit_public_key(cls, value: str) -> bytes:
+            raw = b64decode(value)
+            return Ristretto255.from_bytes(raw)
+
+        @field_validator("private_key", mode="before")
+        def edit_private_key(cls, value: str) -> bytes:
+            raw = b64decode(value)
+            return int.from_bytes(raw, byteorder="little")
+
+    class OPAQUE(BaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
         oprf_seed: bytes
@@ -56,7 +72,8 @@ class Security(BaseModel):
 
     session_duration: int
     key_strength: KeyStrength
-    crypto: Crypto
+    account_creation: AccountCreation
+    opaque: OPAQUE
     e2ee: E2EE
     pop: PoP
 
