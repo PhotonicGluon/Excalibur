@@ -1,4 +1,5 @@
 import hashlib
+import json
 import unicodedata
 from typing import TypedDict
 
@@ -50,7 +51,7 @@ def fast_hash(additional_info: KeygenAdditionalInfo, salt: bytes) -> bytes:
     :returns: The hashed password
     """
 
-    return HKDF(f"{{\"username\":\"{additional_info['username']}\"}}".encode("UTF-8"), KEY_LENGTH, salt, SHA256)
+    return HKDF(json.dumps(additional_info, separators=(",", ":")).encode("UTF-8"), KEY_LENGTH, salt, SHA256)
 
 
 def generate_key(password: str, additional_info: KeygenAdditionalInfo, salt: bytes) -> bytes:
