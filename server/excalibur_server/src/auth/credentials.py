@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from hmac import compare_digest
 from typing import Annotated, Callable
 
 from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
@@ -120,7 +121,7 @@ async def _verify_and_extract_credentials(
 
     # Check if the SRP PoP is valid
     hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)
-    if hmac_computed != hmac:
+    if not compare_digest(hmac_computed, hmac):
         raise raise_exception("Invalid PoP")
 
     return Credentials(user_id=user_id, comm_uuid=comm_uuid)

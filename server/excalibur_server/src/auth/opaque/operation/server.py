@@ -1,3 +1,5 @@
+from hmac import compare_digest
+
 from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.opaque.misc import xor
@@ -138,7 +140,7 @@ class OPAQUEServer(BaseOPAQUE):
         :raises OPAQUEClientAuthError: if the client MAC does not match the expected MAC
         """
 
-        if ke3.client_mac != self._expected_client_mac:
+        if not compare_digest(ke3.client_mac, self._expected_client_mac):
             raise OPAQUEClientAuthError("client MAC does not match expected MAC")
 
         return self._session_key

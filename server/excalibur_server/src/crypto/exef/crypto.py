@@ -1,3 +1,4 @@
+from hmac import compare_digest
 from queue import Empty, Queue
 from typing import Literal
 
@@ -231,7 +232,7 @@ class Decryptor(Cryptor):
             header_copy.header_mac = b"\x00" * 14
             hmac = HMAC.new(self._mac_key, header_copy.serialize_as_bytes(), SHA256)
             header_mac = hmac.digest()[:14]
-            if header_mac != self._header.header_mac:
+            if not compare_digest(header_mac, self._header.header_mac):
                 raise ValueError("header MAC mismatch")
 
             self._cipher = AES.new(self._crypto_key, AES.MODE_GCM, nonce=self._header.nonce)
