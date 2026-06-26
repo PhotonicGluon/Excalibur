@@ -158,7 +158,7 @@ async def get_credentials(
     """
 
     def get_path_and_method() -> tuple[str, str]:
-        return get_url_encoded_path(request.url), request.method
+        return get_url_encoded_path(request.url, include_query=True), request.method
 
     def raise_http_exception(detail: str):
         headers = {"WWW-Authenticate": "Bearer", "X-Auth-PoP": POP_HEADER_PATTERN}

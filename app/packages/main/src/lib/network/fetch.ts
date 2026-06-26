@@ -51,7 +51,7 @@ export async function popFetch(
     let popHeader;
     if (options && masterKey) {
         const method = options.method ?? "GET";
-        const path = getURLEncodedPath(url);
+        const path = getURLEncodedPath(url, true);
         popHeader = generatePoPHeader(masterKey, method, path);
     }
 
@@ -86,7 +86,7 @@ export function popXHR(
     const xhr = timedXHR(url, method, timeout);
 
     if (masterKey) {
-        const path = getURLEncodedPath(url);
+        const path = getURLEncodedPath(url, true);
         const popHeader = generatePoPHeader(masterKey, method, path);
 
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
