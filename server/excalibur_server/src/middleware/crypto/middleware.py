@@ -162,20 +162,35 @@ class EncryptionHandler:
         :return: The decrypted message
         """
 
-        # Decrypt body
-        decrypted_body = b""
-        while decrypted_body == b"":
-            encrypted_body: bytes = message.get("body", b"")
-            self._exef.decryptor.update(encrypted_body)
-            decrypted_body = self._exef.decryptor.get()
+        # Collect entire encrypted body before touching plaintext
+        self._exef.decryptor.update(message.get("body", b""))
+        while message.get("more_body", False):
+            message = await self._receive()
+            self._exef.decryptor.update(message.get("body", b""))
 
-            if decrypted_body == b"":
-                message = await self._receive()
+        decrypted_body = self._exef.decryptor.get()
 
-        if self._exef.decryptor.fully_processed:
+        # Make sure that the auth tag is present and already accounted for
+        if not self._exef.decryptor.fully_processed:
+            # Footer was stripped; treat as a credentials/integrity failure
+            self._to_raise_credentials_exception = True
+            message["body"] = b""
+            message["more_body"] = False
+            return message
+
+        # Make sure that the GCM tag is valid
+        try:
             self._exef.decryptor.verify()
+        except ValueError:
+            # Mismatched tag; ciphertext likely tampered with
+            self._to_raise_credentials_exception = True
+            message["body"] = b""
+            message["more_body"] = False
+            return message
 
+        # Update body
         message["body"] = decrypted_body
+        message["more_body"] = False  # All body data is in this single message
 
         # Update headers
         headers = MutableHeaders(raw=self._scope["headers"])
