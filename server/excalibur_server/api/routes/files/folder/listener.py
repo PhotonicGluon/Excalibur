@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.files import router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
@@ -11,13 +11,12 @@ from excalibur_server.src.files.update_manager import file_update_manager
 async def directory_changes_listener_endpoint(
     websocket: WebSocket,
     credentials: Annotated[Credentials, Depends(get_credentials_ws)],
-    encrypted: Annotated[bool, Query(description="Whether the connection should be encrypted")] = True,
 ):
     """
     Listens for directory changes and sends updates to the client.
     """
 
-    await file_update_manager.connect(credentials, websocket, encrypted)
+    await file_update_manager.connect(credentials, websocket, encrypted=True)
 
     try:
         # Keep the connection alive

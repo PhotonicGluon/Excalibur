@@ -93,7 +93,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
 
     # Connect and change the record
     with auth_client.websocket_connect(
-        f"{EDIT_RECORD_PATH}?auth_token={token}&hmac_validation={quote_plus(pop_header)}&encrypted=false"
+        f"{EDIT_RECORD_PATH}?auth_token={token}&hmac_validation={quote_plus(pop_header)}"
     ) as ws:
         # Helper functions for sending and receiving JSON messages
         def send_json(data: dict):
