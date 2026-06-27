@@ -112,9 +112,6 @@ async def _verify_and_extract_credentials(
     if nonce in POP_NONCE_CACHE:
         raise raise_exception("Nonce reused")
 
-    # Add nonce to cache of known nonces
-    POP_NONCE_CACHE[nonce] = True
-
     # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]
     path, method = get_path_and_method()
@@ -123,6 +120,9 @@ async def _verify_and_extract_credentials(
     hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)
     if not compare_digest(hmac_computed, hmac):
         raise raise_exception("Invalid PoP")
+
+    # Add nonce to cache of known nonces
+    POP_NONCE_CACHE[nonce] = True
 
     return Credentials(user_id=user_id, comm_uuid=comm_uuid)
 

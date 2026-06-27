@@ -115,20 +115,28 @@ class TestHTTPPoPChecks:
             nonce=nonce,
         )
 
-        # First request should succeed
+        # Request with incorrect PoP header should fail, and not consume the nonce
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={"X-Auth-PoP": header[:-2] + "0="},
+        )
+        assert response.status_code == 401, response.json()["detail"]
+        assert response.json()["detail"] == "Invalid PoP"
+
+        # Next request with valid header should succeed (and not fail with nonce reuse)
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={"X-Auth-PoP": header},
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, response.json()["detail"]
         assert response.json()["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
 
-        # Second request should fail
+        # Third request with same header should fail (nonce reuse)
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={"X-Auth-PoP": header},
         )
-        assert response.status_code == 401
+        assert response.status_code == 401, response.json()["detail"]
         assert response.json()["detail"] == "Nonce reused"
 
 
