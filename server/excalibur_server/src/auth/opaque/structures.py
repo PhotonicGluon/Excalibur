@@ -1,3 +1,4 @@
+from os import urandom
 from typing import Self
 
 from pydantic import BaseModel, ConfigDict, model_serializer
@@ -100,8 +101,8 @@ class RegistrationRecord(BaseModel):
 
 
 RegistrationRecord.FAKE = RegistrationRecord(
-    client_public_key=Ristretto255.GENERATOR,
-    masking_key=b"\x00" * 32,
+    client_public_key=Ristretto255.random_scalar() * Ristretto255.GENERATOR,
+    masking_key=urandom(32),
     envelope=Envelope.FAKE,
 )
 
