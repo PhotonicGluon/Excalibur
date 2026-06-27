@@ -34,7 +34,7 @@ OKMS = [
 
 @pytest.mark.parametrize("ikm, salt, info, length, prk, okm", list(zip(IKMS, SALTS, INFOS, LENGTHS, PRKS, OKMS)))
 def test_hkdf(ikm, salt, info, length, prk, okm):
-
     hkdf = HKDF("sha256")
     assert hkdf.extract(bytes.fromhex(salt), bytes.fromhex(ikm)) == bytes.fromhex(prk)
     assert hkdf.expand(bytes.fromhex(prk), bytes.fromhex(info), length) == bytes.fromhex(okm)
+    assert hkdf.hkdf(bytes.fromhex(ikm), bytes.fromhex(salt), bytes.fromhex(info), length) == bytes.fromhex(okm)

@@ -61,3 +61,16 @@ class HKDF:
             t = self.hmac_hash(prk, t + info + bytes([i]))
             okm += t
         return okm[:length]
+
+    def hkdf(self, ikm: bytes, salt: bytes | None, info: bytes, length: int) -> bytes:
+        """
+        HMAC-based Key Derivation Function (HKDF).
+
+        :param ikm: input keying material
+        :param salt: optional salt value
+        :param info: optional context and application specific information
+        :param length: length of output keying material in bytes
+        :returns: output keying material of `length` bytes
+        """
+        prk = self.extract(salt, ikm)
+        return self.expand(prk, info, length)

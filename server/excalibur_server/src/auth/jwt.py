@@ -18,7 +18,7 @@ def _generate_key(username: str, key: bytes) -> bytes:
     """
 
     hkdf = HKDF("sha256")
-    return hkdf.expand(hkdf.extract(b"", key), username.encode("utf-8"), hkdf.digest_size)
+    return hkdf.hkdf(key, b"", username.encode("utf-8"), hkdf.digest_size)
 
 
 def generate_token(sub: str, data: dict, key: bytes, expiry: int = 3600) -> str:

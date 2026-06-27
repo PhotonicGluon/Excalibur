@@ -1,9 +1,8 @@
 import createHmac from "create-hmac";
 
 /** Supported algorithms for HKDF */
-export type HKDFAlgorithm = "sha1" | "sha256" | "sha512";
+export type HKDFAlgorithm = "sha256" | "sha512";
 const HASH_LEN: Record<HKDFAlgorithm, number> = {
-    sha1: 20,
     sha256: 32,
     sha512: 64,
 };
@@ -71,7 +70,7 @@ export default class HKDF {
      * @param salt optional salt value
      * @param info optional context and application specific information
      * @param length length of output keying material in bytes
-     * @returns output keying material (of `l` bytes)
+     * @returns output keying material of `length` bytes
      */
     hkdf(ikm: Buffer, salt: Buffer | null, info: Buffer, length: number): Buffer {
         const prk = this.extract(salt, ikm);
