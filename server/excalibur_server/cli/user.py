@@ -72,13 +72,13 @@ def add_user(
     vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
 
     if auth_protocol == AuthProtocol.OPAQUE_3DH:
-        from excalibur_server.src.auth.opaque import OPAQUE as opaque_server
-        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY, OPAQUEServer
         from excalibur_server.src.auth.opaque.operation import OPAQUEClient
 
         # Perform OPAQUE registration
         password = password.encode("utf-8")
         opaque_client = OPAQUEClient(oprf_type=OPAQUE_OPRF_TYPE)
+        opaque_server = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
         registration_request, blind = opaque_client.create_registration_request(password)
         registration_response = opaque_server.create_registration_response(
@@ -140,5 +140,4 @@ def get_account_creation_key():
     from excalibur_server.src.bip39 import to_mnemonic
     from excalibur_server.src.config import CONFIG
 
-    # TODO: Update this
-    typer.secho(" ".join(to_mnemonic(CONFIG.security.opaque.public_key)))
+    typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation.public_key)))

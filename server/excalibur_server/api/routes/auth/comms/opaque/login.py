@@ -10,7 +10,7 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.consts import FAKE_USER_UUID
 from excalibur_server.src.auth.credentials import generate_auth_token
-from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
 from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
@@ -139,7 +139,7 @@ def _get_opaque() -> OPAQUEServer:
     :return: the OPAQUE server instance
     """
 
-    return OPAQUE
+    return OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
 
 def _get_oprf_seed() -> bytes:

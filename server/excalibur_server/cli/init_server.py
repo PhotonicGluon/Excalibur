@@ -20,7 +20,7 @@ def init_server(
 
     from excalibur_server.cli.config import generate_keys
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
-    from excalibur_server.src.auth.opaque import OPAQUE
+    from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
     # Handle resetting
     if reset:
@@ -42,7 +42,7 @@ def init_server(
         shutil.copyfile(CONFIG_TEMPLATE_FILE, config_path)
 
         # Replace the default parameters
-        oprf_seed = OPAQUE.generate_seed()
+        oprf_seed = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE).generate_seed()
         # private_key, public_key = OPAQUE.generate_keys(for_export=True)
 
         with config_path.open("r+") as f:

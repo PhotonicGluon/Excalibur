@@ -2,7 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.auth.opaque import OPAQUE
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.elgamal import ElGamal
@@ -90,7 +90,7 @@ def _get_opaque() -> OPAQUEServer:
     :return: the OPAQUE server instance
     """
 
-    return OPAQUE
+    return OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
 
 def _get_oprf_seed() -> bytes:

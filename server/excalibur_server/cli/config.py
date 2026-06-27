@@ -173,7 +173,7 @@ def update_config():
     def v4_to_v5(config: TOMLDocument) -> TOMLDocument:
         from base64 import b64encode
 
-        from excalibur_server.src.auth.opaque import OPAQUE
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
         config["version"] = 5
 
@@ -182,16 +182,17 @@ def update_config():
         config["security"]["srp"]["opaque"] = {}
 
         # Add OPRF seed field
+        opaque = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
             "oprf_seed",
-            OPAQUE.generate_seed().hex(),
+            opaque.generate_seed().hex(),
             top_comment="The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal "
             + "format\n# SECURITY NOTE: Keep this value secret and secure!",
         )
 
         # Add private and public key fields
-        private_key, public_key = OPAQUE.generate_keys(for_export=True)
+        private_key, public_key = opaque.generate_keys(for_export=True)
 
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
@@ -217,14 +218,14 @@ def update_config():
     def v5_to_v6(config: TOMLDocument) -> TOMLDocument:
         from base64 import b64encode
 
-        from excalibur_server.src.auth.opaque import OPAQUE
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
         new_config = template_config.copy()
         new_config = _migrate_config(config, new_config)
         new_config["version"] = 6
 
         # Generate new account creation keys
-        private_key, public_key = OPAQUE.generate_keys(for_export=True)
+        private_key, public_key = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE).generate_keys(for_export=True)
         new_config["security"]["account_creation"]["public_key"] = b64encode(public_key).decode("utf-8")
         new_config["security"]["account_creation"]["private_key"] = b64encode(private_key).decode("utf-8")
 
@@ -276,7 +277,7 @@ def generate_keys(
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
-    from excalibur_server.src.auth.opaque import OPAQUE
+    from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
     if validate_config:
         # Check if the config is valid
@@ -301,6 +302,8 @@ def generate_keys(
     # Generate new keys
     if not silent:
         typer.secho("Generating new keys...", fg="yellow")
+
+    OPAQUE = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
     account_creation_private_key, account_creation_public_key = OPAQUE.generate_keys(for_export=True)
     opaque_private_key, opaque_public_key = OPAQUE.generate_keys(for_export=True)
