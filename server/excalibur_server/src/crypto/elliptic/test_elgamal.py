@@ -1,5 +1,4 @@
-from excalibur_server.src.crypto.elgamal import ElGamal
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.elliptic import ElGamal, Ristretto255
 
 PRIV_KEY = 112358
 PUB_KEY = PRIV_KEY * Ristretto255.GENERATOR

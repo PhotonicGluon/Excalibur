@@ -8,7 +8,7 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials_w
 from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.db.operations import get_session
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import get_user, get_user_from_id

@@ -1,4 +1,4 @@
-import { Ristretto255 } from "@lib/crypto/ristretto255";
+import { Ristretto255 } from "@lib/crypto/elliptic";
 
 import { i2osp } from "./misc";
 

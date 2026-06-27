@@ -3,8 +3,8 @@ from hashlib import sha512
 from math import ceil
 from typing import Any, Callable, Literal
 
-from excalibur_server.src.auth.opaque.misc import i2osp, xor
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.elliptic import Ristretto255
+from excalibur_server.src.crypto.misc import i2osp, xor
 
 
 class BaseOPRFRistretto(ABC):

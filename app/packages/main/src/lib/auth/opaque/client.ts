@@ -14,8 +14,8 @@ import {
     RegistrationRequest,
     RegistrationResponse,
 } from "@lib/auth/opaque/structures";
+import { Ristretto255 } from "@lib/crypto/elliptic";
 import HKDF from "@lib/crypto/hkdf";
-import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";

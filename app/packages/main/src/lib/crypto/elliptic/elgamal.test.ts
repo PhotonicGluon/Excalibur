@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 
 import ElGamal from "./elgamal";
-import { Ristretto255 } from "./ristretto255";
+import Ristretto255 from "./ristretto255";
 
 const PRIV_KEY = 112358n;
 const PUB_KEY = Ristretto255.GENERATOR.mul(PRIV_KEY);

@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { Ristretto255 } from "@lib/crypto/ristretto255";
+import { Ristretto255 } from "@lib/crypto/elliptic";
 import { bytesToBigInt } from "@lib/util";
 
 import { OPAQUEAuthError, OPAQUEClient } from "./client";

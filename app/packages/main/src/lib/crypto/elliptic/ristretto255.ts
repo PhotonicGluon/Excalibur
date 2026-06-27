@@ -6,7 +6,7 @@ import { bigIntToBytes, bytesToBigInt, modInv, modulo, powmod } from "@lib/util"
  * Implementation of the Ristretto255 group from
  * [RFC9496](https://datatracker.ietf.org/doc/html/rfc9496), section 4.
  */
-export class Ristretto255 {
+export default class Ristretto255 {
     static readonly P = 2n ** 255n - 19n; // See section 2
     static readonly ORDER = 2n ** 252n + 27742317777372353535851937790883648493n; // `l` in Section 4
     static readonly KEY_LENGTH = 32;

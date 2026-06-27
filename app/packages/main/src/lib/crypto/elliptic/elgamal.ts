@@ -1,4 +1,4 @@
-import { Ristretto255 } from "./ristretto255";
+import Ristretto255 from "./ristretto255";
 
 export default class ElGamal {
     static encrypt(publicKey: Ristretto255, m: Ristretto255, blindScalar?: bigint): Buffer {

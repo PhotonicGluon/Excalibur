@@ -1,6 +1,6 @@
 import createHash from "create-hash";
 
-import { Ristretto255 } from "@lib/crypto/ristretto255";
+import { Ristretto255 } from "@lib/crypto/elliptic";
 import { bigIntToBytes, bytesToBigInt, modulo, xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";

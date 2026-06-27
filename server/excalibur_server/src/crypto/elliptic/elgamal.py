@@ -1,4 +1,4 @@
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.elliptic.ristretto255 import Ristretto255
 
 
 class ElGamal:

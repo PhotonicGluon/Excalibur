@@ -4,8 +4,8 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
+from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.crypto.exef.crypto import KeyStrength
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
 
 
 class Security(BaseModel):

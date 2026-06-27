@@ -1,7 +1,6 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import ElGamal from "@lib/crypto/elgamal";
+import { ElGamal, Ristretto255 } from "@lib/crypto/elliptic";
 import ExEF from "@lib/crypto/exef";
-import { Ristretto255 } from "@lib/crypto/ristretto255";
 import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
 
 export enum RegistrationStage {

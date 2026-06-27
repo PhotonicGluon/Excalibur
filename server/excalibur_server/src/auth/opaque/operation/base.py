@@ -3,7 +3,6 @@ from typing import Callable
 
 from Crypto.Random import get_random_bytes
 
-from excalibur_server.src.auth.opaque.misc import i2osp
 from excalibur_server.src.auth.opaque.oprf import OPRFRistrettoSHA512, OPRFType
 from excalibur_server.src.auth.opaque.structures import (
     KE1,
@@ -17,8 +16,9 @@ from excalibur_server.src.auth.opaque.structures import (
     RegistrationRequest,
     RegistrationResponse,
 )
+from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.crypto.hkdf import HKDF
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.misc import i2osp
 
 
 class OPAQUEAuthError(Exception):

@@ -1,9 +1,12 @@
-import pytest
+import { expect } from "vitest";
 
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+import { bytesToBigInt } from "@lib/util";
 
-# Test vectors from RFC9496, Appendix A
-EXPECTED_A1_RAW = [  # Multiples of the generator
+import Ristretto255 from "./ristretto255";
+
+// Test vectors from RFC9496, Appendix A
+const EXPECTED_A1_RAW = [
+    // Multiples of the generator
     "00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000",
     "e2f2ae0a 6abc4e71 a884a961 c500515f 58e30b6a a582dd8d b6a65945 e08d2d76",
     "6a493210 f7499cd1 7fecb510 ae0cea23 a110e8d5 b901f8ac add3095c 73a3b919",
@@ -20,14 +23,15 @@ EXPECTED_A1_RAW = [  # Multiples of the generator
     "aa52e000 df2e16f5 5fb1032f c33bc427 42dad6bd 5a8fc0be 0167436c 5948501f",
     "46376b80 f409b29d c2b5f6f0 c5259199 0896e571 6f41477c d30085ab 7f10301e",
     "e0c418f7 c8d9c4cd d7395b93 ea124f3a d99021bb 681dfc33 02a9d99a 2e53e64e",
-]
-EXPECTED_A2_RAW = [  # Invalid encodings
-    # Non-canonical field encodings
+];
+const EXPECTED_A2_RAW = [
+    // Invalid encodings
+    // Non-canonical field encodings
     "00ffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff",
     "ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffff7f",
     "f3ffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffff7f",
     "edffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffff7f",
-    # Negative field elements
+    // Negative field elements
     "01000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000",
     "01ffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffff7f",
     "ed57ffd8 c914fb20 1471d1c3 d245ce3c 746fcbe6 3a3679d5 1b6a516e bebe0e20",
@@ -36,7 +40,7 @@ EXPECTED_A2_RAW = [  # Invalid encodings
     "47cfc549 7c53dc8e 61c91d17 fd626ffb 1c49e2bc a94eed05 2281b510 b1117a24",
     "f1c6165d 33367351 b0da8f6e 4511010c 68174a03 b6581212 c71c0e1d 026c3c72",
     "87260f7a 2f124951 18360f02 c26a470f 450dadf3 4a413d21 042b43b9 d93e1309",
-    # Non-square x^2
+    // Non-square x^2
     "26948d35 ca62e643 e26a8317 7332e6b6 afeb9d08 e4268b65 0f1f5bbd 8d81d371",
     "4eac077a 713c57b4 f4397629 a4145982 c661f480 44dd3f96 427d40b1 47d9742f",
     "de6a7b00 deadc788 eb6b6c8d 20c0ae96 c2f20190 78fa604f ee5b87d6 e989ad7b",
@@ -45,7 +49,7 @@ EXPECTED_A2_RAW = [  # Invalid encodings
     "f4a9e534 fc0d216c 44b218fa 0c42d996 35a0127e e2e53c71 2f706096 49fdff22",
     "8268436f 8c412619 6cf64b3c 7ddbda90 746a3786 25f9813d d9b84570 77256731",
     "2810e5cb c2cc4d4e ece54f61 c6f69758 e289aa7a b440b3cb eaa21995 c2f4232b",
-    # Negative x * y value
+    // Negative x * y value
     "3eb858e7 8f5a7254 d8c97311 74a94f76 755fd394 1c0ac937 35c07ba1 4579630e",
     "a45fdc55 c76448c0 49a1ab33 f17023ed fb2be358 1e9c7aad e8a61252 15e04220",
     "d483fe81 3c6ba647 ebbfd3ec 41adca1c 6130c2be eee9d9bf 065c8d15 1c5f396e",
@@ -54,143 +58,143 @@ EXPECTED_A2_RAW = [  # Invalid encodings
     "22714250 1b9d4355 ccba2904 04bde415 75b03769 3cef1f43 8c47f8fb f35d1165",
     "5c37cc49 1da847cf eb9281d4 07efc41e 15144c87 6e0170b4 99a96a22 ed31e01e",
     "44542511 7cb8c90e dcbc7c1c c0e74f74 7f2c1efa 5630a967 c64f2877 92a48a4b",
-    # s = -1, which causes y = 0
+    // s = -1, which causes y = 0
     "ecffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffff7f",
-]
-EXPECTED_A3_RAW = [  # Group Elements from Uniform Byte Strings
-    (
+];
+const EXPECTED_A3_RAW = [
+    // Group Elements from Uniform Byte Strings
+    [
         "5d1be09e3d0c82fc538112490e35701979d99e06ca3e2b5b54bffe8b4dc772c14d98b696a1bbfb5ca32c436cc61c16563790306c79eaca7705668b47dffe5bb6",
         "3066f82a 1a747d45 120d1740 f1435853 1a8f04bb ffe6a819 f86dfe50 f44a0a46",
-    ),
-    (
+    ],
+    [
         "f116b34b8f17ceb56e8732a60d913dd10cce47a6d53bee9204be8b44f6678b270102a56902e2488c46120e9276cfe54638286b9e4b3cdb470b542d46c2068d38",
         "f26e5b6f 7d362d2d 2a94c5d0 e7602cb4 773c95a2 e5c31a64 f133189f a76ed61b",
-    ),
-    (
+    ],
+    [
         "8422e1bbdaab52938b81fd602effb6f89110e1e57208ad12d9ad767e2e25510c27140775f9337088b982d83d7fcf0b2fa1edffe51952cbe7365e95c86eaf325c",
         "006ccd2a 9e6867e6 a2c5cea8 3d3302cc 9de128dd 2a9a57dd 8ee7b9d7 ffe02826",
-    ),
-    (
+    ],
+    [
         "ac22415129b61427bf464e17baee8db65940c233b98afce8d17c57beeb7876c2150d15af1cb1fb824bbd14955f2b57d08d388aab431a391cfc33d5bafb5dbbaf",
         "f8f0c87c f237953c 5890aec3 99816900 5dae3eca 1fbb0454 8c635953 c817f92a",
-    ),
-    (
+    ],
+    [
         "165d697a1ef3d5cf3c38565beefcf88c0f282b8e7dbd28544c483432f1cec7675debea8ebb4e5fe7d6f6e5db15f15587ac4d4d4a1de7191e0c1ca6664abcc413",
         "ae81e7de df20a497 e10c304a 765c1767 a42d6e06 029758d2 d7e8ef7c c4c41179",
-    ),
-    (
+    ],
+    [
         "a836e6c9a9ca9f1e8d486273ad56a78c70cf18f0ce10abb1c7172ddd605d7fd2979854f47ae1ccf204a33102095b4200e5befc0465accc263175485f0e17ea5c",
         "e2705652 ff9f5e44 d3e841bf 1c251cf7 dddb77d1 40870d1a b2ed64f1a 9ce8628",
-    ),
-    (
+    ],
+    [
         "2cdc11eaeb95daf01189417cdddbf95952993aa9cb9c640eb5058d09702c74622c9965a697a3b345ec24ee56335b556e677b30e6f90ac77d781064f866a3c982",
         "80bd0726 2511cdde 4863f8a7 434cef69 6750681c b9510eea 557088f76 d9e5065",
-    ),
-    # The following element derivation function inputs all produce the same encoded output
-    (
+    ],
+    // The following element derivation function inputs all produce the same encoded output
+    [
         "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1200000000000000000000000000000000000000000000000000000000000000",
         "30428279 1023b731 28d277bd cb5c7746 ef2eac08 dde9f298 3379cb8e 5ef0517f",
-    ),
-    (
+    ],
+    [
         "edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "30428279 1023b731 28d277bd cb5c7746 ef2eac08 dde9f298 3379cb8e 5ef0517f",
-    ),
-    (
+    ],
+    [
         "0000000000000000000000000000000000000000000000000000000000000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
         "30428279 1023b731 28d277bd cb5c7746 ef2eac08 dde9f298 3379cb8e 5ef0517f",
-    ),
-    (
+    ],
+    [
         "00000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000080",
         "30428279 1023b731 28d277bd cb5c7746 ef2eac08 dde9f298 3379cb8e 5ef0517f",
-    ),
-]
-EXPECTED_A4_RAW = [  # Square Root of a Ratio of Field Elements
-    (
+    ],
+];
+const EXPECTED_A4_RAW: [string, string, boolean, string][] = [
+    // Square Root of a Ratio of Field Elements
+    [
         "0000000000000000000000000000000000000000000000000000000000000000",
         "0000000000000000000000000000000000000000000000000000000000000000",
-        True,
+        true,
         "0000000000000000000000000000000000000000000000000000000000000000",
-    ),
-    (
+    ],
+    [
         "0000000000000000000000000000000000000000000000000000000000000000",
         "0100000000000000000000000000000000000000000000000000000000000000",
-        True,
+        true,
         "0000000000000000000000000000000000000000000000000000000000000000",
-    ),
-    (
+    ],
+    [
         "0100000000000000000000000000000000000000000000000000000000000000",
         "0000000000000000000000000000000000000000000000000000000000000000",
-        False,
+        false,
         "0000000000000000000000000000000000000000000000000000000000000000",
-    ),
-    (
+    ],
+    [
         "0200000000000000000000000000000000000000000000000000000000000000",
         "0100000000000000000000000000000000000000000000000000000000000000",
-        False,
+        false,
         "3c5ff1b5d8e4113b871bd052f9e7bcd0582804c266ffb2d4f4203eb07fdb7c54",
-    ),
-    (
+    ],
+    [
         "0400000000000000000000000000000000000000000000000000000000000000",
         "0100000000000000000000000000000000000000000000000000000000000000",
-        True,
+        true,
         "0200000000000000000000000000000000000000000000000000000000000000",
-    ),
-    (
+    ],
+    [
         "0100000000000000000000000000000000000000000000000000000000000000",
         "0400000000000000000000000000000000000000000000000000000000000000",
-        True,
+        true,
         "f6ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3f",
-    ),
-]
+    ],
+];
 
-EXPECTED_A1 = [bytes.fromhex(x.replace(" ", "")) for x in EXPECTED_A1_RAW]
-EXPECTED_A2 = [bytes.fromhex(x.replace(" ", "")) for x in EXPECTED_A2_RAW]
-EXPECTED_A3 = [(bytes.fromhex(x[0]), bytes.fromhex(x[1].replace(" ", ""))) for x in EXPECTED_A3_RAW]
-EXPECTED_A4 = [
-    (
-        int.from_bytes(bytes.fromhex(x[0]), "little"),
-        int.from_bytes(bytes.fromhex(x[1]), "little"),
-        x[2],
-        int.from_bytes(bytes.fromhex(x[3]), "little"),
-    )
-    for x in EXPECTED_A4_RAW
-]
+const EXPECTED_A1 = EXPECTED_A1_RAW.map((x) => Buffer.from(x.replaceAll(" ", ""), "hex"));
+const EXPECTED_A2 = EXPECTED_A2_RAW.map((x) => Buffer.from(x.replaceAll(" ", ""), "hex"));
+const EXPECTED_A3 = EXPECTED_A3_RAW.map(([x, y]) => [Buffer.from(x, "hex"), Buffer.from(y.replaceAll(" ", ""), "hex")]);
+const EXPECTED_A4: [bigint, bigint, boolean, bigint][] = EXPECTED_A4_RAW.map(([x, y, z, w]) => [
+    bytesToBigInt(Buffer.from((x as string).replace(" ", ""), "hex"), "little"),
+    bytesToBigInt(Buffer.from((y as string).replace(" ", ""), "hex"), "little"),
+    z,
+    bytesToBigInt(Buffer.from(w as string, "hex"), "little"),
+]);
 
+describe("Ristretto225", () => {
+    it("should handle encoding and decoding correctly", () => {
+        for (const expected of EXPECTED_A1) {
+            expect(Buffer.from(Ristretto255.fromBytes(expected, true).toBytes())).toEqual(expected);
+        }
+    });
 
-class TestRistretto255Point:
-    def test_encode_decode(self):
-        for e in EXPECTED_A1:
-            assert Ristretto255.from_bytes(e, allow_identity=True).to_bytes() == e
+    it("should handle identity prohibition", () => {
+        expect(() => Ristretto255.fromBytes(Buffer.alloc(32), false)).toThrow();
+    });
 
-    def test_identity_prohibition(self):
-        with pytest.raises(ValueError):
-            Ristretto255.from_bytes(bytes(32), allow_identity=False)
+    it("should have correct multiples of generator", () => {
+        let curr = Ristretto255.fromBytes(EXPECTED_A1[0], true);
+        for (let i = 1; i < EXPECTED_A1.length; i++) {
+            curr = curr.add(Ristretto255.fromBytes(EXPECTED_A1[1]));
+            expect(Buffer.from(curr.toBytes())).toEqual(EXPECTED_A1[i]);
+        }
+    });
 
-    def test_multiples_of_generator(self):
-        curr = Ristretto255.from_bytes(EXPECTED_A1[0], allow_identity=True)
-        for i in range(1, len(EXPECTED_A1)):
-            curr = curr + Ristretto255.from_bytes(EXPECTED_A1[1])
-            assert curr.to_bytes() == EXPECTED_A1[i], f"Addition differs at index {i}"
+    it("should handle invalid encodings", () => {
+        for (const expected of EXPECTED_A2) {
+            expect(() => Ristretto255.fromBytes(expected)).toThrow();
+        }
+    });
 
-    def test_invalid_encodings(self):
-        for e in EXPECTED_A2:
-            try:
-                Ristretto255.from_bytes(e)
-                assert False, f"Should have raised ValueError for '{e.hex()}'"
-            except ValueError:
-                pass
+    it("should have correct group elements from uniform byte strings", () => {
+        for (const [b, expected] of EXPECTED_A3) {
+            expect(Buffer.from(Ristretto255.derive(b).toBytes())).toEqual(expected);
+        }
+    });
 
-    def test_group_elements_from_uniform_byte_strings(self):
-        for b, expected in EXPECTED_A3:
-            point = Ristretto255.derive(b)
-            assert point.to_bytes() == expected
-
-    def test_square_root_of_ratio_of_field_elements(self):
-        for u, v, expected_was_square, expected in EXPECTED_A4:
-            was_square, root = Ristretto255._sqrt_ratio_m1(u, v)
-            assert was_square == expected_was_square, (
-                f"Square root test failed for u={u.to_bytes(32, 'little').hex()}, v={v.to_bytes(32, 'little').hex()}"
-            )
-            assert root == expected, (
-                f"Square root value mismatch for u={u.to_bytes(32, 'little').hex()}, v={v.to_bytes(32, 'little').hex()}"
-            )
+    it("should have correct square root of ratio of field elements", () => {
+        for (const [u, v, expected_was_square, expected] of EXPECTED_A4) {
+            const [was_square, root] = Ristretto255._sqrtRatioM1(u, v);
+            expect(was_square).toBe(expected_was_square);
+            expect(root).toBe(expected);
+        }
+    });
+});

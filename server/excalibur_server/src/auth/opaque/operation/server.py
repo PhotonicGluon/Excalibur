@@ -2,7 +2,6 @@ from hmac import compare_digest
 
 from Crypto.Random import get_random_bytes
 
-from excalibur_server.src.auth.opaque.misc import xor
 from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.oprf import OPRFType
 from excalibur_server.src.auth.opaque.structures import (
@@ -17,7 +16,8 @@ from excalibur_server.src.auth.opaque.structures import (
     RegistrationRequest,
     RegistrationResponse,
 )
-from excalibur_server.src.crypto.ristretto255 import Ristretto255
+from excalibur_server.src.crypto.elliptic import Ristretto255
+from excalibur_server.src.crypto.misc import xor
 
 
 class OPAQUEServer(BaseOPAQUE):
