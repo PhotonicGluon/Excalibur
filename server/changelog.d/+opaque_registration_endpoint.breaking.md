@@ -1,3 +1,3 @@
-💥 The OPAQUE registration endpoint (`/api/auth/opaque/register`) now requires clients to encrypt a shared symmetric key using the account creation public key and send it to the server
+💥 The OPAQUE registration endpoint (`/api/auth/opaque/register`) now requires clients to negotiate a shared session key with the server using the Noise-NK protocol before continuing with OPAQUE registration
 
 - Please check the updated documentation for more information

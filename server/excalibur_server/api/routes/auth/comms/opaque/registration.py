@@ -5,7 +5,7 @@ from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.crypto.elliptic import ElGamal, Ristretto255
+from excalibur_server.src.crypto.elliptic import NoiseNK, Ristretto255
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
 from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketManager, WebSocketMsg
@@ -22,14 +22,25 @@ async def registration_endpoint(websocket: WebSocket):
 
     await ws_manager.accept()
     try:
-        # Get symmetric key that will be used for encrypted communications
-        encrypted_key = (await ws_manager.receive()).data
-        key_elem = ElGamal.decrypt(CONFIG.security.account_creation.private_key, encrypted_key)
-        key = key_elem.to_bytes()
+        # Use Noise-NK protocol to set up session key
+        noise = NoiseNK(CONFIG.security.account_creation.public_key)
+
+        client_keyshare_pub_and_tag = (await ws_manager.receive()).data
+        try:
+            client_keyshare_pub = Ristretto255.from_bytes(client_keyshare_pub_and_tag[: Ristretto255.KEY_LENGTH])
+            client_tag = client_keyshare_pub_and_tag[Ristretto255.KEY_LENGTH :]
+            server_keyshare_pub, server_tag, session_key = noise.message_s_to_c(
+                client_keyshare_pub, client_tag, CONFIG.security.account_creation.private_key
+            )
+        except ValueError:
+            await ws_manager.send(WebSocketMsg("Invalid value", status="ERR"))
+            await ws_manager.close()
+            return
+
+        await ws_manager.send(WebSocketMsg(server_keyshare_pub.to_bytes() + server_tag))
 
         # Upgrade manager to handle encrypted communications
-        ws_manager = EncryptedWebSocketManager(ws_manager._ws, key)
-        await ws_manager.send(WebSocketMsg(status="OK"))
+        ws_manager = EncryptedWebSocketManager(ws_manager._ws, session_key)
 
         # Wait for username and registration request
         registration_request_raw_and_username = (await ws_manager.receive()).data

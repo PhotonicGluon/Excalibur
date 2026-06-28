@@ -1,10 +1,10 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
-import { ElGamal, Ristretto255 } from "@lib/crypto/elliptic";
+import { NoiseNK, Ristretto255 } from "@lib/crypto/elliptic";
 import ExEF from "@lib/crypto/exef";
 import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
 
 export enum RegistrationStage {
-    SENT_ENCRYPTION_KEY,
+    SENT_NOISE_NK_CLIENT_MESSAGE,
     SENT_REGISTRATION_REQUEST,
     SENT_REGISTRATION_RECORD,
 }
@@ -46,23 +46,21 @@ export async function registerUserOPAQUE(
     const wsURL = apiURL.replace("http", "ws");
     const ws = new WebSocket(`${wsURL}/auth/opaque/register`);
 
-    // Generate a symmetric key for encrypting communications
-    const publicKeyElem = Ristretto255.fromBytes(ack);
-
-    const keyElem = Ristretto255.GENERATOR.mul(Ristretto255.randomScalar());
-    const encryptedKey = ElGamal.encrypt(publicKeyElem, keyElem);
-    const key = Buffer.from(keyElem.toBytes());
+    // Instantiate Noise-NK protocol handler
+    const noise = new NoiseNK(Ristretto255.fromBytes(ack));
 
     // Create special request handling
+    let sessionKey: Buffer = Buffer.alloc(0);
+
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(key).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = new ExEF(sessionKey).encrypt(Buffer.from(JSON.stringify(serializedData)));
         ws.send(encryptedData);
     }
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = ExEF.decrypt(key, Buffer.from(await (eventData as Blob).arrayBuffer()));
+            const decryptedData = ExEF.decrypt(sessionKey, Buffer.from(await (eventData as Blob).arrayBuffer()));
             return _parseResponse(decryptedData.toString("utf-8"));
         } catch (_e) {
             // Did the server send it in plaintext?
@@ -73,7 +71,7 @@ export async function registerUserOPAQUE(
     // Perform registration
     setLoadingState?.("Sending encryption key...");
     const state: RegistrationState = {
-        stage: RegistrationStage.SENT_ENCRYPTION_KEY,
+        stage: RegistrationStage.SENT_NOISE_NK_CLIENT_MESSAGE,
     };
 
     const registrationPromise = new Promise<void>((resolve, reject) => {
@@ -87,16 +85,35 @@ export async function registerUserOPAQUE(
         });
 
         ws.addEventListener("open", () => {
-            console.log(`Sending encryption key '${key.toString("hex")}' to server`);
-            const serializedData = generateResponse(encryptedKey);
+            console.log(`Sending session setup message to server`);
+            const [keysharePub, tag] = noise.messageCToS();
+            const toSend = Buffer.concat([keysharePub.toBytes(), tag]);
+            const serializedData = generateResponse(toSend);
             ws.send(JSON.stringify(serializedData));
-            setLoadingState?.("Waiting for server acceptance...");
+            setLoadingState?.("Waiting for server response...");
         });
 
         ws.addEventListener("message", async (event: MessageEvent<Blob | string>) => {
             const response = await parseResponse(event.data);
             try {
-                if (state.stage === RegistrationStage.SENT_ENCRYPTION_KEY) {
+                if (state.stage === RegistrationStage.SENT_NOISE_NK_CLIENT_MESSAGE) {
+                    if (response.status === "ERR") {
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.("Registration Failed", "Session setup failed", response.data as string);
+                        reject("Session setup failed");
+                        return;
+                    }
+
+                    // Complete Noise-NK session key exchange
+                    const serverKeysharePubAndTag = response.data as Buffer;
+                    const serverKeysharePub = Ristretto255.fromBytes(
+                        serverKeysharePubAndTag.subarray(0, Ristretto255.KEY_LENGTH),
+                    );
+                    const serverTag = serverKeysharePubAndTag.subarray(Ristretto255.KEY_LENGTH);
+                    sessionKey = noise.deriveSessionKey(serverKeysharePub, serverTag);
+
+                    // Begin OPAQUE registration
                     console.log(`Connected to server; sending username '${username}' and registration request`);
                     const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
                         new TextEncoder().encode(password),
