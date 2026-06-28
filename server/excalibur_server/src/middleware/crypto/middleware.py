@@ -168,7 +168,9 @@ class EncryptionHandler:
             message = await self._receive()
             self._exef.decryptor.update(message.get("body", b""))
 
-        decrypted_body = self._exef.decryptor.get()
+        decrypted_body = b""
+        while curr_body := self._exef.decryptor.get():
+            decrypted_body += curr_body
 
         # Make sure that the auth tag is present and already accounted for
         if not self._exef.decryptor.fully_processed:
