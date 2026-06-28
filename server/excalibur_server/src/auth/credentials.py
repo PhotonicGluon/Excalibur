@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
 from excalibur_server.env import has_pop_checking
-from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.url import get_url_encoded_path
@@ -31,7 +30,7 @@ def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -
     return generate_token(
         sub=user_id,
         data={"uuid": comm_uuid},
-        key=KEY,
+        key=CONFIG.security.jwt_key,
         expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
     )
 
@@ -44,7 +43,7 @@ def check_auth_token(token: str) -> bool:
     :return: True if credentials are valid and False otherwise
     """
 
-    decoded = decode_token(token, KEY)
+    decoded = decode_token(token, CONFIG.security.jwt_key)
     if decoded is None:
         return False
 
@@ -85,7 +84,7 @@ async def _verify_and_extract_credentials(
         raise raise_exception("Missing, invalid, or expired bearer token")
 
     # Check if the provided identity token is valid
-    decoded = decode_token(credentials.credentials, KEY)
+    decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
     user_id = decoded["sub"]

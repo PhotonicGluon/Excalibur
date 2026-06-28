@@ -218,11 +218,17 @@ def update_config():
     def v5_to_v6(config: TOMLDocument) -> TOMLDocument:
         from base64 import b64encode
 
+        from Crypto.Random import get_random_bytes
+
+        from excalibur_server.src.auth.consts import KEYSIZE
         from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
         new_config = template_config.copy()
         new_config = _migrate_config(config, new_config)
         new_config["version"] = 6
+
+        # Add new JWT key
+        new_config["security"]["jwt_key"] = get_random_bytes(KEYSIZE // 8).hex()
 
         # Generate new account creation keys
         private_key, public_key = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE).generate_keys(for_export=True)
@@ -268,15 +274,17 @@ def generate_keys(
     silent: Annotated[bool, typer.Option("-s", "--silent", help="Whether to silence all output.")] = False,
 ):
     """
-    Generate keys for account creation and for the OPAQUE protocol.
+    Generate keys for JWT signing, account creation, and the OPAQUE protocol.
     """
 
     from base64 import b64encode
 
+    from Crypto.Random import get_random_bytes
     from tomlkit import dump, load
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
+    from excalibur_server.src.auth.consts import KEYSIZE
     from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
     if validate_config:
@@ -303,10 +311,11 @@ def generate_keys(
     if not silent:
         typer.secho("Generating new keys...", fg="yellow")
 
-    OPAQUE = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
+    config["security"]["jwt_key"] = get_random_bytes(KEYSIZE // 8).hex()
 
-    account_creation_private_key, account_creation_public_key = OPAQUE.generate_keys(for_export=True)
-    opaque_private_key, opaque_public_key = OPAQUE.generate_keys(for_export=True)
+    opaque = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
+    account_creation_private_key, account_creation_public_key = opaque.generate_keys(for_export=True)
+    opaque_private_key, opaque_public_key = opaque.generate_keys(for_export=True)
 
     config["security"]["account_creation"]["private_key"] = b64encode(account_creation_private_key).decode("utf-8")
     config["security"]["account_creation"]["public_key"] = b64encode(account_creation_public_key).decode("utf-8")

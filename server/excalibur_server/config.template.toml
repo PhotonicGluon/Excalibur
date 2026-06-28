@@ -75,16 +75,20 @@ file = "excalibur.duckdb"
 # How long a login session lasts, in seconds
 session_duration = 3600 # 1 hour
 
+# Secret key for signing JWT tokens, in hexadecimal format
+# SECURITY NOTE: Keep this value secret and secure!
+jwt_key = "Secret key for cryptographic operations goes here!"
+
 # The key strength, in bits, to use for cryptographic operations
 # Valid values: 128, 192, 256
 key_strength = 128
 
 [security.account_creation]
-# Public key for account creation
+# Public key for account creation, in Base64
 # SECURITY NOTE: Only reveal this value to people who want access to the server!
 public_key = "Public key for account creation goes here"
 
-# Private key for account creation
+# Private key for account creation, in Base64
 # SECURITY NOTE: Keep this value secret and secure!
 private_key = "Private key for account creation goes here"
 
@@ -93,10 +97,10 @@ private_key = "Private key for account creation goes here"
 # SECURITY NOTE: Keep this value secret and secure!
 oprf_seed = "OPRF seed goes here!"
 
-# Public key for OPAQUE protocol
+# Public key for OPAQUE protocol, in Base64
 public_key = "Public key for the OPAQUE protocol goes here"
 
-# Private key for OPAQUE protocol
+# Private key for OPAQUE protocol, in Base64
 # SECURITY NOTE: Keep this value secret and secure!
 private_key = "Private key for OPAQUE protocol goes here"
 

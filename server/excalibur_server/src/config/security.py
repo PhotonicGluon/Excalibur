@@ -71,6 +71,7 @@ class Security(BaseModel):
             return value
 
     session_duration: int
+    jwt_key: bytes
     key_strength: KeyStrength
     account_creation: AccountCreation
     opaque: OPAQUE
@@ -82,3 +83,7 @@ class Security(BaseModel):
         if value <= 0:
             raise ValueError("must be greater than 0")
         return value
+
+    @field_validator("jwt_key", mode="before")
+    def edit_jwt_key(cls, value: str) -> bytes:
+        return bytes.fromhex(value)

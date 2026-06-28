@@ -7,7 +7,6 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
-from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.credentials import decode_token
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
@@ -140,7 +139,7 @@ class EncryptionHandler:
         if auth[0] != "Bearer" or len(auth) != 2:
             return
 
-        token = decode_token(auth[1], KEY)
+        token = decode_token(auth[1], CONFIG.security.jwt_key)
         if token is None:
             return
 
