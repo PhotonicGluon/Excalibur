@@ -7,6 +7,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
+from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import decode_token
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
@@ -295,8 +296,7 @@ class EncryptionHandler:
             if not self.route_data.encrypted_body:
                 return message
 
-            headers = MutableHeaders(scope=self._scope)
-            if headers.get("X-Encrypted", "false") == "false":
+            if is_debug() and MutableHeaders(scope=self._scope).get("X-Encrypted", "false") == "false":
                 return message
 
             # Try to set the E2EE key using the scope headers
