@@ -164,17 +164,19 @@ class EncryptionHandler:
 
         # Collect entire encrypted body before touching plaintext
         self._exef.decryptor.update(message.get("body", b""))
+        decrypted_body = b""
         while message.get("more_body", False):
             message = await self._receive()
             self._exef.decryptor.update(message.get("body", b""))
+            decrypted_body += self._exef.decryptor.get()
 
-        decrypted_body = b""
-        while curr_body := self._exef.decryptor.get():
-            decrypted_body += curr_body
+        while not self._exef.decryptor.is_queue_clear:  # Make sure to empty the queue
+            decrypted_body += self._exef.decryptor.get()
 
         # Make sure that the auth tag is present and already accounted for
         if not self._exef.decryptor.fully_processed:
-            # Footer was stripped; treat as a credentials/integrity failure
+            # Nothing left in queue but still not fully processed. Likely that the footer was
+            # stripped; treat as a credentials/integrity failure
             self._to_raise_credentials_exception = True
             message["body"] = b""
             message["more_body"] = False

@@ -1,3 +1,4 @@
+from abc import ABC
 from hmac import compare_digest
 from queue import Empty, Queue
 from typing import Literal
@@ -11,11 +12,62 @@ from .structures import Footer, Header
 KeyStrength = Literal[128, 192, 256]
 
 
-class Cryptor:
+class Cryptor(ABC):
     """
     Base class for encryption and decryption.
     """
 
+    def __init__(self, key: bytes):
+        """
+        Initializes the Cryptor with a given key.
+
+        :param key: the main key as bytes
+        """
+
+        self.key = key
+        "Key used for encryption/decryption"
+
+        self._cipher: _mode_gcm.GcmMode | None = None
+        "Internal AES-GCM cipher object that handles cryptographic operations"
+
+        self._queue = Queue()
+        "Queue used for buffering"
+
+    # Properties
+    @property
+    def is_queue_clear(self):
+        """
+        Checks if the encryption/decryption queue is empty.
+
+        :return: whether the queue is empty
+        """
+
+        return self._queue.qsize() == 0
+
+    @property
+    def cipher(self) -> _mode_gcm.GcmMode:
+        """
+        The AES-GCM cipher object used for encryption/decryption.
+
+        :return: the AES-GCM cipher object
+        """
+
+        raise NotImplementedError()
+
+    @property
+    def fully_processed(self) -> bool:
+        """
+        Checks if the whole message have been processed.
+
+        This includes getting the header and footer. To check if there are no more data in the
+        queue, access the `is_queue_clear` property instead.
+
+        :return: whether all parts of the message have been processed
+        """
+
+        raise NotImplementedError()
+
+    # Static methods
     @staticmethod
     def _gen_key(key: bytes, nonce: bytes, context: bytes, length: int):
         return HKDF(key, length, nonce, SHA256, context=context)
@@ -43,7 +95,8 @@ class Encryptor(Cryptor):
         :parma strength: crypto/MAC key strength, defaults to the length of `key` in bits
         """
 
-        self.key = key
+        super().__init__(key)
+
         self._nonce = nonce
 
         if strength is None:
@@ -56,22 +109,12 @@ class Encryptor(Cryptor):
         self._ct_len: int = -1
         self._header: Header | None = None
 
-        self._cipher: _mode_gcm.GcmMode | None = None
-
         self._header_sent = False
         self._ct_sent_len = 0
-        self._queue = Queue()
 
     # Properties
     @property
     def cipher(self) -> _mode_gcm.GcmMode:
-        """
-        The AES-GCM cipher object.
-
-        :raises ValueError: If parameters are not set before requesting the cipher.
-        :return: The AES-GCM cipher object.
-        """
-
         if self._cipher is None:
             if self._nonce is None or self._ct_len == -1 or self._header is None:
                 raise ValueError("parameters must be set")
@@ -81,13 +124,6 @@ class Encryptor(Cryptor):
 
     @property
     def fully_processed(self) -> bool:
-        """
-        Checks if the encryptor has processed all parts of the message.
-
-        :raises ValueError: If parameters are not set
-        :return: True if the encryptor has processed all parts of the message, False otherwise
-        """
-
         if self._ct_len == -1:
             raise ValueError("parameters must be set")
         return self._ct_sent_len == self._ct_len
@@ -190,10 +226,10 @@ class Decryptor(Cryptor):
         """
         Initializes the Decryptor with a given key.
 
-        :param key: The main key as bytes
+        :param key: the main key as bytes
         """
 
-        self.key = key
+        super().__init__(key)
 
         self._crypto_key: bytes | None = None
         self._mac_key: bytes | None = None
@@ -201,25 +237,14 @@ class Decryptor(Cryptor):
         self._header: Header | None = None
         self._footer: Footer | None = None
 
-        self._cipher: _mode_gcm.GcmMode | None = None
-
         self._buffer = b""
         self._header_remaining = Header.size
         self._footer_remaining = Footer.size
         self._ct_len_left = -1
-        self._queue = Queue()  # Queue of ciphertext chunks
 
     # Properties
     @property
     def cipher(self) -> _mode_gcm.GcmMode:
-        """
-        The AES-GCM cipher object used for decryption.
-
-        :raises ValueError: If the header is not set before requesting the cipher
-        :raises ValueError: If the header MAC check fails
-        :return: The AES-GCM cipher object
-        """
-
         if self._cipher is None:
             if self._header is None:
                 raise ValueError("header must be set")
