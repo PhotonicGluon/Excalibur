@@ -226,6 +226,14 @@ class TestPersistentTTLCache:
         assert "good_key" in cache
         assert "bad_key" not in cache
 
+    def test_pop_persistence(self, cache_file: str, timer: MockTimer):
+        cache = PersistentTTLCache(maxsize=10, ttl=60, filename=cache_file, timer=timer)
+        cache["key1"] = "value1"
+        assert cache.pop("key1", "default") == "value1"
+
+        new_cache = PersistentTTLCache(maxsize=10, ttl=60, filename=cache_file, timer=timer)
+        assert "key1" not in new_cache
+
     def test_clear_persistence(self, cache_file: str, timer: MockTimer):
         cache = PersistentTTLCache(maxsize=10, ttl=60, filename=cache_file, timer=timer)
         cache["a"] = 1

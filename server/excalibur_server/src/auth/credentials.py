@@ -104,7 +104,8 @@ async def _verify_and_extract_credentials(
     timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
     # Check if timestamp is within acceptable range
-    if not abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) < CONFIG.security.pop.timestamp_validity:
+    # (We use 50% of the timestamp validity to make the full window the `timestamp_validity` value)
+    if abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
         raise raise_exception("Invalid timestamp")
 
     # Check if nonce is fresh
