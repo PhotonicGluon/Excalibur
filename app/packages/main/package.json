@@ -40,7 +40,7 @@
         "react": "19.2.5",
         "react-circular-progressbar": "^2.2.0",
         "react-dom": "19.2.5",
-        "react-router": "^5.3.4",
+        "react-router": "^8.0.1",
         "react-router-dom": "^5.3.4",
         "seedrandom": "^3.0.5",
         "semver-parser": "^4.1.8",
