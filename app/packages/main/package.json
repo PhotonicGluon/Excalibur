@@ -39,7 +39,7 @@
         "natural-compare": "^1.4.0",
         "react": "19.2.5",
         "react-circular-progressbar": "^2.2.0",
-        "react-dom": "19.2.5",
+        "react-dom": "19.2.7",
         "react-router": "^5.3.4",
         "react-router-dom": "^5.3.4",
         "seedrandom": "^3.0.5",
