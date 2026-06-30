@@ -157,10 +157,10 @@ importers:
         version: 8.8.6
       '@ionic/react':
         specifier: ^8.8.6
-        version: 8.8.6(react-dom@19.2.5(react@19.2.7))(react@19.2.7)
+        version: 8.8.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@ionic/react-router':
         specifier: ^8.8.6
-        version: 8.8.6(react-dom@19.2.5(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)
+        version: 8.8.6(react-dom@19.2.7(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)
       capacitor-blob-writer:
         specifier: ^1.1.20
         version: 1.1.20(@capacitor/core@8.2.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.2.0))
@@ -192,8 +192,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(react@19.2.7)
       react-dom:
-        specifier: 19.2.5
-        version: 19.2.5(react@19.2.7)
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
       react-router:
         specifier: ^5.3.4
         version: 5.3.4(react@19.2.7)
@@ -2770,7 +2770,7 @@ packages:
   git-raw-commits@2.0.11:
     resolution: {integrity: sha512-VnctFhw+xfj8Va1xtfEqCUD2XDrbAPSJx+hSrE5K7fGdjZruW7XV+QOrN7LF/RJyvspRiD2I0asWsxFp0ya26A==}
     engines: {node: '>=10'}
-    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -2780,7 +2780,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -4124,10 +4124,10 @@ packages:
     peerDependencies:
       react: '>=0.14.0'
 
-  react-dom@19.2.5:
-    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
+  react-dom@19.2.7:
+    resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
     peerDependencies:
-      react: ^19.2.5
+      react: ^19.2.7
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -5781,21 +5781,21 @@ snapshots:
       ionicons: 8.0.13
       tslib: 2.8.1
 
-  '@ionic/react-router@8.8.6(react-dom@19.2.5(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)':
+  '@ionic/react-router@8.8.6(react-dom@19.2.7(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)':
     dependencies:
-      '@ionic/react': 8.8.6(react-dom@19.2.5(react@19.2.7))(react@19.2.7)
+      '@ionic/react': 8.8.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
-      react-dom: 19.2.5(react@19.2.7)
+      react-dom: 19.2.7(react@19.2.7)
       react-router: 5.3.4(react@19.2.7)
       react-router-dom: 5.3.4(react@19.2.7)
       tslib: 2.8.1
 
-  '@ionic/react@8.8.6(react-dom@19.2.5(react@19.2.7))(react@19.2.7)':
+  '@ionic/react@8.8.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@ionic/core': 8.8.6
       ionicons: 8.0.13
       react: 19.2.7
-      react-dom: 19.2.5(react@19.2.7)
+      react-dom: 19.2.7(react@19.2.7)
       tslib: 2.8.1
 
   '@ionic/utils-array@2.1.6':
@@ -9472,7 +9472,7 @@ snapshots:
     dependencies:
       react: 19.2.7
 
-  react-dom@19.2.5(react@19.2.7):
+  react-dom@19.2.7(react@19.2.7):
     dependencies:
       react: 19.2.7
       scheduler: 0.27.0
