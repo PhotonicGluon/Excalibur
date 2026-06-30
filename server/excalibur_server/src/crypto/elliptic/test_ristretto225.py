@@ -171,6 +171,7 @@ class TestRistretto255Point:
         for i in range(1, len(EXPECTED_A1)):
             curr = curr + Ristretto255.from_bytes(EXPECTED_A1[1])
             assert curr.to_bytes() == EXPECTED_A1[i], f"Addition differs at index {i}"
+            assert (i * Ristretto255.GENERATOR).to_bytes() == EXPECTED_A1[i], f"Multiplication differs for scalar {i}"
 
     def test_invalid_encodings(self):
         for e in EXPECTED_A2:

@@ -175,6 +175,7 @@ describe("Ristretto225", () => {
         for (let i = 1; i < EXPECTED_A1.length; i++) {
             curr = curr.add(Ristretto255.fromBytes(EXPECTED_A1[1]));
             expect(Buffer.from(curr.toBytes())).toEqual(EXPECTED_A1[i]);
+            expect(Buffer.from(Ristretto255.GENERATOR.mul(BigInt(i)).toBytes())).toEqual(EXPECTED_A1[i]);
         }
     });
 

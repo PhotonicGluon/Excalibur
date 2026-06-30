@@ -178,20 +178,26 @@ export default class Ristretto255 {
         return this.add(other.neg());
     }
 
+    /**
+     * Scalar multiplication using Montgomery ladder.
+     *
+     * See https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Montgomery_ladder.
+     *
+     * @param scalar the scalar to multiply by
+     * @returns the result of the scalar multiplication
+     */
     mul(scalar: bigint): Ristretto255 {
         scalar = modulo(scalar, Ristretto255.ORDER); // See section 4.4
+        const nBits = scalar.toString(2).length;
 
-        let result = Ristretto255.IDENTITY;
-        let current: Ristretto255 = this;
-        while (scalar > 0n) {
-            if (scalar & 1n) {
-                result = result.add(current);
-            }
-            current = current.add(current);
-            scalar >>= 1n;
+        const r = [Ristretto255.IDENTITY, this];
+        for (let i = nBits - 1; i >= 0; i--) {
+            const di = (scalar >> BigInt(i)) & 1n;
+            r[(Number(di) + 1) % 2] = r[0].add(r[1]);
+            r[Number(di)] = r[Number(di)].add(r[Number(di)]);
         }
 
-        return result;
+        return r[0];
     }
 
     /**

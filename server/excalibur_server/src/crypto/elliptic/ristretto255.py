@@ -72,17 +72,25 @@ class Ristretto255:
         return self + (-other)
 
     def __mul__(self, scalar: int) -> Self:
+        """
+        Scalar multiplication using Montgomery ladder.
+
+        See https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Montgomery_ladder.
+
+        :param scalar: the scalar to multiply by
+        :returns: the result of the scalar multiplication
+        """
+
         scalar = scalar % self.ORDER  # See section 4.4
+        n_bits = scalar.bit_length()
 
-        result = self.IDENTITY
-        current = self
-        while scalar > 0:
-            if scalar & 1:
-                result = result + current
-            current = current + current
-            scalar >>= 1
+        r = [self.IDENTITY, self]
+        for i in range(n_bits - 1, -1, -1):
+            di = (scalar >> i) & 1
+            r[(di + 1) % 2] = r[0] + r[1]
+            r[di] += r[di]
 
-        return result
+        return r[0]
 
     def __rmul__(self, scalar: int) -> Self:
         return self.__mul__(scalar)
