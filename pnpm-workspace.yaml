@@ -29,6 +29,7 @@ trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   # Main
+  globals@>=17.0.0 <=17.7.0: "^17.7.0" # To make sure globals v17 versions are consistent
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   # Security
   "@babel/core@<=7.29.0": ^7.29.1
