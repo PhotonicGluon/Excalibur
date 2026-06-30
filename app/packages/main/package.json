@@ -45,9 +45,9 @@
         "natural-compare": "^1.4.0",
         "pbkdf2": "^3.1.6",
         "randombytes": "^2.1.0",
-        "react": "19.2.5",
+        "react": "19.2.7",
         "react-circular-progressbar": "^2.2.0",
-        "react-dom": "19.2.5",
+        "react-dom": "19.2.7",
         "react-router": "^5.3.4",
         "react-router-dom": "^5.3.4",
         "seedrandom": "^3.0.5",
@@ -70,7 +70,7 @@
         "@types/node": "^25.9.1",
         "@types/pbkdf2": "^3.1.2",
         "@types/randombytes": "^2.0.3",
-        "@types/react": "19.2.14",
+        "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
         "@types/react-router": "^5.1.20",
         "@types/react-router-dom": "^5.3.3",
@@ -81,7 +81,7 @@
         "lint-staged": "^16.4.0",
         "prettier": "^3.8.3",
         "prettier-plugin-tailwindcss": "^0.8.0",
-        "vitest": "^4.1.8"
+        "vitest": "^4.1.9"
     },
     "private": true
 }

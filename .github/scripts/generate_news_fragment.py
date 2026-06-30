@@ -6,12 +6,10 @@ prev_version = os.environ.get("PREV_VERSION", "")
 new_version = os.environ.get("NEW_VERSION", "")
 directory = os.environ.get("DIRECTORY", "")
 
-if "/app" in directory:
-    folder = "app"
-elif "/server" in directory:
+if "/server" in directory:
     folder = "server"
 else:
-    folder = directory.strip("/")
+    folder = "app"
 
 if not folder:
     print(f"Could not determine folder from directory: {directory}")
