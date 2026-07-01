@@ -1,1 +1,0 @@
-🐛 Fixed an issue where multiple file listener connections with the same communications UUID from the authentication token would override each other, causing all non-latest connections to not receive any updates from the server

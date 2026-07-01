@@ -26,44 +26,47 @@ def test_get_user_security_details(auth_client: TestClient):
 
 
 def test_get_user_vault_key(auth_client: TestClient):
+    # TODO: Remove the parameter as it is not used
+
     # Without authentication, it should fail
-    response = client.get("/api/users/vault/test-user")
+    response = client.get("/api/users/vault/ignored-parameter")
     assert response.status_code == 401
 
     # With authentication, it should succeed
-    response = auth_client.get("/api/users/vault/test-user")
+    response = auth_client.get("/api/users/vault/ignored-parameter")
     assert response.status_code == 200
     assert ExEF.validate(response.content), "Did not return an encrypted response"
 
 
 def test_get_user_info(auth_client: TestClient):
+    # TODO: Remove the parameter as it is not used
+
     # Without authentication, it should fail
-    response = client.get("/api/users/info/test-user")
+    response = client.get("/api/users/info/ignored-parameter")
     assert response.status_code == 401
 
     # With authentication, it should succeed
-    response = auth_client.get("/api/users/info/test-user")
+    response = auth_client.get("/api/users/info/ignored-parameter")
     assert response.status_code == 200
     assert ExEF.validate(response.content), "Did not return an encrypted response"
-
-    response = ExEF(b"one demo 16B key").decrypt(response.content)
-    assert response == b"Some Sample Info"
+    assert ExEF(b"one demo 16B key").decrypt(response.content) == b"Some Sample Info"
 
 
 def test_edit_user_info(auth_client: TestClient):
+    # TODO: Remove the parameter as it is not used
+
     # Without authentication, it should fail
-    response = client.post("/api/users/edit-info/test-user", json="New Info")
+    response = client.post("/api/users/edit-info/ignored-parameter", json="New Info")
     assert response.status_code == 401
 
     # With authentication, it should succeed
-    response = auth_client.post("/api/users/edit-info/test-user", json="New Info")
+    response = auth_client.post("/api/users/edit-info/ignored-parameter", json="New Info")
     assert response.status_code == 200
 
     # Check that the info was updated
-    response = auth_client.get("/api/users/info/test-user")
+    response = auth_client.get("/api/users/info/ignored-parameter")
     assert response.status_code == 200
-    response = ExEF(b"one demo 16B key").decrypt(response.content)
-    assert response == b"New Info"
+    assert ExEF(b"one demo 16B key").decrypt(response.content) == b"New Info"
 
 
 def test_edit_user_info_transit_encryption(auth_client: TestClient):

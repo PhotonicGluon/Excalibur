@@ -21,6 +21,7 @@ from excalibur_server.src.users import get_user
         status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
         status.HTTP_409_CONFLICT: {"description": "Item already exists"},
         status.HTTP_412_PRECONDITION_FAILED: {"description": "Cannot rename root directory"},
+        status.HTTP_417_EXPECTATION_FAILED: {"description": "Renamed file needs to end with `.exef`"},
     },
     response_class=PlainTextResponse,
 )
@@ -53,6 +54,12 @@ async def rename_path_endpoint(
     # Prohibit renaming the root directory
     if item.id == root_id:
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot rename root directory")
+
+    # Check if the new name ends with .exef if it's a file
+    if not item.is_folder and not new_name.endswith(".exef"):
+        raise HTTPException(
+            status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Renamed file needs to end with `.exef`"
+        )
 
     # Rename the item
     with get_session() as session:

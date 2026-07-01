@@ -114,6 +114,9 @@ jobs:
 
             - name: Set up Android SDK
               uses: android-actions/setup-android@v4
+              with:
+                packages: ""  # No additional packages
+                log-accepted-android-sdk-licenses: false  # Do not log the license
 
             - name: Install Dependencies
               working-directory: ./app
@@ -123,7 +126,7 @@ jobs:
               working-directory: ./app/packages/main
               run: |
                   pnpm run build
-                  zip -r app-${{ github.ref_name }}-pwa.zip ./dist
+                  zip -r app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip ./dist
 
             - name: Attest
               uses: actions/attest-build-provenance@v3

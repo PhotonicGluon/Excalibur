@@ -11,8 +11,13 @@ import { explorerContext } from "./context";
 
 const files: File[] = [];
 for (let i = 0; i < 10; i++) {
+    let name = `Sample File ${i}.txt.exef`;
+    if (i % 2 === 1) {
+        name = name.toLowerCase(); // To make sure that sorting is case insensitive
+    }
+
     files.push({
-        name: `Sample File ${i}.txt.exef`,
+        name: name,
         creation_time: 1000000000 + i * 1000,
         fullpath: `/some/path/Sample File ${i}.txt.exef`,
         size: 100000 * (i + 1) + 23456,
@@ -100,7 +105,12 @@ describe("<DirectoryList />", () => {
         // Items should be in the correct order
         cy.get("#directory-list ion-list").get("ion-item").eq(0).should("contain.text", "Sample Directory"); // First item is the directory
         for (let i = 1; i < items.length; i++) {
-            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", "Sample File"); // Second item onwards are files
+            let expectedString = "Sample File";
+            if (i % 2 === 0) {
+                expectedString = expectedString.toLowerCase();
+            }
+
+            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", expectedString); // Second item onwards are files
         }
 
         // Row colour classes should be identical (since rowAlternatingColours is "off")
@@ -133,7 +143,12 @@ describe("<DirectoryList />", () => {
         cy.get("#directory-list ion-list").get("ion-item").eq(0).should("have.text", "(Go Back)"); // First item is the directory
         cy.get("#directory-list ion-list").get("ion-item").eq(1).should("contain.text", "Sample Directory"); // Next item is the directory
         for (let i = 2; i < items.length; i++) {
-            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", "Sample File"); // Third item onwards are files
+            let expectedString = "Sample File";
+            if (i % 2 === 1) {
+                expectedString = expectedString.toLowerCase();
+            }
+
+            cy.get("#directory-list ion-list").get("ion-item").eq(i).should("contain.text", expectedString); // Third item onwards are files
         }
     });
 

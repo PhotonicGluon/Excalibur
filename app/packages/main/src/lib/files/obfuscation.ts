@@ -1,6 +1,6 @@
 import seedrandom from "seedrandom";
 
-import { getAllItems, renameItem } from "@lib/files/api";
+import { getAllItems, getCount, renameItem } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
 
 import { AuthProvider } from "@components/auth/context";
@@ -95,35 +95,49 @@ export function deobfuscateDirectoryItems(directory: Directory, noc: Substitutio
  * @param auth authentication provider
  * @param obfuscated whether to obfuscate or deobfuscate
  * @param setLoadingState function to set the loading state
+ * @param timePerFile amount of time, in milliseconds, to add to the timeout for each file operation
  */
 export async function toggleObfuscationForAllFiles(
     auth: AuthProvider,
     obfuscated: boolean,
     setLoadingState: (state: string) => void,
+    timePerFile: number = 100,
 ) {
+    // Get number of items owned by the current user
+    setLoadingState(`Getting item count...`);
+    const countResponse = await getCount(auth);
+    if (!countResponse.success) {
+        throw new Error(countResponse.error!);
+    }
+
+    const numItems = countResponse.count!;
+    const timeout = 5 + (timePerFile / 1000) * numItems;
+
+    console.debug(`User owns ${numItems} items, using a timeout of ${timeout} seconds`);
+
     // Get items owned by the current user
-    const allItemsResponse = await getAllItems(auth);
+    setLoadingState(`Getting items...`);
+    const allItemsResponse = await getAllItems(auth, timeout);
     if (!allItemsResponse.success) {
         throw new Error(allItemsResponse.error!);
     }
 
     const rawItems = allItemsResponse.items!;
-    const numItems = rawItems.length;
 
     // Sort by fullpath, with the deepest items processed first
     const items = rawItems.sort((a, b) => b.fullpath.split("/").length - a.fullpath.split("/").length);
-    console.debug(`Got ${numItems} items to process: `, items);
 
     // Rename items
     for (let i = 0; i < items.length; i++) {
         setLoadingState(`Processed ${i} of ${numItems} Items`);
         const item = items[i];
+        const nameNoExEF = item.name.replace(/\.exef$/g, "");
 
         let newName;
         if (obfuscated) {
-            newName = auth.noc!.encipher(Buffer.from(item.name, "utf-8"));
+            newName = auth.noc!.encipher(Buffer.from(nameNoExEF, "utf-8")) + (item.type === "file" ? ".exef" : "");
         } else {
-            newName = auth.noc!.decipher(item.name).toString("utf-8");
+            newName = auth.noc!.decipher(nameNoExEF).toString("utf-8") + (item.type === "file" ? ".exef" : "");
         }
 
         console.debug(`Renaming item '${item.fullpath}' from '${item.name}' to '${newName}'`);

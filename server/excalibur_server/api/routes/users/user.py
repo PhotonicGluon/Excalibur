@@ -10,7 +10,7 @@ from pydantic import BaseModel, field_serializer
 
 from excalibur_server.api.routes.users import router
 from excalibur_server.env import is_debug
-from excalibur_server.src.auth.credentials import get_credentials
+from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations.helpers import get_session
@@ -86,20 +86,22 @@ def get_user_security_details_endpoint(username: Annotated[str, Path()]):
     summary="Get User Vault Key",
     dependencies=[Depends(get_credentials)],
     responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
     },
     response_model=EncryptedVaultKey,
     tags=["encrypted"],
 )
-def get_user_vault_key_endpoint(username: Annotated[str, Path()]):
+def get_user_vault_key_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    _username: Annotated[
+        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
+    ],
+):
     """
-    Returns the vault key of a user with the specified username.
+    Returns the vault key of the currently authenticated user.
     """
 
-    if not is_user(username):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    user = get_user(username)
+    user = get_user(credentials.username)
     return EncryptedVaultKey(key_enc=user.key_enc)
 
 
@@ -108,20 +110,22 @@ def get_user_vault_key_endpoint(username: Annotated[str, Path()]):
     summary="Get Additional User Info",
     dependencies=[Depends(get_credentials)],
     responses={
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
     },
     tags=["encrypted"],
     response_class=PlainTextResponse,
 )
-def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
+def get_additional_user_info_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    _username: Annotated[
+        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
+    ],
+):
     """
-    Returns the additional user info of a user with the specified username.
+    Returns the additional user info of the currently authenticated user.
     """
 
-    if not is_user(username):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    user = get_user(username)
+    user = get_user(credentials.username)
     return user.additional_info
 
 
@@ -131,21 +135,24 @@ def get_additional_user_info_endpoint(username: Annotated[str, Path()]):
     dependencies=[Depends(get_credentials)],
     responses={
         status.HTTP_200_OK: {"description": "User info updated", "content": None},
-        status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "User not found"},  # TODO: Remove this response code
     },
     tags=["encrypted"],
 )
-def edit_additional_user_info_endpoint(username: Annotated[str, Path()], info: Annotated[str, Body()]):
+def edit_additional_user_info_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    _username: Annotated[
+        str, Path(alias="username", description="Ignored. Present to maintain backwards compatibility.")
+    ],
+    info: Annotated[str, Body()],
+):
     """
-    Edits the additional user info of a user with the specified username.
+    Edits the additional user info of the currently authenticated user.
     """
 
     with get_session() as session:
-        curr_user = session.query(User).filter(User.username == username).first()
-        if curr_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        curr_user.additional_info = info
+        db_user = session.get(User, credentials.username)
+        db_user.additional_info = info
         session.commit()
 
 

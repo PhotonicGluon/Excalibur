@@ -1,6 +1,6 @@
 import json
 
-import httpx
+import httpx2
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -11,7 +11,7 @@ from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.exef import ExEF
 
 
-def _decrypt_response(response: httpx.Response) -> list[tuple[dict, float]]:
+def _decrypt_response(response: httpx2.Response) -> list[tuple[dict, float]]:
     assert response.status_code == 200
     if response.headers.get("X-Encrypted") == "true":
         assert ExEF.validate(response.content), "Did not return an encrypted response"

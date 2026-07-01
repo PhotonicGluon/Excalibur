@@ -4,30 +4,30 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.6.0b4"
+version = "0.6.6"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.4",
     "colorama>=0.4.6 ; sys_platform == 'win32'",
     "duckdb~=1.4.4",
     "duckdb-engine>=0.17.0",
-    "fastapi>=0.136.1",
-    "gitpython>=3.1.47",
-    "httptools>=0.7.1",
+    "fastapi>=0.138.0",
+    "gitpython>=3.1.50",
+    "httptools>=0.8.0",
     "packaging>=26.2",
     "pycryptodome>=3.23.0",
-    "pydantic>=2.13.3",
-    "pydantic-settings>=2.14.0",
-    "pyjwt>=2.12.1",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "pyjwt>=2.13.0",
     "rapidfuzz>=3.14.5",
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
     "sqlalchemy<=2.0.44",
     "sqlmodel>=0.0.37",
     "toml>=0.10.2",
-    "tomlkit>=0.14.0",
-    "typer>=0.25.0",
-    "uvicorn>=0.46.0",
+    "tomlkit>=0.15.0",
+    "typer>=0.26.7",
+    "uvicorn>=0.49.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
     "websockets>=16.0",
 ]
@@ -47,12 +47,15 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.10.1", "ruff>=0.15.12", "watchfiles>=1.1.1"]
-test = ["httpx>=0.28.1", "pytest>=9.0.3", "pytest-timeout>=2.4.0"]
+dev = ["ipython~=9.14.1", "ruff>=0.15.19", "watchfiles>=1.2.0"]
+test = ["httpx2>=2.4.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []
 exclude-newer = "5 days"
+
+[tool.uv.exclude-newer-package]
+starlette = "2026-06-17T00:00:00.000Z"
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"

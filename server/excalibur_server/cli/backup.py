@@ -15,11 +15,18 @@ def create_backup(
 
     import zipfile
 
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+
     from excalibur_server.consts import ROOT_FOLDER
 
-    typer.echo("Creating backup of Excalibur server files")
-    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zip_file:
-        for file in ROOT_FOLDER.iterdir():
-            zip_file.write(file, file.name)
+    with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
+        task = progress.add_task("Creating backup...")
+        with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
+            for file_path in ROOT_FOLDER.rglob("*"):
+                if file_path.is_file():
+                    arcpath = file_path.relative_to(ROOT_FOLDER)
+                    progress.update(task, description=f"Adding {arcpath}")
+                    zf.write(file_path, arcname=arcpath)
+        progress.update(task, description="Done!")
 
     typer.secho(f"Backup created successfully at '{output}'!", fg=typer.colors.GREEN)

@@ -117,12 +117,6 @@ We first need the Vite project to be built. While in the `app/packages/main` dir
 pnpm run build
 ```
 
-Then we sync the changes to Capacitor by running
-
-```bash
-pnpm run sync
-```
-
 We can now open the project in Android Studio by running
 
 ```bash

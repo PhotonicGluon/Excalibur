@@ -1,0 +1,49 @@
+name: Create Dependabot News Fragments
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write # Needed to push the news fragment commit back to the PR
+
+jobs:
+  generate-news-fragment:
+    runs-on: ubuntu-latest
+    # We only want this action to run for Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # Checkout the Dependabot PR branch so we can commit directly to it
+          ref: ${{ github.head_ref }}
+
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Generate News Fragment
+        run: python3 .github/scripts/generate_news_fragment.py
+        env:
+          DEP_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+          PREV_VERSION: ${{ steps.dependabot-metadata.outputs.previous-version }}
+          NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
+          DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
+
+      - name: Stage changelog files
+        run: |
+          git add 
+  
+      - name: Sign and commit
+        uses: planetscale/ghcommit-action@v0.2.20
+        with:
+          commit_message: "Auto-generate news fragment(s) for dependency update"
+          repo: ${{ github.repository }}
+          branch: ${{ github.head_ref || github.ref_name }}
+          empty: false
+          file_pattern: "app/changelog.d/* server/changelog.d/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

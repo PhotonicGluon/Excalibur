@@ -46,6 +46,7 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
     :raises ValueError: if the path is empty or root
     """
 
+    path = PurePosixPath(path).as_posix()
     if path == ".":
         path = ""
 

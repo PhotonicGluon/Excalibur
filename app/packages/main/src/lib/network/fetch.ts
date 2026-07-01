@@ -35,12 +35,12 @@ export function timedXHR(url: string, method: string, timeout: number | null = 3
 /**
  * Fetches a URL with a Proof of Possession (PoP) and timeout.
  *
- * @param url The URL to fetch
- * @param masterKey The master key to use for generating the PoP
- * @param options The options to pass to fetch
- * @param timeout The timeout, in seconds. If null, no timeout is applied
- * @returns The response from fetch
- * @throws {TypeError} If the fetch fails
+ * @param url the URL to fetch
+ * @param masterKey the master key to use for generating the PoP
+ * @param options the options to pass to fetch
+ * @param timeout the timeout, in seconds. If null, no timeout is applied
+ * @returns the response from fetch
+ * @throws {TypeError} if the fetch fails
  */
 export async function popFetch(
     url: string,

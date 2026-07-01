@@ -4,6 +4,12 @@ on:
     pull_request:
         branches:
             - main
+            - stable
+        paths-ignore:
+            - "app/changelog/*"
+            - "app/changelog.d/*"
+            - "server/changelog/*"
+            - "server/changelog.d/*"
     workflow_dispatch:
 
 jobs:

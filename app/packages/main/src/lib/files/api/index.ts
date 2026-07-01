@@ -1,4 +1,5 @@
 export * from "./checks";
+export * from "./count";
 export * from "./delete";
 export * from "./file";
 export * from "./folder";

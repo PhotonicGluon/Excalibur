@@ -4,12 +4,14 @@ on:
     push:
         branches:
             - main
+            - stable
         paths:
             - server/uv.lock
             - server/excalibur_server/**
     pull_request:
         branches:
             - main
+            - stable
         paths:
             - server/uv.lock
             - server/excalibur_server/**

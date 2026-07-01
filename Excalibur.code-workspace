@@ -72,6 +72,9 @@
             "bradlc.vscode-tailwindcss",
             "tamasfe.even-better-toml",
             "usernamehw.errorlens"
+        ],
+        "unwantedRecommendations": [
+            "ms-python.vscode-python-envs"
         ]
     }
 }

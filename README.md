@@ -6,9 +6,12 @@
 
 <div align="center">
     <a href="./LICENSE"><img src="https://img.shields.io/github/license/PhotonicGluon/Excalibur" alt="License"></a>
-    <a href="https://github.com/PhotonicGluon/Excalibur/releases"><img src="https://img.shields.io/github/v/release/PhotonicGluon/Excalibur" alt="GitHub Release"></a>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python"></a>
     <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-green" alt="Node.js"></a>
+    <br>
+    <a href="https://github.com/PhotonicGluon/Excalibur/releases"><img src="https://img.shields.io/github/v/release/PhotonicGluon/Excalibur" alt="GitHub Release"></a>
+    <img src="https://img.shields.io/github/languages/code-size/PhotonicGluon/Excalibur" alt="GitHub code size in bytes">
+    <img src="https://img.shields.io/github/commits-since/PhotonicGluon/Excalibur/latest" alt="GitHub commits since latest release">
 </div>
 
 ## Features
@@ -24,9 +27,11 @@
 
 ![Login Screen](./screenshots/login.png)
 
-![File Browser](./screenshots/explorer.png)
+![Sign Up Screen](./screenshots/sign-up.png)
 
-![Settings](./screenshots/settings.png)
+![Explorer (Empty)](./screenshots/explorer-empty.png)
+
+![Explorer](./screenshots/explorer.png)
 
 ## Quick Start
 

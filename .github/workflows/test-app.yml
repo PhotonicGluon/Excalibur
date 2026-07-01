@@ -4,12 +4,14 @@ on:
     push:
         branches:
             - main
+            - stable
         paths:
             - pnpm-lock.yaml
             - app/packages/main/**
     pull_request:
         branches:
             - main
+            - stable
         paths:
             - pnpm-lock.yaml
             - app/packages/main/**
