@@ -1,43 +1,47 @@
-from typing import Annotated
+from fastapi import WebSocket, WebSocketDisconnect
 
-from fastapi import Query, WebSocket, WebSocketDisconnect
-
-from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.auth.opaque import OPAQUE
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import get_session
+from excalibur_server.src.crypto.elliptic import NoiseNK, Ristretto255
 from excalibur_server.src.db.tables import User
 from excalibur_server.src.users import add_user, get_user
-from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketMsg
+from excalibur_server.src.websocket import EncryptedWebSocketManager, WebSocketManager, WebSocketMsg
 
 
 @router.websocket("/opaque/register")
-async def registration_endpoint(
-    websocket: WebSocket,
-    comms_uuid: Annotated[
-        str | None,
-        Query(description="Communication UUID. Used for upgrading an existing user to OPAQUE from SRP authentication."),
-    ] = None,
-):
+async def registration_endpoint(websocket: WebSocket):
     """
     Endpoint that handles the registration communication of incoming requests.
-
-    All messages should be encrypted with the Account Creation Key (ACK).
     """
 
     OPAQUE = _get_opaque()
-
-    key = CONFIG.security.account_creation_key
-    if comms_uuid and comms_uuid in MASTER_KEYS_CACHE:
-        key = MASTER_KEYS_CACHE[comms_uuid]
-    ws_manager = EncryptedWebSocketManager(websocket, key)
+    ws_manager = WebSocketManager(websocket)
 
     await ws_manager.accept()
     try:
+        # Use Noise-NK protocol to set up session key
+        noise = NoiseNK(CONFIG.security.account_creation.public_key)
+
+        client_keyshare_pub_and_tag = (await ws_manager.receive()).data
+        try:
+            client_keyshare_pub = Ristretto255.from_bytes(client_keyshare_pub_and_tag[: Ristretto255.KEY_LENGTH])
+            client_tag = client_keyshare_pub_and_tag[Ristretto255.KEY_LENGTH :]
+            server_keyshare_pub, server_tag, session_key = noise.message_s_to_c(
+                client_keyshare_pub, client_tag, CONFIG.security.account_creation.private_key
+            )
+        except ValueError:
+            await ws_manager.send(WebSocketMsg("Invalid value", status="ERR"))
+            await ws_manager.close()
+            return
+
+        await ws_manager.send(WebSocketMsg(server_keyshare_pub.to_bytes() + server_tag))
+
+        # Upgrade manager to handle encrypted communications
+        ws_manager = EncryptedWebSocketManager(ws_manager._ws, session_key)
+
         # Wait for username and registration request
         registration_request_raw_and_username = (await ws_manager.receive()).data
         registration_request_raw = registration_request_raw_and_username[: OPAQUE.registration_request_size]
@@ -45,9 +49,7 @@ async def registration_endpoint(
 
         # Check username
         user = get_user(username)
-        if (
-            user is not None and key == CONFIG.security.account_creation_key
-        ):  # We'll allow overwriting if using an actual session key
+        if user is not None:
             await ws_manager.send(WebSocketMsg("User already exists", "ERR"))
             await ws_manager.close()
             return
@@ -68,27 +70,15 @@ async def registration_endpoint(
         auk_salt = upload_data[OPAQUE.registration_record_size : OPAQUE.registration_record_size + 32]
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
-        # If a valid communications UUID was given, we update the authentication protocol
-        if key != CONFIG.security.account_creation_key:
-            with get_session() as session:
-                with session.begin():
-                    current_user = session.query(User).filter_by(username=username).first()
-                    current_user.auth_protocol = AuthProtocol.OPAQUE_3DH
-                    current_user.srp_group = None
-                    current_user.srp_salt = None
-                    current_user.srp_verifier = None
-                    current_user.registration_record = registration_record_raw
-                    session.add(current_user)
-        else:
-            # Add new user
-            user = User(
-                username=username,
-                auth_protocol=AuthProtocol.OPAQUE_3DH,
-                registration_record=registration_record_raw,
-                auk_salt=auk_salt,
-                key_enc=key_enc,
-            )
-            add_user(user)
+        # Add the user
+        user = User(
+            username=username,
+            auth_protocol=AuthProtocol.OPAQUE_3DH,
+            registration_record=registration_record_raw,
+            auk_salt=auk_salt,
+            key_enc=key_enc,
+        )
+        add_user(user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))
@@ -110,7 +100,7 @@ def _get_opaque() -> OPAQUEServer:
     :return: the OPAQUE server instance
     """
 
-    return OPAQUE
+    return OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
 
 def _get_oprf_seed() -> bytes:

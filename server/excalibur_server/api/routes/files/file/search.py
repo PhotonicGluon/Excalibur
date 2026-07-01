@@ -7,7 +7,7 @@ from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_items_in_root
 from excalibur_server.src.files.structures import File
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 @encrypted_router.post(
@@ -52,10 +52,10 @@ def search_endpoint(
     Returns a list of tuples containing the file data and similarity score.
     """
 
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get all files in the user's filesystem
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     files = [item for item in get_items_in_root(root_id) if not item.is_folder]
     choices = [item.name for item in files]
 

@@ -8,7 +8,6 @@ import {
     IonContent,
     IonHeader,
     IonInput,
-    IonInputPasswordToggle,
     IonLabel,
     IonLoading,
     IonMenuButton,
@@ -17,71 +16,41 @@ import {
     IonToolbar,
     useIonAlert,
     useIonRouter,
-    useIonToast,
 } from "@ionic/react";
 
 import { e2ee } from "@lib/auth/e2ee";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { checkUser, getAdditionalUserInfo } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
-import { retrieveVaultKey } from "@lib/users/vault";
+import { retrieveVaultInfo } from "@lib/users/vault";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";
+import PasswordInput from "@components/inputs/PasswordInput";
 
 import logo from "@assets/icon.png";
-
-interface LoginValues {
-    /** Username to log in as */
-    username: string;
-    /** Password for the user */
-    password: string;
-    /** Whether to save the password */
-    savePassword: boolean;
-}
 
 const Login: React.FC = () => {
     // Contexts
     const auth = useAuth();
     const router = useIonRouter();
 
-    // States
     const [presentAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
 
-    const [capslockIndicator, setCapslockIndicator] = useState(false);
+    // States
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [savePassword, setSavePassword] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Logging in...");
 
     // Functions
     /**
-     * Gets all values from the form.
-     *
-     * @returns The values from the form
-     */
-    function getAllValues(): LoginValues {
-        // Get raw inputs
-        const inputs = document.querySelectorAll("ion-input");
-        const checkboxes = document.querySelectorAll("ion-checkbox");
-
-        // Preprocess
-        const username = inputs[0].value! as string;
-        const password = inputs[1].value! as string;
-        const savePassword = checkboxes[0].checked! as boolean;
-
-        // Form values
-        return { username: username, password: password, savePassword: savePassword };
-    }
-
-    /**
      * Validates the values from the form.
      *
-     * @param values The values from the form
      * @returns Whether the values are valid
      */
-    function validateValues({ username, password }: LoginValues) {
+    function validateValues() {
         // Check all filled
         if (username === "" || password === "") {
             return false;
@@ -95,8 +64,7 @@ const Login: React.FC = () => {
      */
     async function onLoginButtonClick() {
         // Check values
-        const values = getAllValues();
-        if (!validateValues(values)) {
+        if (!validateValues()) {
             presentAlert({
                 header: "Invalid Values",
                 message: "Some values are missing or invalid.",
@@ -104,43 +72,14 @@ const Login: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received values: ${JSON.stringify(values)}`);
+        console.debug(`Received values: ${JSON.stringify({ username, password, savePassword })}`);
         setIsLoading(true);
-
-        // Check whether user exists
-        setLoadingState("Finding user...");
-        try {
-            if (!(await checkUser(auth.serverInfo!.apiURL!, values.username))) {
-                setIsLoading(false);
-                presentAlert({
-                    header: "User Not Found",
-                    message: "Please create the user first.",
-                    buttons: [
-                        {
-                            text: "OK",
-                            role: "cancel",
-                        },
-                    ],
-                });
-                return;
-            }
-        } catch (error: unknown) {
-            console.error(error);
-            presentToast({
-                message: `An error occurred: ${error}`,
-                duration: 2000,
-                color: "danger",
-            });
-            setIsLoading(false);
-            return;
-        }
 
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
             auth.serverInfo!.apiURL!,
-            values.username,
-            values.password,
-            () => setIsLoading(true),
+            username,
+            password,
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg, buttons) => {
@@ -152,79 +91,57 @@ const Login: React.FC = () => {
             return;
         }
 
-        // Retrieve the vault key
-        try {
-            const vaultKey = await retrieveVaultKey(
-                auth.serverInfo!.apiURL!,
-                values.username,
-                e2eeData.token,
-                e2eeData.key,
-                e2eeData.auk,
-                (error) => {
-                    console.error(error);
-                    setIsLoading(false);
-                    presentAlert({
-                        header: "Vault Key Failure",
-                        message: error,
-                        buttons: ["OK"],
-                    });
-                },
-            );
-            if (!vaultKey) {
-                // Errors already handled in `retrieveVaultKey()`
-                return;
-            }
-            auth.setVaultKey(vaultKey);
-        } catch (error: unknown) {
-            console.error(error);
-            setIsLoading(false);
-            presentAlert({
-                header: "Vault Key Failure",
-                message: `Could not retrieve vault key: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-
-        // Obtain any additional information
-        let additionalInfo: AdditionalUserInfo;
-        try {
-            const additionalInfoResponse = await getAdditionalUserInfo(
-                auth.serverInfo!.apiURL!,
-                values.username,
-                e2eeData.token,
-                e2eeData.key,
-            );
-            if (!additionalInfoResponse.success) {
-                throw new Error(additionalInfoResponse.error);
-            }
-            additionalInfo = additionalInfoResponse.info!;
-        } catch (error: unknown) {
-            console.error(error);
-            setIsLoading(false);
-            presentAlert({
-                header: "Additional Info Failure",
-                message: `Could not retrieve additional info: ${error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.debug(`Got additional info: ${JSON.stringify(additionalInfo)}`);
-
         // Set authentication info
         const authInfo: AuthInfo = {
-            username: values.username,
-            obfuscatedNames: additionalInfo.obfuscatedNames ?? false,
+            username,
+            password,
             ...e2eeData,
         };
         auth.setAuthInfo(authInfo);
         console.log(`Token for authentication: ${authInfo.token}`);
 
+        // Retrieve the vault info
+        try {
+            const vaultInfo = await retrieveVaultInfo(
+                auth.serverInfo!.apiURL!,
+                e2eeData.token,
+                e2eeData.key,
+                password,
+                { username },
+                (error) => {
+                    console.error(error);
+                    setIsLoading(false);
+                    presentAlert({
+                        header: "Vault Info Failure",
+                        message: error,
+                        buttons: ["OK"],
+                    });
+                },
+                (progress) => {
+                    setLoadingState(`Deriving keys... ${Math.round(progress * 100)}%`);
+                },
+            );
+            if (!vaultInfo) {
+                // Errors already handled in `retrieveVaultInfo()`
+                return;
+            }
+            auth.setVaultInfo(vaultInfo);
+        } catch (error: unknown) {
+            console.error(error);
+            setIsLoading(false);
+            presentAlert({
+                header: "Vault Info Failure",
+                message: `Could not retrieve vault info: ${error}`,
+                buttons: ["OK"],
+            });
+            return;
+        }
+
         // Update preferences
         Preferences.set({
-            username: values.username,
-            password: values.savePassword ? values.password : "",
-            savePassword: values.savePassword,
+            username: username,
+            password: savePassword ? password : "",
+            savePassword: savePassword,
         });
 
         // Continue with files retrieval
@@ -245,20 +162,20 @@ const Login: React.FC = () => {
         Preferences.get("username").then((result) => {
             if (!result) return;
             console.debug(`Got existing username from preferences: ${result}`);
-            document.querySelector("#username-input")!.setAttribute("value", result!);
+            setUsername(result);
         });
         Preferences.get("password").then((result) => {
             if (!result) return;
             console.debug(`Got existing password from preferences: ${result}`);
-            document.querySelector("#password-input")!.setAttribute("value", result!);
+            setPassword(result);
         });
         Preferences.get("savePassword").then((rawResult) => {
             const result = rawResult === "true";
             console.debug(`Got existing save password from preferences: ${result}`);
             if (result) {
-                document.querySelector("#save-password-checkbox")!.setAttribute("checked", "checked");
+                setSavePassword(true);
             } else {
-                document.querySelector("#save-password-checkbox")!.removeAttribute("checked");
+                setSavePassword(false);
             }
         });
     });
@@ -276,7 +193,7 @@ const Login: React.FC = () => {
                     auth.logout(true); // Also remove saved API URL
                     router.push("/server-choice", "forward", "replace");
                 }}
-            ></SidebarMenu>
+            />
 
             <IonPage id="main-content">
                 {/* Header content */}
@@ -304,46 +221,33 @@ const Login: React.FC = () => {
                                 <div className="flex flex-col gap-3">
                                     <div className="h-20">
                                         <IonInput
-                                            id="username-input"
                                             label="Username"
                                             labelPlacement="stacked"
                                             fill="solid"
                                             placeholder="MyCoolUsername"
                                             type="text"
+                                            value={username}
+                                            onIonInput={(e) => setUsername(e.detail.value!)}
                                         ></IonInput>
                                     </div>
                                     <div className="h-20">
-                                        <IonInput
-                                            id="password-input"
-                                            label="Password"
-                                            labelPlacement="stacked"
-                                            fill="solid"
-                                            placeholder="My secure password!"
-                                            type="password"
-                                            onKeyUp={(event) => {
-                                                if (event.getModifierState("CapsLock")) {
-                                                    setCapslockIndicator(true);
-                                                } else {
-                                                    setCapslockIndicator(false);
-                                                }
-                                            }}
+                                        <PasswordInput
+                                            value={password}
+                                            onPasswordChange={setPassword}
                                             onKeyDown={(event) => {
                                                 if (event.key === "Enter") {
                                                     event.preventDefault();
                                                     onLoginButtonClick();
                                                 }
                                             }}
-                                        >
-                                            <IonInputPasswordToggle slot="end" />
-                                        </IonInput>
-                                        {capslockIndicator && (
-                                            <IonLabel color="danger" className="text-xs">
-                                                Caps Lock is on!
-                                            </IonLabel>
-                                        )}
+                                        />
                                     </div>
 
-                                    <IonCheckbox id="save-password-checkbox" labelPlacement="end">
+                                    <IonCheckbox
+                                        labelPlacement="end"
+                                        checked={savePassword}
+                                        onIonChange={(e) => setSavePassword(e.detail.checked)}
+                                    >
                                         <div className="w-full *:block *:leading-none">
                                             <IonLabel className="text-base">Save password</IonLabel>
                                             <IonLabel color="danger" className="text-xs text-wrap">

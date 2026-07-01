@@ -3,9 +3,9 @@ from typing import Literal, Self, Union
 
 from pydantic import BaseModel, Field
 
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.exef import ExEF
 
 
 class Filelike(BaseModel):

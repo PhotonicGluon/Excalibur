@@ -29,7 +29,7 @@ def test_get_token():
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
     from excalibur_server.src.auth.credentials import generate_auth_token
     from excalibur_server.src.auth.pop import generate_pop_header
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     uuid = "00000000000000000000000000000000"
     MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
@@ -43,7 +43,7 @@ def test_get_token():
             "/api/auth/token",
             headers={
                 # Checking whether PoP works is handled in `test_pop_demo.py`
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="GET",
                     path="/api/auth/token",

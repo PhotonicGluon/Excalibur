@@ -2,7 +2,6 @@ from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.auth.opaque.operation.base import BaseOPAQUE
 from excalibur_server.src.auth.opaque.oprf import OPRFType
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import (
     CleartextCredentials,
     Envelope,
@@ -10,6 +9,7 @@ from excalibur_server.src.auth.opaque.structures import (
     RegistrationRequest,
     RegistrationResponse,
 )
+from excalibur_server.src.crypto.elliptic import Ristretto255
 
 
 class OPAQUEClient(BaseOPAQUE):

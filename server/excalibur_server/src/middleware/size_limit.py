@@ -4,7 +4,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):

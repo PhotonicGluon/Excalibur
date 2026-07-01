@@ -1,8 +1,7 @@
 import os
-import shutil
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +10,7 @@ from sqlmodel import Session, SQLModel
 
 from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
+from excalibur_server.cli.start_server import _create_fake_user
 from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.enums import AuthProtocol
@@ -39,6 +39,9 @@ def test_database():
     engine = create_engine(f"duckdb:///{db_path}")
     SQLModel.metadata.create_all(engine)
 
+    # Create fake user
+    _create_fake_user()
+
     try:
         yield engine
     finally:
@@ -62,40 +65,27 @@ def test_user(db_session: Session):
     # Check if user already exists
     from excalibur_server.src.db.operations import get_user
 
-    if existing_user := get_user("test-user-db"):
+    if existing_user := get_user("test-user"):
         return {"user": existing_user, "root_id": existing_user.fsitem_id}
 
-    # Create legacy test user (i.e., using traditional file system) for existing tests
-    legacy_test_user = User(
+    # Create test user
+    user = User(
+        id=UUID("01234567-89ab-dcef-0123-456789abcdef"),
         username="test-user",
         auth_protocol=AuthProtocol.OPAQUE_3DH,
-        fsitem_id=None,  # No database filesystem for legacy user
-        additional_info="Some Sample Info",
+        keygen_algorithm="Example Keygen Function",
+        vault_info="Some Sample Info",
         auk_salt=b"test_auk_salt_16_bytes",
         key_enc=b"test_encrypted_vault_key",
     )
-    db_session.add(legacy_test_user)
-
-    # Create root folder for user
-    root_id = uuid.uuid4()
-    root_folder = FSItem(id=root_id, parent_id=None, root_id=root_id, name="test-user-db", is_folder=True)
+    root_folder = FSItem(name=str(user.id), parent_id=None, is_folder=True)
+    root_folder.root_id = root_folder.id
+    user.fsitem_id = root_folder.id
     db_session.add(root_folder)
-
-    # Create test user with database filesystem
-    db_test_user = User(
-        username="test-user-db",
-        auth_protocol=AuthProtocol.OPAQUE_3DH,
-        fsitem_id=root_id,
-        additional_info="Some Sample Info",
-        auk_salt=b"test_auk_salt_16_bytes",
-        key_enc=b"test_encrypted_vault_key",
-    )
-    db_session.add(db_test_user)
-
-    # Commit all items
+    db_session.add(user)
     db_session.commit()
 
-    return {"user": db_test_user, "root_id": root_id}
+    return {"user": user, "root_id": root_folder.id}
 
 
 @pytest.fixture(scope="class")
@@ -105,51 +95,8 @@ def auth_client(test_user) -> TestClient:
     """
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token("test-user", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(
+        str(test_user["user"].id), "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999
+    )
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
-
-
-@pytest.fixture(scope="class")
-def auth_client_db(test_user) -> TestClient:
-    """
-    An authenticated client for testing with database filesystem.
-    """
-
-    MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token("test-user-db", "some-uuid", datetime.now(tz=timezone.utc).timestamp() + 9999)
-    with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
-        yield client
-
-
-@pytest.fixture(scope="session", autouse=True)
-def test_user_vault_folder(tmp_path_factory: pytest.TempPathFactory):
-    vault = tmp_path_factory.mktemp("vault")
-    CONFIG.storage.vault_folder = vault
-
-    test_user_folder = vault / "test-user"
-    test_user_folder.mkdir()
-    yield test_user_folder
-    shutil.rmtree(vault)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def test_user_db_vault_folder(test_user_vault_folder: Path):
-    test_user_db_folder = test_user_vault_folder.parent / "test-user-db"
-    test_user_db_folder.mkdir()
-    yield test_user_db_folder
-    shutil.rmtree(test_user_db_folder)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_vault_files(test_user_vault_folder: Path):
-    folder = test_user_vault_folder / "folder"
-    folder.mkdir()
-
-    empty_folder = test_user_vault_folder / "empty-folder"
-    empty_folder.mkdir()
-
-    (test_user_vault_folder / "file").touch()
-    (folder / "subfile").touch()
-
-    yield

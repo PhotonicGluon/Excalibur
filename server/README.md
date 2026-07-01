@@ -22,17 +22,24 @@ Run
 excalibur start
 ```
 
-If using debug mode, run
+### Development
+
+To run the server in debug mode for development, run
 
 ```bash
 excalibur start --debug
 ```
 
-To disable CORS, run
+To disable CORS validation, run
 
 ```bash
 excalibur start --disable-cors-validation
 ```
+
+> [!CAUTION]
+> Do **not** enable debug mode for production servers as sensitive endpoints are exposed that can be exploited by malicious actors.
+>
+> _Only enable debug mode for development servers_.
 
 ## Changelog
 

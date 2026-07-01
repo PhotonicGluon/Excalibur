@@ -1,18 +1,34 @@
-from typing import Literal
+from typing import Annotated
+
+from fastapi import Path
+from pydantic import BaseModel
 
 from excalibur_server.api.routes.auth import router
-from excalibur_server.src.auth.srp import SRPGroup
-from excalibur_server.src.config import CONFIG
+from excalibur_server.consts import FAKE_USER_UUID
+from excalibur_server.src.auth.enums import AuthProtocol
+from excalibur_server.src.users import get_user, get_user_from_id
 
-SRPGroupBits = Literal[*{group.bits for group in SRPGroup}]
+
+class AuthInfo(BaseModel):
+    auth_protocol: AuthProtocol
 
 
-@router.get("/group-size")
-def get_group_size_endpoint() -> SRPGroupBits:
+@router.get(
+    "/info/{username}",
+    name="Get User Authentication Info",
+    response_model=AuthInfo,
+)
+def get_user_auth_info_endpoint(username: Annotated[str, Path()]):
     """
-    Gets the size of the SRP group.
-
-    In particular, this returns the number of bits in the group's modulus.
+    Returns the security details of a user with the specified username.
     """
 
-    return CONFIG.security.srp.group.bits
+    # Pre-get the fake user
+    # (This is to prevent side-channel client enumeration attacks. See RFC9807 Section 10.9)
+    fake_user = get_user_from_id(FAKE_USER_UUID)
+
+    user = get_user(username)
+    if user is None:
+        user = fake_user
+
+    return AuthInfo.model_validate(user.model_dump())

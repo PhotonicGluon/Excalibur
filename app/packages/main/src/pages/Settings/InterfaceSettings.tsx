@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
     IonButton,
     IonButtons,
@@ -31,28 +33,31 @@ const InterfaceSettings: React.FC = () => {
     const router = useIonRouter();
     const settings = useSettings();
 
+    // States
+    const [theme, setTheme] = useState<Theme>(settings.theme);
+    const [iconStyle, setIconStyle] = useState<IconStyle>(settings.iconStyle);
+    const [rowAlternatingColours, setRowAlternatingColours] = useState<RowAlternatingColours>(
+        settings.rowAlternatingColours,
+    );
+    const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(settings.fileSizeUnits);
+
     // Functions
     /**
      * Handles any updates to the settings' values.
+     *
+     * @param newSettings the new settings' values
      */
-    function updateSettings() {
-        // Get final data
-        const theme = (document.getElementById("theme")! as HTMLIonSelectElement).value as Theme;
-        const iconStyle = (document.getElementById("icon-style")! as HTMLIonSelectElement).value as IconStyle;
-        const rowAlternatingColours = (document.getElementById("row-alternating-colours")! as HTMLIonSelectElement)
-            .value as RowAlternatingColours;
-        const fileSizeUnits = (document.getElementById("file-size-units")! as HTMLIonSelectElement)
-            .value as FileSizeUnits;
-
-        // Form new settings
-        const newSettings: Partial<SettingsPreferenceValues> = {
-            theme,
-            iconStyle,
-            rowAlternatingColours,
-            fileSizeUnits,
+    function updateSettings(newSettings: SettingsPreferenceValues) {
+        const settingsToSave: Partial<SettingsPreferenceValues> = {
+            theme: newSettings.theme,
+            iconStyle: newSettings.iconStyle,
+            rowAlternatingColours: newSettings.rowAlternatingColours,
+            fileSizeUnits: newSettings.fileSizeUnits,
         };
-        console.log(`Got new settings' values: ${JSON.stringify(newSettings)}`);
-        settings.save(newSettings);
+
+        console.log(`Got new settings' values: ${JSON.stringify(settingsToSave)}`);
+        settings.change(settingsToSave);
+        settings.save(settingsToSave);
     }
 
     // Render
@@ -73,22 +78,19 @@ const InterfaceSettings: React.FC = () => {
             {/* Body content */}
             <IonContent fullscreen>
                 {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:leading-none [&_h2]:font-bold">
+                <IonGrid className="ion-padding-horizontal">
                     <SettingsItem
                         label={<IonLabel>Theme</IonLabel>}
                         input={
                             <IonSelect
-                                id="theme"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select theme"
-                                value={settings.theme}
+                                value={theme}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        theme: e.detail.value as Theme,
-                                    });
-                                    updateSettings();
+                                    const newTheme = e.detail.value as Theme;
+                                    setTheme(newTheme);
+                                    updateSettings({ ...settings, theme: newTheme });
                                 }}
                             >
                                 <IonSelectOption value="system">System</IonSelectOption>
@@ -96,22 +98,19 @@ const InterfaceSettings: React.FC = () => {
                                 <IonSelectOption value="dark">Dark</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<IonLabel>Icon Style</IonLabel>}
                         input={
                             <IonSelect
-                                id="icon-style"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select icon style"
-                                value={settings.iconStyle}
+                                value={iconStyle}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        iconStyle: e.detail.value as IconStyle,
-                                    });
-                                    updateSettings();
+                                    const newIconStyle = e.detail.value as IconStyle;
+                                    setIconStyle(newIconStyle);
+                                    updateSettings({ ...settings, iconStyle: newIconStyle });
                                 }}
                             >
                                 <IonSelectOption value="default">Default</IonSelectOption>
@@ -120,22 +119,19 @@ const InterfaceSettings: React.FC = () => {
                                 <IonSelectOption value="solid">All Solid</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<IonLabel>Row Highlight</IonLabel>}
                         input={
                             <IonSelect
-                                id="row-alternating-colours"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select highlight colours"
-                                value={settings.rowAlternatingColours}
+                                value={rowAlternatingColours}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        rowAlternatingColours: e.detail.value as RowAlternatingColours,
-                                    });
-                                    updateSettings();
+                                    const newRowAlternatingColours = e.detail.value as RowAlternatingColours;
+                                    setRowAlternatingColours(newRowAlternatingColours);
+                                    updateSettings({ ...settings, rowAlternatingColours: newRowAlternatingColours });
                                 }}
                             >
                                 <IonSelectOption value="off">Off</IonSelectOption>
@@ -143,29 +139,26 @@ const InterfaceSettings: React.FC = () => {
                                 <IonSelectOption value="inverted">Inverted</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                     <SettingsItem
                         label={<IonLabel>File Size Units</IonLabel>}
                         input={
                             <IonSelect
-                                id="file-size-units"
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select file size units"
-                                value={settings.fileSizeUnits}
+                                value={fileSizeUnits}
                                 onIonChange={(e) => {
-                                    settings.change({
-                                        ...settings,
-                                        fileSizeUnits: e.detail.value as FileSizeUnits,
-                                    });
-                                    updateSettings();
+                                    const newFileSizeUnits = e.detail.value as FileSizeUnits;
+                                    setFileSizeUnits(newFileSizeUnits);
+                                    updateSettings({ ...settings, fileSizeUnits: newFileSizeUnits });
                                 }}
                             >
                                 <IonSelectOption value="si">kB, MB, GB</IonSelectOption>
                                 <IonSelectOption value="iec">KiB, MiB, GiB</IonSelectOption>
                             </IonSelect>
                         }
-                    ></SettingsItem>
+                    />
                 </IonGrid>
             </IonContent>
         </IonPage>

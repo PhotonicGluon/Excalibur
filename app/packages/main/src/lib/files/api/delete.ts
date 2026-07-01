@@ -1,4 +1,4 @@
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { type ItemType } from "@lib/files/structures";
 import { popFetch } from "@lib/network";
 import { IS_DEV, b64encodeURLSafe } from "@lib/util";

@@ -11,7 +11,8 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 5
+version = 6
+
 
 # -----------------------------------------------------------------------------
 # Server & Network Configuration
@@ -36,6 +37,7 @@ capacity = 250
 
 # The refill rate of the rate limiter, in tokens per second
 refill_rate = 25
+
 
 # -----------------------------------------------------------------------------
 # Storage Configuration
@@ -63,6 +65,7 @@ send_chunk_size = 131072 # 128 KiB
 # The database file path, relative to the application root
 file = "excalibur.duckdb"
 
+
 # -----------------------------------------------------------------------------
 # Security Configuration
 #
@@ -72,29 +75,32 @@ file = "excalibur.duckdb"
 # How long a login session lasts, in seconds
 session_duration = 3600 # 1 hour
 
-# 32-byte key that new users have to provide in order to sign up
-# SECURITY NOTE: This was generated using a cryptographically secure pseudo-random number generator.
-#                DO NOT CHANGE THIS VALUE UNLESS YOU KNOW WHAT YOU ARE DOING!
-account_creation_key = "Account Creation Key Goes Here!!"
+# Secret key for signing JWT tokens, in hexadecimal format
+# SECURITY NOTE: Keep this value secret and secure!
+jwt_key = "Secret key for cryptographic operations goes here!"
 
 # The key strength, in bits, to use for cryptographic operations
 # Valid values: 128, 192, 256
 key_strength = 128
 
-[security.srp]
-# Secure Remote Password (SRP) group size for authentication
-# Valid values (case insensitive): "small", "medium", "large"
-group = "small"
+[security.account_creation]
+# Public key for account creation, in Base64
+# SECURITY NOTE: Only reveal this value to people who want access to the server!
+public_key = "Public key for account creation goes here"
+
+# Private key for account creation, in Base64
+# SECURITY NOTE: Keep this value secret and secure!
+private_key = "Private key for account creation goes here"
 
 [security.opaque]
 # The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal format
 # SECURITY NOTE: Keep this value secret and secure!
 oprf_seed = "OPRF seed goes here!"
 
-# Public key for OPAQUE protocol
+# Public key for OPAQUE protocol, in Base64
 public_key = "Public key for the OPAQUE protocol goes here"
 
-# Private key for OPAQUE protocol
+# Private key for OPAQUE protocol, in Base64
 # SECURITY NOTE: Keep this value secret and secure!
 private_key = "Private key for OPAQUE protocol goes here"
 

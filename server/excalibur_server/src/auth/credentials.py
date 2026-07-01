@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from hmac import compare_digest
 from typing import Annotated, Callable
 
 from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
@@ -7,7 +8,6 @@ from pydantic import BaseModel
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE, POP_NONCE_CACHE
 from excalibur_server.env import has_pop_checking
-from excalibur_server.src.auth.consts import KEY
 from excalibur_server.src.auth.pop import POP_HEADER_PATTERN, generate_pop, parse_pop_header
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.url import get_url_encoded_path
@@ -17,20 +17,20 @@ from .jwt import decode_token, generate_token
 API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
-def generate_auth_token(username: str, comm_uuid: str, expiry_timestamp: float) -> str:
+def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -> str:
     """
     Generates a JWT token for the given E2EE key and expiry timestamp.
 
-    :param username: the username
+    :param user_id: the user ID
     :param comm_uuid: the UUID of the communication session
     :param expiry_timestamp: the timestamp when the token expires
     :return: a serialized JWT
     """
 
     return generate_token(
-        sub=username,
+        sub=user_id,
         data={"uuid": comm_uuid},
-        key=KEY,
+        key=CONFIG.security.jwt_key,
         expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
     )
 
@@ -43,7 +43,7 @@ def check_auth_token(token: str) -> bool:
     :return: True if credentials are valid and False otherwise
     """
 
-    decoded = decode_token(token, KEY)
+    decoded = decode_token(token, CONFIG.security.jwt_key)
     if decoded is None:
         return False
 
@@ -59,7 +59,7 @@ class Credentials(BaseModel):
     The credentials of a user.
     """
 
-    username: str
+    user_id: str
     comm_uuid: str
     encrypted: bool = False
 
@@ -76,7 +76,7 @@ async def _verify_and_extract_credentials(
     :param get_path_and_method: a function that returns the encoded path and method
     :param raise_exception: a function to call to raise context-specific exceptions
     :param credentials: the "Bearer" token credentials
-    :param hmac_validation: the X-SRP-PoP header value
+    :param hmac_validation: the X-Auth-PoP header value
     :return: the validated credentials
     """
 
@@ -84,10 +84,10 @@ async def _verify_and_extract_credentials(
         raise raise_exception("Missing, invalid, or expired bearer token")
 
     # Check if the provided identity token is valid
-    decoded = decode_token(credentials.credentials, KEY)
+    decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
-    sub = decoded["sub"]
+    user_id = decoded["sub"]
     comm_uuid = decoded["uuid"]
 
     if comm_uuid not in MASTER_KEYS_CACHE:
@@ -95,7 +95,7 @@ async def _verify_and_extract_credentials(
 
     if not has_pop_checking():
         # No need to check header's PoP
-        return Credentials(username=sub, comm_uuid=comm_uuid)
+        return Credentials(user_id=user_id, comm_uuid=comm_uuid)
 
     # Check that the header is valid
     if not hmac_validation:
@@ -104,15 +104,13 @@ async def _verify_and_extract_credentials(
     timestamp, nonce, hmac = parse_pop_header(hmac_validation)
 
     # Check if timestamp is within acceptable range
-    if not abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) < CONFIG.security.pop.timestamp_validity:
+    # (We use 50% of the timestamp validity to make the full window the `timestamp_validity` value)
+    if abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
         raise raise_exception("Invalid timestamp")
 
     # Check if nonce is fresh
     if nonce in POP_NONCE_CACHE:
         raise raise_exception("Nonce reused")
-
-    # Add nonce to cache of known nonces
-    POP_NONCE_CACHE[nonce] = True
 
     # Extract parts needed for the SRP Proof of Possession (PoP)
     master_key = MASTER_KEYS_CACHE[comm_uuid]
@@ -120,10 +118,13 @@ async def _verify_and_extract_credentials(
 
     # Check if the SRP PoP is valid
     hmac_computed = generate_pop(master_key, method, path, timestamp, nonce)
-    if hmac_computed != hmac:
+    if not compare_digest(hmac_computed, hmac):
         raise raise_exception("Invalid PoP")
 
-    return Credentials(username=sub, comm_uuid=comm_uuid)
+    # Add nonce to cache of known nonces
+    POP_NONCE_CACHE[nonce] = True
+
+    return Credentials(user_id=user_id, comm_uuid=comm_uuid)
 
 
 async def get_credentials(
@@ -131,7 +132,7 @@ async def get_credentials(
     hmac_validation: Annotated[
         str,
         Header(
-            alias="X-SRP-PoP",
+            alias="X-Auth-PoP",
             pattern=POP_HEADER_PATTERN,
             description="HMAC for authentication",
         ),
@@ -157,10 +158,10 @@ async def get_credentials(
     """
 
     def get_path_and_method() -> tuple[str, str]:
-        return get_url_encoded_path(request.url), request.method
+        return get_url_encoded_path(request.url, include_query=True), request.method
 
     def raise_http_exception(detail: str):
-        headers = {"WWW-Authenticate": "Bearer", "X-SRP-PoP": POP_HEADER_PATTERN}
+        headers = {"WWW-Authenticate": "Bearer", "X-Auth-PoP": POP_HEADER_PATTERN}
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=detail,

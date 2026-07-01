@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { KeyStrength } from "@lib/exef";
+import { KeyStrength } from "@lib/crypto/exef";
 import Preferences from "@lib/preferences";
 import {
     CryptoChunkSize,

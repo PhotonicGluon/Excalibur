@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.exef import ExEF
 
 
 def _decrypt_response(response: httpx2.Response) -> list[tuple[dict, float]]:
@@ -23,7 +23,8 @@ def _decrypt_response(response: httpx2.Response) -> list[tuple[dict, float]]:
 
 class TestSearch:
     @pytest.fixture(scope="class")
-    def search_folder(self, test_user, db_session: Session) -> FSItem:
+    @classmethod
+    def search_folder(cls, test_user, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
         # Create search folders
@@ -115,22 +116,22 @@ class TestSearch:
         response = TestClient(app).post("/api/files/search", json="test")
         assert response.status_code == 401
 
-    def test_search(self, auth_client_db: TestClient, search_folder: FSItem):
-        response = auth_client_db.post("/api/files/search", json="apple")
+    def test_search(self, auth_client: TestClient, search_folder: FSItem):
+        response = auth_client.post("/api/files/search", json="apple")
         content = _decrypt_response(response)
         assert {item[0]["name"].removesuffix(".exef") for item in content} == {
             "apple-fruit-file",
             "snapple-fruit-file",
         }
 
-    def test_search_transit_encryption(self, auth_client_db: TestClient, search_folder: FSItem):
+    def test_search_transit_encryption(self, auth_client: TestClient, search_folder: FSItem):
         headers = {
             "Content-Type": "application/octet-stream",
             "X-Encrypted": "true",
             "X-Content-Type": "text/plain",
         }
         query_encrypted = ExEF(b"one demo 16B key").encrypt(b"apple")
-        response = auth_client_db.post(
+        response = auth_client.post(
             "/api/files/search",
             headers=headers,
             content=query_encrypted,
@@ -142,16 +143,16 @@ class TestSearch:
             "snapple-fruit-file",
         }
 
-    def test_search_limit(self, auth_client_db: TestClient, search_folder: FSItem):
-        response = auth_client_db.post("/api/files/search?limit=3", json="fruit-file")
+    def test_search_limit(self, auth_client: TestClient, search_folder: FSItem):
+        response = auth_client.post("/api/files/search?limit=3", json="fruit-file")
         content = _decrypt_response(response)
         assert len(content) == 3
 
-        response = auth_client_db.post("/api/files/search?limit=10", json="fruit-file")
+        response = auth_client.post("/api/files/search?limit=10", json="fruit-file")
         content = _decrypt_response(response)
         assert len(content) == 6
 
-    def test_search_score_threshold(self, auth_client_db: TestClient, search_folder: FSItem):
-        response = auth_client_db.post("/api/files/search?limit=0&score_threshold=0", json="file")
+    def test_search_score_threshold(self, auth_client: TestClient, search_folder: FSItem):
+        response = auth_client.post("/api/files/search?limit=0&score_threshold=0", json="file")
         content = _decrypt_response(response)
         assert "some-random-file" in {item[0]["name"].removesuffix(".exef") for item in content}

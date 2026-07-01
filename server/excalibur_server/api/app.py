@@ -12,7 +12,14 @@ from .routes import auth_router, files_router, users_router, well_known_router
 
 # Check for enabled flags
 if is_debug():
-    logger.warning("Debug mode is enabled.")
+    DEBUG_WARNING = """\n
+  ___      _                __  __         _       ___ _  _   _   ___ _    ___ ___  
+ |   \ ___| |__ _  _ __ _  |  \/  |___  __| |___  | __| \| | /_\ | _ ) |  | __|   \ 
+ | |) / -_) '_ \ || / _` | | |\/| / _ \/ _` / -_) | _|| .` |/ _ \| _ \ |__| _|| |) |
+ |___/\___|_.__/\_,_\__, | |_|  |_\___/\__,_\___| |___|_|\_/_/ \_\___/____|___|___/ 
+                    |___/                                                           
+"""
+    logger.warning(DEBUG_WARNING)
     logger.setLevel(logging.DEBUG)
 
 if not has_encryption():

@@ -1,4 +1,3 @@
-import { randomBytes } from "crypto";
 import { useState } from "react";
 
 import {
@@ -9,7 +8,6 @@ import {
     IonHeader,
     IonIcon,
     IonInput,
-    IonInputPasswordToggle,
     IonLabel,
     IonLoading,
     IonPage,
@@ -23,33 +21,22 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { e2ee } from "@lib/auth/e2ee";
-import generateKey from "@lib/auth/keygen";
-import ExEF from "@lib/exef";
-import { editAdditionalUserInfo, registerUser } from "@lib/users/api";
-import { AdditionalUserInfo } from "@lib/users/structures";
+import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
+import { editVaultInfo, registerUser } from "@lib/users/api";
+import { UserVaultInfo } from "@lib/users/structures";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
+import PasswordInput from "@components/inputs/PasswordInput";
 
-interface NewUserValues {
-    /** Username to sign up as */
-    username: string;
-    /** Password for the user */
-    password: string;
-    /** Whether to use obfuscated names */
-    obfuscatedNames: boolean;
-}
+const DEFAULT_KEYGEN_ALGORITHM = KeyGenAlgorithm.Argon2d;
 
 const NewUser: React.FC = () => {
-    // Contexts
-    const auth = useAuth();
-    const router = useIonRouter();
-
     // States
-    const [presentAlert] = useIonAlert();
-    const [presentToast] = useIonToast();
-
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [obfuscatedNames, setObfuscatedNames] = useState(true);
     const [ackState, setACKState] = useState<boolean | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -58,35 +45,19 @@ const NewUser: React.FC = () => {
     const [localVaultKey, setLocalVaultKey] = useState<Buffer>();
     const [showVaultKeyDialog, setShowVaultKeyDialog] = useState(false);
 
+    // Contexts
+    const auth = useAuth();
+    const router = useIonRouter();
+    const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
+
     // Functions
-    /**
-     * Gets all values from the form.
-     *
-     * @returns The values from the form
-     */
-    function getAllValues(): NewUserValues {
-        // Get raw inputs
-        const rawUsername = (document.querySelector("#new-username-input")! as HTMLIonInputElement).value! as string;
-        const rawPassword = (document.querySelector("#new-password-input")! as HTMLIonInputElement).value! as string;
-        const rawObfuscatedNames = (document.querySelector("#use-obfuscated-names")! as HTMLIonCheckboxElement)
-            .checked! as boolean;
-
-        // Preprocess
-        const username = rawUsername.trim();
-        const password = rawPassword.trim();
-        const obfuscatedNames = rawObfuscatedNames;
-
-        // Form values
-        return { username: username, password: password, obfuscatedNames: obfuscatedNames };
-    }
-
     /**
      * Validates the values from the form.
      *
-     * @param values The values from the form
      * @returns Whether the values are valid
      */
-    function validateValues({ username, password }: NewUserValues) {
+    function validateValues() {
         // Check all filled
         if (username === "" || password === "") {
             return false;
@@ -100,8 +71,7 @@ const NewUser: React.FC = () => {
      */
     async function onConfirm(ack: Buffer) {
         // Check values
-        const values = getAllValues();
-        if (!validateValues(values)) {
+        if (!validateValues()) {
             presentAlert({
                 header: "Invalid Values",
                 message: "Some values are missing or invalid.",
@@ -109,33 +79,35 @@ const NewUser: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received values: ${JSON.stringify(values)}`);
+        console.debug(`Received values: ${JSON.stringify({ username, password, obfuscatedNames })}`);
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key
-        setLoadingState("Creating new AUK and vault key...");
-        const keygenAdditionalInfo = { username: values.username };
+        const {
+            auk: { key: auk, salt: aukSalt },
+            vault: { key: vaultKey, encryptedKey: encryptedVaultKey },
+        } = await generateVaultKeys(
+            password,
+            { username },
+            undefined, // No existing vault key
+            DEFAULT_KEYGEN_ALGORITHM,
+            (progress: number) => {
+                setLoadingState(`Deriving keys... ${Math.round(progress * 100)}%`);
+            },
+        );
+        console.debug(`Generated AUK '${auk.toString("hex")}' and vault key '${vaultKey.toString("hex")}'`);
 
-        const aukSalt = randomBytes(32);
-        const auk = await generateKey(values.password, keygenAdditionalInfo, aukSalt);
-        console.debug(`Generated AUK '${auk.toString("hex")}' with salt '${aukSalt.toString("hex")}'`);
-
-        const vaultKey = randomBytes(32);
-        console.debug(`Generated vault key '${vaultKey.toString("hex")}'`);
         setLocalVaultKey(vaultKey);
-        const exef = new ExEF(auk);
-        const encryptedVaultKey = exef.encrypt(vaultKey);
 
         // Register new user
         setLoadingState("Registering user...");
         const result = await registerUser(
             auth.serverInfo!.apiURL!,
-            values.username,
-            values.password,
+            username,
+            password,
             ack,
             aukSalt,
             encryptedVaultKey,
-            undefined, // No comms UUID (we're registering, not upgrading)
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg) => {
@@ -152,9 +124,8 @@ const NewUser: React.FC = () => {
         // Set up End-to-End Encryption (E2EE)
         const e2eeData = await e2ee(
             auth.serverInfo!.apiURL!,
-            values.username,
-            values.password,
-            () => setIsLoading(true),
+            username,
+            password,
             () => setIsLoading(false),
             setLoadingState,
             (header, subheader, msg, buttons) => {
@@ -166,19 +137,19 @@ const NewUser: React.FC = () => {
             return;
         }
 
-        // Set vault key for auth
-        auth.setVaultKey(vaultKey);
+        // Set authentication info
+        const authInfo: AuthInfo = { username, password, ...e2eeData };
+        auth.setAuthInfo(authInfo);
+        console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update user additional info
-        const additionalInfo: AdditionalUserInfo = {
-            obfuscatedNames: values.obfuscatedNames,
-        };
+        const additionalInfo: UserVaultInfo = { obfuscatedNames };
 
-        const setAdditionalInfoResponse = await editAdditionalUserInfo(
+        const setAdditionalInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
-            values.username,
             e2eeData.token,
             e2eeData.key,
+            DEFAULT_KEYGEN_ALGORITHM,
             additionalInfo,
         );
         if (!setAdditionalInfoResponse.success) {
@@ -193,14 +164,8 @@ const NewUser: React.FC = () => {
         }
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
-        // Set authentication info
-        const authInfo: AuthInfo = {
-            username: values.username,
-            obfuscatedNames: values.obfuscatedNames,
-            ...e2eeData,
-        };
-        auth.setAuthInfo(authInfo);
-        console.log(`Token for authentication: ${authInfo.token}`);
+        // Set vault info for auth
+        auth.setVaultInfo({ keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM, auk: auk, key: vaultKey, info: additionalInfo });
 
         // Show vault key
         setIsLoading(false);
@@ -245,34 +210,28 @@ const NewUser: React.FC = () => {
                 <div className="mx-auto mt-4 flex w-4/5 flex-col">
                     {/* Signup Form */}
                     <form>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-y-2">
                             {/* Basic Info */}
-                            <div className="h-18">
+                            <div className="flex h-58 flex-col gap-y-2">
                                 <IonInput
-                                    id="new-username-input"
                                     label="Username"
                                     labelPlacement="stacked"
                                     fill="solid"
                                     placeholder="MyCoolUsername"
                                     type="text"
-                                ></IonInput>
-                            </div>
-                            <div className="h-18">
-                                <IonInput
-                                    id="new-password-input"
-                                    label="Password"
-                                    labelPlacement="stacked"
-                                    fill="solid"
-                                    placeholder="My secure password!"
-                                    type="password"
-                                >
-                                    <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
-                                </IonInput>
+                                    value={username}
+                                    onIonInput={(e) => setUsername(e.detail.value!)}
+                                />
+                                <PasswordInput confirmation value={password} onPasswordChange={setPassword} />
                             </div>
                             <hr />
 
-                            {/* Server Settings */}
-                            <IonCheckbox id="use-obfuscated-names" labelPlacement="end" checked={true}>
+                            {/* Server Preferences */}
+                            <IonCheckbox
+                                labelPlacement="end"
+                                checked={obfuscatedNames}
+                                onIonChange={(e) => setObfuscatedNames(e.detail.checked)}
+                            >
                                 <div className="w-full *:block *:leading-none">
                                     <IonLabel className="text-base">Use Obfuscated Names</IonLabel>
                                     <IonLabel color="medium" className="text-xs text-wrap">
@@ -313,7 +272,7 @@ const NewUser: React.FC = () => {
                         className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
                         isOpen={isLoading}
                         message={loadingState}
-                    ></IonLoading>
+                    />
                 </div>
             </IonContent>
         </IonPage>

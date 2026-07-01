@@ -7,7 +7,7 @@ const JobsList: React.FC = () => {
     const jobsManager = useJobsManager();
 
     return jobsManager.jobs.size > 0 ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
             {Array.from(jobsManager.jobs.entries()).map(([jobID, job]) => (
                 <JobEntry key={jobID} {...job} onCancel={() => jobsManager.cancelJob(jobID)} />
             ))}

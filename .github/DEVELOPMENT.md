@@ -82,6 +82,7 @@ You can change the `host` IP to restrict access.
 > - Windows:
 >   - Powershell: `$env:ANDROID_HOME="C:\Users\[USERNAME]\AppData\Local\Android\Sdk"` and `$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
 >   - Command Prompt: `set ANDROID_HOME="C:\Users\[USERNAME]\AppData\Local\Android\Sdk"` and `set JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`
+> - Linux: `export ANDROID_HOME="$HOME/Android/Sdk"` and `export JAVA_HOME="$ANDROID_STUDIO_BASE/jbr"`, where `$ANDROID_STUDIO_BASE` is the base directory of your Android Studio installation (e.g., `/opt/android-studio`)
 
 First, [start the app's PWA server](#pwa).
 

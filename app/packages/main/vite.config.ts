@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
-import { defineConfig } from "vite";
+import { UserConfig, defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 import { syncTheme } from "./src/theme/sync-theme.ts";
@@ -26,14 +26,18 @@ function getAliasesFromTSConfig() {
     return aliases;
 }
 
-// https://vitejs.dev/config/
-export const viteConfig = {
+export const viteConfig: UserConfig = {
     plugins: [
         react({}),
         tailwindcss(),
-        nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "vm"] }),
+        nodePolyfills({
+            include: ["buffer", "crypto", "stream", "util", "vm"],
+        }),
         syncTheme(),
     ],
+    define: {
+        global: "globalThis",
+    },
     resolve: {
         alias: getAliasesFromTSConfig(),
     },
@@ -44,8 +48,7 @@ export const viteConfig = {
         warmup: { clientFiles: ["./src/components/**/*"] },
     },
     build: {
-        chunkSizeWarningLimit: 750, // 750 kB
-        rollupOptions: {
+        rolldownOptions: {
             output: {
                 manualChunks(id: string) {
                     if (!process || !process.env || process.env.NODE_ENV !== "production") {
@@ -54,8 +57,10 @@ export const viteConfig = {
 
                     // For production, we'll split the chunks better
                     if (/css$/.test(id)) {
-                        // See https://github.com/vitejs/vite/issues/21903.
-                        // For now we'll combine all the stylesheets into one chunk.
+                        // See https://github.com/vitejs/vite/issues/22301 and
+                        // https://github.com/vitejs/vite/issues/21903.
+                        // For now we'll combine all the stylesheets into one chunk. This isn't that
+                        // bad, but it would be better to split them up.
                         return "style";
                     }
 

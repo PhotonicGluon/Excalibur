@@ -1,3 +1,5 @@
+from typing import Annotated
+
 import typer
 
 config_app = typer.Typer(no_args_is_help=True, help="Commands relating to configuration.")
@@ -26,11 +28,43 @@ def update_config():
 
     from tomlkit import TOMLDocument, dump, dumps, load, loads
     from tomlkit.exceptions import ParseError
-    from tomlkit.items import Table
+    from tomlkit.items import Item, Table
 
-    from excalibur_server.consts import CONFIG_FILE
+    from excalibur_server.consts import CONFIG_FILE, CONFIG_TEMPLATE_FILE
+
+    # Read the config
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            config = load(f)
+    except FileNotFoundError:
+        typer.secho("Config file not found!", fg="red")
+        raise typer.Exit(1)
+    except ParseError as e:
+        typer.secho(f"Config file is invalid: {e}", fg="red")
+        raise typer.Exit(1)
+
+    # Get the template config file
+    try:
+        with open(CONFIG_TEMPLATE_FILE, "r") as f:
+            template_config = load(f)
+    except FileNotFoundError:
+        typer.secho("Template config file not found!", fg="red")
+        raise typer.Exit(1)
 
     # Helpers
+    def _is_table(obj: Item) -> bool:
+        return hasattr(obj, "items") and hasattr(obj, "keys")
+
+    def _get_value_by_path(config: Table, path: str):
+        keys = path.split(".")
+        current = config
+        for key in keys:
+            if _is_table(current) and key in current:
+                current = current[key]
+            else:
+                return None
+        return current
+
     def _add_new_field(table: Table, key: str, value: Any, top_comment: str = "", side_comment: str = "") -> Table:
         """
         Helper method that adds a new field to a TOML table.
@@ -48,6 +82,33 @@ def update_config():
 
         table = loads(new_table_str)[table.name]
         return table
+
+    def _migrate_config(src_doc: TOMLDocument, dst_doc: TOMLDocument, key_mapping: dict[str, str] | None = None):
+        if key_mapping is None:
+            key_mapping = {}
+
+        def recursive_update(dst_table: Table, current_path=""):
+            for key, new_value in dst_table.items():
+                path = f"{current_path}.{key}" if current_path else key
+
+                # Handle mappings of keys
+                if path in key_mapping:
+                    old_val = _get_value_by_path(src_doc, key_mapping[path])
+                    if old_val is not None:
+                        dst_table[key] = old_val
+                    continue
+
+                # Otherwise, copy over old value
+                old_table = _get_value_by_path(src_doc, current_path) if current_path else src_doc
+                if old_table is not None and key in old_table:
+                    old_value = old_table[key]
+                    if _is_table(new_value) and _is_table(old_value):
+                        recursive_update(new_value, path)
+                    else:
+                        dst_table[key] = old_value
+
+        recursive_update(dst_doc)
+        return dst_doc
 
     # Updaters
     def v1_to_v2(config: TOMLDocument) -> TOMLDocument:
@@ -112,7 +173,7 @@ def update_config():
     def v4_to_v5(config: TOMLDocument) -> TOMLDocument:
         from base64 import b64encode
 
-        from excalibur_server.src.auth.opaque import OPAQUE
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
         config["version"] = 5
 
@@ -121,16 +182,17 @@ def update_config():
         config["security"]["srp"]["opaque"] = {}
 
         # Add OPRF seed field
+        opaque = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
             "oprf_seed",
-            OPAQUE.generate_seed().hex(),
+            opaque.generate_seed().hex(),
             top_comment="The seed for Oblivious Pseudo-Random Function (OPRF) operations, in hexadecimal "
             + "format\n# SECURITY NOTE: Keep this value secret and secure!",
         )
 
         # Add private and public key fields
-        private_key, public_key = OPAQUE.generate_keys(for_export=True)
+        private_key, public_key = opaque.generate_keys(for_export=True)
 
         config["security"]["srp"]["opaque"] = _add_new_field(
             config["security"]["srp"]["opaque"],
@@ -153,24 +215,36 @@ def update_config():
 
         return config
 
-    SETTINGS_VERSION = 5
+    def v5_to_v6(config: TOMLDocument) -> TOMLDocument:
+        from base64 import b64encode
+
+        from Crypto.Random import get_random_bytes
+
+        from excalibur_server.src.auth.consts import KEYSIZE
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
+
+        new_config = template_config.copy()
+        new_config = _migrate_config(config, new_config)
+        new_config["version"] = 6
+
+        # Add new JWT key
+        new_config["security"]["jwt_key"] = get_random_bytes(KEYSIZE // 8).hex()
+
+        # Generate new account creation keys
+        private_key, public_key = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE).generate_keys(for_export=True)
+        new_config["security"]["account_creation"]["public_key"] = b64encode(public_key).decode("utf-8")
+        new_config["security"]["account_creation"]["private_key"] = b64encode(private_key).decode("utf-8")
+
+        return new_config
+
+    SETTINGS_VERSION = 6
     UPDATERS = {
         1: v1_to_v2,
         2: v2_to_v3,
         3: v3_to_v4,
         4: v4_to_v5,
+        5: v5_to_v6,
     }
-
-    # Read the config
-    try:
-        with open(CONFIG_FILE, "r") as f:
-            config = load(f)
-    except FileNotFoundError:
-        typer.secho("Config file not found!", fg="red")
-        raise typer.Exit(1)
-    except ParseError as e:
-        typer.secho(f"Config file is invalid: {e}", fg="red")
-        raise typer.Exit(1)
 
     # Determine what updaters to run
     curr_version = config["version"]
@@ -193,26 +267,34 @@ def update_config():
 
 
 @config_app.command(name="generate-keys")
-def generate_keys():
+def generate_keys(
+    validate_config: Annotated[
+        bool, typer.Option("--validate-config", "-v", help="Whether to validate the config before generating keys.")
+    ] = True,
+    silent: Annotated[bool, typer.Option("-s", "--silent", help="Whether to silence all output.")] = False,
+):
     """
-    Generate Curve25519 keys for OPAQUE protocol.
+    Generate keys for JWT signing, account creation, and the OPAQUE protocol.
     """
 
     from base64 import b64encode
 
+    from Crypto.Random import get_random_bytes
     from tomlkit import dump, load
     from tomlkit.exceptions import ParseError
 
     from excalibur_server.consts import CONFIG_FILE
-    from excalibur_server.src.auth.opaque import OPAQUE
+    from excalibur_server.src.auth.consts import KEYSIZE
+    from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 
-    # Check if the config is valid
-    # (Just importing is enough to validate the config)
-    try:
-        from excalibur_server.src.config import CONFIG as CONFIG
-    except Exception as e:
-        typer.secho(f"Config is invalid: {e}", fg="red")
-        raise typer.Exit(1)
+    if validate_config:
+        # Check if the config is valid
+        # (Just importing is enough to validate the config)
+        try:
+            from excalibur_server.src.config import CONFIG as CONFIG
+        except Exception as e:
+            typer.secho(f"Config is invalid: {e}", fg="red")
+            raise typer.Exit(1)
 
     # Read the config
     try:
@@ -226,14 +308,23 @@ def generate_keys():
         raise typer.Exit(1)
 
     # Generate new keys
-    typer.secho("Generating new keys...", fg="yellow")
-    private_key, public_key = OPAQUE.generate_keys(for_export=True)
+    if not silent:
+        typer.secho("Generating new keys...", fg="yellow")
 
-    config["security"]["opaque"]["private_key"] = b64encode(private_key).decode("utf-8")
-    config["security"]["opaque"]["public_key"] = b64encode(public_key).decode("utf-8")
+    config["security"]["jwt_key"] = get_random_bytes(KEYSIZE // 8).hex()
+
+    opaque = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
+    account_creation_private_key, account_creation_public_key = opaque.generate_keys(for_export=True)
+    opaque_private_key, opaque_public_key = opaque.generate_keys(for_export=True)
+
+    config["security"]["account_creation"]["private_key"] = b64encode(account_creation_private_key).decode("utf-8")
+    config["security"]["account_creation"]["public_key"] = b64encode(account_creation_public_key).decode("utf-8")
+    config["security"]["opaque"]["private_key"] = b64encode(opaque_private_key).decode("utf-8")
+    config["security"]["opaque"]["public_key"] = b64encode(opaque_public_key).decode("utf-8")
 
     # Write the config
     with open(CONFIG_FILE, "w") as f:
         dump(config, f)
 
-    typer.secho("Keys (re)generated!", fg="green")
+    if not silent:
+        typer.secho("Keys (re)generated!", fg="green")

@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
-from excalibur_server.src.auth.srp.group import SRPGroup
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 class User(SQLModel, table=True):
@@ -14,11 +14,8 @@ class User(SQLModel, table=True):
     """
 
     # Basic information
-    username: str = Field(primary_key=True)
-    auth_protocol: AuthProtocol = Field(
-        sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
-    )
-    "Authentication protocol to use"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(unique=True)
     fsitem_id: uuid.UUID = Field(nullable=True)  # TODO: Remove nullable in next version
     """
     ID of the user's root filesystem item.
@@ -30,23 +27,20 @@ class User(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
-    additional_info: str = Field(default="", nullable=False)
-    "Additional information about the user, accessible only after authentication"
 
-    # Secure Remote Password (SRP)
-    # TODO: Deprecate SRP fields in next version
-    srp_group: SRPGroup = Field(sa_column=Column(Enum(SRPGroup), nullable=True))
-    "Secure Remote Password (SRP) group to use for authentication"
-    srp_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=True))
-    "Salt for the SRP protocol key"
-    srp_verifier: bytes = Field(nullable=True)
-    "Verifier to prove server's identity in SRP"
+    # Authentication info
+    auth_protocol: AuthProtocol = Field(
+        sa_column=Column(Enum(AuthProtocol), nullable=False, default=AuthProtocol.OPAQUE_3DH)
+    )
+    "Authentication protocol to use"
 
     # OPAQUE
     registration_record: bytes = Field(nullable=True)  # TODO: Set maximum length
     "Client's serialized registration record for use in the OPAQUE protocol"
 
-    # Vault key
+    # Vault info
+    keygen_algorithm: str = Field(nullable=False, default="argon2d")
+    "Key generation function for the Account Unlock Key (AUK)"
     auk_salt: bytes = Field(sa_column=Column(LargeBinary(length=32), nullable=False))
     "Salt for the Account Unlock Key (AUK)"
     key_enc: bytes = Field(
@@ -59,6 +53,8 @@ class User(SQLModel, table=True):
     Encrypted vault key as an ExEF stream.
     The vault key should have been encrypted using the Account Unlock Key (AUK).
     """
+    vault_info: str = Field(default="", nullable=False)
+    "Additional information about the user's vault"
 
 
 class FSItem(SQLModel, table=True):
@@ -99,3 +95,21 @@ class FSItem(SQLModel, table=True):
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
+
+    @property
+    def system_path(self) -> Path:
+        """
+        Get the system path for this item. Only defined for files.
+
+        :return: path to the file, relative to the base directory
+        :raises NotImplementedError: if this is not a file
+        """
+
+        if self.is_folder:
+            raise NotImplementedError("System path is only defined for files")
+
+        file_id = str(self.id)
+        level_1 = file_id[:2]
+        level_2 = file_id[2:4]
+        rest = file_id[4:]
+        return Path(level_1, level_2, rest + ".exef")

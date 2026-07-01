@@ -8,7 +8,7 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_item_by_path
 from excalibur_server.src.files.structures import Directory
 from excalibur_server.src.files.utils import listdir
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 @encrypted_router.get(
@@ -50,10 +50,10 @@ def listdir_endpoint(
     """
 
     path = processed_path
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get folder's ID
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     folder = get_item_by_path(root_id, path)
     if folder is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")

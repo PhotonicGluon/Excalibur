@@ -48,7 +48,7 @@ describe("OPRFRistretto", () => {
 
             // Test `finalize()`
             const ourOutput = OPRFRistrettoSHA512.finalize(input, blind, outEvaluatedElement);
-            expect(ourOutput).toEqual(output);
+            expect(Buffer.from(ourOutput)).toEqual(output);
         });
     }
 });

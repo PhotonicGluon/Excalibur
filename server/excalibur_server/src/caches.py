@@ -180,6 +180,14 @@ class PersistentTTLCache(TTLCache[_KT, _VT]):
             self._cache[k] = (v, t)  # Direct insert to keep expiration time
 
     # Public methods
+    def pop(self, key: _KT, default: _VT | None = None) -> _VT | None:
+        value = super().pop(key, default)
+        with shelve.open(self.filename) as db:
+            k_str = str(key)
+            if k_str in db:
+                del db[k_str]
+        return value
+
     def clear(self):
         super().clear()
         with shelve.open(self.filename) as db:

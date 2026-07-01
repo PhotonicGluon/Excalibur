@@ -1,6 +1,5 @@
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 
-import HKDF from "@lib/auth/hkdf";
 import {
     AuthRequest,
     AuthResponse,
@@ -15,11 +14,12 @@ import {
     RegistrationRequest,
     RegistrationResponse,
 } from "@lib/auth/opaque/structures";
+import { Ristretto255 } from "@lib/crypto/elliptic";
+import HKDF from "@lib/crypto/hkdf";
 import { xorBuffer } from "@lib/util";
 
 import { i2osp } from "./misc";
 import { OPRFRistrettoSHA512, OPRFType } from "./oprf";
-import { Ristretto255 } from "./ristretto255";
 
 export class OPAQUEAuthError extends Error {
     constructor(message: string) {

@@ -98,6 +98,9 @@ def start_server(
     os.makedirs(CONFIG.logging.directory, exist_ok=True)
     os.makedirs(CONFIG.storage.vault_folder, exist_ok=True)
 
+    # Create fake user if it doesn't exist
+    _create_fake_user()
+
     # Clean up logs
     if cleanup_logs:
         from excalibur_server.cli.logging import _cleanup_logs
@@ -123,3 +126,28 @@ def start_server(
         ws="websockets",
         ws_ping_interval=30.0,
     )
+
+
+def _create_fake_user():
+    from excalibur_server.consts import FAKE_USER_UUID
+    from excalibur_server.src.auth.enums import AuthProtocol
+    from excalibur_server.src.auth.opaque.structures import RegistrationRecord
+    from excalibur_server.src.db.operations import add_user
+    from excalibur_server.src.db.tables import User
+    from excalibur_server.src.users import get_user_from_id
+
+    # Create fake user if it doesn't exist
+    if not get_user_from_id(FAKE_USER_UUID):
+        add_user(
+            User(
+                id=FAKE_USER_UUID,
+                username=b"\x00" * 16,
+                fsitem_id=FAKE_USER_UUID,
+                keygen_algorithm="argon2d",
+                auth_protocol=AuthProtocol.OPAQUE_3DH,
+                registration_record=RegistrationRecord.FAKE.serialize(),
+                vault_info="",
+                auk_salt=b"\x00" * 32,
+                key_enc=b"\x00" * 32,
+            )
+        )

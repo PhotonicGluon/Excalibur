@@ -24,3 +24,26 @@ class TestGetURLEncodedPath:
 
     def test_path_unicode(self):
         assert get_url_encoded_path(URL("http://example.com/測試/測")) == "/%E6%B8%AC%E8%A9%A6/%E6%B8%AC"
+
+
+class TestGetURLEncodedPathWithQuery:
+    def test_query_excluded_by_default(self):
+        assert get_url_encoded_path(URL("http://example.com/upload?force=true")) == "/upload"
+
+    def test_no_query_string(self):
+        assert get_url_encoded_path(URL("http://example.com/test"), include_query=True) == "/test"
+
+    def test_with_query_string(self):
+        assert (
+            get_url_encoded_path(URL("http://example.com/upload?force=true"), include_query=True)
+            == "/upload?force=true"
+        )
+
+    def test_multiple_query_params(self):
+        assert (
+            get_url_encoded_path(URL("http://example.com/upload?force=true&x=1"), include_query=True)
+            == "/upload?force=true&x=1"
+        )
+
+    def test_empty_query_string(self):
+        assert get_url_encoded_path(URL("http://example.com/upload?"), include_query=True) == "/upload"

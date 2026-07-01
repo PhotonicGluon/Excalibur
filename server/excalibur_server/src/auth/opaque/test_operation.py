@@ -2,8 +2,8 @@ import pytest
 
 from excalibur_server.src.auth.opaque.operation import OPAQUEClient, OPAQUEServer
 from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.auth.opaque.structures import Envelope, RegistrationRecord
+from excalibur_server.src.crypto.elliptic import Ristretto255
 
 
 class TestOPAQUEValidationTests:

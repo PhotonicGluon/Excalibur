@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 import { PrivacyScreen } from "@capacitor/privacy-screen";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { enableMapSet } from "immer";
@@ -34,10 +34,12 @@ import DevPages from "@pages/DevPages";
 import FileExplorer from "@pages/FileExplorer";
 import Login from "@pages/Login";
 import NewUser from "@pages/NewUser";
+import AccountPreferences from "@pages/Preferences/AccountPreferences";
+import DataPreferences from "@pages/Preferences/DataPreferences";
+import PreferencesMenu from "@pages/Preferences/PreferencesMenu";
 import ServerChoice from "@pages/ServerChoice";
 import CryptoSettings from "@pages/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Settings/InterfaceSettings";
-import ServerSettings from "@pages/Settings/ServerSettings";
 import SettingsMenu from "@pages/Settings/SettingsMenu";
 import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
@@ -49,8 +51,14 @@ setupIonicReact();
 enableMapSet(); // To allow immer to update maps
 
 // Helper functions
-function toggleDarkPalette(shouldAdd: boolean) {
-    document.documentElement.classList.toggle("ion-palette-dark", shouldAdd);
+/**
+ * Toggles the dark palette for the app.
+ *
+ * @param isDark whether to enable the dark palette
+ */
+function toggleDarkPalette(isDark: boolean) {
+    document.documentElement.classList.toggle("ion-palette-dark", isDark);
+    SystemBars.setStyle({ style: isDark ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
 }
 
 // Enable privacy screen if on a release build
@@ -139,12 +147,15 @@ const App: React.FC = () => {
                     <Redirect exact from="/files" to="/files/." />
                     <PrivateRoute path="/files/*" component={FileExplorer} />
 
-                    {/* Settings */}
+                    {/* Configuration pages */}
                     <Route exact path="/settings" component={SettingsMenu} />
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
                     <Route exact path="/settings/crypto" component={CryptoSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
-                    <PrivateRoute exact path="/settings/server" component={ServerSettings} />
+
+                    <PrivateRoute exact path="/preferences" component={PreferencesMenu} />
+                    <PrivateRoute exact path="/preferences/account" component={AccountPreferences} />
+                    <PrivateRoute exact path="/preferences/data" component={DataPreferences} />
 
                     {/* Testing */}
                     <Route path="/dev/*" component={DevPages} />

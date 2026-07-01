@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import createHash from "create-hash";
 
 import { IS_DEV } from "@lib/util";
 

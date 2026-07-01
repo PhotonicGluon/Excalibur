@@ -25,7 +25,7 @@ import {
 import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
@@ -33,7 +33,6 @@ import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
 import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
-import DecryptionProcessorWorker from "@lib/workers/decrypt-stream?worker";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -132,7 +131,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 if (signal.aborted) throw new Error("Cancelled");
 
                 // Create stream that handles the decryption and updates the progress
-                const worker = new DecryptionProcessorWorker();
+                const worker = new Worker(new URL("@lib/workers/decrypt-stream", import.meta.url), { type: "module" });
                 const processor = Comlink.wrap<DecryptionProcessor>(worker);
 
                 jobsManager.updateJob(jobID, "Decrypting...", 0, worker);
@@ -142,7 +141,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     fileDataBlob = await processor.processStream(
                         // `transfer()` moves datastream ownership to the worker instead of trying to clone it
                         Comlink.transfer(response.dataStream!, [response.dataStream!]),
-                        auth.vaultKey!,
+                        auth.vaultInfo!.key,
                         response.e2ee ? auth.authInfo!.key! : null,
                         fileSize,
                         settings.cryptoChunkSize,
@@ -210,9 +209,11 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     return;
                 }
                 console.error(err);
-            } finally {
-                jobsManager.deleteJob(jobID);
+                jobsManager.updateJob(jobID, "Failed", false);
+                return;
             }
+
+            jobsManager.updateJob(jobID, "Complete", true);
         }
 
         // If on mobile, check if the file already exists

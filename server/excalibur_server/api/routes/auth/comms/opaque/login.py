@@ -1,20 +1,21 @@
 import json
 from base64 import b64encode
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from Crypto.Cipher import AES
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
+from excalibur_server.consts import FAKE_USER_UUID
 from excalibur_server.src.auth.credentials import generate_auth_token
-from excalibur_server.src.auth.opaque import OPAQUE, SERVER_IDENTITY
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
 from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPAQUEClientAuthError
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
-from excalibur_server.src.auth.opaque.ristretto255 import Ristretto255
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.users import get_user
+from excalibur_server.src.crypto.elliptic import Ristretto255
+from excalibur_server.src.users import get_user, get_user_from_id
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 
 
@@ -29,6 +30,10 @@ async def comms_endpoint(websocket: WebSocket):
 
     await ws_manager.accept()
     try:
+        # Pre-get the fake user
+        # (This is to prevent side-channel client enumeration attacks. See RFC9807 Section 10.9)
+        fake_user = get_user_from_id(FAKE_USER_UUID)
+
         # Wait for username and first key exchange message
         ke1_raw_and_username = (await ws_manager.receive()).data
         ke1_raw = ke1_raw_and_username[: OPAQUE.ke1_size]
@@ -37,10 +42,9 @@ async def comms_endpoint(websocket: WebSocket):
         # Check username
         user = get_user(username)
         if user is None:
-            # TODO: Do we send a fake vector instead of explicitly saying the user doesn't exist (cf. RFC9807)?
-            await ws_manager.send(WebSocketMsg("User does not exist", "ERR"))
-            await ws_manager.close()
-            return
+            # Use fake user's data
+            # (We fully expect that the authentication fails)
+            user = fake_user
 
         # Generate second key exchange message
         ke1 = OPAQUE.deserialize_ke1(ke1_raw)
@@ -86,7 +90,7 @@ async def comms_endpoint(websocket: WebSocket):
         MASTER_KEYS_CACHE[uuid] = master_key
 
         # Send the auth token for client to use
-        await _send_auth_token(ws_manager, user.username, uuid)
+        await _send_auth_token(ws_manager, user.id, uuid)
 
         # Finally, close connection
         await ws_manager.close()
@@ -94,19 +98,19 @@ async def comms_endpoint(websocket: WebSocket):
         pass
 
 
-async def _send_auth_token(ws_manager: WebSocketManager, username: str, comm_uuid: str) -> None:
+async def _send_auth_token(ws_manager: WebSocketManager, user_id: UUID, comm_uuid: str) -> None:
     """
     Send the authentication token to the client.
 
     Encrypts the authentication token using the master value and sends it to the client.
 
     :param ws_manager: the WebSocket manager
-    :param username: the username
+    :param user_id: the ID of the user
     :param comm_uuid: the UUID of the communication session
     """
 
     auth_token = generate_auth_token(
-        username, comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
+        str(user_id), comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
     )
 
     cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)
@@ -135,7 +139,7 @@ def _get_opaque() -> OPAQUEServer:
     :return: the OPAQUE server instance
     """
 
-    return OPAQUE
+    return OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
 
 def _get_oprf_seed() -> bytes:

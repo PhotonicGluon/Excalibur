@@ -3,8 +3,8 @@ packages:
   - app/packages/**
 
 auditConfig:
-  ignoreCves:
-    - CVE-2025-14505 # Unfixed vulnerability in elliptic
+  ignoreGhsas:
+    - GHSA-848j-6mx2-7j84 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
 minimumReleaseAgeExclude:
@@ -25,12 +25,15 @@ allowBuilds:
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - prettier-plugin-tailwindcss@0.7.4
+  - tinyexec@1.2.2
 trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   # Main
   globals@>=17.0.0 <=17.7.0: "^17.7.0" # To make sure globals v17 versions are consistent
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
+  prettier@<3.8.4: ">=3.8.4"
+  readable-stream@<=4: ">=4"
   # Security
   "@babel/core@<=7.29.0": ^7.29.1
   esbuild@>=0.17.0 <0.28.1: ^0.28.1
@@ -42,7 +45,9 @@ overrides:
   tmp@<0.2.6: ^0.2.6
   undici@<6.27.0: ^6.27.0
   uuid@<11.1.1: ^11.1.1
-  vite@>=7.0.0 <=7.3.4: ~7.3.5
+
+patchedDependencies:
+  randombytes@2.1.0: app/packages/main/patches/randombytes@2.1.0.patch # To upgrade to latest (b4eb4126fccc503e375853ca7b3e96aaa34af9e6)
 
 sideEffectsCache: false
 

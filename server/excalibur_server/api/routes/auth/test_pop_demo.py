@@ -38,14 +38,14 @@ class TestHTTPPoPChecks:
         assert response.json()["detail"] == "Missing PoP"
 
     def test_invalid_pop(self, auth_client: TestClient):
-        response = auth_client.get("/api/auth/pop-demo", headers={"X-SRP-PoP": "invalid-pop"})
+        response = auth_client.get("/api/auth/pop-demo", headers={"X-Auth-PoP": "invalid-pop"})
         assert response.status_code == 422
 
     def test_invalid_timestamp(self, auth_client: TestClient):
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": "0 "
+                "X-Auth-PoP": "0 "
                 + b64encode(_gen_nonce()).decode("UTF-8")
                 + " "
                 + b64encode(b"\x00" * 32).decode("UTF-8")
@@ -58,7 +58,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": "9999999999 "
+                "X-Auth-PoP": "9999999999 "
                 + b64encode(_gen_nonce()).decode("UTF-8")
                 + " "
                 + b64encode(b"\x00" * 32).decode("UTF-8")
@@ -73,7 +73,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="WRONG",
                     path="/api/auth/pop-demo",
@@ -91,7 +91,7 @@ class TestHTTPPoPChecks:
         response = auth_client.get(
             "/api/auth/pop-demo",
             headers={
-                "X-SRP-PoP": generate_pop_header(
+                "X-Auth-PoP": generate_pop_header(
                     master_key=b"one demo 16B key",
                     method="GET",
                     path="/api/some-incorrect-path",
@@ -115,20 +115,28 @@ class TestHTTPPoPChecks:
             nonce=nonce,
         )
 
-        # First request should succeed
+        # Request with incorrect PoP header should fail, and not consume the nonce
         response = auth_client.get(
             "/api/auth/pop-demo",
-            headers={"X-SRP-PoP": header},
+            headers={"X-Auth-PoP": header[:-2] + "0="},
         )
-        assert response.status_code == 200
-        assert response.json()["username"] == "test-user"
+        assert response.status_code == 401, response.json()["detail"]
+        assert response.json()["detail"] == "Invalid PoP"
 
-        # Second request should fail
+        # Next request with valid header should succeed (and not fail with nonce reuse)
         response = auth_client.get(
             "/api/auth/pop-demo",
-            headers={"X-SRP-PoP": header},
+            headers={"X-Auth-PoP": header},
         )
-        assert response.status_code == 401
+        assert response.status_code == 200, response.json()["detail"]
+        assert response.json()["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
+
+        # Third request with same header should fail (nonce reuse)
+        response = auth_client.get(
+            "/api/auth/pop-demo",
+            headers={"X-Auth-PoP": header},
+        )
+        assert response.status_code == 401, response.json()["detail"]
         assert response.json()["detail"] == "Nonce reused"
 
 
@@ -235,7 +243,7 @@ def test_get(auth_client: TestClient):
     response = auth_client.get(
         "/api/auth/pop-demo",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path="/api/auth/pop-demo",
@@ -245,19 +253,19 @@ def test_get(auth_client: TestClient):
         },
     )
     assert response.status_code == 200
-    assert response.json()["username"] == "test-user"
+    assert response.json()["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
 
 
 def test_get_with_path(auth_client: TestClient):
     import time
 
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     # Non-encrypted path parameter
     response = auth_client.get(
         "/api/auth/pop-demo-get/hello-world",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path="/api/auth/pop-demo-get/hello-world",
@@ -276,7 +284,7 @@ def test_get_with_path(auth_client: TestClient):
     response = auth_client.get(
         f"/api/auth/pop-demo-get/{path_b64}",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="GET",
                 path=f"/api/auth/pop-demo-get/{path_b64}",
@@ -296,7 +304,7 @@ def test_post_no_encrypt(auth_client: TestClient):
     response = auth_client.post(
         "/api/auth/pop-demo",
         headers={
-            "X-SRP-PoP": generate_pop_header(
+            "X-Auth-PoP": generate_pop_header(
                 master_key=b"one demo 16B key",
                 method="POST",
                 path="/api/auth/pop-demo",
@@ -307,7 +315,7 @@ def test_post_no_encrypt(auth_client: TestClient):
         json="hello world",
     )
     assert response.status_code == 200
-    assert response.json()["credential"]["username"] == "test-user"
+    assert response.json()["credential"]["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
     assert response.json()["data"] == "hello world"
 
 
@@ -315,7 +323,7 @@ def test_post_encrypted(auth_client: TestClient):
     import json
     import time
 
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
 
     transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(b"hello world")
     hmac_header = generate_pop_header(
@@ -332,13 +340,13 @@ def test_post_encrypted(auth_client: TestClient):
             "Content-Type": "application/octet-stream",
             "X-Encrypted": "true",
             "X-Content-Type": "text/plain",
-            "X-SRP-PoP": hmac_header,
+            "X-Auth-PoP": hmac_header,
         },
         content=transit_encrypted_data,
     )
     assert response.status_code == 200
     response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
-    assert response["credential"]["username"] == "test-user"
+    assert response["credential"]["user_id"] == "01234567-89ab-dcef-0123-456789abcdef"
     assert response["data"] == "hello world"
 
 
@@ -359,4 +367,4 @@ def test_websocket(auth_client: TestClient, auth_token: str):
     ) as websocket:
         websocket.send_text("hello world")
         response = websocket.receive_text()
-        assert response == "test-user: hello world"
+        assert response == "01234567-89ab-dcef-0123-456789abcdef: hello world"

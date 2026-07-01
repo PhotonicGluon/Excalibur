@@ -3,8 +3,8 @@ import json
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_items_in_root
-from excalibur_server.src.exef import ExEF
 
 
 class TestGetAll:
@@ -12,8 +12,8 @@ class TestGetAll:
         response = TestClient(app).get("/api/files/all")
         assert response.status_code == 401
 
-    def test_get_all(self, auth_client_db: TestClient, test_user):
-        response = auth_client_db.get("/api/files/all")
+    def test_get_all(self, auth_client: TestClient, test_user):
+        response = auth_client.get("/api/files/all")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 

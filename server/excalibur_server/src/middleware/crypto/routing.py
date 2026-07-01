@@ -98,20 +98,7 @@ USERS_ROUTING_TREE = RoutingTree(
             has_path_param=True,
             encrypted_routes={
                 "GET": EncryptedRoute(),
-            },
-        ),
-        "info": RoutingTree(
-            segment="info",
-            has_path_param=True,
-            encrypted_routes={
-                "GET": EncryptedRoute(),
-            },
-        ),
-        "edit-info": RoutingTree(
-            segment="edit-info",
-            has_path_param=True,
-            encrypted_routes={
-                "POST": EncryptedRoute(),
+                "PUT": EncryptedRoute(),
             },
         ),
     },

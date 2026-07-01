@@ -21,6 +21,7 @@ describe("<JobsList />", () => {
                         updateProgress: (_id: string, _newProgress: number | null) => {},
                         cancelJob: onCancelJob ?? (() => {}),
                         deleteJob: (_id: string) => {},
+                        clearComplete: () => {},
                     }}
                 >
                     <JobsList />
@@ -49,7 +50,7 @@ describe("<JobsList />", () => {
         const jobs = new Map<string, Job>([
             ["job1", { name: "file1.txt", direction: "upload", description: "Uploading", progress: 0.25 }],
             ["job2", { name: "image.png", direction: "upload", description: "Processing", progress: 0.8 }],
-            ["job3", { name: "archive.zip", direction: "upload", description: "Complete", progress: 1 }],
+            ["job3", { name: "archive.zip", direction: "upload", description: "Complete", progress: true }],
         ]);
 
         mountComponent({ jobs });

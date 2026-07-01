@@ -1,8 +1,7 @@
 import { RefObject } from "react";
 
-import { generatePoPHeader } from "@lib/auth/pop";
-import ExEF from "@lib/exef";
-import { getURLEncodedPath, quotePlus } from "@lib/url";
+import ExEF from "@lib/crypto/exef";
+import { getAuthenticatedWS } from "@lib/network/websocket";
 import { sleep } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
@@ -10,24 +9,6 @@ import { AuthProvider } from "@components/auth/context";
 const RETRY_COUNT = 5;
 const RETRY_BACKOFF_MULTIPLIER = 2;
 const RETRY_INITIAL_DELAY = 100; // In ms
-
-/**
- * Helper function that handles the authentication part of the WebSocket connection.
- *
- * @param auth the current authentication provider
- * @returns the websocket object
- */
-function getWS(auth: AuthProvider): WebSocket {
-    const wsURL = auth.serverInfo!.apiURL!.replace("http", "ws");
-    const listenerURL = `${wsURL}/files/listen`;
-
-    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(listenerURL));
-    const ws = new WebSocket(
-        `${wsURL}/files/listen?auth_token=${auth.getToken()}&hmac_validation=${quotePlus(popHeader)}`,
-    );
-
-    return ws;
-}
 
 /**
  * Helper function that handles connection to the file listener WebSocket and sets up message event
@@ -48,7 +29,7 @@ function connectToListener(
     onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
     isCleaningUp: () => boolean,
 ): WebSocket {
-    const ws = getWS(auth);
+    const ws = getAuthenticatedWS(auth, "/files/listen");
 
     ws.addEventListener("open", () => {
         if (isCleaningUp()) {

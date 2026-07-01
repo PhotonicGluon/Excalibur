@@ -1,3 +1,3 @@
-export * from "./info";
-export * from "./main";
+export * from "./auth-info";
 export { registerUser } from "./registration";
+export * from "./vault-info";

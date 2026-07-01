@@ -1,8 +1,11 @@
-import hashlib
 from datetime import datetime, timedelta, timezone
 
 import jwt
 from jwt.exceptions import InvalidTokenError
+
+from excalibur_server.src.crypto.hkdf import HKDF
+
+REQUIRED_JWT_FIELDS = {"sub", "iat", "exp"}
 
 
 def _generate_key(username: str, key: bytes) -> bytes:
@@ -14,7 +17,8 @@ def _generate_key(username: str, key: bytes) -> bytes:
     :return: the generated key
     """
 
-    return hashlib.sha3_256(username.encode("utf-8") + key).digest()
+    hkdf = HKDF("sha256")
+    return hkdf.hkdf(key, b"", username.encode("utf-8"), hkdf.digest_size)
 
 
 def generate_token(sub: str, data: dict, key: bytes, expiry: int = 3600) -> str:
@@ -44,12 +48,20 @@ def decode_token(token: str, key: bytes) -> dict | None:
     :return: the decoded payload, or None if the token is invalid or expired
     """
 
-    # Try to get the subject
+    # Ensure that we received a valid JWT
     try:
         decoded: dict = jwt.decode(token, options={"verify_signature": False})
     except InvalidTokenError:
         return None
+
+    # Check if required keys are present
+    for required_key in REQUIRED_JWT_FIELDS:
+        if required_key not in decoded:
+            return None
+
     sub = decoded.pop("sub")
+    issued_at = decoded.pop("iat")
+    expiry = decoded.pop("exp", 0)
 
     # Then properly verify the token
     try:
@@ -58,12 +70,11 @@ def decode_token(token: str, key: bytes) -> dict | None:
         return None
 
     now = datetime.now().timestamp()
-    issued_at = decoded.pop("iat")
-    if issued_at > now:
+    if issued_at > now or expiry < now:
         return None
 
-    expiry = decoded.pop("exp", 0)
-    if expiry < now:
-        return None
+    # Clear out the metadata fields
+    del decoded["iat"]
+    del decoded["exp"]
 
     return decoded

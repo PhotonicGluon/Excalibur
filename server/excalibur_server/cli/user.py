@@ -49,17 +49,18 @@ def add_user(
     Adds a user to the API server.
 
     Assumes the server has been initialized.
+
+    Only supports the PBKDF2-based key generation algorithm.
     """
 
     from base64 import b64decode
 
     import typer
     from Crypto.Random import get_random_bytes
-    from Crypto.Util.number import bytes_to_long, long_to_bytes
 
-    from excalibur_server.src.auth.keygen import generate_key
     from excalibur_server.src.config import CONFIG
-    from excalibur_server.src.exef import ExEF
+    from excalibur_server.src.crypto.exef import ExEF
+    from excalibur_server.src.crypto.keygen import generate_key
     from excalibur_server.src.users import User, add_user
 
     # Generate account unlock key (AUK) values
@@ -70,36 +71,14 @@ def add_user(
     vault_key: bytes = b64decode(vault_key)
     vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
 
-    if auth_protocol == AuthProtocol.SRP:
-        from excalibur_server.src.auth.srp import SRP
-
-        # Generate SRP data
-        srp_handler = SRP(CONFIG.security.srp.group)
-
-        srp_salt = get_random_bytes(16)
-        srp_key = generate_key(password, {"username": username}, srp_salt)
-        verifier = long_to_bytes(srp_handler.compute_verifier(bytes_to_long(srp_key)))
-
-        # Create user
-        add_user(
-            User(
-                username=username,
-                auth_protocol=auth_protocol,
-                srp_group=CONFIG.security.srp.group,
-                srp_salt=srp_salt,
-                srp_verifier=verifier,
-                auk_salt=auk_salt,
-                key_enc=vault_key_enc,
-            )
-        )
-    else:
-        from excalibur_server.src.auth.opaque import OPAQUE as opaque_server
-        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY
+    if auth_protocol == AuthProtocol.OPAQUE_3DH:
+        from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY, OPAQUEServer
         from excalibur_server.src.auth.opaque.operation import OPAQUEClient
 
         # Perform OPAQUE registration
         password = password.encode("utf-8")
         opaque_client = OPAQUEClient(oprf_type=OPAQUE_OPRF_TYPE)
+        opaque_server = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE)
 
         registration_request, blind = opaque_client.create_registration_request(password)
         registration_response = opaque_server.create_registration_response(
@@ -121,8 +100,8 @@ def add_user(
             User(
                 username=username,
                 auth_protocol=auth_protocol,
-                srp_group=CONFIG.security.srp.group,
                 registration_record=registration_record.serialize(),
+                keygen_algorithm="pbkdf2",
                 auk_salt=auk_salt,
                 key_enc=vault_key_enc,
             )
@@ -161,4 +140,4 @@ def get_account_creation_key():
     from excalibur_server.src.bip39 import to_mnemonic
     from excalibur_server.src.config import CONFIG
 
-    typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation_key)))
+    typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation.public_key)))

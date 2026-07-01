@@ -35,6 +35,11 @@ describe("<CircularProgressBar />", () => {
         cy.get("ion-spinner").should("have.class", "ion-color-danger");
     });
 
+    it("should apply aria label to the progress bar", () => {
+        mount(<CircularProgressBar value={0.25} ariaLabel="Loading" />);
+        cy.get(".circular-progress-bar").should("have.attr", "aria-label", "Loading");
+    });
+
     it("should apply custom classes to the spinner", () => {
         // Indeterminate
         mount(<CircularProgressBar value={null} className="my-spinner-class" />);

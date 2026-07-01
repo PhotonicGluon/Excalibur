@@ -6,7 +6,7 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.db.operations import get_item_by_path, is_dir_empty
-from excalibur_server.src.users import get_user
+from excalibur_server.src.users import get_user_from_id
 
 
 @encrypted_router.head(
@@ -29,10 +29,10 @@ async def check_path_endpoint(
     """
 
     path = processed_path
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get item
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found")
@@ -65,10 +65,10 @@ async def check_dir_endpoint(
     """
 
     path = processed_path
-    username = credentials.username
+    user_id = credentials.user_id
 
     # Get item
-    root_id = get_user(username).fsitem_id
+    root_id = get_user_from_id(user_id).fsitem_id
     item = get_item_by_path(root_id, path)
     if not item or not item.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Directory not found")

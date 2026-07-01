@@ -7,10 +7,10 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.logging import logger
-from excalibur_server.src.auth.consts import KEY
+from excalibur_server.env import is_debug
 from excalibur_server.src.auth.credentials import decode_token
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.middleware.crypto.routing import ROUTING_TREE
 from excalibur_server.src.middleware.crypto.structures import EncryptedRoute
 
@@ -140,7 +140,7 @@ class EncryptionHandler:
         if auth[0] != "Bearer" or len(auth) != 2:
             return
 
-        token = decode_token(auth[1], KEY)
+        token = decode_token(auth[1], CONFIG.security.jwt_key)
         if token is None:
             return
 
@@ -162,24 +162,45 @@ class EncryptionHandler:
         :return: The decrypted message
         """
 
-        # Decrypt body
+        # Collect entire encrypted body before touching plaintext
+        self._exef.decryptor.update(message.get("body", b""))
         decrypted_body = b""
-        while decrypted_body == b"":
-            encrypted_body: bytes = message.get("body", b"")
-            self._exef.decryptor.update(encrypted_body)
-            decrypted_body = self._exef.decryptor.get()
+        while message.get("more_body", False):
+            message = await self._receive()
+            self._exef.decryptor.update(message.get("body", b""))
+            decrypted_body += self._exef.decryptor.get()
 
-            if decrypted_body == b"":
-                message = await self._receive()
+        while not self._exef.decryptor.is_queue_clear:  # Make sure to empty the queue
+            decrypted_body += self._exef.decryptor.get()
 
-        if self._exef.decryptor.fully_processed:
+        # Make sure that the auth tag is present and already accounted for
+        if not self._exef.decryptor.fully_processed:
+            # Nothing left in queue but still not fully processed. Likely that the footer was
+            # stripped; treat as a credentials/integrity failure
+            self._to_raise_credentials_exception = True
+            message["body"] = b""
+            message["more_body"] = False
+            return message
+
+        # Make sure that the GCM tag is valid
+        try:
             self._exef.decryptor.verify()
+        except ValueError:
+            # Mismatched tag; ciphertext likely tampered with
+            self._to_raise_credentials_exception = True
+            message["body"] = b""
+            message["more_body"] = False
+            return message
 
+        # Update body
         message["body"] = decrypted_body
+        message["more_body"] = False  # All body data is in this single message
 
         # Update headers
         headers = MutableHeaders(raw=self._scope["headers"])
         headers["Content-Length"] = str(len(decrypted_body))
+        if original_content_type := headers.get("X-Content-Type"):
+            headers["Content-Type"] = original_content_type
 
         self._scope["headers"] = headers.raw
 
@@ -277,8 +298,7 @@ class EncryptionHandler:
             if not self.route_data.encrypted_body:
                 return message
 
-            headers = MutableHeaders(scope=self._scope)
-            if headers.get("X-Encrypted", "false") == "false":
+            if is_debug() and MutableHeaders(scope=self._scope).get("X-Encrypted", "false") == "false":
                 return message
 
             # Try to set the E2EE key using the scope headers

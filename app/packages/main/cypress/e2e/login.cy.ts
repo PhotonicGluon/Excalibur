@@ -6,9 +6,9 @@ describe("Check Login Page Contents", () => {
 
     it("should have basic navigation and form", () => {
         cy.get("#menu-button").should("exist");
-        cy.get("#username-input").should("exist");
-        cy.get("#password-input").should("exist");
-        cy.get("#save-password-checkbox").should("exist");
+        cy.get("[label='Username']").should("exist");
+        cy.get("[label='Password']").should("exist");
+        cy.get("ion-checkbox").should("exist");
         cy.get("#login-button").should("exist");
     });
 
@@ -32,23 +32,23 @@ describe("Handle Auth Process", () => {
         });
 
         it("should show error if user does not exist", () => {
-            cy.get("#username-input").type("{selectAll}" + "non-existent-user");
-            cy.get("#password-input").type("{selectAll}" + "Password");
+            cy.get("[label='Username']").type("{selectAll}" + "non-existent-user");
+            cy.get("[label='Password']").type("{selectAll}" + "Password");
             cy.get("#login-button").click();
 
             cy.url().should("include", "/login"); // Did not move into files page
             cy.get(".alert-wrapper").should("be.visible");
-            cy.get(".alert-title").should("contain.text", "User Not Found");
+            cy.get(".alert-title").should("contain.text", "Handshake Failed");
         });
 
         it("should show error if password is incorrect", () => {
-            cy.get("#username-input").type("{selectAll}" + "test-user");
-            cy.get("#password-input").type("{selectAll}" + "WrongPassword");
+            cy.get("[label='Username']").type("{selectAll}" + "test-user");
+            cy.get("[label='Password']").type("{selectAll}" + "WrongPassword");
             cy.get("#login-button").click();
 
             cy.url().should("include", "/login"); // Did not move into files page
             cy.get(".alert-wrapper").should("be.visible");
-            cy.get(".alert-title").should("contain.text", "Authentication Failed");
+            cy.get(".alert-title").should("contain.text", "Handshake Failed");
         });
     });
 });
@@ -60,8 +60,8 @@ describe("Check All Inputs Filled", () => {
     });
 
     const inputs = [
-        { field: "#username-input", name: "username" },
-        { field: "#password-input", name: "password" },
+        { field: "[label='Username']", name: "username" },
+        { field: "[label='Password']", name: "password" },
     ];
 
     inputs.forEach((input) => {

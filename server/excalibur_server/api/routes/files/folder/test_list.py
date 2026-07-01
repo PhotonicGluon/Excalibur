@@ -1,14 +1,13 @@
 import json
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item, get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.exef import ExEF
 from excalibur_server.src.files.structures import Directory, File
 
 
@@ -53,12 +52,12 @@ class TestListdir:
             db_session.delete(folder)
             db_session.commit()
 
-    def test_no_auth(self, test_user_vault_folder: Path):
-        response = TestClient(app).get(f"/api/files/list/{test_user_vault_folder}")
+    def test_no_auth(self):
+        response = TestClient(app).get("/api/files/list/.")
         assert response.status_code == 401
 
-    def test_listdir(self, auth_client_db: TestClient, dir_with_items: FSItem):
-        response = auth_client_db.get(f"/api/files/list/{get_item_fullpath(dir_with_items.id)}")
+    def test_listdir(self, auth_client: TestClient, dir_with_items: FSItem):
+        response = auth_client.get(f"/api/files/list/{get_item_fullpath(dir_with_items.id)}")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 
@@ -79,14 +78,14 @@ class TestListdir:
         assert items[1].type == "file"
         assert items[1].size == 100 - ExEF.additional_size
 
-    def test_listdir_encrypted_path(self, auth_client_db: TestClient, dir_with_items: FSItem):
+    def test_listdir_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
         from base64 import b64encode
 
         path_encrypted_data = ExEF(b"one demo 16B key").encrypt(
             f"{get_item_fullpath(dir_with_items.id)}".encode("UTF-8")
         )
 
-        response = auth_client_db.get(
+        response = auth_client.get(
             f"/api/files/list/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
             headers={"X-Encrypted": "true"},
         )
@@ -100,6 +99,6 @@ class TestListdir:
         assert directory.type == "directory"
         assert len(directory.items) == 2
 
-    def test_path_not_found(self, auth_client_db: TestClient):
-        response = auth_client_db.get("/api/files/list/fake/path")
+    def test_path_not_found(self, auth_client: TestClient):
+        response = auth_client.get("/api/files/list/fake/path")
         assert response.status_code == 404

@@ -1,40 +1,26 @@
 import React from "react";
 
-import { IonButton, IonContent, IonInput, IonPage } from "@ionic/react";
+import { IonContent, IonPage } from "@ionic/react";
 
-import { handshakeOPAQUE } from "@lib/auth/e2ee/opaque";
+import PasswordInput from "@components/inputs/PasswordInput";
 
 const TestPage: React.FC = () => {
-    // States
-    const [password, setPassword] = React.useState("Password");
-
     // Render
     return (
         <IonPage>
             <IonContent className="ion-padding">
                 <h1>Test Page</h1>
-                <IonInput
-                    value={password}
-                    onIonChange={(e) => setPassword(e.detail.value!)}
-                    placeholder="Password"
-                ></IonInput>
-                <IonButton
-                    onClick={() => {
-                        handshakeOPAQUE(
-                            "http://localhost:8888/api",
-                            "test-user-opaque",
-                            password,
-                            undefined,
-                            (message) => console.log("Set loading state: " + message),
-                            (header, subheader, message) =>
-                                console.log("Show alert: " + header + " " + subheader + " " + message),
-                        ).then((result) => {
-                            console.log(result);
-                        });
-                    }}
-                >
-                    Test OPAQUE Protocol
-                </IonButton>
+
+                <hr />
+                <h2>Single-Password</h2>
+                <PasswordInput onPasswordChange={(password) => console.log("Single-Password:", password)} />
+
+                <hr />
+                <h2>Double-Password</h2>
+                <PasswordInput
+                    confirmation
+                    onPasswordChange={(password) => console.log("Double-Password:", password)}
+                />
             </IonContent>
         </IonPage>
     );

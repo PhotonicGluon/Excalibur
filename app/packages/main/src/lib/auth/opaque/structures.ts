@@ -1,5 +1,6 @@
+import { Ristretto255 } from "@lib/crypto/elliptic";
+
 import { i2osp } from "./misc";
-import { Ristretto255 } from "./ristretto255";
 
 export class CleartextCredentials {
     serverPublicKey: Ristretto255;

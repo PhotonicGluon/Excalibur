@@ -69,10 +69,16 @@ export function quotePlus(str: string, safe: string = "") {
 /**
  * Encodes the path of a URL.
  *
- * @param url The URL to encode the path of
- * @returns The encoded path
+ * @param url the URL to encode the path of
+ * @param includeQuery whether to include the query string in the encoded path
+ * @returns the encoded path
  */
-export function getURLEncodedPath(url: string) {
-    const basePath = decodeURIComponent(new URL(url).pathname); // Decode it to just get the raw path
-    return quote(basePath);
+export function getURLEncodedPath(url: string, includeQuery: boolean = false) {
+    const urlObj = new URL(url);
+    const basePath = decodeURIComponent(urlObj.pathname); // Decode it to just get the raw path
+    let result = quote(basePath);
+    if (includeQuery && urlObj.search) {
+        result += urlObj.search;
+    }
+    return result;
 }

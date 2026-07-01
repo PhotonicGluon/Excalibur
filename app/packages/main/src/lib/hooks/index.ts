@@ -1,3 +1,4 @@
+export { useCapsLock } from "./caps-lock";
 export { useDirectory } from "./directory";
 export * from "./generic";
 export { useTokenManager } from "./token-manager";

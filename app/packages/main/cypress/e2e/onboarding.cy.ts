@@ -44,7 +44,7 @@ describe("Check Server Choice Page", () => {
 
         invalidURLs.forEach((url) => {
             it(`should reject invalid URL: '${url}'`, () => {
-                cy.get("#server-input").type(url);
+                cy.get("#server-input").type("{selectAll}" + url);
                 cy.get("#confirm-button").click();
 
                 // Ionic alerts usually have a specific header class
@@ -63,7 +63,7 @@ describe("Check Server Choice Page", () => {
                 "checkPort",
             );
 
-            cy.get("#server-input").type("http://example:11111");
+            cy.get("#server-input").type("{selectAll}http://example:11111");
             cy.get("#confirm-button").click();
 
             // Explicitly wait for the network call to happen
@@ -79,7 +79,7 @@ describe("Check Server Choice Page", () => {
                 "checkStandard",
             );
 
-            cy.get("#server-input").type("http://example");
+            cy.get("#server-input").type("{selectAll}http://example");
             cy.get("#confirm-button").click();
 
             // Cypress waits for these to fire
@@ -88,7 +88,7 @@ describe("Check Server Choice Page", () => {
     });
 
     it("should handle valid URL and redirect to login", () => {
-        cy.get("#server-input").type(SERVER_URL);
+        cy.get("#server-input").type("{selectAll}" + SERVER_URL);
         cy.get("#confirm-button").click();
         cy.url().should("include", "/login");
     });

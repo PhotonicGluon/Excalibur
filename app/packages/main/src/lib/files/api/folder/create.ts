@@ -1,4 +1,4 @@
-import ExEF from "@lib/exef";
+import ExEF from "@lib/crypto/exef";
 import { popFetch } from "@lib/network";
 import { b64encodeURLSafe } from "@lib/util";
 
@@ -21,7 +21,7 @@ export async function mkdir(
     obfuscateName: boolean = true,
 ): Promise<{ success: boolean; error?: string }> {
     const rawName =
-        obfuscateName && auth.authInfo!.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
+        obfuscateName && auth.vaultInfo!.info.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
 
     const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(

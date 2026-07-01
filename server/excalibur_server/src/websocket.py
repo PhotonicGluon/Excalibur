@@ -6,7 +6,7 @@ from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, model_serializer
 
 from excalibur_server.api.logging import logger
-from excalibur_server.src.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 
 
 class WebSocketMsg(BaseModel):
