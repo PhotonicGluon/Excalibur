@@ -1,6 +1,6 @@
 from playwright.sync_api import sync_playwright
 from rich import print
-from httpx import get
+from httpx2 import get
 import time
 
 WIDTH = 1280
@@ -9,7 +9,9 @@ HEIGHT = 720
 print("[yellow bold underline]This assumes:[/yellow bold underline]")
 print("[yellow]- the app is running on http://localhost:5173")
 print("[yellow]- the server is running on http://localhost:8989")
-print("[yellow]- a user [underline]screenshotter[/underline] exists with password [underline]Password[/underline]")
+print(
+    "[yellow]- a user [underline]screenshotter[/underline] exists with password [underline]Password[/underline]"
+)
 print("[yellow]- the user has demo files in their vault")
 print()
 print("[yellow bold]Press enter to continue...[/yellow bold]")
@@ -48,8 +50,9 @@ with sync_playwright() as p:
 
     page.goto("http://localhost:5173/new-user")
     screenshot(path="screenshots/sign-up.png")
-    page.fill("#new-username-input > .input-wrapper", f"new-user-{time.time_ns()}")
-    page.fill("#new-password-input > .input-wrapper", "Password")
+    page.fill("[label='Username'] > .input-wrapper", f"new-user-{time.time_ns()}")
+    page.fill("[label='Password'] > .input-wrapper", "Password")
+    page.fill("[label='Confirm Password'] > .input-wrapper", "Password")
     page.evaluate(f"navigator.clipboard.writeText('{ack}')")
     page.locator("input[placeholder='Word 1']").focus()
     page.keyboard.press("ControlOrMeta+v")  # Pastes the ACK
@@ -57,18 +60,25 @@ with sync_playwright() as p:
     page.wait_for_timeout(1000)  # To allow processing to fully complete
     page.click("details summary")  # Expand out the vault key
     screenshot(
-        clip={"x": (WIDTH - 400) // 2, "y": (HEIGHT - 420) // 2, "width": 400, "height": 420},
+        clip={
+            "x": (WIDTH - 400) // 2,
+            "y": (HEIGHT - 420) // 2,
+            "width": 400,
+            "height": 420,
+        },
         path="screenshots/vault-key-initial.png",
     )
 
     page.goto("http://localhost:5173/files/")
-    page.wait_for_timeout(500)  # To allow page to fully load (and show that there's nothing)
+    page.wait_for_timeout(
+        500
+    )  # To allow page to fully load (and show that there's nothing)
     screenshot(path="screenshots/explorer-empty.png")
 
     # Login to existing account with demo files
     page.goto("http://localhost:5173/login")
-    page.fill("#username-input > .input-wrapper", "screenshotter")
-    page.fill("#password-input > .input-wrapper", "Password")
+    page.fill("[label='Username'] > .input-wrapper", "screenshotter")
+    page.fill("[label='Password'] > .input-wrapper", "Password")
     page.click("#login-button")
 
     page.wait_for_url("http://localhost:5173/files/")
@@ -91,7 +101,9 @@ with sync_playwright() as p:
     page.locator("#drag-and-drop-item").hover()
     page.mouse.down()
     page.locator("#files-area").hover()
-    page.locator("#files-area").hover()  # See https://playwright.dev/docs/input#dragging-manually
+    page.locator(
+        "#files-area"
+    ).hover()  # See https://playwright.dev/docs/input#dragging-manually
     page.evaluate(
         "document.querySelector('#drag-and-drop-item').setAttribute('style','display:none')"  # Hide item from screenshot
     )
@@ -102,25 +114,40 @@ with sync_playwright() as p:
 
     page.locator("ion-label", has_text="Name").click()
     page.wait_for_timeout(500)  # To allow popup to fully appear
-    screenshot(clip={"x": 27, "y": 125, "width": 275, "height": 400}, path="screenshots/sort-options.png")
+    screenshot(
+        clip={"x": 27, "y": 125, "width": 275, "height": 400},
+        path="screenshots/sort-options.png",
+    )
     page.reload()  # Reset page state
     page.wait_for_timeout(500)  # To allow page to fully load
 
-    page.click("ion-fab-button")
-    page.wait_for_timeout(500)  # To allow FAB to fully load
-    with page.expect_file_chooser() as fc_info:
-        page.locator("button[aria-label='Upload File']").click()
-    file_chooser = fc_info.value
-    file_chooser.set_files(
-        [
-            {"name": f"10 MB File - {time.time_ns()}.txt", "mimeType": "text/plain", "buffer": b"A" * 1_000_000},
-            {"name": f"50 MB File - {time.time_ns()}.txt", "mimeType": "text/plain", "buffer": b"B" * 10_000_000},
-        ]
-    )
-    page.click("#jobs-summary")
-    screenshot(clip={"x": (WIDTH - 420) // 2, "y": 0, "width": 420, "height": 160}, path="screenshots/jobs.png")
-    page.reload()  # Reset page state
-    page.wait_for_timeout(500)  # To allow page to fully load
+    # TODO: Update with new jobs modal
+    # page.click("ion-fab-button")
+    # page.wait_for_timeout(500)  # To allow FAB to fully load
+    # with page.expect_file_chooser() as fc_info:
+    #     page.locator("button[aria-label='Upload File']").click()
+    # file_chooser = fc_info.value
+    # file_chooser.set_files(
+    #     [
+    #         {
+    #             "name": f"10 MB File - {time.time_ns()}.txt",
+    #             "mimeType": "text/plain",
+    #             "buffer": b"A" * 1_000_000,
+    #         },
+    #         {
+    #             "name": f"50 MB File - {time.time_ns()}.txt",
+    #             "mimeType": "text/plain",
+    #             "buffer": b"B" * 10_000_000,
+    #         },
+    #     ]
+    # )
+    # page.click("#jobs-summary")
+    # screenshot(
+    #     clip={"x": (WIDTH - 420) // 2, "y": 0, "width": 420, "height": 160},
+    #     path="screenshots/jobs.png",
+    # )
+    # page.reload()  # Reset page state
+    # page.wait_for_timeout(500)  # To allow page to fully load
 
     browser.close()
 
