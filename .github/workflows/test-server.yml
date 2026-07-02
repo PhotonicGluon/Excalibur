@@ -35,7 +35,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
               with:
                   enable-cache: true
-                  version: "0.11.16"
+                  version: "0.11.26"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Set Up Testing Environment
