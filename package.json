@@ -8,8 +8,10 @@
         "sync": "pnpm i && cd server && uv sync --all-groups",
         "app:start": "cd app/packages/main && pnpm exec vite dev --port 5173",
         "server:setup-for-test": "cd server && cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"uv run excalibur init -r && uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=\"",
+        "server:setup-for-screenshotter": "cd server && cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"uv run excalibur init -r && uv run excalibur user add --username screenshotter --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=\"",
         "server:start": "cd server && uv run excalibur start --port 8989 --debug --no-log",
         "server:start-for-test": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"pnpm run server:setup-for-test && pnpm run server:start\"",
+        "server:start-for-screenshotter": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"pnpm run server:setup-for-screenshotter && pnpm run server:start\"",
         "server:post-test-reset": "cross-env-shell EXCALIBUR_ROOT_FOLDER=excalibur-test-files \"cd server && uv run excalibur reset -y\"",
         "cy:open": "cd app/packages/main && pnpm run cy:open",
         "cy:run": "cd app/packages/main && pnpm run cy:run",
@@ -18,7 +20,8 @@
         "test:component": "cd app/packages/main && pnpm run test:component",
         "test:server": "cd server && uv run excalibur test",
         "test:e2e": "start-server-and-test server:start-for-test http://localhost:8989/api/docs \"start-server-and-test app:start http://localhost:5173 cy:run && pnpm run server:post-test-reset\"",
-        "test:all": "pnpm run test:unit && pnpm run test:component && pnpm run test:server && pnpm run test:e2e"
+        "test:all": "pnpm run test:unit && pnpm run test:component && pnpm run test:server && pnpm run test:e2e",
+        "screenshotter": "start-server-and-test server:start-for-screenshotter http://localhost:8989/api/docs \"start-server-and-test app:start http://localhost:5173 cy:open && pnpm run server:post-test-reset\""
     },
     "devDependencies": {
         "cross-env": "^10.1.0",

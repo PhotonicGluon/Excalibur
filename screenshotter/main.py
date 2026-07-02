@@ -19,7 +19,12 @@ input()
 
 # Get the ACK for signing up
 print("[cyan]Getting ACK...[/cyan]")
-ack = get("http://localhost:8989/api/auth/ack?as_string=true", verify=False).text
+try:
+    ack = get("http://localhost:8989/api/auth/ack?as_string=true", verify=False).text
+except Exception as e:
+    print(f"[red]Error getting ACK: {e}[/red]")
+    print("[red]Make sure the server is running on http://localhost:8989[/red]")
+    exit(1)
 
 print("[cyan]Starting screenshotter...[/cyan]")
 
@@ -28,6 +33,7 @@ with sync_playwright() as p:
     page = browser.new_page(
         viewport={"width": WIDTH, "height": HEIGHT},
         device_scale_factor=1.5,
+        # device_scale_factor=1,
         color_scheme="dark",
     )
 
@@ -40,7 +46,7 @@ with sync_playwright() as p:
     screenshot(path="screenshots/welcome.png")
 
     page.goto("http://localhost:5173/server-choice")
-    screenshot(path="screenshots/server-choice.png")
+    screenshot(path="screenshots/server-choice.png")  # Disable this for trying to log in only
     page.fill("#server-input > .input-wrapper", "http://localhost:8989")
     page.click("#confirm-button")
 
@@ -94,24 +100,6 @@ with sync_playwright() as p:
     page.click("ion-fab-button")  # Cancel
     page.wait_for_timeout(500)  # To allow FAB to fully load
 
-    page.evaluate(
-        "document.querySelector('#files-area').insertAdjacentHTML('beforeend','<span id=\"drag-and-drop-item\">drag and drop item</span>')"  # Create test item for drag-and-drop
-    )
-    page.locator("#drag-and-drop-item").select_text()
-    page.locator("#drag-and-drop-item").hover()
-    page.mouse.down()
-    page.locator("#files-area").hover()
-    page.locator(
-        "#files-area"
-    ).hover()  # See https://playwright.dev/docs/input#dragging-manually
-    page.evaluate(
-        "document.querySelector('#drag-and-drop-item').setAttribute('style','display:none')"  # Hide item from screenshot
-    )
-    screenshot(path="screenshots/drag-and-drop.png")
-    page.mouse.up()
-    page.reload()  # Reset page state
-    page.wait_for_timeout(500)  # To allow page to fully load
-
     page.locator("ion-label", has_text="Name").click()
     page.wait_for_timeout(500)  # To allow popup to fully appear
     screenshot(
@@ -121,33 +109,47 @@ with sync_playwright() as p:
     page.reload()  # Reset page state
     page.wait_for_timeout(500)  # To allow page to fully load
 
-    # TODO: Update with new jobs modal
-    # page.click("ion-fab-button")
-    # page.wait_for_timeout(500)  # To allow FAB to fully load
-    # with page.expect_file_chooser() as fc_info:
-    #     page.locator("button[aria-label='Upload File']").click()
-    # file_chooser = fc_info.value
-    # file_chooser.set_files(
-    #     [
-    #         {
-    #             "name": f"10 MB File - {time.time_ns()}.txt",
-    #             "mimeType": "text/plain",
-    #             "buffer": b"A" * 1_000_000,
-    #         },
-    #         {
-    #             "name": f"50 MB File - {time.time_ns()}.txt",
-    #             "mimeType": "text/plain",
-    #             "buffer": b"B" * 10_000_000,
-    #         },
-    #     ]
-    # )
-    # page.click("#jobs-summary")
-    # screenshot(
-    #     clip={"x": (WIDTH - 420) // 2, "y": 0, "width": 420, "height": 160},
-    #     path="screenshots/jobs.png",
-    # )
-    # page.reload()  # Reset page state
-    # page.wait_for_timeout(500)  # To allow page to fully load
+    page.click("#ellipsis-button")
+    page.wait_for_timeout(500)  # For ellipsis menu to fully load
+    screenshot(
+        clip={"x": (WIDTH - 275), "y": 50, "width": 275, "height": 184},
+        path="screenshots/ellipsis-menu.png",
+    )
+    page.reload()  # Reset page state
+    page.wait_for_timeout(500)  # To allow page to fully load
+
+    page.click("ion-fab-button")
+    page.wait_for_timeout(500)  # To allow FAB to fully load
+    with page.expect_file_chooser() as fc_info:
+        page.locator("button[aria-label='Upload File']").click()
+    file_chooser = fc_info.value
+    file_chooser.set_files(
+        [
+            {
+                "name": f"10 MB File - {time.time_ns()}.txt",
+                "mimeType": "text/plain",
+                "buffer": b"A" * 1_000_000,
+            },
+            {
+                "name": f"50 MB File - {time.time_ns()}.txt",
+                "mimeType": "text/plain",
+                "buffer": b"B" * 10_000_000,
+            },
+        ]
+    )
+    page.wait_for_timeout(500)  # To allow toast to load
+    screenshot(
+        clip={"x": 265, "y": 590, "width": 750, "height": 130},
+        path="screenshots/jobs-modal-peek.png",
+    )
+    page.click("[aria-label='Expand Modal']")  # Expands the job modal
+    page.wait_for_timeout(500)  # To allow modal to fully expand
+    screenshot(
+        clip={"x": 265, "y": 0, "width": 750, "height": 215},
+        path="screenshots/jobs-modal-expanded.png",
+    )
+    page.reload()  # Reset page state
+    page.wait_for_timeout(500)  # To allow page to fully load
 
     browser.close()
 

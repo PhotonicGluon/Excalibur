@@ -18,10 +18,10 @@ uv run playwright install chromium
 
 ## Usage
 
-First start the application and server from the root folder (we use `cy:e2e` to do this for convenience):
+First start the application and server from the root folder:
 
 ```bash
-pnpm run cy:e2e
+pnpm run screenshotter
 ```
 
 Then create a user called `screenshotter` with password `Password`, and ensure they have demo files in their vault.
