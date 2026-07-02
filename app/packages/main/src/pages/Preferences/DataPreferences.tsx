@@ -207,6 +207,7 @@ const DataPreferences: React.FC = () => {
                         </div>
 
                         <BIP39MnemonicInput
+                            className="xl:grid-cols-4"
                             numWords={24}
                             initialWords={localVaultKeyMnemonic}
                             maxSuggestions={5}
