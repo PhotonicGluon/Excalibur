@@ -7,6 +7,8 @@ import { BIP39MnemonicLength, WORD_TRIE, fromMnemonic } from "@lib/auth/bip39";
 import BIP39WordInput from "./BIP39WordInput";
 
 interface ContainerProps {
+    /** CSS class name for the container */
+    className?: string;
     /** Number of words in the BIP39 mnemonic */
     numWords: BIP39MnemonicLength;
     /** Initial words to display */
@@ -99,7 +101,7 @@ const BIP39MnemonicInput: React.FC<ContainerProps> = (props) => {
     // Render
     return (
         <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 xl:grid-cols-4">
+            <div className={`grid grid-cols-2 ${props.className}`}>
                 {Array.from({ length: props.numWords }).map((_, index) => (
                     <BIP39WordInput
                         // Making the key depend on the word's value will make React destroy and re-create the

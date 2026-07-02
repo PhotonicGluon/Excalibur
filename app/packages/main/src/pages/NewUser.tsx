@@ -246,6 +246,7 @@ const NewUser: React.FC = () => {
                             <div id="ack-input">
                                 <IonLabel>Account Creation Key</IonLabel>
                                 <BIP39MnemonicInput
+                                    className="xl:grid-cols-4"
                                     numWords={24}
                                     maxSuggestions={5}
                                     onEntropy={(ack) => {
