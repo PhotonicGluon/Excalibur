@@ -1,0 +1,88 @@
+---
+sidebar_position: -5
+sidebar_label: Updating to 0.7
+description: Guide explaining the upgrade process from Excalibur 0.6 to 0.7.
+---
+
+:::warning
+
+This guide is subject to change.
+
+:::
+
+# Upgrading from Excalibur 0.6 to Excalibur 0.7
+
+In this guide, you'll find steps to update your Excalibur app and server instances to version 0.7.
+
+:::important
+
+Please read this guide carefully and follow all steps.
+
+:::
+
+This guide will assume that the `0.7.x` version of the Excalibur server is installed. If you are using version `0.6.x`, please upgrade to `0.7.x` before proceeding.
+
+## Removed Secure Remote Password (SRP) Authentication
+
+As mentioned in the [0.5.x to 0.6.x upgrade guide](./05x-to-06x.mdx), SRP will be deprecated. Thus, Excalibur 0.7 has removed the Secure Remote Password (SRP) authentication system in favour of OPAQUE-3DH.
+
+## Configuration File v6
+
+Excalibur 0.7 modifies the configuration file from version 5 to version 6, with the following changes:
+
+- The **`security.srp`** table has been removed
+- A new field **`security.jwt_key`** has been added to store a static JSON Web Token (JWT) key to sign tokens (instead of being created every time the server starts)
+- A new table **`security.account_creation`** was added to store the account creation key (ACK) in an asymmetric (i.e., public/private) key system, and thus has:
+    - **`security.account_creation.public_key`**: The public key used on the client to encrypt account creation requests
+    - **`security.account_creation.private_key`**: The private key used on the server to decrypt account creation requests on the server
+
+Existing configuration files can be upgraded by running
+
+```bash
+excalibur config update
+```
+
+on the server. Verify that the updated configuration is valid by running the command
+
+```bash
+excalibur config validate
+```
+
+You should see `Config is valid!` appear in the terminal.
+
+## Database Changes
+
+The database schema has been updated, with the following changes:
+- Secure Remote Password (SRP) fields have been removed
+- New user ID and key generation function fields have been added to the `User` table
+- The `additional_info` field in the `User` table has been renamed to `vault_info`
+
+As such, existing databases need to be upgraded. This can be done by running
+
+```bash
+excalibur db upgrade
+```
+
+on the server.
+
+## Updated Filesystem
+
+Excalibur 0.6 migrated the filesystem to be based on the database. In Excalibur 0.7, we have further collapsed the filesystem structure to improve performance and storage of the vault files.
+
+First, it is recommended to create a backup of the server files by running:
+
+```bash
+excalibur backup
+```
+
+You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created.
+
+Now, begin the migration to the new filesystem by running:
+
+```bash
+excalibur db migrate-files-v7
+```
+
+## Conclusion
+
+These are the steps to upgrade your Excalibur app and server instances to version 0.7. After following these steps, your Excalibur instance should be running on version 0.7.
