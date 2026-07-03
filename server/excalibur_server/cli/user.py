@@ -140,4 +140,4 @@ def get_account_creation_key():
     from excalibur_server.src.bip39 import to_mnemonic
     from excalibur_server.src.config import CONFIG
 
-    typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation.public_key)))
+    typer.secho(" ".join(to_mnemonic(CONFIG.security.account_creation.public_key.to_bytes())))
