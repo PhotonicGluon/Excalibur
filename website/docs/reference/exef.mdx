@@ -71,7 +71,7 @@ This section immediately follows the ciphertext.
 
 ## Keys
 
-We do not directly use the vault key ($K$) for encryption. Instead, two keys are derived from the vault key using HKDF.
+We do not directly use the vault key ($K$) for encrypting data. Instead, two keys are derived from the vault key using HKDF.
 
 - **Crypto Key ($k_c$)**: This key is the actual key used to encrypt/decrypt the ciphertext stored in an ExEF file.
 - **MAC Key ($k_m$)**: This key is used as a quick check on the provided vault key $K$.
@@ -85,6 +85,8 @@ These two keys are generated using HKDF with the following parameters (following
     - Otherwise, it will be the string `ExEF MAC Key`.
 - `length`: the length of the vault key $K$.
 
+For other uses of ExEF, the vault key $K$ is replaced with a context-appropriate key. For example, during end-to-end transmission of data, the end-to-end encryption session key is used instead.
+
 ## Header MAC Generation
 
 The header MAC field in the header uses HMAC-SHA256 with the key $k_m$. The process for generating the header MAC is as follows.
@@ -95,7 +97,7 @@ The header MAC field in the header uses HMAC-SHA256 with the key $k_m$. The proc
 
 :::important
 
-The header MAC is not used for authentication. It is only used as a quick verification on the provided vault key $K$.
+The header MAC is ***not*** used for authentication. It is only used as a quick verification on the provided vault key $K$. **It must _not_ be used for authentication**.
 
 :::
 
@@ -107,4 +109,4 @@ It is recommended to check the provided vault key $K$ using the header MAC. You 
 
 ## Ciphertext Decryption
 
-After verifying that the vault key $K$ is (likely) correct using the header MAC and the MAC key $k_m$, the crypto key $k_c$ is used to decrypt the ciphertext. Verification of the decryption is done using the footer tag.
+After verifying that the vault key $K$ is (likely) correct using the header MAC and the MAC key $k_m$, the crypto key $k_c$ is used to decrypt the ciphertext. Verification of the decryption is done using the footer tag (which is the AES-256-GCM authentication tag).

@@ -26,7 +26,7 @@ We use a substitution cipher to substitute every byte with another byte. This al
 
 ### The Key
 
-To ensure that the same name always produces the same obfuscated name, we use a key to generate the substitution cipher. This key is a 32-byte string derived from the vault key as follows:
+To ensure that the same name always produces the same obfuscated name, we use a key to generate the substitution cipher. This key is a 32-byte string derived from the vault key using SHA-256 as the hash function as follows:
 ```
 HKDF(vaultKey, NULL, "Name Obfuscation Cipher", 32)
 ```

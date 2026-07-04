@@ -53,7 +53,7 @@ The body of the message need not be included in the HMAC calculation since it is
 
 :::
 
-The HMAC's key is the derived session key $K$ and the hash algorithm used is SHA-256. The output PoP value is encoded using Base64 for ease of transmission.
+The HMAC's key is the derived end-to-end-encryption session key and the hash algorithm used is SHA-256. The output PoP value is encoded using Base64 for ease of transmission.
 
 A CyberChef demonstration of the PoP generation process can be found [here](<https://gchq.github.io/CyberChef/#recipe=HMAC(%7B'option':'UTF8','string':'one%20demo%2016B%20key'%7D,'SHA256')From_Hex('Auto')To_Base64('A-Za-z0-9%2B/%3D')&input=R0VUIC9hcGkvYXV0aC9wb3AtZGVtbyAxMDAwMDAwMDAwIDAxMjM0NTY3ODlhYmNkZWY&oeol=FF>).
 
