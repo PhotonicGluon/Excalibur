@@ -1,5 +1,11 @@
 # Network Key Generation
 
+:::warning
+
+TODO: Update
+
+:::
+
 This document describes the network key generation process used in Excalibur, which is based on 1Password's key generation process as described in [their security whitepaper](https://1passwordstatic.com/files/security/1password-white-paper.pdf).
 
 The key generation process can be concisely summarized in the following flowchart.
@@ -55,11 +61,3 @@ Let's examine each step in detail.
 This key generation step is used to generate a key for unlocking the vault[^vault-key], called the **Account Unlock Key** (AUK), using a salt called `auk_salt`.
 
 [^vault-key]: More accurately, the key is actually used to decrypt the file that contains the vault key.
-
-:::note[Secure Remote Password (SRP)]
-
-If a user uses [SRP authentication](./server-api/authentication/srp), the same key generation step is used to generate a key for SRP authentication, called the **SRP Key**, using a salt called `srp_salt`.
-
-The reason for why we need a second key is that we don't want a leak of the communication key (i.e., the SRP key) to compromise the vault, and vice versa. Thus the two salts, `auk_salt` and `srp_salt`, are distinct.
-
-:::

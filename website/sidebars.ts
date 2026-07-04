@@ -56,7 +56,6 @@ const sidebars: SidebarsConfig = {
                     },
                     items: [
                         "reference/server-api/authentication/opaque",
-                        "reference/server-api/authentication/srp",
                         "reference/server-api/authentication/subsequent",
                     ],
                 },
