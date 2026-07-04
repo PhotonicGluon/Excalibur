@@ -21,6 +21,7 @@ def init_server(
     from excalibur_server.cli.config import generate_keys
     from excalibur_server.consts import CONFIG_TEMPLATE_FILE, ROOT_FOLDER
     from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
+    from excalibur_server.src.bip39.operation import to_mnemonic
 
     # Handle resetting
     if reset:
@@ -43,17 +44,10 @@ def init_server(
 
         # Replace the default parameters
         oprf_seed = OPAQUEServer(oprf_type=OPAQUE_OPRF_TYPE).generate_seed()
-        # private_key, public_key = OPAQUE.generate_keys(for_export=True)
 
         with config_path.open("r+") as f:
             contents = f.read()
             contents = contents.replace("OPRF seed goes here!", oprf_seed.hex())
-            # contents = contents.replace(
-            #     "Public key for the OPAQUE protocol goes here", b64encode(public_key).decode("utf-8")
-            # )
-            # contents = contents.replace(
-            #     "Private key for OPAQUE protocol goes here", b64encode(private_key).decode("utf-8")
-            # )
             f.seek(0)
             f.write(contents)
             f.truncate()
@@ -62,8 +56,6 @@ def init_server(
 
         # Report completion
         typer.secho("done.", fg="green")
-        # typer.secho("Server Public Key Mnemonic:", fg="cyan")
-        # typer.secho("    " + " ".join(to_mnemonic(public_key)), fg="cyan")
     else:
         typer.secho("Config file already exists; not changing", fg="yellow")
 
@@ -79,3 +71,6 @@ def init_server(
         upgrade(revision="head")  # Upgrade the database to the latest revision
 
     typer.secho("Server initialized.", fg="green")
+
+    typer.secho("Account Creation Key Mnemonic:", fg="cyan")
+    typer.secho("    " + " ".join(to_mnemonic(CONFIG.security.account_creation.public_key.to_bytes())), fg="cyan")
