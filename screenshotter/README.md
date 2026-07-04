@@ -24,7 +24,7 @@ First start the application and server from the root folder:
 pnpm run screenshotter
 ```
 
-Then create a user called `screenshotter` with password `Password`, and ensure they have demo files in their vault.
+Then ensure that the `screenshotter` user (with password `Password`) has demo files in their vault.
 
 Finally, run the screenshotter:
 

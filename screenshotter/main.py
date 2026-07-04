@@ -103,7 +103,7 @@ with sync_playwright() as p:
     page.locator("ion-label", has_text="Name").click()
     page.wait_for_timeout(500)  # To allow popup to fully appear
     screenshot(
-        clip={"x": 27, "y": 125, "width": 275, "height": 400},
+        clip={"x": 27, "y": 110, "width": 275, "height": 400},
         path="screenshots/sort-options.png",
     )
     page.reload()  # Reset page state
