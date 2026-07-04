@@ -26,8 +26,8 @@ The blue "+" button at the bottom of the screen allows you to add stuff. Tapping
 </div>
 
 - The top option allows you to upload a file.
-    - The file will be encrypted _before_ it is sent over the network, where it will be encrypted _again_. Thus, **the server only stores encrypted files**.
-- The second option allows you to create a new folder.
+    - The file will be encrypted _before_ it is sent over the network. Thus, **the server only stores encrypted files**.
+- The second option allows you to create a new folder. A popup will appear asking you to enter the name of the folder.
 
 Close the menu by clicking on the blue button again (which now displays "&times;").
 
@@ -52,37 +52,57 @@ After adding some items, your file explorer should look something like this:
 
 <Image img={require("./img/explorer.png")} alt="File Explorer" />
 
-- Tap on a _file_ to download and decrypt the file.
-    - The file will be encrypted during transit.
-    - File decryption happens _only_ on the client and **never** on the server.
 - Tap on a _folder_ to navigate into it.
-- Tap on the ellipsis on the side of an item to bring up a popup that allows you to rename, move, or delete the item. For desktop/PWA users, you can also right-click on an item to bring up the same popup.
+- Tap on a _file_ to download and decrypt the file.
+    - File decryption happens _only_ on the client and **never** on the server.
+- Tap on the ellipsis on the side of an item to bring up a popup that allows you to rename, move, or delete the item.
+    - For desktop/PWA users, you can also right-click on an item to bring up the same popup.
 
-The top-right ellipsis menu has two options:
-
-- "Search", allowing you to search for files
-- "Open Excalibur Folder", which is only available on mobile platforms
-    - For desktop/PWA users, the files are downloaded to your device's Downloads folder
-
-You can sort the items in the file explorer by tapping on the up arrow on the side of "Name". A popup will appear showing a list of sorting options:
+You can also sort the items in the file explorer by tapping on the up arrow on the side of "Name". A popup will appear showing a list of sorting options:
 
 <div className="w-full">
-<div className="mx-auto max-w-50">
+<div className="mx-auto max-w-60">
 <Image img={require("./img/sort-options.png")} alt="Sort Options" />
 </div>
 </div>
 
 You can choose any of the sorting options to sort the files and directories, as well as the sorting order.
 
-
-## Jobs
-
-When you upload or download a file, a new job is created. The list of active jobs can be accessed by tapping/clicking on the "jobs" text at the top of the screen.
+The top-right corner has an ellipsis menu:
 
 <div className="w-full">
-<div className="mx-auto max-w-100">
-<Image img={require("./img/jobs.png")} alt="Jobs" />
+<div className="mx-auto max-w-75">
+<Image img={require("./img/ellipsis-menu.png")} alt="Ellipsis Menu" />
 </div>
 </div>
 
-An active job can be cancelled by hovering over the circular progress bar and then tapping/clicking on the "x".
+- **"Search"**: search for files
+- **"Jobs"**: (re)open the [jobs modal](#jobs)
+- **"Preferences"**: access user/server preferences
+- (***Mobile Only***) **"Open Excalibur Folder"**: opens your local device's file manager to where the downloaded files are stored
+    - For desktop/PWA users, the files are downloaded to your device's Downloads folder
+
+
+## Jobs {/* #jobs */}
+
+When you upload or download a file, a new job is created and a jobs modal appears on the bottom of the screen.
+
+<div className="w-full">
+<div className="mx-auto max-w-150">
+<Image img={require("./img/jobs-modal-peek.png")} alt="Jobs Modal (Peeking)" />
+</div>
+</div>
+
+This allows you to see the number of completed, pending, and failed jobs.
+
+More details about the jobs can be found by expanding the modal:
+
+<div className="w-full">
+<div className="mx-auto max-w-150">
+<Image img={require("./img/jobs-modal-expanded.png")} alt="Jobs Modal (Expanded)" />
+</div>
+</div>
+
+Here you can see the list of active jobs, as well as their status and progress. A green progress bar means that the job is complete while a red progress bar means that it failed.
+
+An active job can be cancelled by hovering over the circular progress bar and then tapping/clicking on the "&times;".

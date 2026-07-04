@@ -43,12 +43,6 @@ excalibur init
 
 This will create a new folder `excalibur-files` in the current working directory. You should also notice a message like `Account Creation Key Mnemonic` followed by 24 words; these words are your Account Creation Key (ACK) mnemonic, which is needed to create an account from the client.
 
-:::note
-
-The ACK is actually a 256-bit (32-byte) random number, but it is represented as a mnemonic for ease of use.
-
-:::
-
 :::tip[Getting the ACK Mnemonic]
 
 If you want to see the ACK mnemonic again, use the command
@@ -61,6 +55,12 @@ This will print the ACK mnemonic to the console.
 
 :::
 
+:::note[What _is_ the ACK?]
+
+The ACK is more accurately the public key for account creation. It is a Ristretto255-curve point, which is a type of elliptic curve point used in cryptographic operations. For convenience, we use a mnemonic to represent the ACK.
+
+:::
+
 ### Configuration
 
 The configuration file is a TOML file named `config.toml` in the `excalibur-files` folder. There are a few key values that you might want to edit:
@@ -70,12 +70,6 @@ The configuration file is a TOML file named `config.toml` in the `excalibur-file
 - **`security.key_strength`**: The size of the keys used for cryptographic operations, in bits. The default value of `128` bits should be both secure and performant, but if you prefer a higher security, you can set it to `192` or `256`.
 
 You should also notice that the `security.opaque` table has been populated. These values are used for the [OPAQUE-3DH](../../reference/server-api/authentication/opaque) authentication system, a more modern augmented password-authenticated key exchange (aPAKE) protocol.
-
-:::note[Legacy SRP Configuration]
-
-You might notice that there is a `security.srp` table in the configuration file. This is for the legacy Secure Remote Password (SRP) authentication system, which is still supported but not recommended for new deployments. If you want to use the legacy SRP system, you can set the `security.srp.group` value to `small`, `medium`, or `large` to control the security level.
-
-:::
 
 ## Starting the Server
 

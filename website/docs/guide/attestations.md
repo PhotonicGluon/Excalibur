@@ -10,9 +10,7 @@ Excalibur's release assets are all generated using [GitHub Actions](https://gith
 
 :::important
 
-You will need to install the [GitHub CLI](https://cli.github.com/).
-
-You will also need to set up the GitHub CLI by running `gh auth login`.
+You will need to install the [GitHub CLI](https://cli.github.com/) and set it up by running `gh auth login`.
 
 :::
 
