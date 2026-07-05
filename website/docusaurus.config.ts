@@ -157,6 +157,12 @@ const config: Config = {
                     sidebarId: "reference",
                     label: "Reference",
                 },
+                {
+                    type: "docSidebar",
+                    position: "left",
+                    sidebarId: "server_api",
+                    label: "Server API",
+                },
                 { position: "left", to: "/changelog", label: "Changelog" },
                 {
                     href: "https://github.com/PhotonicGluon/Excalibur",

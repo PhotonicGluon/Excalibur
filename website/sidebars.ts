@@ -34,36 +34,23 @@ const sidebars: SidebarsConfig = {
         "reference/keygen",
         "reference/name-obfuscation",
         "reference/exef",
+    ],
+    server_api: [
+        "server-api/logging-in",
         {
             type: "category",
-            label: "Server API",
+            label: "Authentication",
             link: {
                 type: "generated-index",
-                title: "Server API",
+                title: "Authentication",
                 description:
-                    "Any Excalibur server exposes a common API for clients to connect to. This documentation will guide you through interacting with the server API.",
+                    "Although some of the endpoints of the server is available without authentication, any client who wishes to access their files need to authenticate themselves with the server. Excalibur uses an Augmented Password Authenticated Key Exchange (aPAKE) protocol combined with Proof-of-Possession (PoP) to ensure secure authentication.",
             },
-            items: [
-                "reference/server-api/logging-in",
-                {
-                    type: "category",
-                    label: "Authentication",
-                    link: {
-                        type: "generated-index",
-                        title: "Authentication",
-                        description:
-                            "Although some of the endpoints of the server is available without authentication, any client who wishes to access their files need to authenticate themselves with the server. Excalibur uses an Augmented Password Authenticated Key Exchange (aPAKE) protocol combined with Proof-of-Possession (PoP) to ensure secure authentication.",
-                    },
-                    items: [
-                        "reference/server-api/authentication/opaque",
-                        "reference/server-api/authentication/subsequent",
-                    ],
-                },
-                "reference/server-api/encrypted-requests-and-responses",
-                "reference/server-api/files",
-                "reference/server-api/additional-user-info",
-            ],
+            items: ["server-api/authentication/opaque", "server-api/authentication/subsequent"],
         },
+        "server-api/encrypted-requests-and-responses",
+        "server-api/files",
+        "server-api/additional-user-info",
     ],
 };
 

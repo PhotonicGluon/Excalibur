@@ -40,7 +40,7 @@ Let's examine each step in detail.
 
 2. **Slow Hash**: produces a 32-byte string
     - Option 1 (Preferred): Argon2d v1.3
-        - Parameters: `m: 32768, t: 3, p: 2` (see https://www.dashlane.com/download/whitepaper-en.pdf, page 40)
+        - Parameters: `m = 32768`, `t = 3`, `p = 2` (see https://www.dashlane.com/download/whitepaper-en.pdf, page 40)
     - Option 2 (Compatibility): 650,000 iterations of PBKDF2 with HMAC-SHA256
 
 3. **Fast Hash (HKDF)**

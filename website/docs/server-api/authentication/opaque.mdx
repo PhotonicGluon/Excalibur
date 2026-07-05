@@ -111,7 +111,7 @@ Like with the login flow, we need to send the username to the server. Thus we **
 
 ### `record + auk_salt + key_enc` Message
 
-As the server needs to store the encrypted vault key, we need a way to send the [Account Unlock Key (AUK)](../../keygen.mdx) salt (`auk_salt`) and the encrypted vault key (`key_enc`) to the server. We do this by **concatenating the `record`, `auk_salt`, and `key_enc` fields** and sending them to the server together. Do note that `auk_salt` must be 32-bytes in length.
+As the server needs to store the encrypted vault key, we need a way to send the [Account Unlock Key (AUK)](/docs/reference/keygen.mdx) salt (`auk_salt`) and the encrypted vault key (`key_enc`) to the server. We do this by **concatenating the `record`, `auk_salt`, and `key_enc` fields** and sending them to the server together. Do note that `auk_salt` must be 32-bytes in length.
 
 ## Official Implementations
 
