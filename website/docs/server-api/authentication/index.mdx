@@ -1,0 +1,11 @@
+import DocCardList from '@theme/DocCardList';
+
+# Authentication Using The OPAQUE-3DH Protocol
+
+Although some of the endpoints of the server is available without authentication, any client who wishes to access their files need to authenticate themselves with the server. Excalibur uses the OPAQUE-3DH protocol to authenticate users.
+
+The OPAQUE-3DH protocol is a modern augmented password-authenticated key exchange (aPAKE) protocol that supports bilateral authentication of both the client and the server, as well as providing forward secrecy and the ability to hide the password from the server, even during registration.
+
+The full OPAQUE-3DH process is described in [RFC9807](https://datatracker.ietf.org/doc/html/rfc9807). Excalibur's implementation requires referencing [RFC9496 (`ristretto255` Elliptic Curve Group)](https://datatracker.ietf.org/doc/html/rfc9496#name-ristretto255) and [RFC9497 (Oblivious PRFs)](https://datatracker.ietf.org/doc/html/rfc9497).
+
+<DocCardList />

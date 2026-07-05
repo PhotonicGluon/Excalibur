@@ -36,19 +36,23 @@ const sidebars: SidebarsConfig = {
         "reference/exef",
     ],
     server_api: [
-        "server-api/logging-in",
+        "server-api/index",
         {
             type: "category",
             label: "Authentication",
             link: {
-                type: "generated-index",
-                title: "Authentication",
-                description:
-                    "Although some of the endpoints of the server is available without authentication, any client who wishes to access their files need to authenticate themselves with the server. Excalibur uses an Augmented Password Authenticated Key Exchange (aPAKE) protocol combined with Proof-of-Possession (PoP) to ensure secure authentication.",
+                type: "doc",
+                id: "server-api/authentication/index",
             },
-            items: ["server-api/authentication/opaque", "server-api/authentication/subsequent"],
+            items: [
+                "server-api/authentication/login",
+                "server-api/authentication/register",
+                "server-api/authentication/edit-record",
+            ],
         },
+        "server-api/subsequent-authentication",
         "server-api/encrypted-requests-and-responses",
+        "server-api/websocket-messages",
         "server-api/files",
         "server-api/additional-user-info",
     ],

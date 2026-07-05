@@ -1,21 +1,21 @@
 # Authenticating Subsequent Requests
 
-Once this initial authentication process is complete, future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted. Read more in [Encrypted Requests and Responses](../encrypted-requests-and-responses.mdx).
+Once the client is logged into the server via [OPAQUE-3DH](./authentication/login.mdx), future requests to secure endpoints will require the use of the authentication token obtained from the server. Do note that the body of the request and response will be encrypted. Read more in [Encrypted Requests and Responses](./encrypted-requests-and-responses.mdx).
 
 ## Authentication Token
 
 The authentication token is a JSON Web Token (JWT) that contains the following claims:
 
-- `sub`: The subject of the token, which is the username.
-- `iat`: The issued at time of the token, which is the current time.
-- `exp`: The expiration time of the token.
+- **`sub`**: The subject of the token, which is the username.
+- **`iat`**: The issued at time of the token, which is the current time.
+- **`exp`**: The expiration time of the token.
     - Currently the token expires after one hour.
-- `uuid`: Comms UUID used in the [Proof-of-Possession (PoP)](#proof-of-possession-pop) process.
+- **`uuid`**: Comms UUID used in the [Proof-of-Possession (PoP)](#proof-of-possession-pop) process.
 
 An example of JWT (which has an invalid JWT signature) is as follows:
 
 ```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInN1YiI6ICJNeUNvb2xVc2VybmFtZSIsCiAgICAiaWF0IjogMTUxNjIzOTAyMiwKICAgICJleHAiOiAxNTE2MjQyNjIyLAogICAgInV1aWQiOiAiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIgp9.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInN1YiI6ICJNeUNvb2xVc2VybmFtZSIsCiAgICAiaWF0IjogMTUxNjIzOTAyMiwKICAgICJleHAiOiAxNTE2MjQyNjIyLAogICAgInV1aWQiOiAiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIgp9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
 which has the following data (expressed in JSON):

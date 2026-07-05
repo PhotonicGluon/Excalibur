@@ -1,0 +1,26 @@
+# WebSocket Message Format
+
+Each message is a JSON object containing the following fields:
+
+- `status`: Current authentication status. Can be `OK`, `ERR`, or null.
+- `binary`: Whether the included data is binary data. Can be `true` or `false`.
+- `data`: Message data. If `binary` is true, this field is a Base64 encoded byte array. Otherwise, it is a ASCII string.
+
+Here are two examples of messages:
+
+
+```json
+{
+    "status": null,
+    "binary": true,
+    "data": "AQ=="
+}
+```
+
+```json
+{
+    "status": "OK",
+    "binary": false,
+    "data": "Sample Text"
+}
+```
