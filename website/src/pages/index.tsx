@@ -161,8 +161,10 @@ const Home: React.FC = () => {
                                 whileInView="visible"
                                 viewport={{ once: true, amount: 0.3 }}
                             >
-                                {featureRows.map((row, _rowIndex) =>
-                                    row.map((feature) => <FeatureCard {...feature} />),
+                                {featureRows.map((row, rowIndex) =>
+                                    row.map((feature, colIdx) => (
+                                        <FeatureCard key={`${rowIndex}-${colIdx}`} {...feature} />
+                                    )),
                                 )}
                             </motion.div>
                         </div>
@@ -178,8 +180,8 @@ const Home: React.FC = () => {
                                     whileInView="visible"
                                     viewport={{ once: true, amount: 0.3 }}
                                 >
-                                    {row.map((feature) => (
-                                        <FeatureCard {...feature} />
+                                    {row.map((feature, colIdx) => (
+                                        <FeatureCard key={`${rowIndex}-${colIdx}`} {...feature} />
                                     ))}
                                 </motion.div>
                             ))}

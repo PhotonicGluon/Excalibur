@@ -5,6 +5,10 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* General Styling */
+:root {
+    --ifm-font-family-base: "Inter", sans-serif;
+}
+
 p {
     @apply text-justify;
 }
