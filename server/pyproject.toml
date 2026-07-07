@@ -47,7 +47,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.14.1", "ruff>=0.15.19", "watchfiles>=1.2.0"]
+dev = ["ipython~=9.14.1", "ruff>=0.15.20", "watchfiles>=1.2.0"]
 test = ["httpx2>=2.4.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
