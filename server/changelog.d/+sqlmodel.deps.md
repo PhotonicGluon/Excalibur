@@ -1,0 +1,1 @@
+⬆️ Updated `sqlmodel` from `0.0.38` to `0.0.39`
