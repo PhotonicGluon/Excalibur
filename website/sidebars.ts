@@ -37,6 +37,7 @@ const sidebars: SidebarsConfig = {
     ],
     server_api: [
         "server-api/index",
+        "server-api/websocket-messages",
         {
             type: "category",
             label: "Authentication",
@@ -52,7 +53,6 @@ const sidebars: SidebarsConfig = {
         },
         "server-api/subsequent-authentication",
         "server-api/encrypted-requests-and-responses",
-        "server-api/websocket-messages",
         "server-api/files",
         "server-api/additional-user-info",
     ],

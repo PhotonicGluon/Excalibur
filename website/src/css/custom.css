@@ -6,7 +6,8 @@
 
 /* General Styling */
 :root {
-    --ifm-font-family-base: "Inter", sans-serif;
+    --ifm-font-family-base: "Noto Sans", sans-serif;
+    font-optical-sizing: auto;
 }
 
 p {

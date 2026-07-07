@@ -8,18 +8,7 @@ We need a way for the client to know when a folder has been updated so that it c
 
 ### Connecting
 
-Like with all operations, this request needs to be authenticated. Provide the following values _as query parameters_ in the WebSocket request:
-
-- `auth_token`: The JWT authentication token obtained during initial authentication with the server.
-- `hmac_validation`: The proof-of-possession (PoP) token computed according to the [WebSocket PoP token generation process](./authentication/subsequent).
-
-There is an optional query parameter, `encrypted`, describing whether the WebSocket messages should be encrypted. It is recommended to _not_ set this to `false` (it is set to `true` by default).
-
-:::danger[Authentication Failure]
-
-Failure to provide the correct `hmac_validation` value will result in the connection being closed with code `1008 Policy Violation`.
-
-:::
+Like with all operations, this request needs to be authenticated. See the [WebSocket PoP token generation process](./authentication/subsequent-authentication.mdx#ws-pop).
 
 ### Listening
 

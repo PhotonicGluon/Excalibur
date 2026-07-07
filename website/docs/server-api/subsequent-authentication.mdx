@@ -6,26 +6,25 @@ Once the client is logged into the server via [OPAQUE-3DH](./authentication/logi
 
 The authentication token is a JSON Web Token (JWT) that contains the following claims:
 
-- **`sub`**: The subject of the token, which is the username.
+- **`sub`**: The subject of the token, which is the user ID.
 - **`iat`**: The issued at time of the token, which is the current time.
 - **`exp`**: The expiration time of the token.
-    - Currently the token expires after one hour.
 - **`uuid`**: Comms UUID used in the [Proof-of-Possession (PoP)](#proof-of-possession-pop) process.
 
 An example of JWT (which has an invalid JWT signature) is as follows:
 
 ```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInN1YiI6ICJNeUNvb2xVc2VybmFtZSIsCiAgICAiaWF0IjogMTUxNjIzOTAyMiwKICAgICJleHAiOiAxNTE2MjQyNjIyLAogICAgInV1aWQiOiAiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIgp9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
-which has the following data (expressed in JSON):
+which has the following payload (expressed in JSON):
 
 ```json
 {
-    "sub": "MyCoolUsername",
-    "iat": 1516239022,
-    "exp": 1516242622,
-    "uuid": "123e4567-e89b-12d3-a456-426614174000"
+  "sub": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "iat": 1700000000,
+  "exp": 1700001000,
+  "uuid": "00000000111122223333444444444444"
 }
 ```
 
@@ -34,7 +33,8 @@ which has the following data (expressed in JSON):
 A proof-of-possession (PoP) value needs to be computed in addition to providing the authentication token. This value is computed using a HMAC of the message `<METHOD> <PATH> <TIMESTAMP> <NONCE>`, where
 
 - `<METHOD>` is the HTTP method (e.g., `GET`, `POST`, `PUT`, `DELETE`) in ALL CAPS;
-- `<PATH>` is the path of the request (e.g., `/some/path/here`);
+- `<PATH>` is the path of the request, _including query parameters_ (e.g., `/some/path/here`, `/some/path/here?param1=value1&param2=value2`);
+    - Note that the PoP query parameters for WebSockets (i.e., `auth_token` and `hmac_validation`) are _excluded_.
 - `<TIMESTAMP>` is the current time _in seconds_ since the Unix epoch; and
 - `<NONCE>` is a random 16 byte value.
 
@@ -61,9 +61,44 @@ A CyberChef demonstration of the PoP generation process can be found [here](<htt
 
 Requests to secure endpoints need _both_ the authentication token and a PoP header, and the request/response body will be encrypted using the derived session key.
 
+### Regular Requests
+
 To prove that the user is who they claim to be, their request will need to include two headers:
 
 - **`Authorization`**: The format of the header is `Bearer <JWT>` where `<JWT>` is the authentication token.
-- **`X-Auth-PoP`**: The format of the header is `<TIMESTAMP> <NONCE> <PoP>` where `<PoP>` is the Base64 encoded PoP value computed as described above and `<TIMESTAMP>` and `<NONCE>` are the timestamp and nonce used to compute the PoP value, respectively.
+- **`X-Auth-PoP`**: The format of the header is `<TIMESTAMP> <NONCE> <PoP>` where `<TIMESTAMP>` and `<NONCE>` are the timestamp and nonce used to compute the PoP value and `<PoP>` is the PoP value computed as described above.
+    - Note that both `<NONCE>` and `<PoP>` are to be Base64 encoded.
 
-Failing to provide both headers will result in a `401 Unauthorized` response.
+:::danger[Authentication Failure]
+
+Failing to provide both headers, or invalid authentication credentials, will result in a `401 Unauthorized` response.
+
+:::
+
+Here's an example of what the two headers could look like:
+
+```text
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+X-Auth-PoP: 1700000000 qInFLPAe9Wf/hXPDSmyptQ== Fu832VLTGarkN1DfP81OQzMg7s0PmbB3labVaQuljPA=
+```
+
+### WebSocket Requests {/* #ws-pop */}
+
+For WebSocket connections, instead of providing headers, provide the following values _as query parameters_ in the WebSocket request:
+
+- **`auth_token`**: The JWT authentication token obtained during initial authentication with the server.
+- **`hmac_validation`**: The `X-Auth-PoP` value computed as described above, but URL-encoded.
+
+:::danger[Authentication Failure]
+
+Failure to provide the correct `hmac_validation` value will result in the connection being closed with code `1008 Policy Violation`.
+
+:::
+
+Here's an example of what the query parameters could look like when sending a request to a fake `/demo/websocket` endpoint on an Excalibur server listening on `localhost` port `52419`:
+
+```
+ws://localhost:52419/demo/websocket?auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&hmac_validation=1700000000+qInFLPAe9Wf%2FhXPDSmyptQ%3D%3D+Fu832VLTGarkN1DfP81OQzMg7s0PmbB3labVaQuljPA%3D
+```
+
+Note that the `auth_token` is the same as the `Authorization` header value from the HTTP request example above, and the `hmac_validation` is the same as the `X-Auth-PoP` header value from the HTTP request example above.

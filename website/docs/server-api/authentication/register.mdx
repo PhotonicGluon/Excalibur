@@ -19,7 +19,7 @@ sequenceDiagram
         S->>C: [ERR] "Invalid value"
     end
     S->>C: Server Keyshare, Server Tag
-    Note over C,S: Session Key Agreed
+    Note over C,S: Session Key Agreed<br/>Future Messages Encrypted Using Session Key
 
     % OPAQUE-3DH Registration
     C->>S: RegistrationRequest + username
