@@ -1,9 +1,6 @@
-import json
-from base64 import b64encode
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from Crypto.Cipher import AES
 from fastapi import WebSocket, WebSocketDisconnect
 
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
@@ -15,6 +12,7 @@ from excalibur_server.src.auth.opaque.operation.base import OPAQUEAuthError, OPA
 from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.elliptic import Ristretto255
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.users import get_user, get_user_from_id
 from excalibur_server.src.websocket import WebSocketManager, WebSocketMsg
 
@@ -112,20 +110,8 @@ async def _send_auth_token(ws_manager: WebSocketManager, user_id: UUID, comm_uui
     auth_token = generate_auth_token(
         str(user_id), comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
     )
-
-    cipher = AES.new(MASTER_KEYS_CACHE[comm_uuid], AES.MODE_GCM)
-    auth_token_enc = cipher.encrypt(auth_token.encode("UTF-8"))
-    tag = cipher.digest()
-
-    auth_token_data = json.dumps(
-        {
-            "nonce": b64encode(cipher.nonce).decode("utf-8"),
-            "token": b64encode(auth_token_enc).decode("utf-8"),
-            "tag": b64encode(tag).decode("utf-8"),
-        }
-    )
-
-    await ws_manager.send(WebSocketMsg(auth_token_data))
+    encrypted_auth_token = ExEF(MASTER_KEYS_CACHE[comm_uuid]).encrypt(auth_token.encode("UTF-8"))
+    await ws_manager.send(WebSocketMsg(encrypted_auth_token))
 
 
 # Monkeypatch Functions

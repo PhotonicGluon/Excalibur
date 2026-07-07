@@ -1,8 +1,7 @@
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
-import { GCMDecipher } from "@lib/crypto/cipher";
+import ExEF from "@lib/crypto/exef";
 import { parseResponse, sendResponse } from "@lib/network/websocket";
-import { b64decode } from "@lib/util";
 
 import { E2EEData } from "./structures";
 
@@ -152,16 +151,10 @@ export async function handshakeOPAQUE(
                         return;
                     }
 
-                    const authTokenData = JSON.parse(response.data! as string);
-                    const nonce = b64decode(authTokenData.nonce);
-                    const token = b64decode(authTokenData.token);
-                    const tag = b64decode(authTokenData.tag);
+                    const encryptedAuthToken = response.data! as Buffer;
+                    const authToken = ExEF.decrypt(state.master!, encryptedAuthToken).toString("utf-8");
+                    resolve({ key: state.master!, token: authToken });
 
-                    const cipher = new GCMDecipher("aes-256-gcm", state.master!, nonce);
-                    cipher.setAuthTag(tag);
-
-                    const plaintext = Buffer.concat([cipher.update(token), cipher.final()]);
-                    resolve({ key: state.master!, token: plaintext.toString("utf-8") });
                     return;
                 }
             } catch (e: unknown) {

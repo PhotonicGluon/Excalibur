@@ -1,14 +1,13 @@
-import json
 from base64 import b64decode, b64encode
 
 import pytest
-from Crypto.Cipher import AES
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
+from excalibur_server.src.crypto.exef.exef import ExEF
 from excalibur_server.src.db.tables import User
 
 client = TestClient(app)
@@ -91,11 +90,8 @@ def test_login(test_idx: int, monkeypatch: pytest.MonkeyPatch):
 
         # Check received auth token
         expected_master_key = mock_server.kdf.expand(OPAQUETestVectors.SESSION_KEYS[test_idx], b"Master Key", 32)
-        auth_token_data = json.loads(ws.receive_json()["data"])
-        cipher = AES.new(
-            expected_master_key,
-            AES.MODE_GCM,
-            nonce=b64decode(auth_token_data["nonce"]),
-        )
-        cipher.decrypt(b64decode(auth_token_data["token"]))
-        cipher.verify(b64decode(auth_token_data["tag"]))
+        response: dict = ws.receive_json()
+        assert response.get("binary"), "Auth token message should be binary"
+        assert response.get("data"), "Auth token message should have data"
+        auth_token_data = b64decode(response["data"])
+        ExEF(expected_master_key).decrypt(auth_token_data)
