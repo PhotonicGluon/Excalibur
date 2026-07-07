@@ -5,8 +5,7 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
-from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
-from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.db.operations import get_session
