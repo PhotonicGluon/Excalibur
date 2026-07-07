@@ -23,7 +23,7 @@ dependencies = [
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
     "sqlalchemy<=2.0.44",
-    "sqlmodel>=0.0.37",
+    "sqlmodel>=0.0.39",
     "toml>=0.10.2",
     "tomlkit>=0.15.0",
     "typer>=0.26.7",
