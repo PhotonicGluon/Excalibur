@@ -17,7 +17,7 @@ sequenceDiagram
     Note right of S: Check username
     S->>C: KE2
     C->>S: KE3
-    Note right of S: ServerFinish(ke3)
+    Note right of S: ServerFinish(KE3)
     Note over C,S: Expand session key to be master key
     activate S
     S->>-C: Authentication token
@@ -25,29 +25,40 @@ sequenceDiagram
 
 </div>
 
-There are some deviations from the aforementioned RFC, as noted below.
+Let us look at each step of the protocol. A fuller description of the OPAQUE-3DH protocol can be found in the aforementioned RFC9807.
 
 ## `KE1 + username` Message
-In RFC9807, the username is not part of the `KE1` message. However the server still has to have a way to obtain the username in order to check it and to generate `KE2`.
+The client begins the login attempt by deriving `KE1` from the user's password. The `KE1` message contains two main parts: a `CredentialRequest` in which the client requests for credential information from the server, and an `AuthRequest` in which contains authentication information required for the client to prove its identity to the server. Deriving `KE1` requires the client to run the Oblivious Pseudorandom Function (OPRF) blinding step on the password, so the plaintext password never leaves the client.
 
-To achieve this, we **concatenate the username after the `KE1` message** and send both to the server together (as described in section 10.3 of the RFC). The server then extracts the username from the message and uses it to check if the user exists and to generate `KE2`.
+Note that in RFC9807, the username is not part of the `KE1` message. However the server still has to have a way to obtain the username in order to check it and to generate `KE2`. To achieve this, we **concatenate the username after the `KE1` message** and send both to the server together (as described in section 10.3 of the RFC). The server then extracts the username from the message and uses it to check if the user exists and to generate `KE2`. This is doable since the `KE1` message is always of a fixed size.
+
+### Fake User
+If the username does not correspond to a registered user, the server still responds with a `KE2` message generated against a pre-generated fake credential rather than an error. This prevents an attacker from being able to enumerate valid usernames by observing whether the server rejects the login attempt at this stage.
+
+## `KE2` Message
+Upon looking up (or faking) the user's registration record, the server evaluates the OPRF over the blinded password, packages the result together with its own key share and an authenticator, and returns all of this in the `CredentialResponse` and `AuthResponse` structures within the `KE2` message.
+
+## `KE3` Message
+The client uses `KE2`, together with the password entered by the user, to recover its long-term private key and to derive a shared session key with the server.
+- If the password is correct, the client's authentication material derived from `KE2` will match what the server expects.
+- If the password is incorrect, or if the user doesn't actually exist (and hence received a fake `KE2` message), the client is unable to construct a valid `KE3` in this step and thus aborts.
+
+The client responds with `KE3`, which contains a MAC computed over the transcript of the exchange so far. This lets the server confirm that the client actually derived the correct session key &mdash; and hence the correct password &mdash without the password itself ever being transmitted over the wire.
+
+## `ServerFinish()`
+Upon receiving `KE3`, the server runs `ServerFinish(KE2, KE3)` to verify this MAC against its own copy of the session key. If verification fails (e.g. because the client supplied the wrong password), the server aborts the exchange and the login attempt is rejected. Only once `ServerFinish` succeeds do both sides consider the session key trustworthy, and proceed to expand it into the master key.
 
 ## Master Key
-
-We derive the master key from the shared session key using:
+Once the server has verified `KE3`, both the client and the server independently derive the master key from the shared session key using:
 ```
 HKDF-Expand(session_key, b"Master Key", 32)
 ```
-
-where the `HKDF-Expand` function is as described in [RFC5869, Section 2.3](https://datatracker.ietf.org/doc/html/rfc5869#section-2.3).
+where the `HKDF-Expand` function is as described in [RFC5869, Section 2.3](https://datatracker.ietf.org/doc/html/rfc5869#section-2.3). Note that the HKDF used is the same as the one used in the OPAQUE protocol. Since this key is derived independently on each side from the shared session key, it never needs to be transmitted, and only a client and server that completed the exchange with the correct password can arrive at the same value.
 
 ## Authentication Token
+With a shared master key established, the server issues the client an authentication token to use for subsequent requests. This token is encrypted in the [Excalibur Encryption Format](/docs/reference/exef.mdx) using the master key so that only the client and server can read it.
 
-The server will send a message with no status and JSON data containing three fields: `nonce`, `token`, and `tag`, each as a Base64 encoded byte array:
-- **`nonce`**: A random value
-- **`token`**: An encrypted JSON Web Token (JWT) using AES-GCM-256 with the key being the derived master key
-- **`tag`**: The authentication tag for the encrypted token
+The client decrypts the authentication token using the master key to recover the JWT, which it then presents to authenticate future requests (see [Subsequent Authentication](/docs/server-api/subsequent-authentication.mdx)).
 
 ## Official Implementation
-
 The implementation of the OPAQUE login protocol can be found in the [`opaque/login.py` file](https://github.com/PhotonicGluon/Excalibur/blob/stable/server/excalibur_server/api/routes/auth/comms/opaque/login.py).
