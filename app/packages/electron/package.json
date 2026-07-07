@@ -22,7 +22,7 @@
         "@vitejs/plugin-react": "^5.2.0",
         "dmg-builder": "^26.8.1",
         "electron": "^41.5.1",
-        "electron-builder": "^26.8.1",
+        "electron-builder": "^26.15.3",
         "electron-builder-squirrel-windows": "^26.8.1",
         "electron-vite": "^5.0.0",
         "vite": "~7.3.2",
