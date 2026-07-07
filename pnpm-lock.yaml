@@ -151,8 +151,8 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.2.0)
       '@capawesome/capacitor-file-picker':
-        specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@8.2.0)
+        specifier: ^8.0.3
+        version: 8.0.3(@capacitor/core@8.2.0)
       '@ionic/core':
         specifier: ^8.8.6
         version: 8.8.6
@@ -474,8 +474,8 @@ packages:
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
 
-  '@capawesome/capacitor-file-picker@8.0.2':
-    resolution: {integrity: sha512-TQstOBrynvQP7t1s7egvf0RkiTR29EUbBMEhus8bb4uPFROfACOxR0s68uuOS6uTN3bSF2tpsz2NcVnVV/XvzA==}
+  '@capawesome/capacitor-file-picker@8.0.3':
+    resolution: {integrity: sha512-/PdujysNnbY82LXXM1XthRdgNr5wodgLNgbo2pgarJskiQYvy/+QPKsuzFPUZd/4pi3dLxXjZMZVVyYy2Wm05A==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -5476,7 +5476,7 @@ snapshots:
 
   '@capacitor/synapse@1.0.4': {}
 
-  '@capawesome/capacitor-file-picker@8.0.2(@capacitor/core@8.2.0)':
+  '@capawesome/capacitor-file-picker@8.0.3(@capacitor/core@8.2.0)':
     dependencies:
       '@capacitor/core': 8.2.0
 
