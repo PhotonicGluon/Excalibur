@@ -36,7 +36,8 @@ def init_server(
 
     # Handle config file
     config_path = ROOT_FOLDER / "config.toml"
-    if not config_path.exists():
+    does_config_exist = config_path.exists()
+    if not does_config_exist:
         typer.secho("Creating config file...", nl=False, fg="yellow")
 
         # Copy the config file
@@ -72,5 +73,6 @@ def init_server(
 
     typer.secho("Server initialized.", fg="green")
 
-    typer.secho("Account Creation Key Mnemonic:", fg="cyan")
-    typer.secho("    " + " ".join(to_mnemonic(CONFIG.security.account_creation.public_key.to_bytes())), fg="cyan")
+    if not does_config_exist:
+        typer.secho("Account Creation Key Mnemonic:", fg="cyan")
+        typer.secho("    " + " ".join(to_mnemonic(CONFIG.security.account_creation.public_key.to_bytes())), fg="cyan")
