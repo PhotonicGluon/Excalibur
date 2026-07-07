@@ -1,0 +1,1 @@
+⬆️ Updated `prettier` from `3.8.4` to `3.9.4`
