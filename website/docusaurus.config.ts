@@ -138,6 +138,11 @@ const config: Config = {
             defaultMode: "dark",
         },
 
+        tableOfContents: {
+            minHeadingLevel: 2,
+            maxHeadingLevel: 4,
+        },
+
         navbar: {
             title: "Excalibur",
             logo: {
@@ -183,6 +188,7 @@ const config: Config = {
                 },
             ],
         },
+
         prism: {
             additionalLanguages: ["bash", "diff"],
             theme: prismThemes.github,

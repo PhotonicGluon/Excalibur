@@ -20,6 +20,7 @@
         "HKDF",
         "HMAC",
         "katex",
+        "keyshare",
         "OPRF",
         "pipx",
         "ristretto255",
