@@ -4,13 +4,14 @@ sidebar_label: Updating to 0.7
 description: Guide explaining the upgrade process from Excalibur 0.6 to 0.7.
 ---
 
+# Upgrading from Excalibur 0.6 to Excalibur 0.7
+
 :::warning
 
 This guide is subject to change.
 
 :::
 
-# Upgrading from Excalibur 0.6 to Excalibur 0.7
 
 In this guide, you'll find steps to update your Excalibur app and server instances to version 0.7.
 
@@ -20,11 +21,24 @@ Please read this guide carefully and follow all steps.
 
 :::
 
-This guide will assume that the `0.7.x` version of the Excalibur server is installed. If you are using version `0.6.x`, please upgrade to `0.7.x` before proceeding.
+This guide will assume that the `0.7.x` version of the Excalibur server is installed. If you are using version `0.6.x`, please upgrade to `0.7.x` before proceeding. It is also recommended to create a backup of the server files by running:
+
+```bash
+excalibur backup
+```
+
+You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created.
+
+With the backup created, you can now proceed with the upgrade.
 
 ## Removed Secure Remote Password (SRP) Authentication
 
 As mentioned in the [0.5.x to 0.6.x upgrade guide](./05x-to-06x.mdx), SRP will be deprecated. Thus, Excalibur 0.7 has removed the Secure Remote Password (SRP) authentication system in favour of OPAQUE-3DH.
+
+Existing users who haven't migrated to OPAQUE-3DH yet will need to create new accounts. Alternatively:
+1. downgrade the server to `0.6.6`;
+2. migrate the users to OPAQUE-3DH; and then
+3. upgrade the server to `0.7.x`.
 
 ## Configuration File v6
 
@@ -69,19 +83,17 @@ on the server.
 
 Excalibur 0.6 migrated the filesystem to be based on the database. In Excalibur 0.7, we have further collapsed the filesystem structure to improve performance and storage of the vault files.
 
-First, it is recommended to create a backup of the server files by running:
-
-```bash
-excalibur backup
-```
-
-You can optionally specify the output file name by using the `--output` flag. By default, a backup file named `excalibur-files-backup.zip` should have been created.
-
-Now, begin the migration to the new filesystem by running:
+Begin the migration to the new filesystem by running:
 
 ```bash
 excalibur db migrate-files-v7
 ```
+
+You should see a confirmation message like `Please ensure that the database revision is up-to-date`. If you have upgraded the database, you can press Enter/Return to start the migration.
+
+## Server API Changes
+
+This update introduces some breaking changes to the server API. Please read the [changelog](/changelog/v0.7.0#server) for more information about what changed.
 
 ## Conclusion
 
