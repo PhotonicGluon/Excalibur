@@ -86,10 +86,10 @@ importers:
     dependencies:
       '@electron-toolkit/preload':
         specifier: ^3.0.2
-        version: 3.0.2(electron@42.5.2)
+        version: 3.0.2(electron@41.9.2)
       '@electron-toolkit/utils':
         specifier: ^4.0.0
-        version: 4.0.0(electron@42.5.2)
+        version: 4.0.0(electron@41.9.2)
       electron-updater:
         specifier: ^6.8.3
         version: 6.8.3
@@ -107,8 +107,8 @@ importers:
         specifier: ^26.15.3
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
       electron:
-        specifier: ^42.5.2
-        version: 42.5.2
+        specifier: ^41.9.2
+        version: 41.9.2
       electron-builder:
         specifier: ^26.15.3
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
@@ -2359,8 +2359,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@42.5.2:
-    resolution: {integrity: sha512-nEoyciv2iC6gTvCbkQ3eP5tjAOo28wfm0adZaMYTns92MyODHeD1TlrGt4E35d4tJfDlmv+BHOuz0QIkJ63c6w==}
+  electron@41.9.2:
+    resolution: {integrity: sha512-j8a6s8HDIeKMdsU8mLFl13ALuzORPjtoK/d9oKpmg8Qp/iTmKjPO6TRuFpHJzYXyTwG7ytCU/qjMbfhRkHVEfw==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -5481,17 +5481,17 @@ snapshots:
 
   '@electron-internal/extract-zip@1.0.2': {}
 
-  '@electron-toolkit/preload@3.0.2(electron@42.5.2)':
+  '@electron-toolkit/preload@3.0.2(electron@41.9.2)':
     dependencies:
-      electron: 42.5.2
+      electron: 41.9.2
 
   '@electron-toolkit/tsconfig@2.0.0(@types/node@25.9.3)':
     dependencies:
       '@types/node': 25.9.3
 
-  '@electron-toolkit/utils@4.0.0(electron@42.5.2)':
+  '@electron-toolkit/utils@4.0.0(electron@41.9.2)':
     dependencies:
-      electron: 42.5.2
+      electron: 41.9.2
 
   '@electron/asar@3.4.1':
     dependencies:
@@ -7589,7 +7589,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@42.5.2:
+  electron@41.9.2:
     dependencies:
       '@electron-internal/extract-zip': 1.0.2
       '@electron/get': 5.0.0
