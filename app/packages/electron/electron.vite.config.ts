@@ -32,15 +32,15 @@ export default defineConfig({
         },
     },
     renderer: {
+        ...viteConfig,
         root: "../main",
-        resolve: viteConfig.resolve,
-        plugins: viteConfig.plugins,
         build: {
+            ...viteConfig.build,
             rolldownOptions: {
+                ...viteConfig.build?.rolldownOptions,
                 input: {
                     index: resolve(__dirname, "../main/index.html"),
                 },
-                output: viteConfig.build!.rolldownOptions!.output,
             },
         },
     },
