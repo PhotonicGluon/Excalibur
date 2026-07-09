@@ -13,6 +13,7 @@ function createWindow(): void {
         webPreferences: {
             preload: join(__dirname, "preload", "index.mjs"),
             sandbox: false,
+            devTools: !app.isPackaged, // Enable devtools in development only
         },
     });
 

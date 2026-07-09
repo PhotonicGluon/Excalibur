@@ -11,19 +11,17 @@
         "build:mac": "pnpm run build && electron-builder --mac --config electron-builder.config.js",
         "build:linux": "pnpm run build && electron-builder --linux --config electron-builder.config.js"
     },
-    "dependencies": {
-        "@electron-toolkit/preload": "^3.0.2",
-        "@electron-toolkit/utils": "^4.0.0",
-        "electron-updater": "^6.8.3"
-    },
     "devDependencies": {
+        "@electron-toolkit/preload": "^3.0.2",
         "@electron-toolkit/tsconfig": "^2.0.0",
+        "@electron-toolkit/utils": "^4.0.0",
         "@tailwindcss/vite": "^4.3.0",
         "@vitejs/plugin-react": "^6.0.1",
         "dmg-builder": "^26.15.3",
         "electron": "^41.9.2",
         "electron-builder": "^26.15.3",
         "electron-builder-squirrel-windows": "^26.15.3",
+        "electron-updater": "^6.8.3",
         "electron-vite": "^6.0.0-beta.1",
         "vite": "~8.0.16",
         "vite-plugin-node-polyfills": "^0.28.0"
