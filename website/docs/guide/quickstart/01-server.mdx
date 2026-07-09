@@ -79,7 +79,7 @@ The configuration file is a TOML file named `config.toml` in the `excalibur-file
 - **`security.session_duration`**: The duration of a login session in seconds. The default value represents 1 hour, but you can set it to a higher or lower value if you prefer.
 - **`security.key_strength`**: The size of the keys used for cryptographic operations, in bits. The default value of `128` bits should be both secure and performant, but if you prefer a higher security, you can set it to `192` or `256`.
 
-You should also notice that the `security.opaque` table has been populated. These values are used for the [OPAQUE-3DH](../../reference/server-api/authentication/opaque) authentication system, a more modern augmented password-authenticated key exchange (aPAKE) protocol.
+You should also notice that the `security.opaque` table has been populated. These values are used for the [OPAQUE-3DH](/docs/server-api/authentication/index.mdx) authentication system, a more modern augmented password-authenticated key exchange (aPAKE) protocol.
 
 ## Starting the Server
 

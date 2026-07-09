@@ -20,7 +20,7 @@ This guide will assume that the `0.6.x` version of the Excalibur server is insta
 
 Excalibur 0.6 modifies the configuration file from version 4 to version 5, with the following changes:
 
-- A new table `security.opaque` was added, containing fields relating to the [OPAQUE-3DH](/docs/reference/server-api/authentication/opaque) protocol, which are:
+- A new table `security.opaque` was added, containing fields relating to the [OPAQUE-3DH](/docs/server-api/authentication/index.mdx) protocol, which are:
     - **`security.opaque.oprf_seed`**: the seed for Oblivious Pseudo-Random Function (OPRF) operations
     - **`security.opaque.public_key`**: the public key for OPAQUE-3DH protocol
     - **`security.opaque.private_key`**: the private key for OPAQUE-3DH protocol
@@ -82,7 +82,7 @@ The `--enable-cors` and `--disable-cors` flags have been renamed to `--enable-co
 
 ### `excalibur user add` Command
 
-Along with the addition of the [OPAQUE-3DH](/docs/reference/server-api/authentication/opaque) protocol for authentication, a new option `--auth-protocol` has been added to the `excalibur user add` command. It defaults to the new OPAQUE authentication mechanism; for SRP compatibility, specify `--auth-protocol=SRP`.
+Along with the addition of the [OPAQUE-3DH](/docs/server-api/authentication/index.mdx) protocol for authentication, a new option `--auth-protocol` has been added to the `excalibur user add` command. It defaults to the new OPAQUE authentication mechanism; for SRP compatibility, specify `--auth-protocol=SRP`.
 
 ## Server API Changes
 
