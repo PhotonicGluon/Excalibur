@@ -51,6 +51,7 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
             cy.window().should((win) => {
                 expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
                 expect(win.localStorage.getItem("authInfo"), "authInfo").to.not.be.null;
+                expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.not.be.null;
             });
         },
         {
@@ -60,8 +61,9 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
                 }
                 cy.window().then((win) => {
                     const authInfo = win.localStorage.getItem("authInfo");
-                    if (!authInfo) {
-                        throw new Error("Session invalid: authInfo missing");
+                    const vaultInfo = win.localStorage.getItem("vaultInfo");
+                    if (!authInfo || !vaultInfo) {
+                        throw new Error("Session invalid: authInfo or vaultInfo missing");
                     }
                 });
             },
