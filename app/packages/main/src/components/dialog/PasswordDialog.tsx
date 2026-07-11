@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 
 import PasswordInput from "@components/inputs/PasswordInput";
-import {
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonFooter,
-    IonHeader,
-    IonIcon,
-    IonModal,
-    IonTitle,
-    IonToolbar,
-} from "@ionic/react";
+import { IonButton, IonButtons, IonFooter, IonHeader, IonIcon, IonModal, IonTitle, IonToolbar } from "@ionic/react";
 import { close } from "ionicons/icons";
 
 interface PasswordDialogProps {
@@ -30,8 +20,7 @@ const PasswordDialog: React.FC<PasswordDialogProps> = (props) => {
     // Render
     return (
         <IonModal
-            className="min-h-80 [--height:35%] [--width:min(24rem,90vw)]"
-            id="vault-key-modal"
+            className="[--height:fit-content] [--width:min(24rem,90vw)]"
             isOpen={props.isOpen}
             onDidDismiss={props.onDidDismiss}
             backdropDismiss={true}
@@ -48,13 +37,11 @@ const PasswordDialog: React.FC<PasswordDialogProps> = (props) => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="ion-padding">
-                <PasswordInput onPasswordChange={setPassword} />
-            </IonContent>
+            <PasswordInput className="ion-padding" onPasswordChange={setPassword} />
 
             <IonFooter>
                 <IonButton
-                    className="mx-auto w-full p-4"
+                    className="mx-auto -mt-2 w-full px-4 pb-4"
                     onClick={() => props.onDidConfirm?.(password)}
                     color="primary"
                     fill="solid"
