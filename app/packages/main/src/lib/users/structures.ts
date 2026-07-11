@@ -12,8 +12,8 @@ export interface VaultInfo {
     keygenAlgorithm: KeyGenAlgorithm;
     /** Account unlock key salt */
     aukSalt: Buffer;
-    /** Account unlock key */
-    auk: Buffer;
+    /** Encrypted vault key */
+    encryptedKey: Buffer;
     /** Vault key */
     key: Buffer;
     /** Additional user vault information */

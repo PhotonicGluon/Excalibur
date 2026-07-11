@@ -168,7 +168,7 @@ const NewUser: React.FC = () => {
         auth.setVaultInfo({
             keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM,
             aukSalt,
-            auk,
+            encryptedKey: encryptedVaultKey,
             key: vaultKey,
             info: additionalInfo,
         });

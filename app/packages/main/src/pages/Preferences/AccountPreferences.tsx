@@ -29,6 +29,7 @@ import { useAuth } from "@components/auth/context";
 import PasswordDialog from "@components/dialog/PasswordDialog";
 import PasswordInput from "@components/inputs/PasswordInput";
 import SettingsItem from "@components/settings/SettingsItem";
+import ExEF from "@lib/crypto/exef";
 
 const AccountPreferences: React.FC = () => {
     // Contexts
@@ -57,7 +58,7 @@ const AccountPreferences: React.FC = () => {
     async function updatePreferences(password: string) {
         setIsLoading(true);
 
-        // Check if the provided password is indeed correct by regenerating the AUK
+        // Check if the provided password is indeed correct by checking if the vault key can be recovered
         const { key: proposedAUK } = await generateAUK(
             password,
             { username: auth.authInfo!.username! },
@@ -68,8 +69,10 @@ const AccountPreferences: React.FC = () => {
             },
         );
 
-        if (Buffer.from(proposedAUK).compare(auth.vaultInfo!.auk) !== 0) {
-            console.error("User entered incorrect current password");
+        try {
+            ExEF.decrypt(proposedAUK, auth.vaultInfo!.encryptedKey);
+        } catch (e) {
+            console.error("Password is likely incorrect, causing", e);
             presentToast({
                 message: "Password incorrect",
                 duration: 2000,
@@ -78,6 +81,8 @@ const AccountPreferences: React.FC = () => {
             setIsLoading(false);
             return;
         }
+
+        console.debug("Entered password checked to be correct");
 
         // Process the new preferences
         const oldPref = {
@@ -105,7 +110,7 @@ const AccountPreferences: React.FC = () => {
 
         // Regenerate AUK and encrypted vault key
         const {
-            auk: { salt: newAUKSalt, key: newAUK },
+            auk: { salt: newAUKSalt },
             vault: { encryptedKey: newEncryptedVaultKey },
         } = await generateVaultKeys(
             newPref.password,
@@ -171,9 +176,9 @@ const AccountPreferences: React.FC = () => {
         });
         auth.setVaultInfo({
             ...auth.vaultInfo!,
-            aukSalt: newAUKSalt,
-            auk: newAUK,
             keygenAlgorithm: newPref.keygenAlgorithm,
+            encryptedKey: newEncryptedVaultKey,
+            aukSalt: newAUKSalt,
         });
 
         presentToast({

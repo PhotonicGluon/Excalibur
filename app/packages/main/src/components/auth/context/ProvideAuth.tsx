@@ -156,7 +156,7 @@ function serializeVaultInfo(data: VaultInfo): string {
     return JSON.stringify({
         keygenAlgorithm: data.keygenAlgorithm,
         aukSalt: data.aukSalt.toString("hex"),
-        auk: data.auk.toString("hex"),
+        encryptedKey: data.encryptedKey.toString("hex"),
         key: data.key.toString("hex"),
         info: JSON.stringify(data.info),
     });
@@ -167,7 +167,7 @@ function deserializeVaultInfo(data: string): VaultInfo {
     return {
         keygenAlgorithm: parsed.keygenAlgorithm,
         aukSalt: Buffer.from(parsed.aukSalt, "hex"),
-        auk: Buffer.from(parsed.auk, "hex"),
+        encryptedKey: Buffer.from(parsed.encryptedKey, "hex"),
         key: Buffer.from(parsed.key, "hex"),
         info: JSON.parse(parsed.info),
     };

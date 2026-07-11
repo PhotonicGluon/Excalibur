@@ -21,7 +21,7 @@ describe("<Versions />", () => {
                         },
                         vaultInfo: {
                             aukSalt: Buffer.alloc(0),
-                            auk: Buffer.alloc(0),
+                            encryptedKey: Buffer.alloc(0),
                             key: Buffer.alloc(0),
                             keygenAlgorithm: KeyGenAlgorithm.PBKDF2,
                             info: {},
