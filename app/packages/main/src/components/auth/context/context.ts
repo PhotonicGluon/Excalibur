@@ -6,7 +6,6 @@ import { VaultInfo } from "@lib/users/structures";
 
 export interface AuthInfo extends E2EEData {
     username: string;
-    password: string;
 }
 
 export interface ServerInfo {

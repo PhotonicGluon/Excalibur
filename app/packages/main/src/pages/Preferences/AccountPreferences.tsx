@@ -140,7 +140,6 @@ const AccountPreferences: React.FC = () => {
             ...auth.authInfo!,
             token: auth.getToken()!,
             username: newPref.username,
-            password: newPref.password,
         });
         auth.setVaultInfo({
             ...auth.vaultInfo!,

@@ -140,7 +140,6 @@ function serializeAuthInfo(data: AuthInfo): string {
         key: data.key.toString("hex"),
         token: data.token,
         username: data.username,
-        password: data.password,
     });
 }
 
@@ -150,7 +149,6 @@ function deserializeAuthInfo(data: string): AuthInfo {
         key: Buffer.from(parsed.key, "hex"),
         token: parsed.token,
         username: parsed.username,
-        password: parsed.password,
     };
 }
 
