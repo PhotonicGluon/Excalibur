@@ -155,6 +155,7 @@ function deserializeAuthInfo(data: string): AuthInfo {
 function serializeVaultInfo(data: VaultInfo): string {
     return JSON.stringify({
         keygenAlgorithm: data.keygenAlgorithm,
+        aukSalt: data.aukSalt.toString("hex"),
         auk: data.auk.toString("hex"),
         key: data.key.toString("hex"),
         info: JSON.stringify(data.info),
@@ -165,6 +166,7 @@ function deserializeVaultInfo(data: string): VaultInfo {
     const parsed = JSON.parse(data);
     return {
         keygenAlgorithm: parsed.keygenAlgorithm,
+        aukSalt: Buffer.from(parsed.aukSalt, "hex"),
         auk: Buffer.from(parsed.auk, "hex"),
         key: Buffer.from(parsed.key, "hex"),
         info: JSON.parse(parsed.info),

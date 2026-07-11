@@ -165,7 +165,13 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM, auk: auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({
+            keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM,
+            aukSalt,
+            auk,
+            key: vaultKey,
+            info: additionalInfo,
+        });
 
         // Show vault key
         setIsLoading(false);

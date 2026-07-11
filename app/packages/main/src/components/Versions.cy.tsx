@@ -3,6 +3,7 @@ import packageInfo from "@root/package.json";
 
 import { authContext } from "@components/auth/context";
 
+import { KeyGenAlgorithm } from "@lib/crypto/keygen";
 import Versions from "./Versions";
 
 describe("<Versions />", () => {
@@ -19,8 +20,10 @@ describe("<Versions />", () => {
                             maxUploadSize: 0,
                         },
                         vaultInfo: {
+                            aukSalt: Buffer.alloc(0),
                             auk: Buffer.alloc(0),
                             key: Buffer.alloc(0),
+                            keygenAlgorithm: KeyGenAlgorithm.PBKDF2,
                             info: {},
                         },
                         noc: null,

@@ -10,6 +10,8 @@ export type UserVaultInfo = Partial<RawUserVaultInfo>;
 export interface VaultInfo {
     /** Key generation algorithm */
     keygenAlgorithm: KeyGenAlgorithm;
+    /** Account unlock key salt */
+    aukSalt: Buffer;
     /** Account unlock key */
     auk: Buffer;
     /** Vault key */
