@@ -127,6 +127,47 @@ export async function generateKey(
 }
 
 /**
+ * Generates a data object containing the account unlock key (AUK) and its salt.
+ *
+ * @param password the password to be used
+ * @param additionalInfo additional information to be included in the key generation
+ * @param salt optional existing AUK salt to use instead of generating a new one
+ * @param slowHash the slow hash function to use
+ * @param onProgress optional callback to report progress
+ * @returns an object containing the AUK and the AUK salt
+ */
+export async function generateAUK(
+    password: string,
+    additionalInfo: KeygenAdditionalInfo,
+    salt?: Buffer,
+    slowHash: KeyGenAlgorithm = KeyGenAlgorithm.Argon2d,
+    onProgress?: (progress: number) => void,
+): Promise<{
+    key: Buffer;
+    salt: Buffer;
+}> {
+    const worker = new Worker(new URL("@lib/workers/generate-auk", import.meta.url), { type: "module" });
+    const processor = Comlink.wrap<AUKGenerationProcessor>(worker);
+
+    let aukData;
+    try {
+        aukData = await processor.generateAUK(
+            password,
+            additionalInfo,
+            salt,
+            slowHash,
+            // `proxy()` ensures the callback function works across threads
+            onProgress ? Comlink.proxy(onProgress) : undefined,
+        );
+    } finally {
+        // Free up resources
+        worker.terminate();
+    }
+
+    return aukData;
+}
+
+/**
  * Generates a data object containing the account unlock key (AUK) and the encrypted vault key.
  *
  * @param password the password to be used
@@ -143,28 +184,13 @@ export async function generateVaultKeys(
     slowHash: KeyGenAlgorithm = KeyGenAlgorithm.Argon2d,
     onProgress?: (progress: number) => void,
 ) {
-    // Generate the AUK
-    const worker = new Worker(new URL("@lib/workers/generate-auk", import.meta.url), { type: "module" });
-    const processor = Comlink.wrap<AUKGenerationProcessor>(worker);
-
-    let aukData;
-    try {
-        aukData = await processor.generateAUK(
-            password,
-            additionalInfo,
-            undefined, // No AUK salt is provided
-            slowHash,
-            // `proxy()` ensures the callback function works across threads
-            onProgress ? Comlink.proxy(onProgress) : undefined,
-        );
-    } finally {
-        // Free up resources
-        worker.terminate();
-    }
-
-    const { key: auk, salt: aukSalt } = aukData;
-
-    // Recover vault key
+    const { key: auk, salt: aukSalt } = await generateAUK(
+        password,
+        additionalInfo,
+        undefined, // No AUK salt is provided
+        slowHash,
+        onProgress,
+    );
     const vaultKey = existingVaultKey ?? randomBytes(32);
     const encryptedVaultKey = new ExEF(auk).encrypt(vaultKey);
 

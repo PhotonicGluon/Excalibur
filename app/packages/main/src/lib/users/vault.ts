@@ -1,9 +1,6 @@
-import * as Comlink from "comlink";
-
 import ExEF from "@lib/crypto/exef";
-import { KeygenAdditionalInfo } from "@lib/crypto/keygen";
+import { generateAUK, KeygenAdditionalInfo } from "@lib/crypto/keygen";
 import { getVaultInfo } from "@lib/users/api";
-import { AUKGenerationProcessor } from "@lib/workers/generate-auk";
 
 import { VaultInfo } from "./structures";
 
@@ -44,25 +41,7 @@ export async function retrieveVaultInfo(
     const vaultInfo = vaultInfoResponse.vaultInfo!;
 
     // Derive the AUK
-    const worker = new Worker(new URL("@lib/workers/generate-auk", import.meta.url), { type: "module" });
-    const processor = Comlink.wrap<AUKGenerationProcessor>(worker);
-
-    let aukData;
-    try {
-        aukData = await processor.generateAUK(
-            password,
-            additionalInfo,
-            aukSalt,
-            keygenAlgorithm,
-            // `proxy()` ensures the callback function works across threads
-            onProgress ? Comlink.proxy(onProgress) : undefined,
-        );
-    } finally {
-        // Free up resources
-        worker.terminate();
-    }
-
-    const { key: auk } = aukData;
+    const { key: auk } = await generateAUK(password, additionalInfo, aukSalt, keygenAlgorithm, onProgress);
 
     // Recover vault key
     console.debug("Decrypting obtained vault key...");
