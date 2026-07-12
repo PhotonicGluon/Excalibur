@@ -201,8 +201,7 @@ const NewUser: React.FC = () => {
                     inputDisabled={true}
                     onDidDismiss={async () => {
                         setShowVaultKeyDialog(false);
-                        router.push("/files/", "forward", "replace");
-                        window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
+                        router.push("/files/", "forward", "push");
                     }}
                 />
 

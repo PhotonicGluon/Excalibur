@@ -101,7 +101,7 @@ const App: React.FC = () => {
             }
 
             await Preferences.set({ lastUpdateCheck: Date.now() });
-            await performUpdateCheck(presentAlert);
+            await performUpdateCheck(presentAlert).catch((e) => console.warn(`Update check failed: ${e}`));
         });
     });
 

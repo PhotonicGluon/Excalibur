@@ -183,17 +183,19 @@ const Login: React.FC = () => {
     // Render
     return (
         <>
-            {/* Hamburger menu */}
-            <SidebarMenu
-                mainContentID="main-content"
-                menuController={menuController}
-                preventExit={auth.serverInfo?.isFixed}
-                exitButtonText="Change Server"
-                onExit={() => {
-                    auth.logout(true); // Also remove saved API URL
-                    router.push("/server-choice", "forward", "replace");
-                }}
-            />
+            {/* Hamburger menu (shown only when logged out so that it doesn't shadow the file explorer's menu) */}
+            {!auth.authInfo && (
+                <SidebarMenu
+                    mainContentID="main-content"
+                    menuController={menuController}
+                    preventExit={auth.serverInfo?.isFixed}
+                    exitButtonText="Change Server"
+                    onExit={() => {
+                        auth.logout(true); // Also remove saved API URL
+                        router.push("/server-choice", "forward", "replace");
+                    }}
+                />
+            )}
 
             <IonPage id="main-content">
                 {/* Header content */}
