@@ -94,7 +94,6 @@ const Login: React.FC = () => {
         // Set authentication info
         const authInfo: AuthInfo = {
             username,
-            password,
             ...e2eeData,
         };
         auth.setAuthInfo(authInfo);

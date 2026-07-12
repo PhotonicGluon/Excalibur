@@ -36,7 +36,11 @@ describe("Check Account Preferences", () => {
 
         // Fill in new username
         cy.get(".mt-2 > :nth-child(1) > :nth-child(2)").type(`{selectAll}{backspace}${renamedUsername}{enter}`);
+
         cy.get("#save-changes-button").click();
+        cy.get("ion-modal").should("exist");
+        cy.get("ion-modal [label='Password']").type(oldPassword);
+        cy.get("ion-modal ion-footer ion-button").click();
         cy.get("ion-toast").should("exist");
 
         // Trying to log in with old username should fail
@@ -58,6 +62,10 @@ describe("Check Account Preferences", () => {
         cy.get("input").eq(2).type(`{selectAll}{backspace}${changedPassword}{enter}`);
 
         cy.get("#save-changes-button").click();
+        cy.get("ion-modal").should("exist");
+        cy.get("ion-modal [label='Password']").type(oldPassword);
+        cy.get("ion-modal ion-footer ion-button").click();
+
         cy.get("ion-toast").should("exist");
 
         // Trying to log in with old password should fail

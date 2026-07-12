@@ -138,7 +138,7 @@ const NewUser: React.FC = () => {
         }
 
         // Set authentication info
-        const authInfo: AuthInfo = { username, password, ...e2eeData };
+        const authInfo: AuthInfo = { username, ...e2eeData };
         auth.setAuthInfo(authInfo);
         console.log(`Token for authentication: ${authInfo.token}`);
 
@@ -165,7 +165,13 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM, auk: auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({
+            keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM,
+            aukSalt,
+            encryptedKey: encryptedVaultKey,
+            key: vaultKey,
+            info: additionalInfo,
+        });
 
         // Show vault key
         setIsLoading(false);

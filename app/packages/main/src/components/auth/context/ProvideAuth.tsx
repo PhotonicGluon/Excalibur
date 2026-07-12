@@ -140,7 +140,6 @@ function serializeAuthInfo(data: AuthInfo): string {
         key: data.key.toString("hex"),
         token: data.token,
         username: data.username,
-        password: data.password,
     });
 }
 
@@ -150,14 +149,14 @@ function deserializeAuthInfo(data: string): AuthInfo {
         key: Buffer.from(parsed.key, "hex"),
         token: parsed.token,
         username: parsed.username,
-        password: parsed.password,
     };
 }
 
 function serializeVaultInfo(data: VaultInfo): string {
     return JSON.stringify({
         keygenAlgorithm: data.keygenAlgorithm,
-        auk: data.auk.toString("hex"),
+        aukSalt: data.aukSalt.toString("hex"),
+        encryptedKey: data.encryptedKey.toString("hex"),
         key: data.key.toString("hex"),
         info: JSON.stringify(data.info),
     });
@@ -167,7 +166,8 @@ function deserializeVaultInfo(data: string): VaultInfo {
     const parsed = JSON.parse(data);
     return {
         keygenAlgorithm: parsed.keygenAlgorithm,
-        auk: Buffer.from(parsed.auk, "hex"),
+        aukSalt: Buffer.from(parsed.aukSalt, "hex"),
+        encryptedKey: Buffer.from(parsed.encryptedKey, "hex"),
         key: Buffer.from(parsed.key, "hex"),
         info: JSON.parse(parsed.info),
     };
