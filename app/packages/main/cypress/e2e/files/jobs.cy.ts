@@ -4,8 +4,6 @@ import { createFile } from "./helpers";
 
 beforeEach(() => {
     cy.login("http://127.0.0.1:8989", "test-user", "Password");
-    cy.visit("/files/");
-    cy.url().should("include", "/files");
 });
 
 afterEach(function () {
@@ -56,10 +54,10 @@ describe("Check Job Cancellations", () => {
         const fileName = createFile(1e6, true)[0];
         let fileElement = cy.get(`div[data-name='${fileName}']`);
         fileElement.should("exist");
-        cy.reload(); // Reload to remove the upload job
+        cy.login("http://127.0.0.1:8989", "test-user", "Password"); // Log in afresh to remove the upload job
 
         // Create a file download task
-        fileElement = cy.get(`div[data-name='${fileName}']`); // Need to get again due to page reload
+        fileElement = cy.get(`div[data-name='${fileName}']`); // Need to get again due to the fresh login
         fileElement.click();
 
         // Check that the job is listed

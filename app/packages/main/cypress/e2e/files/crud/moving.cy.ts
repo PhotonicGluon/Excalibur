@@ -7,8 +7,6 @@ describe("Moving Operations", () => {
 
     beforeEach(() => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
 
         // Create test file and folder
         fileName = createFile(SMALL_SIZE, true)[0];

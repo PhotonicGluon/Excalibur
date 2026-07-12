@@ -3,8 +3,6 @@ import { LARGE_SIZE, SMALL_SIZE } from "./constants";
 
 beforeEach(() => {
     cy.login("http://127.0.0.1:8989", "test-user", "Password");
-    cy.visit("/files/");
-    cy.url().should("include", "/files");
 
     // Wait for listener to connect
     cy.get("#directory-list-stats").should("exist");

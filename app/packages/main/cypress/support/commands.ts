@@ -31,101 +31,79 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
 });
 
 Cypress.Commands.add("login", (serverURL: string, username: string, password: string, expectToFail?: boolean) => {
-    cy.session(
-        ["login", serverURL, username, password],
-        () => {
-            cy.onboard(serverURL);
-            cy.visit("/login");
+    cy.onboard(serverURL);
+    cy.visit("/login");
 
-            // Login using form
-            cy.get("[label='Username']").type("{selectAll}" + username);
-            cy.get("[label='Password']").type("{selectAll}" + password);
-            cy.get("#login-button").click();
+    // Login using form
+    cy.get("[label='Username']").type("{selectAll}" + username);
+    cy.get("[label='Password']").type("{selectAll}" + password);
+    cy.get("#login-button").click();
 
-            if (expectToFail) {
-                cy.url().should("not.include", "/files");
-                return;
-            }
+    if (expectToFail) {
+        cy.get(".alert-title", { timeout: 20000 }).should("contain.text", "Handshake Failed");
+        cy.get(".alert-button").click();
+        cy.url().should("not.include", "/files");
+        return;
+    }
 
-            cy.url().should("include", "/files");
-            cy.window().should((win) => {
-                expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
-                expect(win.localStorage.getItem("authInfo"), "authInfo").to.not.be.null;
-                expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.not.be.null;
-            });
-        },
-        {
-            validate: () => {
-                if (expectToFail) {
-                    return;
-                }
-                cy.window().then((win) => {
-                    const authInfo = win.localStorage.getItem("authInfo");
-                    const vaultInfo = win.localStorage.getItem("vaultInfo");
-                    if (!authInfo || !vaultInfo) {
-                        throw new Error("Session invalid: authInfo or vaultInfo missing");
-                    }
-                });
-            },
-            cacheAcrossSpecs: true,
-        },
-    );
+    cy.url().should("include", "/files");
+    cy.window().should((win) => {
+        expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+
+        // Secrets must never be persisted
+        expect(win.localStorage.getItem("authInfo"), "authInfo").to.be.null;
+        expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.be.null;
+    });
 });
 
 Cypress.Commands.add("signup", (serverURL: string, username: string, password: string) => {
-    cy.session(
-        ["signup", serverURL, username, password],
-        () => {
-            let ack: string[];
+    let ack: string[];
 
-            cy.onboard(serverURL);
-            cy.visit("/new-user");
+    cy.onboard(serverURL);
+    cy.visit("/new-user");
 
-            // Initial checks
-            cy.get("#vault-key-modal").should("not.be.visible");
+    // Initial checks
+    cy.get("#vault-key-modal").should("not.be.visible");
 
-            // Get ACK
-            cy.request({
-                url: `${serverURL}/api/auth/ack`,
-                method: "GET",
-            }).then((response) => {
-                expect(response.body).to.have.length(24);
-                ack = response.body;
-            });
+    // Get ACK
+    cy.request({
+        url: `${serverURL}/api/auth/ack`,
+        method: "GET",
+    }).then((response) => {
+        expect(response.body).to.have.length(24);
+        ack = response.body;
+    });
 
-            // Fill in signup form
-            cy.get("[label='Username']").find("input").type(username);
-            cy.get("[label='Password']").find("input").type(password);
-            cy.get("[label='Confirm Password']").find("input").type(password);
+    // Fill in signup form
+    cy.get("[label='Username']").find("input").type(username);
+    cy.get("[label='Password']").find("input").type(password);
+    cy.get("[label='Confirm Password']").find("input").type(password);
 
-            // Fill in Account Creation Key (ACK) by pasting into the first input box
-            cy.get("#ack-input")
-                .find("input")
-                .eq(0)
-                .trigger("paste", {
-                    clipboardData: { getData: () => ack.join(" ") },
-                });
+    // Fill in Account Creation Key (ACK) by pasting into the first input box
+    cy.get("#ack-input")
+        .find("input")
+        .eq(0)
+        .trigger("paste", {
+            clipboardData: { getData: () => ack.join(" ") },
+        });
 
-            cy.contains("ion-button", "Confirm").click();
+    cy.contains("ion-button", "Confirm").click();
 
-            // Assert that the vault key dialog shows up
-            cy.get("#vault-key-modal").should("be.visible");
-            cy.get("#vault-key-modal-close").click();
+    // Assert that the vault key dialog shows up
+    cy.get("#vault-key-modal").should("be.visible");
+    cy.get("#vault-key-modal-close").click();
 
-            // We should have been redirected to the files page (i.e., logged in successfully)
-            cy.url().should("include", "/files/");
-        },
-        {
-            validate: () => {
-                cy.request({
-                    url: `${serverURL}/api/users/check/${username}`,
-                    method: "HEAD",
-                }).then((response) => {
-                    expect(response.status).to.eq(200);
-                });
-            },
-        },
-    );
+    // We should have been redirected to the files page (i.e., logged in successfully)
+    cy.url().should("include", "/files/");
+
+    // Wait for the "User created" toast to clear so later toast assertions cannot match it
+    cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
+});
+
+Cypress.Commands.add("gotoPreferences", () => {
+    cy.get("#ellipsis-button").click();
+    cy.get("ion-list ion-item").contains("Preferences").click();
+    cy.url().should("include", "/preferences");
 });
 
 Cypress.Commands.add("pullRefresh", () => {
@@ -150,6 +128,7 @@ declare global {
             onboard(serverURL: string): Chainable<void>;
             login(serverURL: string, username: string, password: string, expectToFail?: boolean): Chainable<void>;
             signup(serverURL: string, username: string, password: string): Chainable<void>;
+            gotoPreferences(): Chainable<void>;
             pullRefresh(): Chainable<void>;
         }
     }

@@ -3,8 +3,6 @@ import { createFile, createFolder } from "../helpers";
 describe("Nested Operations", () => {
     beforeEach(() => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
 
         // Create super folder
         const superFolderName = createFolder();

@@ -3,8 +3,6 @@ import { createFolder } from "./helpers";
 describe("Check Breadcrumbs", () => {
     beforeEach(() => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
     });
 
     afterEach(function () {
@@ -36,10 +34,6 @@ describe("Check Breadcrumbs", () => {
 
     it("should handle multi-nested folder", () => {
         const NUM_NESTED_FOLDERS = 3;
-
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
 
         // Create folders
         let path = "/files";

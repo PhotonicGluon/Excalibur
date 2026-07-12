@@ -10,9 +10,14 @@ describe("Check Page Contents", () => {
         cy.url().should("include", "/login");
     });
 
+    it("should redirect to login on reload", () => {
+        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.reload();
+        cy.url().should("include", "/login");
+    });
+
     it("should stay on files page if logged in", () => {
         cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
 
         cy.get(".fab-horizontal-end").should("exist"); // The "add" fab should exist
         cy.get('.breadcrumb-active > [slot=""]').should("exist");

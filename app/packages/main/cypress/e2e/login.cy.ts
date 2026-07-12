@@ -21,8 +21,7 @@ describe("Check Login Page Contents", () => {
 describe("Handle Auth Process", () => {
     it("should handle login gracefully", () => {
         cy.login(Cypress.expose("serverURL"), "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("not.include", "/login");
+        cy.url().should("include", "/files");
     });
 
     describe("Handle Incorrect Credentials", () => {
