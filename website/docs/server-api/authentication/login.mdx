@@ -60,7 +60,7 @@ HKDF-Expand(session_key, b"Master Key", 32)
 where the `HKDF-Expand` function is as described in [RFC5869, Section 2.3](https://datatracker.ietf.org/doc/html/rfc5869#section-2.3). Note that the HKDF used is the same as the one used in the OPAQUE protocol. Since this key is derived independently on each side from the shared session key, it never needs to be transmitted, and only a client and server that completed the exchange with the correct password can arrive at the same value.
 
 ### Authentication Token
-With a shared master key established, the server issues the client an authentication token to use for subsequent requests. This token is encrypted in the [Excalibur Encryption Format](/docs/reference/exef.mdx) using the master key so that only the client and server can read it.
+With a shared master key established, the server issues the client an authentication token to use for subsequent requests. This token is encrypted in the [Excalibur Encryption Format](/docs/reference/exef) using the master key so that only the client and server can read it.
 
 The client decrypts the authentication token using the master key to recover the JWT, which it then presents to authenticate future requests (see [Subsequent Authentication](/docs/server-api/subsequent-authentication.mdx)).
 

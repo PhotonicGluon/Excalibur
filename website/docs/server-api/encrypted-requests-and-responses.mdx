@@ -12,7 +12,7 @@ Some endpoints accept encrypted data.
 
 In general, path parameters for file-related endpoints can be (and should be) encrypted. These requests' path parameters **must**:
 
-- be encrypted using [the ExEF specification](/docs/reference/exef.mdx);
+- be encrypted using [the ExEF specification](/docs/reference/exef);
 - be converted to [URL-safe Base64 encoding](https://developer.mozilla.org/en-US/docs/Glossary/Base64#url_and_filename_safe_base64); and
 - have the `X-Encrypted` header present and set to `true`.
 
@@ -34,7 +34,7 @@ Remember to specify the `X-Encrypted` header as `true`.
 
 Some endpoints accept encrypted request bodies. These requests' request bodies **must**:
 
-- be encrypted using [the ExEF specification](/docs/reference/exef.mdx);
+- be encrypted using [the ExEF specification](/docs/reference/exef);
 - have the `X-Encrypted` header present and set to `true`;
 - have the `Content-Type` header set to `application/octet-stream`; and
 - have the `X-Content-Type` header set to the original content type of the request body.
