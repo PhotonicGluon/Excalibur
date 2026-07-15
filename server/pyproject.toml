@@ -4,11 +4,10 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.7.1"
+version = "0.7.2rc1"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.18.5",
-    "colorama>=0.4.6 ; sys_platform == 'win32'",
     "duckdb~=1.5.3",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.139.0",
@@ -27,7 +26,7 @@ dependencies = [
     "toml>=0.10.2",
     "tomlkit>=0.15.0",
     "typer>=0.26.8",
-    "uvicorn>=0.49.0",
+    "uvicorn>=0.51.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
     "websockets>=16.0",
 ]
