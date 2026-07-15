@@ -7,7 +7,7 @@ name = "excalibur-server"
 version = "0.7.1"
 dependencies = [
     "aiofiles>=25.1.0",
-    "alembic>=1.18.4",
+    "alembic>=1.18.5",
     "colorama>=0.4.6 ; sys_platform == 'win32'",
     "duckdb~=1.5.3",
     "duckdb-engine>=0.17.0",
@@ -26,7 +26,7 @@ dependencies = [
     "sqlmodel>=0.0.39",
     "toml>=0.10.2",
     "tomlkit>=0.15.0",
-    "typer>=0.26.7",
+    "typer>=0.26.8",
     "uvicorn>=0.51.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
     "websockets>=16.0",
@@ -48,7 +48,7 @@ excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
 dev = ["ipython~=9.15.0", "ruff>=0.15.20", "watchfiles>=1.2.0"]
-test = ["httpx2>=2.4.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
+test = ["httpx2>=2.5.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []
