@@ -154,12 +154,11 @@ wheels = [
 
 [[package]]
 name = "excalibur-server"
-version = "0.7.1"
+version = "0.7.2rc1"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "alembic" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "duckdb" },
     { name = "duckdb-engine" },
     { name = "fastapi" },
@@ -198,7 +197,6 @@ test = [
 requires-dist = [
     { name = "aiofiles", specifier = ">=25.1.0" },
     { name = "alembic", specifier = ">=1.18.5" },
-    { name = "colorama", marker = "sys_platform == 'win32'", specifier = ">=0.4.6" },
     { name = "duckdb", specifier = "~=1.5.3" },
     { name = "duckdb-engine", specifier = ">=0.17.0" },
     { name = "fastapi", specifier = ">=0.139.0" },
