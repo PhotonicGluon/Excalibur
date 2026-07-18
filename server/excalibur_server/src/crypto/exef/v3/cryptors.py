@@ -1,18 +1,16 @@
-from abc import ABC
 from hmac import compare_digest
-from queue import Empty, Queue
-from typing import Literal
+from queue import Empty
 
 from Crypto.Cipher import AES, _mode_gcm
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Protocol.KDF import HKDF
 
+from excalibur_server.src.crypto.exef.base.cryptors import BaseCryptor, BaseDecryptor, BaseEncryptor, KeyStrength
+
 from .structures import Footer, Header
 
-KeyStrength = Literal[128, 192, 256]
 
-
-class Cryptor(ABC):
+class Cryptor(BaseCryptor):
     """
     Base class for encryption and decryption.
     """
@@ -24,45 +22,18 @@ class Cryptor(ABC):
         :param key: the main key as bytes
         """
 
-        self.key = key
-        "Key used for encryption/decryption"
+        super().__init__(key)
 
         self._cipher: _mode_gcm.GcmMode | None = None
         "Internal AES-GCM cipher object that handles cryptographic operations"
 
-        self._queue = Queue()
-        "Queue used for buffering"
-
     # Properties
-    @property
-    def is_queue_clear(self):
-        """
-        Checks if the encryption/decryption queue is empty.
-
-        :return: whether the queue is empty
-        """
-
-        return self._queue.qsize() == 0
-
     @property
     def cipher(self) -> _mode_gcm.GcmMode:
         """
         The AES-GCM cipher object used for encryption/decryption.
 
         :return: the AES-GCM cipher object
-        """
-
-        raise NotImplementedError()
-
-    @property
-    def fully_processed(self) -> bool:
-        """
-        Checks if the whole message have been processed.
-
-        This includes getting the header and footer. To check if there are no more data in the
-        queue, access the `is_queue_clear` property instead.
-
-        :return: whether all parts of the message have been processed
         """
 
         raise NotImplementedError()
@@ -81,7 +52,7 @@ class Cryptor(ABC):
         return Cryptor._gen_key(key, nonce, b"ExEF MAC Key", length)
 
 
-class Encryptor(Cryptor):
+class Encryptor(BaseEncryptor, Cryptor):
     """
     Class that handles the encryption of ExEF messages.
     """
@@ -95,13 +66,9 @@ class Encryptor(Cryptor):
         :parma strength: crypto/MAC key strength, defaults to the length of `key` in bits
         """
 
-        super().__init__(key)
+        super(Encryptor, self).__init__(key, strength=strength)
 
         self._nonce = nonce
-
-        if strength is None:
-            strength = len(key) * 8
-        self._strength = strength
 
         self._crypto_key = self._gen_crypto_key(key, nonce, strength // 8)
         self._mac_key = self._gen_mac_key(key, nonce, strength // 8)
@@ -124,22 +91,13 @@ class Encryptor(Cryptor):
 
     @property
     def fully_processed(self) -> bool:
-        """
-        Whether every chunk has been generated and queued.
-        """
-
         if self._ct_len == -1:
             raise ValueError("parameters must be set")
         return self._ct_sent_len == self._ct_len
 
     # Public methods
     def set_params(self, *, length: int):
-        """
-        Sets the parameters for the encryption process.
-
-        :param length: The length of the plaintext to be encrypted
-        :raises ValueError: If the key size is not 128, 192, or 256
-        """
+        super().set_params(length=length)
 
         self._ct_len = length  # Ciphertext length is equal to plaintext length
 
@@ -167,27 +125,10 @@ class Encryptor(Cryptor):
         self._header = header
 
     def update(self, data: bytes):
-        """
-        Encrypts the given data.
-
-        :param data: The data to be encrypted.
-        """
-
         self._queue.put(self.cipher.encrypt(data))
         self._ct_sent_len += len(data)
 
     def get(self) -> bytes:
-        """
-        Gets the next piece of encrypted data.
-
-        If the header was not yet sent, it is sent first.
-        Then, the body is sent.
-        If there is no more data left in the queue, the footer is sent.
-        If there is still data left in the queue, an empty bytes object is returned.
-
-        :return: The next piece of data.
-        """
-
         # Get header first
         if not self._header_sent:
             self._header_sent = True
@@ -207,20 +148,13 @@ class Encryptor(Cryptor):
             return b""
 
     def encrypt(self, pt: bytes) -> bytes:
-        """
-        Encrypts the given plaintext.
-
-        :param pt: The plaintext to be encrypted as bytes.
-        :return: The encrypted ciphertext as bytes.
-        """
-
         self.set_params(length=len(pt))
         self.update(pt)
         output = self.get() + self.get() + self.get()  # First is header, then body, then footer
         return output
 
 
-class Decryptor(Cryptor):
+class Decryptor(BaseDecryptor, Cryptor):
     """
     Class that handles the decryption of ExEF messages.
     """
@@ -269,22 +203,10 @@ class Decryptor(Cryptor):
 
     @property
     def fully_processed(self) -> bool:
-        """
-        Checks if the decryptor has processed all parts of the message.
-
-        :return: True if the decryptor has processed all parts of the message, False otherwise.
-        """
-
         return self._header is not None and self._footer is not None
 
     # Public methods
     def update(self, data: bytes):
-        """
-        Updates the decryptor with the given ciphertext data.
-
-        :param data: The ciphertext data as bytes
-        """
-
         # Handle header
         if self._header_remaining > 0:
             self._buffer += data
@@ -324,43 +246,18 @@ class Decryptor(Cryptor):
                 self._buffer = b""
 
     def get(self) -> bytes:
-        """
-        Gets the next piece of decrypted data.
-
-        If no data is left in the queue (or if nothing is in the queue), an empty bytes object is
-        returned.
-
-        :return: The next piece of data.
-        """
-
         try:
             return self._queue.get(block=False)
         except Empty:
             return b""
 
     def verify(self):
-        """
-        Verifies the integrity of the decrypted data.
-
-        :raises ValueError: If the header or footer have not been set
-        :raises ValueError: If the footer is not valid (e.g., wrong tag)
-        """
-
         if self._header is None or self._footer is None:
             raise ValueError("header and footer must be set")
 
         self.cipher.verify(self._footer.tag)
 
     def decrypt(self, exef_data: bytes) -> bytes:
-        """
-        Decrypts the given ExEF data.
-
-        :param exef_data: The ExEF data as bytes
-        :return: The decrypted data as bytes
-        :raises ValueError: If the header or footer have not been set
-        :raises ValueError: If the footer is not valid (e.g., wrong tag)
-        """
-
         self.update(exef_data)
         output = self.get()
         self.verify()

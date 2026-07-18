@@ -1,12 +1,10 @@
-from abc import ABC
-from queue import Empty, Queue
-
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import HKDF
 from Crypto.Random import get_random_bytes
 
 from excalibur_server.src.crypto.consts import MAX_UINT64
+from excalibur_server.src.crypto.exef.base.cryptors import BaseDecryptor, BaseEncryptor, KeyStrength
 from excalibur_server.src.crypto.exef.padme import PADME
 
 from .structures import (
@@ -18,7 +16,6 @@ from .structures import (
     SALT_SIZE,
     TAG_SIZE,
     Header,
-    KeyStrength,
     aad,
     cipher_id_for_key_size,
     compute_chunk_count,
@@ -42,51 +39,7 @@ def derive_crypto_key(key: bytes, salt: bytes, cipher_id: int, key_size: int) ->
     return HKDF(key, key_size, salt, SHA256, context=info)
 
 
-class Cryptor(ABC):
-    """
-    Base class for ExEF v4 encryption and decryption.
-    """
-
-    def __init__(self, key: bytes):
-        """
-        Initializes the Cryptor with a given key.
-
-        :param key: the main key as bytes
-        """
-
-        self.key = key
-        "Key used for encryption/decryption"
-
-        self._queue: Queue = Queue()
-        "Queue used for buffering decrypted/encrypted output"
-
-    @property
-    def is_queue_clear(self) -> bool:
-        """
-        Checks if the output queue is empty.
-
-        :return: whether the queue is empty
-        """
-
-        return self._queue.qsize() == 0
-
-    def _drain(self) -> bytes:
-        """
-        Drains and concatenates all currently-available output from the queue.
-
-        :return: the concatenated output, or empty if nothing is queued
-        """
-
-        out = b""
-        while True:
-            try:
-                out += self._queue.get(block=False)
-            except Empty:
-                break
-        return out
-
-
-class Encryptor(Cryptor):
+class Encryptor(BaseEncryptor):
     """
     Class that handles the encryption of ExEF v4 messages.
     """
@@ -107,11 +60,8 @@ class Encryptor(Cryptor):
         :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
         """
 
-        super().__init__(key)
+        super().__init__(key, strength=strength)
 
-        if strength is None:
-            strength = len(key) * 8
-        self._strength = strength
         self._key_size = strength // 8
         self._cipher_id = cipher_id_for_key_size(self._key_size)
 
@@ -128,7 +78,6 @@ class Encryptor(Cryptor):
         self._crypto_key = derive_crypto_key(key, salt, self._cipher_id, self._key_size)
 
         # These parameters will be defined by `set_params()`
-        self._length: int = -1
         self._padded_size: int = -1
         self._chunk_count: int = -1
         self._header_bytes: bytes | None = None
@@ -143,10 +92,6 @@ class Encryptor(Cryptor):
     # Properties
     @property
     def fully_processed(self) -> bool:
-        """
-        Whether every chunk has been generated and queued.
-        """
-
         if self._chunk_count == -1:
             raise ValueError("parameters must be set")
         return self._chunks_emitted == self._chunk_count
@@ -196,6 +141,8 @@ class Encryptor(Cryptor):
         :raises ValueError: if there will be too many chunks
         """
 
+        super().set_params(length=length)
+
         padded_size = compute_padded_size(length)
         if padded_size < length or padded_size > MAX_UINT64:
             # `padded_size < length` catches a fixed-width PADME overflow near 2**64
@@ -206,7 +153,6 @@ class Encryptor(Cryptor):
         if n > MAX_CHUNK_COUNT:
             raise ValueError("too many chunks")
 
-        self._length = length
         self._padded_size = padded_size
         self._chunk_count = n
 
@@ -219,7 +165,6 @@ class Encryptor(Cryptor):
         )
         self._header_bytes = header.serialize_as_bytes()
 
-        # Seed the pre-encryption stream with the big-endian plaintext length prefix
         self._pre_buffer = length.to_bytes(LENGTH_PREFIX_SIZE, "big")
 
     def update(self, data: bytes):
@@ -248,15 +193,6 @@ class Encryptor(Cryptor):
         self._emit_ready_chunks()
 
     def get(self) -> bytes:
-        """
-        Gets the next piece of encrypted data.
-
-        The header is emitted first, followed by all currently-available body chunks. Once the body
-        is exhausted this returns an empty bytes object.
-
-        :return: the next piece of data, or an empty bytes object if no more data is available
-        """
-
         if not self._header_sent:
             self._header_sent = True
             return self._header_bytes
@@ -264,19 +200,12 @@ class Encryptor(Cryptor):
         return self._drain()
 
     def encrypt(self, pt: bytes) -> bytes:
-        """
-        Encrypts the given plaintext in one shot.
-
-        :param pt: the plaintext to encrypt
-        :return: the complete ExEF v4 file as bytes
-        """
-
         self.set_params(length=len(pt))
         self.update(pt)
         return self.get() + self.get()  # Header, then all body chunks
 
 
-class Decryptor(Cryptor):
+class Decryptor(BaseDecryptor):
     """
     Class that handles the decryption of ExEF v4 messages.
     """
@@ -308,12 +237,6 @@ class Decryptor(Cryptor):
     # Properties
     @property
     def fully_processed(self) -> bool:
-        """
-        Whether the header and every chunk have been successfully processed.
-
-        :return: whether all parts of the message have been processed
-        """
-
         return self._header is not None and not self._failed and self._chunk_index == self._header.chunk_count
 
     # Helper methods
@@ -413,23 +336,9 @@ class Decryptor(Cryptor):
             self._chunk_index += 1
 
     def get(self) -> bytes:
-        """
-        Gets the next piece of decrypted plaintext.
-
-        :return: the next piece of data, or empty if nothing is queued
-        """
-
         return self._drain()
 
     def verify(self):
-        """
-        Verifies the integrity of the decrypted data.
-
-        :raises ValueError: if any chunk failed authentication
-        :raises ValueError: if the stream is incomplete
-        :raises ValueError: if trailing bytes remain after the final chunk
-        """
-
         if self._error is not None:
             raise self._error
         if not self.fully_processed:
@@ -438,14 +347,6 @@ class Decryptor(Cryptor):
             raise ValueError("trailing data after final chunk")
 
     def decrypt(self, exef_data: bytes) -> bytes:
-        """
-        Decrypts the given ExEF v4 data in one shot.
-
-        :param exef_data: the ExEF data as bytes
-        :return: the decrypted plaintext as bytes
-        :raises ValueError: if the data is malformed or fails authentication
-        """
-
         self.update(exef_data)
         output = self._drain()
         self.verify()

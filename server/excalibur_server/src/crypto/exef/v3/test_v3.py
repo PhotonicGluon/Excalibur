@@ -1,6 +1,7 @@
 import pytest
 
-from .crypto import KeyStrength
+from excalibur_server.src.crypto.exef.base import KeyStrength
+
 from .processor import ExEFv3
 from .structures import Footer, Header
 

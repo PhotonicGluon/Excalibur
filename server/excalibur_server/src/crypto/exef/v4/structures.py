@@ -23,7 +23,6 @@ MIN_CHUNK_COUNT = 1
 MAX_CHUNK_COUNT = MAX_UINT32
 
 # Mapping of cipher ID to key size, in bytes
-KeyStrength = Literal[128, 192, 256]
 _CIPHER_ID_TO_KEY_SIZE: dict[int, int] = {1: 16, 2: 24, 3: 32}
 _KEY_SIZE_TO_CIPHER_ID: dict[int, int] = {size: cid for cid, size in _CIPHER_ID_TO_KEY_SIZE.items()}
 

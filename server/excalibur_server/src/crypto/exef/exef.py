@@ -1,9 +1,9 @@
 from typing import ClassVar, Literal
 
+from excalibur_server.src.crypto.exef.base import BaseDecryptor, BaseEncryptor, KeyStrength
 from excalibur_server.src.crypto.exef.v4.structures import DEFAULT_EXPONENT
 
 from .v3 import ExEFv3
-from .v3 import KeyStrength as KeyStrength  # re-exported for backwards compatibility
 from .v4 import ExEFv4
 
 MAGIC = b"ExEF"
@@ -45,13 +45,10 @@ def identify_version(data: bytes) -> Literal[3, 4]:
     return version
 
 
-class _AutoDecryptor:
+class _AutoDecryptor(BaseDecryptor):
     """
     A streaming decryptor that identifies the ExEF version from the incoming stream and delegates to
     the appropriate version-specific decryptor.
-
-    It mirrors the interface of the underlying decryptors (``update``, ``get``, ``verify``,
-    ``is_queue_clear``, ``fully_processed``) so it can be used interchangeably with them.
     """
 
     def __init__(self, key: bytes):
@@ -61,10 +58,20 @@ class _AutoDecryptor:
         :param key: the decryption key
         """
 
-        self._key = key
+        super().__init__(key)
+
         self._buffer = b""
         self._delegate = None
         self._error: Exception | None = None
+
+    # Properties
+    @property
+    def is_queue_clear(self) -> bool:
+        return self._delegate is None or self._delegate.is_queue_clear
+
+    @property
+    def fully_processed(self) -> bool:
+        return self._delegate is not None and self._delegate.fully_processed
 
     # Helper methods
     def _ensure_delegate(self):
@@ -76,12 +83,14 @@ class _AutoDecryptor:
             return
         if len(self._buffer) < MIN_IDENTIFY_BYTES:
             return
+
         try:
             version = identify_version(self._buffer)
-        except ValueError as exc:
-            self._error = exc
+        except ValueError as e:
+            self._error = e
             return
-        self._delegate = _PROCESSORS[version](self._key).decryptor
+
+        self._delegate = _PROCESSORS[version](self.key).decryptor
         buffered, self._buffer = self._buffer, b""
         self._delegate.update(buffered)
 
@@ -90,32 +99,29 @@ class _AutoDecryptor:
         if self._delegate is not None:
             self._delegate.update(data)
             return
+
         self._buffer += data
         self._ensure_delegate()
 
     def get(self) -> bytes:
         if self._delegate is None:
             return b""
+
         return self._delegate.get()
-
-    @property
-    def is_queue_clear(self) -> bool:
-        if self._delegate is None:
-            return True
-        return self._delegate.is_queue_clear
-
-    @property
-    def fully_processed(self) -> bool:
-        if self._delegate is None:
-            return False
-        return self._delegate.fully_processed
 
     def verify(self):
         if self._error is not None:
             raise self._error
         if self._delegate is None:
             raise ValueError("incomplete ExEF data")
+
         self._delegate.verify()
+
+    def decrypt(self, exef_data: bytes) -> bytes:
+        self.update(exef_data)
+        output = self._drain()
+        self.verify()
+        return output
 
 
 class ExEF:
@@ -180,12 +186,12 @@ class ExEF:
         return f"aes-{self.keysize}-gcm"
 
     @property
-    def encryptor(self):
+    def encryptor(self) -> BaseEncryptor:
         """The version-specific encryptor object used for encryption."""
         return self._processor.encryptor
 
     @property
-    def decryptor(self):
+    def decryptor(self) -> BaseDecryptor:
         """The version-detecting decryptor object used for decryption."""
         return self._decryptor
 
@@ -194,8 +200,8 @@ class ExEF:
         """
         Encrypts the given data as the configured version.
 
-        :param data: The data to encrypt
-        :return: The encrypted data
+        :param data: the data to encrypt
+        :return: the encrypted data
         """
 
         return self._processor.encrypt(data)
@@ -204,9 +210,9 @@ class ExEF:
         """
         Decrypts the given ExEF data, auto-detecting its version.
 
-        :param data: The encrypted data (ExEF v3 or v4)
-        :return: The decrypted data
-        :raises ValueError: If the data is malformed or fails authentication
+        :param data: the encrypted data (either version 3 or version 4)
+        :return: the decrypted data
+        :raises ValueError: if the data is malformed or fails authentication
         """
 
         version = identify_version(data)
@@ -218,8 +224,8 @@ class ExEF:
         """
         Checks if the given data is valid ExEF data of any supported version.
 
-        :param data: The data to check
-        :return: Whether the data is valid ExEF data
+        :param data: the data to check
+        :return: whether the data is valid ExEF data
         """
 
         try:
@@ -233,10 +239,10 @@ class ExEF:
         """
         Computes the total encrypted size for a plaintext of the given length.
 
-        :param plaintext_len: The plaintext length, in bytes
-        :param version: The ExEF version, defaults to :data:`DEFAULT_VERSION`
+        :param plaintext_len: the plaintext length, in bytes
+        :param version: the ExEF version, defaults to the `DEFAULT_VERSION`
         :param exponent: (ExEF v4 only) the chunk size exponent
-        :return: The total encrypted size, in bytes
+        :return: the total encrypted size, in bytes
         """
 
         if version == 3:
@@ -252,10 +258,10 @@ class ExEF:
         """
         Computes the encrypted overhead (encrypted size minus plaintext size).
 
-        :param plaintext_len: The plaintext length, in bytes
-        :param version: The ExEF version, defaults to :data:`DEFAULT_VERSION`
+        :param plaintext_len: the plaintext length, in bytes
+        :param version: the ExEF version, defaults to the `DEFAULT_VERSION`
         :param exponent: (ExEF v4 only) the chunk size exponent
-        :return: The overhead, in bytes
+        :return: the overhead, in bytes
         """
 
         return cls.encrypted_size(plaintext_len, version, exponent) - plaintext_len

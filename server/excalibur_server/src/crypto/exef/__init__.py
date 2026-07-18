@@ -1,4 +1,5 @@
-from .exef import ExEF, KeyStrength, identify_version
+from .base import KeyStrength
+from .exef import ExEF, identify_version
 from .v3 import ExEFv3
 from .v4 import ExEFv4
 

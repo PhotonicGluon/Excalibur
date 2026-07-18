@@ -2,7 +2,9 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 
-from .crypto import Decryptor, Encryptor, KeyStrength
+from excalibur_server.src.crypto.exef.base import KeyStrength
+
+from .cryptors import Decryptor, Encryptor
 from .structures import (
     DEFAULT_EXPONENT,
     EXEF_VERSION,
