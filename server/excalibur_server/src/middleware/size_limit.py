@@ -27,7 +27,7 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.max_upload_size = (
             max_upload_size
-            + ExEF.additional_size  # For the actual encrypted file (which is an ExEF stream)
+            + ExEF.v3_additional_size  # For the actual encrypted file (which is an ExEF stream)
             + 1024  # For the transmission (which includes multipart form data)
         )
 

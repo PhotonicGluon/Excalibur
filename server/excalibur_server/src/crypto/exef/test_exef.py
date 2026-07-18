@@ -1,176 +1,135 @@
 import pytest
 
-from excalibur_server.src.crypto.exef.crypto import KeyStrength
-
-from .exef import ExEF
-from .structures import Footer, Header
+from .exef import DEFAULT_VERSION, ExEF, identify_version
+from .v3.test_v3 import KEY as V3_KEY
+from .v3.test_v3 import NONCE
+from .v3.test_v3 import SAMPLE_EXEF_192 as V3_SAMPLE
+from .v4.test_v4 import KEY_256 as V4_KEY
+from .v4.test_v4 import SAMPLE_EXEF_256 as V4_SAMPLE
 
 KEY = b"1" * 24
-NONCE = b"\xab" * 12
-
-SAMPLE_EXEF_128 = bytes.fromhex(
-    "457845460301abababababababababababab3ae89cecf3e7cb56042e43d824ec000000000000000cb52c1501910110d2afcb7b114b29d231367c43770ada41198c9a96a4",
-)
-SAMPLE_EXEF_192 = bytes.fromhex(
-    "457845460302abababababababababababab3a5a8758e2c946869e38d6ae9d7f000000000000000c01a2d354eb2527742fa264b5b50d70e450d7892345f7ce463da59d22",
-)
-SAMPLE_EXEF_256 = bytes.fromhex(
-    "457845460303abababababababababababab86250f2fdf59840a66218d549ee7000000000000000c8dcad08960b097c68ae73d0c86a807d763605e0ebf6c40df88826657",
-)
-EXEFS = {
-    128: SAMPLE_EXEF_128,
-    192: SAMPLE_EXEF_192,
-    256: SAMPLE_EXEF_256,
-}
 
 
-# Helper functions
-def _generate_invalid_magic():
-    invalid = b"NOPE" + SAMPLE_EXEF_192[4:]
-    return invalid
+class TestVersionIdentification:
+    def test_identify_v3(self):
+        assert identify_version(V3_SAMPLE) == 3
+
+    def test_identify_v4(self):
+        assert identify_version(V4_SAMPLE) == 4
+
+    def test_identify_from_header_only(self):
+        # Only the first 5 bytes are needed to identify the version
+        assert identify_version(V4_SAMPLE[:5]) == 4
+        assert identify_version(V3_SAMPLE[:5]) == 3
+
+    def test_too_short(self):
+        with pytest.raises(ValueError, match="too short"):
+            identify_version(b"ExE")
+
+    def test_bad_magic(self):
+        with pytest.raises(ValueError, match="must start with 'ExEF'"):
+            identify_version(b"NOPE\x04")
+
+    def test_unsupported_version(self):
+        with pytest.raises(ValueError, match="unsupported ExEF version"):
+            identify_version(b"ExEF\x05")
+
+    def test_unsupported_version_zero(self):
+        with pytest.raises(ValueError, match="unsupported ExEF version"):
+            identify_version(b"ExEF\x00")
 
 
-def _generate_invalid_version():
-    invalid = SAMPLE_EXEF_192[:4] + b"\xff" + SAMPLE_EXEF_192[5:]
-    return invalid
+class TestEncryptionDispatch:
+    def test_default_is_v4(self):
+        assert DEFAULT_VERSION == 4
+        ct = ExEF(KEY).encrypt(b"Hello World!")
+        assert identify_version(ct) == 4
+
+    def test_explicit_v4(self):
+        ct = ExEF(KEY, version=4).encrypt(b"Hello World!")
+        assert identify_version(ct) == 4
+
+    def test_explicit_v3(self):
+        ct = ExEF(KEY, nonce=NONCE, version=3).encrypt(b"Hello World!")
+        assert ct == V3_SAMPLE
+        assert identify_version(ct) == 3
+
+    def test_unsupported_version_rejected(self):
+        with pytest.raises(ValueError, match="unsupported ExEF version"):
+            ExEF(KEY, version=2)
 
 
-def _generate_invalid_footer():
-    invalid = SAMPLE_EXEF_192[:-1]  # One byte short
-    return invalid
+class TestDecryptionAutoDetect:
+    def test_decrypt_v3(self):
+        assert ExEF(V3_KEY).decrypt(V3_SAMPLE) == b"Hello World!"
+
+    def test_decrypt_v4(self):
+        assert ExEF(V4_KEY).decrypt(V4_SAMPLE) == b"Hello World!"
+
+    def test_roundtrip_v4_default(self):
+        payload = b"round trip payload " * 100
+        ct = ExEF(KEY).encrypt(payload)
+        assert ExEF(KEY).decrypt(ct) == payload
+
+    def test_roundtrip_v3_optin(self):
+        ct = ExEF(KEY, version=3).encrypt(b"payload")
+        assert ExEF(KEY).decrypt(ct) == b"payload"
+
+    def test_same_object_decrypts_both_versions(self):
+        # A single facade instance can decrypt either version
+        assert ExEF(V3_KEY).decrypt(V3_SAMPLE) == b"Hello World!"
+        assert ExEF(V4_KEY).decrypt(V4_SAMPLE) == b"Hello World!"
 
 
-def _generate_invalid_tag():
-    invalid = SAMPLE_EXEF_192[:-1] + ((SAMPLE_EXEF_192[-1] + 0x01) % 0xFF).to_bytes(1, "big")
-    return invalid
-
-
-# Tests
-class TestValidExEF:
-    def test_parsing(self):
-        # Parse header
-        header = Header.from_serialized(SAMPLE_EXEF_192[: Header.size])
-
-        assert header.cipher_id == 2
-        assert header.nonce == NONCE
-        assert header.header_mac.hex() == "3a5a8758e2c946869e38d6ae9d7f"
-        assert header.ct_len == 12
-
-        # Parse footer
-        footer = Footer.from_serialized(SAMPLE_EXEF_192[-Footer.size :])
-        assert footer.tag.hex() == "b50d70e450d7892345f7ce463da59d22"
-
-    def test_validation(self):
-        assert ExEF.validate(SAMPLE_EXEF_128)
-        assert ExEF.validate(SAMPLE_EXEF_192)
-        assert ExEF.validate(SAMPLE_EXEF_256)
-
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_encrypt(self, strength: KeyStrength):
-        ct_test = ExEF(KEY, nonce=NONCE, strength=strength).encrypt(b"Hello World!")
-        assert ct_test == EXEFS[strength]
-
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_encrypt_stream_1(self, strength: KeyStrength):
-        iterable = iter([b"Hello World!"])
-
-        encryptor = ExEF(KEY, nonce=NONCE, strength=strength).encryptor
-        encryptor.set_params(length=12)
-
-        output = encryptor.get()  # Header
-        for chunk in iterable:
-            encryptor.update(chunk)
-            output += encryptor.get()
-        output += encryptor.get()  # Footer
-
-        assert output == EXEFS[strength]
-
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_encrypt_stream_2(self, strength: KeyStrength):
-        iterable = iter([b"He", b"llo Wo", b"rld!"])
-
-        encryptor = ExEF(KEY, nonce=NONCE, strength=strength).encryptor
-        encryptor.set_params(length=12)
-
-        output = encryptor.get()  # Header
-        for chunk in iterable:
-            encryptor.update(chunk)
-            output += encryptor.get()
-        output += encryptor.get()  # Footer
-
-        assert output == EXEFS[strength]
-
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_decrypt(self, strength: KeyStrength):
-        pt_test = ExEF(KEY).decrypt(EXEFS[strength])
-        assert pt_test == b"Hello World!"
-
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_decrypt_stream_1(self, strength: KeyStrength):
-        iterable = iter([EXEFS[strength]])
-
-        decryptor = ExEF(KEY).decryptor
+class TestStreamingAutoDetect:
+    @pytest.mark.parametrize("sample,key", [(V3_SAMPLE, V3_KEY), (V4_SAMPLE, V4_KEY)])
+    def test_streaming_decrypt(self, sample: bytes, key: bytes):
+        decryptor = ExEF(key).decryptor
         output = b""
-        for chunk in iterable:
-            decryptor.update(chunk)
+        for i in range(0, len(sample), 3):
+            decryptor.update(sample[i : i + 3])
             output += decryptor.get()
-
+        output += decryptor.get()
         decryptor.verify()
         assert output == b"Hello World!"
+        assert decryptor.fully_processed
 
-    @pytest.mark.parametrize("strength", EXEFS.keys())
-    def test_decrypt_stream_2(self, strength: KeyStrength):
-        iterable = iter([EXEFS[strength][i : i + 2] for i in range(0, len(EXEFS[strength]), 2)])
-
-        decryptor = ExEF(KEY).decryptor
-        output = b""
-        for chunk in iterable:
-            decryptor.update(chunk)
-            output += decryptor.get()
-
+    def test_streaming_before_identification(self):
+        # Fewer than 5 bytes: version not yet known, nothing decrypted, not complete
+        decryptor = ExEF(V4_KEY).decryptor
+        decryptor.update(V4_SAMPLE[:3])
+        assert decryptor.get() == b""
+        assert not decryptor.fully_processed
+        # Feed the rest and it should complete
+        decryptor.update(V4_SAMPLE[3:])
+        out = decryptor.get()
         decryptor.verify()
-        assert output == b"Hello World!"
+        assert out == b"Hello World!"
 
 
-class TestInvalidExEF:
-    @pytest.fixture
-    def exef(self):
-        return ExEF(KEY, nonce=NONCE)
+class TestValidation:
+    def test_validate_v3(self):
+        assert ExEF.validate(V3_SAMPLE)
 
-    def test_invalid_keysize(self):
-        with pytest.raises(ValueError, match="keysize must be 128, 192, or 256"):
-            ExEF(key=b"123", nonce=b"123456789012")
+    def test_validate_v4(self):
+        assert ExEF.validate(V4_SAMPLE)
 
-    def test_invalid_nonce(self):
-        with pytest.raises(ValueError, match="nonce must be 12 bytes"):
-            ExEF(key=KEY, nonce=b"123")
+    def test_invalid_magic(self):
+        assert not ExEF.validate(b"NOPE" + V4_SAMPLE[4:])
 
-    def test_invalid_key(self):
-        fake_key = bytearray(KEY)
-        fake_key[0] = 255 - fake_key[0]
-        with pytest.raises(ValueError, match="header MAC mismatch"):
-            ExEF(key=fake_key, nonce=NONCE).decrypt(SAMPLE_EXEF_192)
+    def test_invalid_version(self):
+        assert not ExEF.validate(V4_SAMPLE[:4] + b"\x07" + V4_SAMPLE[5:])
 
-    def test_invalid_magic(self, exef: ExEF):
-        invalid_magic = _generate_invalid_magic()
-        assert not ExEF.validate(invalid_magic)
-        with pytest.raises(ValueError, match="data must start with 'ExEF'"):
-            exef.decrypt(invalid_magic)
+    def test_too_short(self):
+        assert not ExEF.validate(b"ExEF")
 
-    def test_invalid_version(self, exef: ExEF):
-        invalid_version = _generate_invalid_version()
-        assert not ExEF.validate(invalid_version)
-        with pytest.raises(ValueError, match="version must be"):
-            exef.decrypt(invalid_version)
 
-    def test_invalid_footer(self, exef: ExEF):
-        invalid_footer = _generate_invalid_footer()
-        assert ExEF.validate(invalid_footer)  # Technically, this is valid ExEF data
-        with pytest.raises(ValueError, match="header and footer must be set"):
-            exef.decrypt(invalid_footer)
+class TestSizeHelpers:
+    def test_v4_encrypted_size(self):
+        assert len(ExEF(KEY).encrypt(b"x" * 100)) == ExEF.encrypted_size(100)
 
-    def test_invalid_tag(self, exef: ExEF):
-        invalid_tag = _generate_invalid_tag()
-        assert ExEF.validate(invalid_tag)  # Technically, this is valid ExEF data
-        with pytest.raises(ValueError, match="MAC check failed"):
-            exef.decrypt(invalid_tag)
+    def test_v3_encrypted_size(self):
+        assert ExEF.encrypted_size(100, version=3) == 100 + ExEF.v3_additional_size
+
+    def test_overhead(self):
+        assert ExEF.overhead(0, version=3) == ExEF.v3_additional_size

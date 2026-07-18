@@ -227,7 +227,7 @@ class EncryptionHandler:
             if content_length is None:
                 raise ValueError("Content-Length header not found")
             content_length = int(content_length)
-            new_content_length = content_length + ExEF.additional_size
+            new_content_length = ExEF.encrypted_size(content_length)
 
             # Set headers
             headers["Content-Type"] = "application/octet-stream"

@@ -124,6 +124,10 @@ class Encryptor(Cryptor):
 
     @property
     def fully_processed(self) -> bool:
+        """
+        Whether every chunk has been generated and queued.
+        """
+
         if self._ct_len == -1:
             raise ValueError("parameters must be set")
         return self._ct_sent_len == self._ct_len
@@ -135,7 +139,6 @@ class Encryptor(Cryptor):
 
         :param length: The length of the plaintext to be encrypted
         :raises ValueError: If the key size is not 128, 192, or 256
-        :raises ValueError: If parameters are set before requesting the cipher
         """
 
         self._ct_len = length  # Ciphertext length is equal to plaintext length

@@ -72,11 +72,11 @@ class TestListdir:
         assert items[0].name == "test-file.txt.exef"
         assert items[0].fullpath == "test-dir/test-file.txt.exef"
         assert items[0].type == "file"
-        assert items[0].size == 100 - ExEF.additional_size
+        assert items[0].size == 100 - ExEF.v3_additional_size
         assert items[1].name == "test-file2.txt.exef"
         assert items[1].fullpath == "test-dir/test-file2.txt.exef"
         assert items[1].type == "file"
-        assert items[1].size == 100 - ExEF.additional_size
+        assert items[1].size == 100 - ExEF.v3_additional_size
 
     def test_listdir_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
         from base64 import b64encode

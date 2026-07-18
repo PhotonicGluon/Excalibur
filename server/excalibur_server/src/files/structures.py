@@ -59,7 +59,7 @@ class File(Filelike):
 
         size = fsitem.size
         if not include_exef_size:
-            size -= ExEF.header_size + ExEF.footer_size
+            size -= ExEF.v3_header_size + ExEF.v3_footer_size
 
         base_fields = cls._get_base_fields(fsitem, parent_dir_path)
         return cls(

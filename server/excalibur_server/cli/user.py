@@ -67,9 +67,9 @@ def add_user(
     auk_salt = get_random_bytes(16)
     auk_key = generate_key(password, {"username": username}, auk_salt)
 
-    # Encrypt vault key
+    # Encrypt vault key (ExEF v4 generates a fresh random salt internally)
     vault_key: bytes = b64decode(vault_key)
-    vault_key_enc = ExEF(auk_key, get_random_bytes(12)).encrypt(vault_key)
+    vault_key_enc = ExEF(auk_key).encrypt(vault_key)
 
     if auth_protocol == AuthProtocol.OPAQUE_3DH:
         from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, SERVER_IDENTITY, OPAQUEServer
