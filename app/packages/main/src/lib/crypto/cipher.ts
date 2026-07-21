@@ -45,6 +45,8 @@ abstract class BaseGCMCipher {
     protected key: Buffer;
     /** Nonce used for encryption/decryption */
     protected nonce: Buffer;
+    /** Length of the additional authenticated data */
+    protected aadLength: number = 0;
 
     /** Expanded key for encryption */
     protected readonly xk: Uint32Array;
@@ -70,11 +72,14 @@ abstract class BaseGCMCipher {
      * @param alg algorithm used for encryption/decryption
      * @param key key used for encryption/decryption
      * @param nonce nonce used for encryption
+     * @param aad any additional authenticated data
      */
-    constructor(alg: GCMAlgorithm, key: Buffer, nonce: Buffer) {
+    constructor(alg: GCMAlgorithm, key: Buffer, nonce: Buffer, aad?: Buffer) {
         this.alg = alg;
         this.key = key;
         this.nonce = nonce;
+
+        this.aadLength = aad?.length || 0;
 
         const { xk, authKey, counter, tagMask } = this.deriveKeys();
         this.xk = xk;
@@ -83,6 +88,9 @@ abstract class BaseGCMCipher {
         this.tagMask = tagMask;
 
         this.hasher = ghash.create(this.authKey);
+        if (aad) {
+            this.hasher.update(aad);
+        }
     }
 
     // Helper methods
@@ -199,7 +207,7 @@ export class GCMCipher extends BaseGCMCipher {
         }
 
         // Add the final block length
-        const num = u64Lengths(8 * this.length, 0, false);
+        const num = u64Lengths(8 * this.length, 8 * this.aadLength, false);
         this.hasher.update(num);
 
         // Mask the tag
@@ -275,7 +283,7 @@ export class GCMDecipher extends BaseGCMCipher {
         }
 
         // Add the final block length
-        const num = u64Lengths(8 * this.length, 0, false);
+        const num = u64Lengths(8 * this.length, 8 * this.aadLength, false);
         this.hasher.update(num);
 
         // Mask the tag
