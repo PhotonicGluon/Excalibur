@@ -241,8 +241,8 @@ export default class ExEF {
         const cipher = this._cipher as GCMCipher;
 
         // Encrypt
-        const ciphertext = Buffer.concat([cipher.update(data), cipher.final()]);
-        const tag = Buffer.from(cipher.getAuthTag());
+        const ciphertext = cipher.update(data);
+        const tag = Buffer.from(cipher.digest());
 
         // Form the output
         const headerMAC = this._getHeaderMAC(ciphertext.length);
@@ -274,7 +274,6 @@ export default class ExEF {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {
-                        controller.enqueue(Buffer.from(cipher.final()));
                         break;
                     }
                     const encBlock = cipher.update(value);
@@ -282,7 +281,7 @@ export default class ExEF {
                 }
 
                 // Yield footer
-                const tag = Buffer.from(cipher.getAuthTag());
+                const tag = Buffer.from(cipher.digest());
                 const footer = new ExEFFooter(tag);
                 controller.enqueue(footer.toBuffer());
 
@@ -319,11 +318,13 @@ export default class ExEF {
         const cipher = instance._cipher as GCMDecipher;
         cipher.setAuthTag(footer.tag);
 
+        const output = cipher.update(ciphertext);
         try {
-            return Buffer.concat([cipher.update(ciphertext), cipher.final()]);
+            cipher.verify();
         } catch {
             throw new Error("MAC check failed");
         }
+        return Buffer.from(output);
     }
 
     /**
@@ -411,7 +412,7 @@ export default class ExEF {
                 cipher.setAuthTag(footer.tag);
 
                 try {
-                    controller.enqueue(cipher.final());
+                    cipher.verify();
                 } catch {
                     throw new Error("MAC check failed");
                 }
