@@ -58,6 +58,8 @@ class Encryptor(BaseEncryptor):
         :param salt: the 32-byte HKDF salt. If not provided, a fresh random salt is generated
         :param strength: the crypto key strength in bits, defaults to the length of `key` in bits
         :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
+        :raises ValueError: if the salt is not 32 bytes
+        :raises ValueError: if the exponent is out of range
         """
 
         super().__init__(key, strength=strength)
@@ -80,7 +82,7 @@ class Encryptor(BaseEncryptor):
         # These parameters will be defined by `set_params()`
         self._padded_size: int = -1
         self._chunk_count: int = -1
-        self._header_bytes: bytes | None = None
+        self._header_buffer: bytes | None = None
 
         # Streaming state
         self._pre_buffer = b""
@@ -99,7 +101,7 @@ class Encryptor(BaseEncryptor):
     # Helper methods
     def _emit_chunk(self, chunk_pt: bytes, is_final: bool):
         """
-        Emits a chunk of encrypted data.
+        Emits a chunk of encrypted data (i.e., ciphertext + tag).
 
         :param chunk_pt: the plaintext chunk to encrypt
         :param is_final: whether this is the final chunk
@@ -107,14 +109,14 @@ class Encryptor(BaseEncryptor):
 
         index = self._chunks_emitted
         cipher = AES.new(self._crypto_key, AES.MODE_GCM, nonce=nonce(index))
-        cipher.update(aad(self._header_bytes, index, is_final))
+        cipher.update(aad(self._header_buffer, index, is_final))
         ct, tag = cipher.encrypt_and_digest(chunk_pt)
         self._queue.put(ct + tag)
         self._chunks_emitted += 1
 
     def _emit_ready_chunks(self):
         """
-        Emits ready chunks from the pre-buffer.
+        Emits all chunks that are fully available in the pre-encryption buffer.
         """
 
         chunk_size = 1 << self._exponent
@@ -131,14 +133,14 @@ class Encryptor(BaseEncryptor):
             self._pre_buffer = b""
             self._emit_chunk(chunk_pt, is_final=True)
 
-    # Main methods
+    # Public methods
     def set_params(self, *, length: int):
         """
         Sets the parameters for the encryption process.
 
         :param length: the length of the plaintext to be encrypted
         :raises ValueError: if the resulting encrypted data would exceed the format's size limits
-        :raises ValueError: if there will be too many chunks
+        :raises ValueError: if there would be too many chunks
         """
 
         super().set_params(length=length)
@@ -163,8 +165,9 @@ class Encryptor(BaseEncryptor):
             padded_size=padded_size,
             salt=self._salt,
         )
-        self._header_bytes = header.serialize_as_bytes()
+        self._header_buffer = header.serialize_as_bytes()
 
+        # The pre-encryption plaintext opens with the 8-byte plaintext length prefix
         self._pre_buffer = length.to_bytes(LENGTH_PREFIX_SIZE, "big")
 
     def update(self, data: bytes):
@@ -176,7 +179,7 @@ class Encryptor(BaseEncryptor):
         :raises ValueError: if more plaintext is supplied than was declared to `set_params()`
         """
 
-        if self._header_bytes is None:
+        if self._header_buffer is None:
             raise ValueError("parameters must be set")
 
         if self._pt_received + len(data) > self._length:
@@ -187,15 +190,18 @@ class Encryptor(BaseEncryptor):
 
         # Once all plaintext has arrived, append the PADME padding
         if self._pt_received == self._length and not self._padding_added:
-            self._pre_buffer += b"\x00" * (self._padded_size - LENGTH_PREFIX_SIZE - self._length)
+            padding = b"\x00" * (self._padded_size - LENGTH_PREFIX_SIZE - self._length)
+            self._pre_buffer += padding
             self._padding_added = True
 
         self._emit_ready_chunks()
 
     def get(self) -> bytes:
         if not self._header_sent:
+            if self._header_buffer is None:
+                raise ValueError("parameters must be set")
             self._header_sent = True
-            return self._header_bytes
+            return self._header_buffer
 
         return self._drain()
 
@@ -223,11 +229,12 @@ class Decryptor(BaseDecryptor):
         self._header_bytes: bytes | None = None
         self._crypto_key: bytes | None = None
 
-        self._ct_buf = b""  # Buffered ciphertext awaiting a complete chunk
+        # Ciphertext state
+        self._ct_buffer = b""  # Buffered ciphertext awaiting a complete chunk
         self._chunk_index = 0
 
         # Pre-encryption plaintext parsing state
-        self._prefix_buf = b""
+        self._prefix_buffer = b""
         self._length: int | None = None
         self._pt_remaining: int | None = None
 
@@ -251,15 +258,18 @@ class Decryptor(BaseDecryptor):
 
         # Read the 8-byte plaintext length prefix, which could span multiple chunks
         if self._length is None:
-            need = LENGTH_PREFIX_SIZE - len(self._prefix_buf)
-            self._prefix_buf += data[:need]
+            need = LENGTH_PREFIX_SIZE - len(self._prefix_buffer)
+            self._prefix_buffer += data[:need]
             data = data[need:]
-            if len(self._prefix_buf) < LENGTH_PREFIX_SIZE:
+            if len(self._prefix_buffer) < LENGTH_PREFIX_SIZE:
                 return
 
-            self._length = int.from_bytes(self._prefix_buf, "big")
-            expected_padme = self._header.padded_size - LENGTH_PREFIX_SIZE
-            if self._length > expected_padme or PADME.compute_padded_length(self._length) != expected_padme:
+            self._length = int.from_bytes(self._prefix_buffer, "big")
+            expected_padme_length = self._header.padded_size - LENGTH_PREFIX_SIZE
+            if (
+                self._length > expected_padme_length
+                or PADME.compute_padded_length(self._length) != expected_padme_length
+            ):
                 self._error = ValueError("declared plaintext size is inconsistent with padding")
                 self._failed = True
                 return
@@ -268,7 +278,7 @@ class Decryptor(BaseDecryptor):
         # Emit plaintext bytes
         if self._pt_remaining > 0:
             n = min(self._pt_remaining, len(data))
-            if n:
+            if n > 0:
                 self._queue.put(data[:n])
                 self._pt_remaining -= n
             data = data[n:]
@@ -278,29 +288,29 @@ class Decryptor(BaseDecryptor):
             self._error = ValueError("padding must be zero")
             self._failed = True
 
-    # Main methods
+    # Public methods
     def update(self, data: bytes):
         """
         Feeds ciphertext to the decryptor.
 
-        Chunks are decrypted and verified as they become available.
+        Chunks are decrypted and verified as they become available. A failing tag does not raise
+        immediately; the error is recorded and surfaced by `verify()`, so that callers can
+        distinguish a tampered stream from an incomplete one.
 
         :param data: the ciphertext data
-        :note: a failing tag does not raise immediately; the error is recorded and surfaced by
-            `verify()`, so that callers can distinguish a tampered stream from an incomplete one
         """
 
         if self._failed:
             return
 
-        self._ct_buf += data
+        self._ct_buffer += data
 
         # Parse the header first
         if self._header is None:
-            if len(self._ct_buf) < Header.size:
+            if len(self._ct_buffer) < Header.size:
                 return
-            self._header_bytes = self._ct_buf[: Header.size]
-            self._ct_buf = self._ct_buf[Header.size :]
+            self._header_bytes = self._ct_buffer[: Header.size]
+            self._ct_buffer = self._ct_buffer[Header.size :]
             try:
                 self._header = Header.from_serialized(self._header_bytes)
             except ValueError as exc:
@@ -313,13 +323,13 @@ class Decryptor(BaseDecryptor):
 
         # Decrypt whole chunks as they arrive
         while self._chunk_index < self._header.chunk_count:
-            plaintext_size = self._header.chunk_plaintext_size(self._chunk_index)
+            plaintext_size = self._header.compute_chunk_plaintext_size(self._chunk_index)
             expected = plaintext_size + TAG_SIZE
-            if len(self._ct_buf) < expected:
+            if len(self._ct_buffer) < expected:
                 return
 
-            blob = self._ct_buf[:expected]
-            self._ct_buf = self._ct_buf[expected:]
+            blob = self._ct_buffer[:expected]
+            self._ct_buffer = self._ct_buffer[expected:]
             ct, tag = blob[:plaintext_size], blob[plaintext_size:]
 
             is_final = self._chunk_index == self._header.chunk_count - 1
@@ -343,7 +353,7 @@ class Decryptor(BaseDecryptor):
             raise self._error
         if not self.fully_processed:
             raise ValueError("incomplete ExEF data")
-        if self._ct_buf:
+        if self._ct_buffer:
             raise ValueError("trailing data after final chunk")
 
     def decrypt(self, exef_data: bytes) -> bytes:

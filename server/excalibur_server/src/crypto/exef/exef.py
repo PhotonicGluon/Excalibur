@@ -6,8 +6,6 @@ from excalibur_server.src.crypto.exef.v4.structures import DEFAULT_EXPONENT
 from .v3 import ExEFv3
 from .v4 import ExEFv4
 
-MAGIC = b"ExEF"
-
 DEFAULT_VERSION = 4
 """The ExEF version produced when encrypting, unless overridden."""
 
@@ -36,7 +34,7 @@ def identify_version(data: bytes) -> Literal[3, 4]:
 
     if len(data) < MIN_IDENTIFY_BYTES:
         raise ValueError("data too short to identify ExEF version")
-    if data[:4] != MAGIC:
+    if data[:4] != b"ExEF":
         raise ValueError("data must start with 'ExEF'")
 
     version = data[VERSION_OFFSET]
@@ -76,7 +74,7 @@ class _AutoDecryptor(BaseDecryptor):
     # Helper methods
     def _ensure_delegate(self):
         """
-        Ensure that the delegate decryptor is initialized.
+        Ensure that the delegate decryptor is initialized, once enough bytes have arrived.
         """
 
         if self._delegate is not None or self._error is not None:
@@ -94,7 +92,7 @@ class _AutoDecryptor(BaseDecryptor):
         buffered, self._buffer = self._buffer, b""
         self._delegate.update(buffered)
 
-    # Main methods
+    # Public methods
     def update(self, data: bytes):
         if self._delegate is not None:
             self._delegate.update(data)
@@ -127,6 +125,9 @@ class _AutoDecryptor(BaseDecryptor):
 class ExEF:
     """
     Excalibur Encryption Format (ExEF) processor.
+
+    Encryption produces the version given by the `version` option (defaulting to the
+    `DEFAULT_VERSION`), while decryption auto-detects the version of whatever data it is fed.
     """
 
     # Legacy fields

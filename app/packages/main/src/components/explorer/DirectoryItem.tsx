@@ -126,7 +126,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     throw new Error(response.error); // Propagate error to outer try-catch
                 }
 
-                const fileSize = response.fileSize! - ExEF.additionalSize;
+                const fileSize = response.fileSize! - ExEF.v3AdditionalSize;
 
                 if (signal.aborted) throw new Error("Cancelled");
 

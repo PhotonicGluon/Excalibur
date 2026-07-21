@@ -65,7 +65,7 @@ export async function downloadFile(
             return { success: false, error: "Unknown error" };
     }
 
-    const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
+    const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.v3AdditionalSize;
     return {
         success: true,
         fileSize: fileSize,

@@ -1,5 +1,4 @@
 from hmac import compare_digest
-from queue import Empty
 
 from Crypto.Cipher import AES, _mode_gcm
 from Crypto.Hash import HMAC, SHA256
@@ -54,12 +53,12 @@ class Cryptor(BaseCryptor):
 
 class Encryptor(BaseEncryptor, Cryptor):
     """
-    Class that handles the encryption of ExEF messages.
+    Class that handles the encryption of ExEF v3 messages.
     """
 
     def __init__(self, key: bytes, nonce: bytes, strength: KeyStrength | None = None):
         """
-        Initializes the Encryptor with a given key and nonce.
+        Initializes the encryptor with a given key and nonce.
 
         :param key: The main key as bytes
         :param nonce: The nonce used for AES-GCM encryption
@@ -78,6 +77,7 @@ class Encryptor(BaseEncryptor, Cryptor):
 
         self._header_sent = False
         self._ct_sent_len = 0
+        self._finalized = False
 
     # Properties
     @property
@@ -135,17 +135,17 @@ class Encryptor(BaseEncryptor, Cryptor):
             return self._header.serialize_as_bytes()
 
         # Get body
-        try:
-            return self._queue.get(block=False)
-        except Empty:
-            # Nothing left in queue, see if we sent all data
-            if self._ct_sent_len >= self._ct_len:
-                tag = self.cipher.digest()
-                footer = Footer(tag=tag)
-                return footer.serialize_as_bytes()
+        body = self._drain()
+        if body:
+            return body
 
-            # Nothing in queue but not all data sent...
-            return b""
+        # Plaintext has been consumed; get footer
+        if not self._finalized and self._ct_sent_len >= self._ct_len:
+            self._finalized = True
+            footer = Footer(tag=self._cipher.digest())
+            return footer.serialize_as_bytes()
+
+        return b""
 
     def encrypt(self, pt: bytes) -> bytes:
         self.set_params(length=len(pt))
@@ -156,7 +156,7 @@ class Encryptor(BaseEncryptor, Cryptor):
 
 class Decryptor(BaseDecryptor, Cryptor):
     """
-    Class that handles the decryption of ExEF messages.
+    Class that handles the decryption of ExEF v3 messages.
     """
 
     def __init__(self, key: bytes):
@@ -212,16 +212,16 @@ class Decryptor(BaseDecryptor, Cryptor):
             self._buffer += data
             self._header_remaining -= len(data)
 
-            if self._header_remaining <= 0:
-                # We have enough data to set the header
-                self._header = Header.from_serialized(self._buffer[: Header.size])
-
-                # Enqueue first part
-                data = self._buffer[Header.size :]
-                self._ct_len_left = self._header.ct_len
-                self._buffer = b""
-            else:
+            if self._header_remaining > 0:
                 return
+
+            # We have enough data to set the header
+            self._header = Header.from_serialized(self._buffer[: Header.size])
+
+            # Enqueue first part
+            data = self._buffer[Header.size :]
+            self._ct_len_left = self._header.ct_len
+            self._buffer = b""
 
         # Handle ciphertext
         if self._ct_len_left > 0:
@@ -230,10 +230,11 @@ class Decryptor(BaseDecryptor, Cryptor):
                 self._queue.put(self.cipher.decrypt(data))
                 self._ct_len_left -= len(data)
                 return
-            else:  # Incoming data contains part of footer
-                self._queue.put(self.cipher.decrypt(data[: self._ct_len_left]))
-                data = data[self._ct_len_left :]
-                self._ct_len_left = 0
+
+            # Incoming data contains part of footer
+            self._queue.put(self.cipher.decrypt(data[: self._ct_len_left]))
+            data = data[self._ct_len_left :]
+            self._ct_len_left = 0
 
         # Handle footer
         if self._footer_remaining > 0:
@@ -246,10 +247,7 @@ class Decryptor(BaseDecryptor, Cryptor):
                 self._buffer = b""
 
     def get(self) -> bytes:
-        try:
-            return self._queue.get(block=False)
-        except Empty:
-            return b""
+        return self._drain()
 
     def verify(self):
         if self._header is None or self._footer is None:

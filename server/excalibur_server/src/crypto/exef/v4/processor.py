@@ -114,29 +114,6 @@ class ExEFv4(BaseModel):
         return self.decryptor.decrypt(data)
 
     # Other methods
-    @staticmethod
-    def compute_encrypted_size(plaintext_len: int, exponent: int = DEFAULT_EXPONENT) -> int:
-        """
-        Computes the total ExEF v4 size for a plaintext of the given length.
-
-        :param plaintext_len: the plaintext length, in bytes
-        :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
-        :return: the total encrypted size, in bytes
-        """
-
-        return compute_encrypted_size(plaintext_len, exponent)
-
-    @staticmethod
-    def compute_overhead(plaintext_len: int, exponent: int = DEFAULT_EXPONENT) -> int:
-        """
-        Computes the ExEF v4 overhead (encrypted size minus plaintext size).
-
-        :param plaintext_len: the plaintext length, in bytes
-        :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
-        :return: the overhead, in bytes
-        """
-
-        return compute_encrypted_size(plaintext_len, exponent) - plaintext_len
 
     @classmethod
     def validate(cls, data: bytes) -> bool:
@@ -152,3 +129,15 @@ class ExEFv4(BaseModel):
             return True
         except ValueError:
             return False
+
+    @staticmethod
+    def compute_encrypted_size(plaintext_len: int, exponent: int = DEFAULT_EXPONENT) -> int:
+        """
+        Computes the total ExEF v4 size for a plaintext of the given length.
+
+        :param plaintext_len: the plaintext length, in bytes
+        :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
+        :return: the total encrypted size, in bytes
+        """
+
+        return compute_encrypted_size(plaintext_len, exponent)

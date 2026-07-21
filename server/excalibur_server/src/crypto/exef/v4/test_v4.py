@@ -112,7 +112,7 @@ class TestSizeHelpers:
         plaintext = b"x" * length
         ct = ExEFv4(KEY_128, salt=SALT).encrypt(plaintext)
         assert len(ct) == ExEFv4.compute_encrypted_size(length)
-        assert ExEFv4.compute_overhead(length) == len(ct) - length
+        assert ExEFv4.compute_encrypted_size(length) - length == len(ct) - length
 
     def test_default_exponent_constant(self):
         assert MIN_EXPONENT <= DEFAULT_EXPONENT

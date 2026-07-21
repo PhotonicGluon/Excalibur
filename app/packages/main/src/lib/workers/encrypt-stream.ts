@@ -44,11 +44,12 @@ const encryptionProcessor = {
         this._isAborted = false;
 
         // Define ExEF encryption instances
-        const vaultExEF = new ExEF(vaultKey, undefined, "encrypt", keyStrength);
-        const e2eeExEF = new ExEF(e2eeKey, undefined, "encrypt", keyStrength);
+        const vaultExEF = new ExEF(vaultKey, { strength: keyStrength });
+        const e2eeExEF = new ExEF(e2eeKey, { strength: keyStrength });
 
-        // Form nesting of streams for encryption
-        const encryptedFileSize = fileSize + ExEF.additionalSize;
+        // Form nesting of streams for encryption. The vault-encrypted stream is what the E2EE
+        // stream takes as its plaintext, so its declared length must be the *encrypted* size
+        const encryptedFileSize = vaultExEF.encryptedSize(fileSize);
         const vStream = new ReadableStream<Buffer>({
             start: async (controller) => {
                 const reader = vaultExEF.encryptStream(fileSize, stream, chunkSize).getReader();

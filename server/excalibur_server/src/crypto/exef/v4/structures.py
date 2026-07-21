@@ -245,7 +245,8 @@ class Header(BaseModel):
 
         return self.padded_size + TAG_SIZE * self.chunk_count
 
-    def chunk_plaintext_size(self, index: int) -> int:
+    # Public methods
+    def compute_chunk_plaintext_size(self, index: int) -> int:
         """
         Returns the plaintext size of the chunk at the given index.
 
