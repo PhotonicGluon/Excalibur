@@ -28,7 +28,7 @@ dependencies = [
     "typer>=0.26.8",
     "uvicorn>=0.51.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
-    "websockets>=16.0",
+    "websockets>=16.1",
 ]
 requires-python = ">=3.11"
 authors = [
