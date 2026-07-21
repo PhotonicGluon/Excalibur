@@ -22,7 +22,7 @@
         "update": "cd .. && pnpm run update"
     },
     "devDependencies": {
-        "@eslint/js": "^9.39.4",
+        "@eslint/js": "^9.39.5",
         "@trivago/prettier-plugin-sort-imports": "^6.0.2",
         "eslint": "^9.39.4",
         "eslint-plugin-chai-friendly": "^1.2.1",
