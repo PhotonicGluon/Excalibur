@@ -24,7 +24,7 @@ dependencies = [
     "sqlalchemy<=2.0.44",
     "sqlmodel>=0.0.39",
     "toml>=0.10.2",
-    "tomlkit>=0.15.0",
+    "tomlkit>=0.15.1",
     "typer>=0.27.0",
     "uvicorn>=0.51.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
