@@ -178,7 +178,7 @@ const NewUser: React.FC = () => {
         setShowVaultKeyDialog(true);
         presentToast({
             message: "User created. Please save the vault key in a secure location.",
-            duration: 5000,
+            duration: 3000,
             color: "success",
         });
     }
