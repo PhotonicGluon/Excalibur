@@ -1,72 +1,77 @@
 name: Run Post-Dependabot Automation
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+    pull_request:
+        types: [opened, synchronize]
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  generate-news-fragment:
-    runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.head_ref }}
+    generate-news-fragment:
+        runs-on: ubuntu-latest
+        if: github.actor == 'dependabot[bot]'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.head_ref }}
 
-      - name: Fetch Dependabot metadata
-        id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v3
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+            - name: Fetch Dependabot metadata
+              id: dependabot-metadata
+              uses: dependabot/fetch-metadata@v3
+              with:
+                  github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Generate News Fragment
-        run: python3 .github/scripts/generate_news_fragment.py
-        env:
-          DEP_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
-          PREV_VERSION: ${{ steps.dependabot-metadata.outputs.previous-version }}
-          NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
-          DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
+            - name: Generate News Fragment
+              run: python3 .github/scripts/generate_news_fragment.py
+              env:
+                  DEP_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+                  PREV_VERSION: ${{ steps.dependabot-metadata.outputs.previous-version }}
+                  NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
+                  DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
 
-      - name: Stage News Fragment
-        run: |
-          git add 
-  
-      - name: Sign and Commit
-        uses: planetscale/ghcommit-action@v0.2.20
-        with:
-          commit_message: "Auto-generate news fragment(s) for dependency update"
-          repo: ${{ github.repository }}
-          branch: ${{ github.head_ref || github.ref_name }}
-          empty: false
-          file_pattern: "app/changelog.d/* server/changelog.d/*"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Stage News Fragment
+              run: |
+                  git add
 
-  post-pnpm-update:
-    runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.head_ref }}
+            - name: Sign and Commit
+              uses: planetscale/ghcommit-action@v0.2.20
+              with:
+                  commit_message: "Auto-generate news fragment(s) for dependency update"
+                  repo: ${{ github.repository }}
+                  branch: ${{ github.head_ref || github.ref_name }}
+                  empty: false
+                  file_pattern: "app/changelog.d/* server/changelog.d/*"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Refresh and Add `pnpm-lock.yaml`
-        run: |
-          pnpm install
-          git add 
-  
-      - name: Sign and Commit
-        uses: planetscale/ghcommit-action@v0.2.20
-        with:
-          commit_message: "Update `pnpm-lock.yaml`"
-          repo: ${{ github.repository }}
-          branch: ${{ github.head_ref || github.ref_name }}
-          empty: false
-          file_pattern: "pnpm-lock.yaml"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    post-pnpm-update:
+        runs-on: ubuntu-latest
+        if: github.actor == 'dependabot[bot]'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.head_ref }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 11
+
+            - name: Refresh and Add `pnpm-lock.yaml`
+              run: |
+                  pnpm install
+                  git add
+
+            - name: Sign and Commit
+              uses: planetscale/ghcommit-action@v0.2.20
+              with:
+                  commit_message: "Update `pnpm-lock.yaml`"
+                  repo: ${{ github.repository }}
+                  branch: ${{ github.head_ref || github.ref_name }}
+                  empty: false
+                  file_pattern: "pnpm-lock.yaml"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
