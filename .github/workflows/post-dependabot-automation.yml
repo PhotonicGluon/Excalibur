@@ -1,22 +1,20 @@
-name: Create Dependabot News Fragments
+name: Run Post-Dependabot Automation
 
 on:
   pull_request:
     types: [opened, synchronize]
 
 permissions:
-  contents: write # Needed to push the news fragment commit back to the PR
+  contents: write
 
 jobs:
   generate-news-fragment:
     runs-on: ubuntu-latest
-    # We only want this action to run for Dependabot PRs
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          # Checkout the Dependabot PR branch so we can commit directly to it
           ref: ${{ github.head_ref }}
 
       - name: Fetch Dependabot metadata
@@ -33,11 +31,11 @@ jobs:
           NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
           DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
 
-      - name: Stage changelog files
+      - name: Stage News Fragment
         run: |
           git add 
   
-      - name: Sign and commit
+      - name: Sign and Commit
         uses: planetscale/ghcommit-action@v0.2.20
         with:
           commit_message: "Auto-generate news fragment(s) for dependency update"
@@ -45,5 +43,30 @@ jobs:
           branch: ${{ github.head_ref || github.ref_name }}
           empty: false
           file_pattern: "app/changelog.d/* server/changelog.d/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  post-pnpm-update:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Refresh and Add `pnpm-lock.yaml`
+        run: |
+          pnpm install
+          git add 
+  
+      - name: Sign and Commit
+        uses: planetscale/ghcommit-action@v0.2.20
+        with:
+          commit_message: "Update `pnpm-lock.yaml`"
+          repo: ${{ github.repository }}
+          branch: ${{ github.head_ref || github.ref_name }}
+          empty: false
+          file_pattern: "pnpm-lock.yaml"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

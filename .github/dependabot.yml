@@ -5,13 +5,13 @@
 
 version: 2
 updates:
-  # - package-ecosystem: "npm"
-  #   directory: "/"
-  #   target-branch: "stable"
-  #   schedule:
-  #     interval: "weekly"
-  #   cooldown:
-  #     default-days: 5
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "stable"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 5
 
   - package-ecosystem: "npm"
     directory: "/app"
