@@ -13,13 +13,13 @@ updates:
     cooldown:
       default-days: 5
 
-  - package-ecosystem: "npm"
-    directory: "/app"
-    target-branch: "stable"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 5
+  # - package-ecosystem: "npm"
+  #   directory: "/app"
+  #   target-branch: "stable"
+  #   schedule:
+  #     interval: "weekly"
+  #   cooldown:
+  #     default-days: 5
 
   - package-ecosystem: "uv"
     directory: "/server"

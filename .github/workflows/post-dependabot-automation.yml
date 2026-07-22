@@ -17,10 +17,10 @@ jobs:
               with:
                   ref: ${{ github.head_ref }}
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v6
-              with:
-                  version: 11
+            # - name: Install pnpm
+            #   uses: pnpm/action-setup@v6
+            #   with:
+            #       version: 11
 
             - name: Fetch Dependabot metadata
               id: dependabot-metadata
@@ -36,9 +36,9 @@ jobs:
                   NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
                   DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
 
-            - name: Refresh `pnpm-lock.yaml`
-              run: |
-                  pnpm install --no-frozen-lockfile
+            # - name: Refresh `pnpm-lock.yaml`
+            #   run: |
+            #       pnpm install --no-frozen-lockfile
 
             - name: Stage New Files
               run: |
