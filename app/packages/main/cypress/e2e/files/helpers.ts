@@ -16,7 +16,7 @@ function randstr(n: number) {
 export function createFolder() {
     // Clicking on create folder should have popup
     cy.get("ion-fab").eq(0).click(); // In case Cypress bugs out and detects multiple
-    cy.get('[aria-label="Create Folder"]').click();
+    cy.get("#fab-create-folder").click();
     cy.get(".alert-head").should("have.text", "Enter Folder Name");
 
     // Enter test folder name
@@ -33,6 +33,9 @@ export function createFolder() {
     // Folder should have been created
     cy.get(".h-16 > ion-grid.md").should("exist");
     cy.get(".h-16 > ion-grid.md").should("contain.text", folderName);
+
+    // Wait for the "Folder created" toast to clear so later toast assertions cannot match it
+    cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
 
     return folderName;
 }
