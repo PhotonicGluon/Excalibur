@@ -56,8 +56,8 @@ describe("Check Account Preferences", () => {
         const changedPassword = `password-${Date.now()}`;
 
         // Fill in new password
-        cy.get("input").eq(1).type(`{selectAll}{backspace}${changedPassword}{enter}`);
-        cy.get("input").eq(2).type(`{selectAll}{backspace}${changedPassword}{enter}`);
+        cy.get("ion-grid [label='Password']").type(`{selectAll}{backspace}${changedPassword}{enter}`);
+        cy.get("ion-grid [label='Confirm Password']").type(`{selectAll}{backspace}${changedPassword}{enter}`);
 
         cy.get("#save-changes-button").click();
         cy.get("ion-modal").should("exist");

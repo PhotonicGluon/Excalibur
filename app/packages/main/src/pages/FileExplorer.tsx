@@ -69,10 +69,10 @@ const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolea
                 <IonIcon icon={add} />
             </IonFabButton>
             <IonFabList side="top">
-                <IonFabButton aria-label="Create Folder" onClick={() => props.onCreateFolder()}>
+                <IonFabButton id="fab-create-folder" aria-label="Create Folder" onClick={() => props.onCreateFolder()}>
                     <IonIcon icon={folderOutline} />
                 </IonFabButton>
-                <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
+                <IonFabButton id="fab-upload-file" aria-label="Upload File" onClick={() => onUploadFile()}>
                     <IonIcon icon={documentOutline} />
                 </IonFabButton>
             </IonFabList>
