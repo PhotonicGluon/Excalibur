@@ -8,7 +8,7 @@ permissions:
     contents: write
 
 jobs:
-    generate-news-fragment:
+    automation:
         runs-on: ubuntu-latest
         if: github.actor == 'dependabot[bot]'
         steps:
@@ -16,6 +16,11 @@ jobs:
               uses: actions/checkout@v6
               with:
                   ref: ${{ github.head_ref }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 11
 
             - name: Fetch Dependabot metadata
               id: dependabot-metadata
@@ -31,7 +36,11 @@ jobs:
                   NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
                   DIRECTORY: ${{ steps.dependabot-metadata.outputs.directory }}
 
-            - name: Stage News Fragment
+            - name: Refresh `pnpm-lock.yaml`
+              run: |
+                  pnpm install --no-frozen-lockfile
+
+            - name: Stage New Files
               run: |
                   git add
 
@@ -42,36 +51,6 @@ jobs:
                   repo: ${{ github.repository }}
                   branch: ${{ github.head_ref || github.ref_name }}
                   empty: false
-                  file_pattern: "app/changelog.d/* server/changelog.d/*"
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    post-pnpm-update:
-        runs-on: ubuntu-latest
-        if: github.actor == 'dependabot[bot]'
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v6
-              with:
-                  ref: ${{ github.head_ref }}
-
-            - name: Install pnpm
-              uses: pnpm/action-setup@v6
-              with:
-                  version: 11
-
-            - name: Refresh and Add `pnpm-lock.yaml`
-              run: |
-                  pnpm install --no-frozen-lockfile
-                  git add
-
-            - name: Sign and Commit
-              uses: planetscale/ghcommit-action@v0.2.20
-              with:
-                  commit_message: "Update `pnpm-lock.yaml`"
-                  repo: ${{ github.repository }}
-                  branch: ${{ github.head_ref || github.ref_name }}
-                  empty: false
-                  file_pattern: "pnpm-lock.yaml"
+                  file_pattern: "app/changelog.d/* server/changelog.d/* pnpm-lock.yaml"
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
