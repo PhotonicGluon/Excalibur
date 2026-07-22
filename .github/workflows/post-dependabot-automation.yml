@@ -62,7 +62,7 @@ jobs:
 
             - name: Refresh and Add `pnpm-lock.yaml`
               run: |
-                  pnpm install
+                  pnpm install --no-frozen-lockfile
                   git add
 
             - name: Sign and Commit
