@@ -3,22 +3,19 @@ from typing import Literal
 from excalibur_server.src.crypto.exef.base import BaseDecryptor, BaseEncryptor, KeyStrength
 from excalibur_server.src.crypto.exef.v4.structures import DEFAULT_EXPONENT
 
-from .v3 import ExEFv3
 from .v4 import ExEFv4
 
-DEFAULT_VERSION = 4
-"""The ExEF version produced when encrypting, unless overridden."""
-
-SUPPORTED_VERSIONS = (3, 4)
+CURRENT_VERSION = 4
+"""The ExEF version produced when encrypting."""
 
 # The version byte lives at offset 4, so we need at least 5 bytes to identify a stream.
 VERSION_OFFSET = 4
 MIN_IDENTIFY_BYTES = VERSION_OFFSET + 1
 
-_PROCESSORS: dict[int, type] = {3: ExEFv3, 4: ExEFv4}
+_PROCESSORS: dict[int, type] = {4: ExEFv4}
 
 
-def identify_version(data: bytes) -> Literal[3, 4]:
+def identify_version(data: bytes) -> Literal[CURRENT_VERSION]:
     """
     Identifies the ExEF version of a data stream from its header.
 
@@ -29,7 +26,7 @@ def identify_version(data: bytes) -> Literal[3, 4]:
     :raises ValueError: if the magic is wrong
     :raises ValueError: if the stream is too short
     :raises ValueError: if the version is unsupported
-    :return: the ExEF version number (3 or 4)
+    :return: the current ExEF version number
     """
 
     if len(data) < MIN_IDENTIFY_BYTES:
@@ -38,7 +35,7 @@ def identify_version(data: bytes) -> Literal[3, 4]:
         raise ValueError("data must start with 'ExEF'")
 
     version = data[VERSION_OFFSET]
-    if version not in SUPPORTED_VERSIONS:
+    if version != CURRENT_VERSION:
         raise ValueError(f"unsupported ExEF version: {version}")
     return version
 
@@ -133,9 +130,8 @@ class ExEF:
     def __init__(
         self,
         key: bytes,
-        nonce: bytes | None = None,
         strength: KeyStrength | None = None,
-        version: int = DEFAULT_VERSION,
+        version: int = CURRENT_VERSION,
         salt: bytes | None = None,
         exponent: int = DEFAULT_EXPONENT,
     ):
@@ -143,26 +139,22 @@ class ExEF:
         Constructor.
 
         :param key: the key to use for encryption and decryption
-        :param nonce: (ExEF v3 only) the 12-byte nonce to use for encryption
-        :param strength: the key strength to use for encryption, defaults to the length of `key` in bits
-        :param version: the ExEF version to produce when encrypting, defaults to the `DEFAULT_VERSION`
-        :param salt: (ExEF v4 only) the 32-byte salt to use for encryption
-        :param exponent: (ExEF v4 only) the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
+        :param strength: the key strength to use for encryption, defaults to the length of `key` in
+            bits
+        :param version: the ExEF version to produce when encrypting. If provided, must be the
+            `CURRENT_VERSION`
+        :param salt: the 32-byte salt to use for encryption
+        :param exponent: the chunk size exponent, defaults to the `DEFAULT_EXPONENT`
         :raises ValueError: if the version is not supported
         """
 
-        if version not in SUPPORTED_VERSIONS:
-            raise ValueError(f"unsupported ExEF version: {version}")
+        if version != CURRENT_VERSION:
+            raise ValueError("unsupported ExEF version")
 
         self.key = key
-        self.version = version
 
         # Build the version-specific processor used for encryption
-        self._processor: ExEFv3 | ExEFv4
-        if version == 3:
-            self._processor = ExEFv3(key, nonce=nonce, strength=strength)
-        else:
-            self._processor = ExEFv4(key, salt=salt, strength=strength, exponent=exponent)
+        self._processor = ExEFv4(key, salt=salt, strength=strength, exponent=exponent)
 
         # The decryptor auto-detects the version of whatever stream it is fed
         self._decryptor = _AutoDecryptor(key)
@@ -203,7 +195,7 @@ class ExEF:
         """
         Decrypts the given ExEF data, auto-detecting its version.
 
-        :param data: the encrypted data (either version 3 or version 4)
+        :param data: the encrypted data
         :return: the decrypted data
         :raises ValueError: if the data is malformed or fails authentication
         """
@@ -229,21 +221,20 @@ class ExEF:
 
     @classmethod
     def compute_encrypted_size(
-        cls, plaintext_len: int, version: int = DEFAULT_VERSION, exponent: int | None = None
+        cls, plaintext_len: int, version: int = CURRENT_VERSION, exponent: int | None = None
     ) -> int:
         """
         Computes the total encrypted size for a plaintext of the given length.
 
         :param plaintext_len: the plaintext length, in bytes
-        :param version: the ExEF version, defaults to the `DEFAULT_VERSION`
-        :param exponent: (ExEF v4 only) the chunk size exponent
+        :param version: the ExEF version. If provided, must be the `CURRENT_VERSION`
+        :param exponent: the chunk size exponent
         :return: the total encrypted size, in bytes
         """
 
-        if version == 3:
-            return plaintext_len + ExEFv3.additional_size
-        if version == 4:
-            if exponent is None:
-                return ExEFv4.compute_encrypted_size(plaintext_len)
-            return ExEFv4.compute_encrypted_size(plaintext_len, exponent)
-        raise ValueError(f"unsupported ExEF version: {version}")
+        if version != CURRENT_VERSION:
+            raise ValueError(f"unsupported ExEF version: {version}")
+
+        if exponent is None:
+            return ExEFv4.compute_encrypted_size(plaintext_len)
+        return ExEFv4.compute_encrypted_size(plaintext_len, exponent)

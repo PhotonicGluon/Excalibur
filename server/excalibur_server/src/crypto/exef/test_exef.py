@@ -1,11 +1,6 @@
 import pytest
 
-from excalibur_server.src.crypto.exef.v3.processor import ExEFv3
-
-from .exef import DEFAULT_VERSION, ExEF, identify_version
-from .v3.test_v3 import KEY as V3_KEY
-from .v3.test_v3 import NONCE
-from .v3.test_v3 import SAMPLE_EXEF_192 as V3_SAMPLE
+from .exef import ExEF, identify_version
 from .v4.test_v4 import KEY_256 as V4_KEY
 from .v4.test_v4 import SAMPLE_EXEF_256 as V4_SAMPLE
 
@@ -13,16 +8,12 @@ KEY = b"1" * 24
 
 
 class TestVersionIdentification:
-    def test_identify_v3(self):
-        assert identify_version(V3_SAMPLE) == 3
-
     def test_identify_v4(self):
         assert identify_version(V4_SAMPLE) == 4
 
     def test_identify_from_header_only(self):
         # Only the first 5 bytes are needed to identify the version
         assert identify_version(V4_SAMPLE[:5]) == 4
-        assert identify_version(V3_SAMPLE[:5]) == 3
 
     def test_too_short(self):
         with pytest.raises(ValueError, match="too short"):
@@ -43,7 +34,6 @@ class TestVersionIdentification:
 
 class TestEncryptionDispatch:
     def test_default_is_v4(self):
-        assert DEFAULT_VERSION == 4
         ct = ExEF(KEY).encrypt(b"Hello World!")
         assert identify_version(ct) == 4
 
@@ -51,20 +41,12 @@ class TestEncryptionDispatch:
         ct = ExEF(KEY, version=4).encrypt(b"Hello World!")
         assert identify_version(ct) == 4
 
-    def test_explicit_v3(self):
-        ct = ExEF(KEY, nonce=NONCE, version=3).encrypt(b"Hello World!")
-        assert ct == V3_SAMPLE
-        assert identify_version(ct) == 3
-
     def test_unsupported_version_rejected(self):
         with pytest.raises(ValueError, match="unsupported ExEF version"):
-            ExEF(KEY, version=2)
+            ExEF(KEY, version=3)
 
 
 class TestDecryptionAutoDetect:
-    def test_decrypt_v3(self):
-        assert ExEF(V3_KEY).decrypt(V3_SAMPLE) == b"Hello World!"
-
     def test_decrypt_v4(self):
         assert ExEF(V4_KEY).decrypt(V4_SAMPLE) == b"Hello World!"
 
@@ -73,18 +55,9 @@ class TestDecryptionAutoDetect:
         ct = ExEF(KEY).encrypt(payload)
         assert ExEF(KEY).decrypt(ct) == payload
 
-    def test_roundtrip_v3_optin(self):
-        ct = ExEF(KEY, version=3).encrypt(b"payload")
-        assert ExEF(KEY).decrypt(ct) == b"payload"
-
-    def test_same_object_decrypts_both_versions(self):
-        # A single facade instance can decrypt either version
-        assert ExEF(V3_KEY).decrypt(V3_SAMPLE) == b"Hello World!"
-        assert ExEF(V4_KEY).decrypt(V4_SAMPLE) == b"Hello World!"
-
 
 class TestStreamingAutoDetect:
-    @pytest.mark.parametrize("sample,key", [(V3_SAMPLE, V3_KEY), (V4_SAMPLE, V4_KEY)])
+    @pytest.mark.parametrize("sample,key", [(V4_SAMPLE, V4_KEY)])
     def test_streaming_decrypt(self, sample: bytes, key: bytes):
         decryptor = ExEF(key).decryptor
         output = b""
@@ -102,6 +75,7 @@ class TestStreamingAutoDetect:
         decryptor.update(V4_SAMPLE[:3])
         assert decryptor.get() == b""
         assert not decryptor.fully_processed
+
         # Feed the rest and it should complete
         decryptor.update(V4_SAMPLE[3:])
         out = decryptor.get()
@@ -110,9 +84,6 @@ class TestStreamingAutoDetect:
 
 
 class TestValidation:
-    def test_validate_v3(self):
-        assert ExEF.validate(V3_SAMPLE)
-
     def test_validate_v4(self):
         assert ExEF.validate(V4_SAMPLE)
 
@@ -127,8 +98,5 @@ class TestValidation:
 
 
 class TestSizeHelpers:
-    def test_v3_encrypted_size(self):
-        assert ExEF.compute_encrypted_size(100, version=3) == 100 + ExEFv3.additional_size
-
     def test_v4_encrypted_size(self):
         assert ExEF.compute_encrypted_size(100, version=4) == len(ExEF(KEY).encrypt(b"x" * 100))

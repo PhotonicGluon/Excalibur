@@ -45,8 +45,8 @@ class User(SQLModel, table=True):
     "Salt for the Account Unlock Key (AUK)"
     key_enc: bytes = Field(
         sa_column=Column(
-            # 32 is the actual key size; sized for the (default) ExEF v4 encoding, which is larger
-            # than the legacy v3 encoding, so existing v3-encrypted keys still fit
+            # 32 is the actual key size; sized for the ExEF v4 encoding, which is larger than the
+            # legacy v3 encoding, so existing v3-encrypted keys still fit
             LargeBinary(length=ExEF.compute_encrypted_size(32, version=4)),
             nullable=False,
         )
