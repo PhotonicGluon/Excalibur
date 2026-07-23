@@ -101,6 +101,12 @@ def start_server(
     # Create fake user if it doesn't exist
     _create_fake_user()
 
+    # Release the database file lock held by the connection opened above, so the request-serving
+    # worker process (spawned by `uvicorn.run` below, especially when reloading) can acquire it.
+    from excalibur_server.src.db.operations.helpers import close_all_engines
+
+    close_all_engines()
+
     # Clean up logs
     if cleanup_logs:
         from excalibur_server.cli.logging import _cleanup_logs
