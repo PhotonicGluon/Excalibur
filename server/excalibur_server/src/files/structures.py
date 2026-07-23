@@ -3,7 +3,6 @@ from typing import Literal, Self, Union
 
 from pydantic import BaseModel, Field
 
-from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
 
@@ -47,24 +46,19 @@ class File(Filelike):
     "Size of the file in bytes"
 
     @classmethod
-    def from_fsitem(cls, fsitem: FSItem, include_exef_size: bool = False, parent_dir_path: Path | None = None) -> Self:
+    def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
         """
         Create a File instance from an FSItem.
 
         :param fsitem: `FSItem` to create instance from
-        :param include_exef_size: whether to include ExEF size in the file size, defaults to False
         :param parent_dir_path: parent directory path, defaults to None
         :return: File instance
         """
 
-        size = fsitem.size
-        if not include_exef_size:
-            size -= ExEF.v3_header_size + ExEF.v3_footer_size
-
         base_fields = cls._get_base_fields(fsitem, parent_dir_path)
         return cls(
             **base_fields,
-            size=size,
+            size=fsitem.size,
         )
 
 

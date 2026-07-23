@@ -1,5 +1,7 @@
 import pytest
 
+from excalibur_server.src.crypto.exef.v3.processor import ExEFv3
+
 from .exef import DEFAULT_VERSION, ExEF, identify_version
 from .v3.test_v3 import KEY as V3_KEY
 from .v3.test_v3 import NONCE
@@ -125,11 +127,8 @@ class TestValidation:
 
 
 class TestSizeHelpers:
-    def test_v4_encrypted_size(self):
-        assert len(ExEF(KEY).encrypt(b"x" * 100)) == ExEF.encrypted_size(100)
-
     def test_v3_encrypted_size(self):
-        assert ExEF.encrypted_size(100, version=3) == 100 + ExEF.v3_additional_size
+        assert ExEF.compute_encrypted_size(100, version=3) == 100 + ExEFv3.additional_size
 
-    def test_overhead(self):
-        assert ExEF.overhead(0, version=3) == ExEF.v3_additional_size
+    def test_v4_encrypted_size(self):
+        assert ExEF.compute_encrypted_size(100, version=4) == len(ExEF(KEY).encrypt(b"x" * 100))

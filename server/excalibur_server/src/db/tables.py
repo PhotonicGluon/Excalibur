@@ -47,7 +47,7 @@ class User(SQLModel, table=True):
         sa_column=Column(
             # 32 is the actual key size; sized for the (default) ExEF v4 encoding, which is larger
             # than the legacy v3 encoding, so existing v3-encrypted keys still fit
-            LargeBinary(length=ExEF.encrypted_size(32, version=4)),
+            LargeBinary(length=ExEF.compute_encrypted_size(32, version=4)),
             nullable=False,
         )
     )

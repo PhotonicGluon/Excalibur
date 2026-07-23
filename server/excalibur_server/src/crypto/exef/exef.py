@@ -1,4 +1,4 @@
-from typing import ClassVar, Literal
+from typing import Literal
 
 from excalibur_server.src.crypto.exef.base import BaseDecryptor, BaseEncryptor, KeyStrength
 from excalibur_server.src.crypto.exef.v4.structures import DEFAULT_EXPONENT
@@ -130,14 +130,6 @@ class ExEF:
     `DEFAULT_VERSION`), while decryption auto-detects the version of whatever data it is fed.
     """
 
-    # Legacy fields
-    v3_header_size: ClassVar[int] = ExEFv3.header_size
-    """Size of the ExEF v3 header, in bytes"""
-    v3_footer_size: ClassVar[int] = ExEFv3.footer_size
-    """Size of the ExEF v3 footer, in bytes"""
-    v3_additional_size: ClassVar[int] = ExEFv3.additional_size
-    """Size of the ExEF v3 additional (non-plaintext) data, in bytes"""
-
     def __init__(
         self,
         key: bytes,
@@ -236,7 +228,9 @@ class ExEF:
         return _PROCESSORS[version].validate(data)
 
     @classmethod
-    def encrypted_size(cls, plaintext_len: int, version: int = DEFAULT_VERSION, exponent: int | None = None) -> int:
+    def compute_encrypted_size(
+        cls, plaintext_len: int, version: int = DEFAULT_VERSION, exponent: int | None = None
+    ) -> int:
         """
         Computes the total encrypted size for a plaintext of the given length.
 
@@ -253,16 +247,3 @@ class ExEF:
                 return ExEFv4.compute_encrypted_size(plaintext_len)
             return ExEFv4.compute_encrypted_size(plaintext_len, exponent)
         raise ValueError(f"unsupported ExEF version: {version}")
-
-    @classmethod
-    def overhead(cls, plaintext_len: int, version: int = DEFAULT_VERSION, exponent: int | None = None) -> int:
-        """
-        Computes the encrypted overhead (encrypted size minus plaintext size).
-
-        :param plaintext_len: the plaintext length, in bytes
-        :param version: the ExEF version, defaults to the `DEFAULT_VERSION`
-        :param exponent: (ExEF v4 only) the chunk size exponent
-        :return: the overhead, in bytes
-        """
-
-        return cls.encrypted_size(plaintext_len, version, exponent) - plaintext_len
