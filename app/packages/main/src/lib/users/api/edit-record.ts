@@ -33,7 +33,9 @@ export async function editRecord(
     // Create special request handling
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+            Buffer.from(JSON.stringify(serializedData)),
+        );
         ws.send(encryptedData);
     }
 

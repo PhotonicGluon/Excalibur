@@ -51,6 +51,7 @@ export function identifyVersion(data: Buffer): ExEFVersion {
     if (version !== 3 && version !== 4) {
         throw new Error(`unsupported ExEF version: ${version}`);
     }
+
     return version;
 }
 
@@ -157,14 +158,6 @@ export interface ExEFOptions {
  * {@link DEFAULT_VERSION}), while decryption auto-detects the version of whatever data it is fed.
  */
 export default class ExEF {
-    // Legacy fields
-    /** Size of the ExEF v3 header, in bytes */
-    static v3HeaderSize: number = ExEFv3.headerSize;
-    /** Size of the ExEF v3 footer, in bytes */
-    static v3FooterSize: number = ExEFv3.footerSize;
-    /** Size of the ExEF v3 additional (non-plaintext) data, in bytes */
-    static v3AdditionalSize: number = ExEFv3.additionalSize;
-
     /** Encryption key */
     readonly key: Buffer;
     /** The ExEF version produced when encrypting */

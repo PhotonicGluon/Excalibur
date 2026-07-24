@@ -20,7 +20,7 @@ export async function listdir(
     try {
         let additionalHeaders = {};
         if (!IS_DEV) {
-            const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+            const encryptedPath = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
             path = b64encodeURLSafe(encryptedPath);
             additionalHeaders = { "X-Encrypted": "true" };
         }

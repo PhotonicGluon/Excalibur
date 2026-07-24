@@ -54,7 +54,7 @@ export async function registerUserOPAQUE(
 
     function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(sessionKey).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = new ExEF(sessionKey, { version: 4 }).encrypt(Buffer.from(JSON.stringify(serializedData)));
         ws.send(encryptedData);
     }
 

@@ -29,7 +29,9 @@ export async function uploadFile(
 ): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve, reject) => {
         // Set up an XHR with PoP
-        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(`${path}/${file.name}`, "utf-8"));
+        const encryptedPath = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+            Buffer.from(`${path}/${file.name}`, "utf-8"),
+        );
         const xhr = popXHR(
             `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedPath)}?force=true`,
             auth.getToken()!,

@@ -2,7 +2,7 @@ import { expect } from "vitest";
 
 import { sha256 } from "@lib/crypto/hashing";
 import { chunkData, collectStream } from "@lib/util";
-import ExEF, { ExEFVersion, identifyVersion } from "./index";
+import ExEF, { ExEFv3, ExEFVersion, identifyVersion } from "./index";
 
 const KEY = Buffer.from("111111111111111111111111", "utf-8");
 const NONCE = Buffer.from("abababababababababababab", "hex");
@@ -63,7 +63,7 @@ describe("ExEF", () => {
     describe("sizing", () => {
         it("should compute the v3 encrypted size", () => {
             expect(ExEF.encryptedSize(12, 3)).toBe(SAMPLE_V3_192.length);
-            expect(ExEF.overhead(12, 3)).toBe(ExEF.v3AdditionalSize);
+            expect(ExEF.overhead(12, 3)).toBe(ExEFv3.additionalSize);
         });
 
         it("should compute the v4 encrypted size", () => {
