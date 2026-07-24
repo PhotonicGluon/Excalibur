@@ -179,8 +179,8 @@ export default class ExEF {
      *
      * @param key encryption key
      * @param options encryption options; see {@link ExEFOptions}
-     * @throws {Error} If the version is not supported
-     * @throws {Error} If the key size is not 128, 192, or 256 bits
+     * @throws {Error} if the version is not supported
+     * @throws {Error} if the key size is not 128, 192, or 256 bits
      */
     constructor(key: Buffer, options: ExEFOptions = {}) {
         const version = options.version ?? (DEFAULT_VERSION as ExEFVersion);
@@ -258,18 +258,11 @@ export default class ExEF {
      * @param ptLen plaintext length
      * @param ptStream stream of plaintext
      * @param chunkSize size of each chunk read from {@link ptStream}
-     * @param version ExEF version to produce, defaults to this instance's version
      * @returns a stream of ExEF bytes
      */
-    encryptStream(
-        ptLen: number,
-        ptStream: ReadableStream<Buffer>,
-        chunkSize: number,
-        version: ExEFVersion = this.version,
-    ): ReadableStream<Buffer> {
-        const processor =
-            version === this.version ? this._processor : ExEF._buildProcessor(this.key, version, this._options);
-        const encryptor = processor.encryptor;
+    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize: number): ReadableStream<Buffer> {
+        const processor = this._processor;
+        const encryptor: BaseEncryptor = processor.encryptor;
         encryptor.setParams(ptLen);
 
         const chunkingStream = chunkStream(ptStream, chunkSize);

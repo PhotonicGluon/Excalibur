@@ -1,8 +1,7 @@
-import createHash from "create-hash";
 import { expect } from "vitest";
 
-import { chunkData, collectStream } from "@lib/util";
-import ExEF, { ExEFv4Header, KeyStrength } from "./index";
+import { sha256 } from "@lib/crypto/hashing";
+import { ExEFv4, ExEFv4Header, KeyStrength } from "./index";
 
 const KEY = Buffer.from("111111111111111111111111", "utf-8");
 const SALT = Buffer.from("ab".repeat(32), "hex");
@@ -38,8 +37,13 @@ const MULTI_CHUNK_HEADER =
 const MULTI_CHUNK_SHA256 = "791a0ec5df3fcbde8931c5b2b67b07b212f642b385791b0c66a8e60bf3b7f3ae";
 
 // Helper functions
-function _sha256(data: Buffer): string {
-    return createHash("sha256").update(data).digest("hex");
+/**
+ * Returns a copy of the 192-bit sample with the byte at `offset` set to `value`.
+ */
+function _mutate(offset: number, value: number): Buffer {
+    const copy = Buffer.from(SAMPLE_V4_192);
+    copy[offset] = value;
+    return copy;
 }
 
 // Tests
@@ -67,7 +71,7 @@ describe("ExEF v4", () => {
         const expected = Object.values(EXEFS_V4);
         for (let i = 0; i < 3; i++) {
             it(`strength of ${strengths[i]}`, () => {
-                const parsed = new ExEF(KEY, { salt: SALT, strength: strengths[i] as KeyStrength });
+                const parsed = new ExEFv4(KEY, SALT, strengths[i] as KeyStrength);
                 expect(parsed.encrypt(Buffer.from("Hello World!", "utf-8")).toString("hex")).toBe(
                     expected[i].toString("hex"),
                 );
@@ -76,25 +80,25 @@ describe("ExEF v4", () => {
     });
 
     it("should encrypt the empty plaintext", () => {
-        const parsed = new ExEF(KEY, { salt: SALT, strength: 192 });
+        const parsed = new ExEFv4(KEY, SALT, 192);
         expect(parsed.encrypt(Buffer.alloc(0)).toString("hex")).toBe(SAMPLE_V4_EMPTY.toString("hex"));
     });
 
     it("should decrypt the empty plaintext", () => {
-        expect(ExEF.decrypt(KEY, SAMPLE_V4_EMPTY).length).toBe(0);
+        expect(new ExEFv4(KEY).decrypt(SAMPLE_V4_EMPTY).length).toBe(0);
     });
 
     it("should encrypt across several chunks", () => {
-        const parsed = new ExEF(KEY, { salt: SALT, strength: 192, exponent: 12 });
+        const parsed = new ExEFv4(KEY, SALT, 192, 12);
         const output = parsed.encrypt(MULTI_CHUNK_PT);
         expect(output.subarray(0, 56).toString("hex")).toBe(MULTI_CHUNK_HEADER);
         expect(output.length).toBe(10352);
-        expect(_sha256(output)).toBe(MULTI_CHUNK_SHA256);
+        expect(sha256(output).toString("hex")).toBe(MULTI_CHUNK_SHA256);
     });
 
     it("should decrypt across several chunks", () => {
-        const parsed = new ExEF(KEY, { salt: SALT, strength: 192, exponent: 12 });
-        const decrypted = ExEF.decrypt(KEY, parsed.encrypt(MULTI_CHUNK_PT));
+        const parsed = new ExEFv4(KEY, SALT, 192, 12);
+        const decrypted = new ExEFv4(KEY).decrypt(parsed.encrypt(MULTI_CHUNK_PT));
         expect(decrypted.toString("hex")).toBe(MULTI_CHUNK_PT.toString("hex"));
     });
 
@@ -103,145 +107,76 @@ describe("ExEF v4", () => {
         const exefs = Object.values(EXEFS_V4);
         for (let i = 0; i < 3; i++) {
             it(`strength of ${strengths[i]}`, () => {
-                expect(ExEF.decrypt(KEY, exefs[i]).toString("utf-8")).toBe("Hello World!");
+                expect(new ExEFv4(KEY, SALT, 192, 12).decrypt(exefs[i]).toString("utf-8")).toBe("Hello World!");
             });
         }
     });
 
-    describe("encrypt stream", () => {
-        const streamChunkSizes = [12, 6, 1];
-        const cryptoChunkSizes = [1, 4, 16];
-        const strengths = Object.keys(EXEFS_V4).map((x) => parseInt(x));
-        const expected = Object.values(EXEFS_V4);
-        const pt = Buffer.from("Hello World!", "utf-8");
-
-        for (const streamChunkSize of streamChunkSizes) {
-            for (const cryptoChunkSize of cryptoChunkSizes) {
-                for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
-                    it(`stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}, strength ${strengths[strengthIdx]}`, async () => {
-                        const parsed = new ExEF(KEY, {
-                            salt: SALT,
-                            strength: strengths[strengthIdx] as KeyStrength,
-                        });
-                        const stream = parsed.encryptStream(pt.length, chunkData(pt, streamChunkSize), cryptoChunkSize);
-                        const output = await collectStream(stream);
-                        expect(output.toString("hex")).toBe(expected[strengthIdx].toString("hex"));
-                    });
-                }
-            }
-        }
-    });
-
-    it("should stream a multi-chunk payload", async () => {
-        const parsed = new ExEF(KEY, { salt: SALT, strength: 192, exponent: 12 });
-        const stream = parsed.encryptStream(MULTI_CHUNK_PT.length, chunkData(MULTI_CHUNK_PT, 777), 333);
-        expect(_sha256(await collectStream(stream))).toBe(MULTI_CHUNK_SHA256);
-    });
-
-    describe("decrypt stream", () => {
-        const streamChunkSizes = [12, 6, 1];
-        const cryptoChunkSizes = [1, 4, 16];
-        const exefs = Object.values(EXEFS_V4);
-
-        for (const streamChunkSize of streamChunkSizes) {
-            for (const cryptoChunkSize of cryptoChunkSizes) {
-                for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
-                    it(`stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
-                        const stream = ExEF.decryptStream(
-                            KEY,
-                            chunkData(exefs[strengthIdx], streamChunkSize),
-                            cryptoChunkSize,
-                        );
-                        const output = await collectStream(stream);
-                        expect(output.toString("utf-8")).toBe("Hello World!");
-                    });
-                }
-            }
-        }
-    });
-
-    it("should stream-decrypt a multi-chunk payload", async () => {
-        const parsed = new ExEF(KEY, { salt: SALT, strength: 192, exponent: 12 });
-        const encrypted = parsed.encrypt(MULTI_CHUNK_PT);
-        const output = await collectStream(ExEF.decryptStream(KEY, chunkData(encrypted, 999), 501));
-        expect(output.toString("hex")).toBe(MULTI_CHUNK_PT.toString("hex"));
-    });
-
     describe("error handling", () => {
-        /**
-         * Returns a copy of the 192-bit sample with the byte at `offset` set to `value`.
-         */
-        function _mutate(offset: number, value: number): Buffer {
-            const copy = Buffer.from(SAMPLE_V4_192);
-            copy[offset] = value;
-            return copy;
-        }
-
         it("should reject an unknown cipher ID", () => {
-            expect(() => ExEF.decrypt(KEY, _mutate(5, 0x04))).toThrow("unknown cipher ID");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(5, 0x04))).toThrow("unknown cipher ID");
         });
 
         it("should reject an out-of-range exponent", () => {
-            expect(() => ExEF.decrypt(KEY, _mutate(6, 0x0b))).toThrow("exponent must be between 12 and 30");
-            expect(() => ExEF.decrypt(KEY, _mutate(6, 0x1f))).toThrow("exponent must be between 12 and 30");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(6, 0x0b))).toThrow("exponent must be between 12 and 30");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(6, 0x1f))).toThrow("exponent must be between 12 and 30");
         });
 
         it("should reject non-zero reserved bytes", () => {
-            expect(() => ExEF.decrypt(KEY, _mutate(51, 0x01))).toThrow("reserved bytes must be zero");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(51, 0x01))).toThrow("reserved bytes must be zero");
         });
 
         it("should reject a mismatched chunk count", () => {
-            expect(() => ExEF.decrypt(KEY, _mutate(10, 0x02))).toThrow("chunk count does not match padded size");
-            expect(() => ExEF.decrypt(KEY, _mutate(10, 0x00))).toThrow("chunk count must be at least 1");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(10, 0x02))).toThrow("chunk count does not match padded size");
+            expect(() => new ExEFv4(KEY).decrypt(_mutate(10, 0x00))).toThrow("chunk count must be at least 1");
         });
 
         it("should reject a padded size that is not a PADME output", () => {
             // PADME(1000) is 1024, so a padded size of 8 + 1000 can never have been produced
             const copy = Buffer.from(SAMPLE_V4_192);
             copy.writeUInt16BE(1008, 17);
-            expect(() => ExEF.decrypt(KEY, copy)).toThrow("padded size is not a valid PADME output");
+            expect(() => new ExEFv4(KEY).decrypt(copy)).toThrow("padded size is not a valid PADME output");
         });
 
         it("should reject a tampered tag", () => {
             const copy = Buffer.from(SAMPLE_V4_192);
             copy[copy.length - 1] ^= 0xff;
-            expect(() => ExEF.decrypt(KEY, copy)).toThrow("chunk authentication failed");
+            expect(() => new ExEFv4(KEY).decrypt(copy)).toThrow("chunk authentication failed");
         });
 
         it("should reject a tampered header, since it is bound to every chunk", () => {
             // Flipping a salt byte keeps the header structurally valid but changes the derived key
             const copy = Buffer.from(SAMPLE_V4_192);
             copy[19] ^= 0xff;
-            expect(() => ExEF.decrypt(KEY, copy)).toThrow("chunk authentication failed");
+            expect(() => new ExEFv4(KEY).decrypt(copy)).toThrow("chunk authentication failed");
         });
 
         it("should reject the wrong key", () => {
             const fakeKey = Buffer.from(KEY);
             fakeKey[0] = 255 - fakeKey[0];
-            expect(() => ExEF.decrypt(fakeKey, SAMPLE_V4_192)).toThrow("chunk authentication failed");
+            expect(() => new ExEFv4(fakeKey).decrypt(SAMPLE_V4_192)).toThrow("chunk authentication failed");
         });
 
         it("should reject a truncated stream", () => {
-            expect(() => ExEF.decrypt(KEY, SAMPLE_V4_192.subarray(0, -1))).toThrow("incomplete ExEF data");
+            expect(() => new ExEFv4(KEY).decrypt(SAMPLE_V4_192.subarray(0, -1))).toThrow("incomplete ExEF data");
         });
 
         it("should reject trailing data", () => {
             const copy = Buffer.concat([SAMPLE_V4_192, Buffer.from([0x00])]);
-            expect(() => ExEF.decrypt(KEY, copy)).toThrow("trailing data after final chunk");
-        });
-
-        it("should reject an out-of-range exponent when encrypting", () => {
-            expect(() => new ExEF(KEY, { salt: SALT, exponent: 31 })).toThrow("exponent must be between 12 and 30");
+            expect(() => new ExEFv4(KEY).decrypt(copy)).toThrow("trailing data after final chunk");
         });
 
         it("should reject a salt of the wrong size", () => {
-            expect(() => new ExEF(KEY, { salt: Buffer.alloc(16) })).toThrow("salt must be 32 bytes");
+            expect(() => new ExEFv4(KEY, Buffer.alloc(16))).toThrow("salt must be 32 bytes");
         });
 
-        it("should fail loudly on a truncated stream", async () => {
-            const truncated = SAMPLE_V4_192.subarray(0, -1);
-            const stream = ExEF.decryptStream(KEY, chunkData(truncated, 8), 8);
-            await expect(collectStream(stream)).rejects.toThrow("incomplete ExEF data");
+        it("should reject an invalid key size", () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            expect(() => new ExEFv4(KEY, SALT, 12 as any)).toThrow("strength must be 128, 192, or 256");
+        });
+
+        it("should reject an out-of-range exponent when encrypting", () => {
+            expect(() => new ExEFv4(KEY, SALT, undefined, 31)).toThrow("exponent must be between 12 and 30");
         });
     });
 });
