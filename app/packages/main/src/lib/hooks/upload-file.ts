@@ -113,7 +113,7 @@ export function useUploadFile() {
                         auth.authInfo!.key!,
                         rawFileSize,
                         settings.cryptoKeyStrength,
-                        Math.log2(settings.cryptoChunkSize), // TODO: Replace with chunk size exponent field
+                        settings.cryptoChunkSizeExponent,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {

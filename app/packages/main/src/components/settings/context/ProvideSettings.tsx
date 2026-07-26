@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { KeyStrength } from "@lib/crypto/exef";
 import Preferences from "@lib/preferences";
 import {
-    CryptoChunkSize,
+    CryptoChunkSizeExponent,
     DEFAULT_SETTINGS_VALUES,
     FileReadChunkSize,
     FileSizeUnits,
@@ -38,7 +38,9 @@ function useProvideSettings(): SettingsProvider {
         DEFAULT_SETTINGS_VALUES.fileReadChunkSize,
     );
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
-    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
+    const [cryptoChunkSizeExponent, setCryptoChunkSizeExponent] = useState<CryptoChunkSizeExponent>(
+        DEFAULT_SETTINGS_VALUES.cryptoChunkSizeExponent,
+    );
 
     const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
     const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
@@ -52,7 +54,8 @@ function useProvideSettings(): SettingsProvider {
 
         if (settings.fileReadChunkSize !== undefined) setFileReadChunkSize(settings.fileReadChunkSize);
         if (settings.cryptoKeyStrength !== undefined) setCryptoKeyStrength(settings.cryptoKeyStrength);
-        if (settings.cryptoChunkSize !== undefined) setCryptoChunkSize(settings.cryptoChunkSize);
+        if (settings.cryptoChunkSizeExponent !== undefined)
+            setCryptoChunkSizeExponent(settings.cryptoChunkSizeExponent);
 
         if (settings.checkUpdate !== undefined) setCheckUpdate(settings.checkUpdate);
         if (settings.checkUpdateInterval !== undefined) setCheckUpdateInterval(settings.checkUpdateInterval);
@@ -103,10 +106,10 @@ function useProvideSettings(): SettingsProvider {
                 setCryptoKeyStrength(parseInt(value) as KeyStrength);
             }
         });
-        Preferences.get("cryptoChunkSize").then((value) => {
+        Preferences.get("cryptoChunkSizeExponent").then((value) => {
             if (value) {
-                console.debug(`Crypto chunk size: ${value}`);
-                setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
+                console.debug(`Crypto chunk exponent: ${value}`);
+                setCryptoChunkSizeExponent(parseInt(value) as CryptoChunkSizeExponent);
             }
         });
 
@@ -133,7 +136,7 @@ function useProvideSettings(): SettingsProvider {
         // Operations
         fileReadChunkSize,
         cryptoKeyStrength,
-        cryptoChunkSize,
+        cryptoChunkSizeExponent,
         // Updates
         checkUpdate,
         checkUpdateInterval,

@@ -20,7 +20,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { KeyStrength } from "@lib/crypto/exef";
-import { CryptoChunkSize, FileReadChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
+import { CryptoChunkSizeExponent, FileReadChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@components/settings/context";
@@ -33,7 +33,9 @@ const OperationsSettings: React.FC = () => {
     // States
     const [fileReadChunkSize, setFileReadChunkSize] = useState<FileReadChunkSize>(settings.fileReadChunkSize);
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(settings.cryptoKeyStrength);
-    const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(settings.cryptoChunkSize);
+    const [cryptoChunkSizeExponent, setCryptoChunkSizeExponent] = useState<CryptoChunkSizeExponent>(
+        settings.cryptoChunkSizeExponent,
+    );
 
     // Functions
     /**
@@ -45,7 +47,7 @@ const OperationsSettings: React.FC = () => {
         const settingsToSave: Partial<SettingsPreferenceValues> = {
             fileReadChunkSize: newSettings.fileReadChunkSize,
             cryptoKeyStrength: newSettings.cryptoKeyStrength,
-            cryptoChunkSize: newSettings.cryptoChunkSize,
+            cryptoChunkSizeExponent: newSettings.cryptoChunkSizeExponent,
         };
 
         console.log(`Got new settings' values: ${JSON.stringify(settingsToSave)}`);
@@ -141,20 +143,27 @@ const OperationsSettings: React.FC = () => {
                                 interface="popover"
                                 fill="outline"
                                 placeholder="Select chunk size"
-                                value={cryptoChunkSize.toString()}
+                                value={cryptoChunkSizeExponent.toString()}
                                 onIonChange={(e) => {
-                                    const newCryptoChunkSize = parseInt(e.detail.value) as CryptoChunkSize;
-                                    setCryptoChunkSize(newCryptoChunkSize);
-                                    updateSettings({ ...settings, cryptoChunkSize: newCryptoChunkSize });
+                                    const newCryptoChunkSizeExponent = parseInt(
+                                        e.detail.value,
+                                    ) as CryptoChunkSizeExponent;
+                                    setCryptoChunkSizeExponent(newCryptoChunkSizeExponent);
+                                    updateSettings({
+                                        ...settings,
+                                        cryptoChunkSizeExponent: newCryptoChunkSizeExponent,
+                                    });
                                 }}
                             >
-                                <IonSelectOption value="65536">64 KiB</IonSelectOption>
-                                <IonSelectOption value="131072">128 KiB</IonSelectOption>
-                                <IonSelectOption value="262144">256 KiB</IonSelectOption>
-                                <IonSelectOption value="524288">512 KiB</IonSelectOption>
-                                <IonSelectOption value="1048576">1 MiB</IonSelectOption>
-                                <IonSelectOption value="2097152">2 MiB</IonSelectOption>
-                                <IonSelectOption value="4194304">4 MiB</IonSelectOption>
+                                <IonSelectOption value="14">16 KiB</IonSelectOption>
+                                <IonSelectOption value="15">32 KiB</IonSelectOption>
+                                <IonSelectOption value="16">64 KiB</IonSelectOption>
+                                <IonSelectOption value="17">128 KiB</IonSelectOption>
+                                <IonSelectOption value="18">256 KiB</IonSelectOption>
+                                <IonSelectOption value="19">512 KiB</IonSelectOption>
+                                <IonSelectOption value="20">1 MiB</IonSelectOption>
+                                <IonSelectOption value="21">2 MiB</IonSelectOption>
+                                <IonSelectOption value="22">4 MiB</IonSelectOption>
                             </IonSelect>
                         }
                     />

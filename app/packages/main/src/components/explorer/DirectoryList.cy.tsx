@@ -70,7 +70,7 @@ describe("<DirectoryList />", () => {
                             fileSizeUnits: "si",
                             fileReadChunkSize: 262144,
                             cryptoKeyStrength: 128,
-                            cryptoChunkSize: 262144,
+                            cryptoChunkSizeExponent: 16,
                             change: () => {},
                             save: () => Promise.resolve(),
                             checkUpdate: false,
