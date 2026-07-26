@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel
 
 from excalibur_server.api.app import app
@@ -27,6 +27,8 @@ def disable_proof_checks():
 
 @pytest.fixture(scope="session", autouse=True)
 def test_database():
+    from excalibur_server.src.db.operations.helpers import close_all_engines, get_engine
+
     # Use a test database file
     ROOT_FOLDER.mkdir(parents=True, exist_ok=True)
     CONFIG.storage.database.file = Path("test.duckdb")
@@ -35,8 +37,8 @@ def test_database():
     if db_path.exists():
         db_path.unlink()
 
-    # Create all tables in the test database
-    engine = create_engine(f"duckdb:///{db_path}")
+    # Create all tables in the test database, reusing the shared engine so the file is only attached once per process
+    engine = get_engine(db_path.as_posix())
     SQLModel.metadata.create_all(engine)
 
     # Create fake user
@@ -45,7 +47,7 @@ def test_database():
     try:
         yield engine
     finally:
-        engine.dispose()
+        close_all_engines()
         try:
             if db_path.exists():
                 db_path.unlink()
