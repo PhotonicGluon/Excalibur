@@ -68,6 +68,7 @@ describe("<DirectoryList />", () => {
                             iconStyle: "default",
                             rowAlternatingColours,
                             fileSizeUnits: "si",
+                            fileReadChunkSize: 262144,
                             cryptoKeyStrength: 128,
                             cryptoChunkSize: 262144,
                             change: () => {},

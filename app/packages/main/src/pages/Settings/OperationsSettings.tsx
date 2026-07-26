@@ -20,7 +20,7 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { KeyStrength } from "@lib/crypto/exef";
-import { CryptoChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
+import { CryptoChunkSize, FileReadChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@components/settings/context";
@@ -31,6 +31,7 @@ const OperationsSettings: React.FC = () => {
     const settings = useSettings();
 
     // States
+    const [fileReadChunkSize, setFileReadChunkSize] = useState<FileReadChunkSize>(settings.fileReadChunkSize);
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(settings.cryptoKeyStrength);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(settings.cryptoChunkSize);
 
@@ -42,6 +43,7 @@ const OperationsSettings: React.FC = () => {
      */
     function updateSettings(newSettings: SettingsPreferenceValues) {
         const settingsToSave: Partial<SettingsPreferenceValues> = {
+            fileReadChunkSize: newSettings.fileReadChunkSize,
             cryptoKeyStrength: newSettings.cryptoKeyStrength,
             cryptoChunkSize: newSettings.cryptoChunkSize,
         };
@@ -70,6 +72,39 @@ const OperationsSettings: React.FC = () => {
             <IonContent fullscreen>
                 {/* Settings list */}
                 <IonGrid className="ion-padding-horizontal">
+                    {/* I/O */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2 className="text-lg font-bold">Input/Output</h2>
+                                <p>Affects the input/output operations of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
+                    <SettingsItem
+                        label={<IonLabel>File Read Chunk Size</IonLabel>}
+                        input={
+                            <IonSelect
+                                interface="popover"
+                                fill="outline"
+                                placeholder="Select chunk size"
+                                value={fileReadChunkSize.toString()}
+                                onIonChange={(e) => {
+                                    const newFileReadChunkSize = parseInt(e.detail.value) as FileReadChunkSize;
+                                    setFileReadChunkSize(newFileReadChunkSize);
+                                    updateSettings({ ...settings, fileReadChunkSize: newFileReadChunkSize });
+                                }}
+                            >
+                                <IonSelectOption value="65536">64 KiB</IonSelectOption>
+                                <IonSelectOption value="131072">128 KiB</IonSelectOption>
+                                <IonSelectOption value="262144">256 KiB</IonSelectOption>
+                                <IonSelectOption value="524288">512 KiB</IonSelectOption>
+                                <IonSelectOption value="1048576">1 MiB</IonSelectOption>
+                                <IonSelectOption value="2097152">2 MiB</IonSelectOption>
+                                <IonSelectOption value="4194304">4 MiB</IonSelectOption>
+                            </IonSelect>
+                        }
+                    />
                     {/* Crypto */}
                     <IonRow>
                         <IonCol>

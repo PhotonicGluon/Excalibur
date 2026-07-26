@@ -5,7 +5,8 @@ export type Theme = "light" | "dark" | "system";
 export type IconStyle = "default" | "reversed" | "outline" | "solid";
 export type RowAlternatingColours = "off" | "normal" | "inverted";
 export type FileSizeUnits = "si" | "iec";
-export type CryptoChunkSize = 65536 | 131072 | 262144 | 524288 | 1_048_576 | 2_097_152 | 4_194_304;
+export type FileReadChunkSize = 65536 | 131072 | 262144 | 524288 | 1_048_576 | 2_097_152 | 4_194_304;
+export type CryptoChunkSize = FileReadChunkSize; // TODO: Change to 'chunk size exponent' to match ExEF v4
 
 /**
  * Preferences for the settings page.
@@ -26,6 +27,8 @@ export interface SettingsPreferenceValues {
     fileSizeUnits: FileSizeUnits;
 
     // Operations
+    /** Chunk size, in bytes, to use when reading files */
+    fileReadChunkSize: FileReadChunkSize;
     /** Key strength, in bits, to use when generating keys */
     cryptoKeyStrength: KeyStrength;
     /** Chunk size, in bytes, to use when encrypting/decrypting files */
@@ -40,12 +43,16 @@ export interface SettingsPreferenceValues {
 }
 
 export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
+    // Interface
     theme: "system",
     iconStyle: "default",
     rowAlternatingColours: "off",
+    fileSizeUnits: "si",
+    // Operations
+    fileReadChunkSize: 262144, // 256 KiB
     cryptoKeyStrength: 128,
     cryptoChunkSize: 262144, // 256 KiB
-    fileSizeUnits: "si",
+    // Check for updates
     checkUpdate: true,
     checkUpdateInterval: 24,
 };

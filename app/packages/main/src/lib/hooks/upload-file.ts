@@ -69,7 +69,7 @@ export function useUploadFile() {
                             Filesystem.readFileInChunks(
                                 {
                                     path: rawFile.path!,
-                                    chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
+                                    chunkSize: settings.fileReadChunkSize,
                                 },
                                 (chunk, err) => {
                                     if (err) {

@@ -40,6 +40,7 @@ describe("<DirectoryItem />", () => {
                         iconStyle: "default",
                         rowAlternatingColours: "normal",
                         fileSizeUnits: "si",
+                        fileReadChunkSize: 262144,
                         cryptoKeyStrength: 128,
                         cryptoChunkSize: 262144,
                         change: () => {},

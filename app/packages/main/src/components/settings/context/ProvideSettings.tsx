@@ -5,6 +5,7 @@ import Preferences from "@lib/preferences";
 import {
     CryptoChunkSize,
     DEFAULT_SETTINGS_VALUES,
+    FileReadChunkSize,
     FileSizeUnits,
     IconStyle,
     RowAlternatingColours,
@@ -32,18 +33,27 @@ function useProvideSettings(): SettingsProvider {
         DEFAULT_SETTINGS_VALUES.rowAlternatingColours,
     );
     const [fileSizeUnits, setFileSizeUnits] = useState<FileSizeUnits>(DEFAULT_SETTINGS_VALUES.fileSizeUnits);
+
+    const [fileReadChunkSize, setFileReadChunkSize] = useState<FileReadChunkSize>(
+        DEFAULT_SETTINGS_VALUES.fileReadChunkSize,
+    );
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
     const [cryptoChunkSize, setCryptoChunkSize] = useState<CryptoChunkSize>(DEFAULT_SETTINGS_VALUES.cryptoChunkSize);
+
     const [checkUpdate, setCheckUpdate] = useState<boolean>(DEFAULT_SETTINGS_VALUES.checkUpdate);
     const [checkUpdateInterval, setCheckUpdateInterval] = useState<number>(DEFAULT_SETTINGS_VALUES.checkUpdateInterval);
 
+    // Functions
     function changeFunc(settings: Partial<SettingsPreferenceValues>) {
         if (settings.theme !== undefined) setTheme(settings.theme);
         if (settings.iconStyle !== undefined) setIconStyle(settings.iconStyle);
         if (settings.rowAlternatingColours !== undefined) setRowAlternatingColours(settings.rowAlternatingColours);
         if (settings.fileSizeUnits !== undefined) setFileSizeUnits(settings.fileSizeUnits);
+
+        if (settings.fileReadChunkSize !== undefined) setFileReadChunkSize(settings.fileReadChunkSize);
         if (settings.cryptoKeyStrength !== undefined) setCryptoKeyStrength(settings.cryptoKeyStrength);
         if (settings.cryptoChunkSize !== undefined) setCryptoChunkSize(settings.cryptoChunkSize);
+
         if (settings.checkUpdate !== undefined) setCheckUpdate(settings.checkUpdate);
         if (settings.checkUpdateInterval !== undefined) setCheckUpdateInterval(settings.checkUpdateInterval);
     }
@@ -62,6 +72,12 @@ function useProvideSettings(): SettingsProvider {
                 setTheme(value as Theme);
             }
         });
+        Preferences.get("iconStyle").then((value) => {
+            if (value) {
+                console.debug(`Icon style: ${value}`);
+                setIconStyle(value as IconStyle);
+            }
+        });
         Preferences.get("rowAlternatingColours").then((value) => {
             if (value) {
                 console.debug(`Row alternating colours: ${value}`);
@@ -72,6 +88,13 @@ function useProvideSettings(): SettingsProvider {
             if (value) {
                 console.debug(`File size units: ${value}`);
                 setFileSizeUnits(value as FileSizeUnits);
+            }
+        });
+
+        Preferences.get("fileReadChunkSize").then((value) => {
+            if (value) {
+                console.debug(`File read chunk size: ${value}`);
+                setFileReadChunkSize(parseInt(value) as FileReadChunkSize);
             }
         });
         Preferences.get("cryptoKeyStrength").then((value) => {
@@ -86,6 +109,7 @@ function useProvideSettings(): SettingsProvider {
                 setCryptoChunkSize(parseInt(value) as CryptoChunkSize);
             }
         });
+
         Preferences.get("checkUpdate").then((value) => {
             if (value) {
                 console.debug(`Check update: ${value}`);
@@ -101,14 +125,19 @@ function useProvideSettings(): SettingsProvider {
     }, []);
 
     return {
+        // Interface
         theme,
         iconStyle,
         rowAlternatingColours,
         fileSizeUnits,
+        // Operations
+        fileReadChunkSize,
         cryptoKeyStrength,
         cryptoChunkSize,
+        // Updates
         checkUpdate,
         checkUpdateInterval,
+        // Functions
         change: changeFunc,
         save: saveFunc,
     };
