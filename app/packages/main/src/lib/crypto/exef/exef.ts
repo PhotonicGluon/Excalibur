@@ -250,22 +250,22 @@ export default class ExEF {
      *
      * @param ptLen plaintext length
      * @param ptStream stream of plaintext
-     * @param chunkSize size of each chunk read from {@link ptStream}
+     * @param chunkSize optional fixed size of each chunk read from {@link ptStream}
      * @returns a stream of ExEF bytes
      */
-    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize: number): ReadableStream<Buffer> {
+    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize?: number): ReadableStream<Buffer> {
         const processor = this._processor;
         const encryptor: BaseEncryptor = processor.encryptor;
         encryptor.setParams(ptLen);
 
-        const chunkingStream = chunkStream(ptStream, chunkSize);
+        const stream = chunkSize ? chunkStream(ptStream, chunkSize) : ptStream;
         return new ReadableStream<Buffer>({
             async start(controller) {
                 // Yield header
                 controller.enqueue(encryptor.get());
 
                 // Yield the body as it becomes available
-                const reader = chunkingStream.getReader();
+                const reader = stream.getReader();
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) {

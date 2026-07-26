@@ -22,15 +22,15 @@ const encryptionProcessor = {
      * Encrypts a stream of file data, reports progress in a callback, and returns a
      * doubly-encrypted blob.
      *
-     * @param stream The readable stream of data to encrypt
-     * @param vaultKey The vault key to use for encryption
-     * @param e2eeKey The E2EE key to use for encryption
-     * @param fileSize The size of the file
-     * @param keyStrength The key strength to use for encryption
-     * @param chunkSize The size of each chunk to encrypt
-     * @param onProgress A callback function to report progress (a value from 0 to 1)
-     * @throws {Error} If the encryption process is cancelled
-     * @returns A promise that resolves with the doubly-encrypted blob
+     * @param stream the readable stream of data to encrypt
+     * @param vaultKey the vault key to use for encryption
+     * @param e2eeKey the E2EE key to use for encryption
+     * @param fileSize the size of the file
+     * @param keyStrength the key strength to use for encryption
+     * @param chunkSizeExponent the chunk size exponent (where 2^exponent = chunk size)
+     * @param onProgress a callback function to report progress (a value from 0 to 1)
+     * @throws {Error} if the encryption process is cancelled
+     * @returns a promise that resolves with the doubly-encrypted blob
      */
     async processStream(
         stream: ReadableStream<Buffer>,
@@ -38,21 +38,21 @@ const encryptionProcessor = {
         e2eeKey: Buffer,
         fileSize: number,
         keyStrength: KeyStrength,
-        chunkSize: number,
+        chunkSizeExponent: number,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
         this._isAborted = false;
 
         // Define ExEF encryption instances
-        const vaultExEF = new ExEF(vaultKey, { version: 4, strength: keyStrength });
-        const e2eeExEF = new ExEF(e2eeKey, { version: 4, strength: keyStrength });
+        const vaultExEF = new ExEF(vaultKey, { version: 4, strength: keyStrength, exponent: chunkSizeExponent });
+        const e2eeExEF = new ExEF(e2eeKey, { version: 4, strength: keyStrength, exponent: chunkSizeExponent });
 
         // Form nesting of streams for encryption. The vault-encrypted stream is what the E2EE
         // stream takes as its plaintext, so its declared length must be the *encrypted* size
         const encryptedFileSize = vaultExEF.encryptedSize(fileSize);
         const vStream = new ReadableStream<Buffer>({
             start: async (controller) => {
-                const reader = vaultExEF.encryptStream(fileSize, stream, chunkSize).getReader();
+                const reader = vaultExEF.encryptStream(fileSize, stream).getReader();
                 let offset = 0;
                 while (true) {
                     const { done, value } = await reader.read();
@@ -75,7 +75,7 @@ const encryptionProcessor = {
                 controller.close();
             },
         });
-        const eStream = e2eeExEF.encryptStream(encryptedFileSize, vStream, chunkSize);
+        const eStream = e2eeExEF.encryptStream(encryptedFileSize, vStream);
 
         // Generate encrypted chunks
         const reader = eStream.getReader();

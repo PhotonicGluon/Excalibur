@@ -88,7 +88,7 @@ describe("ExEF", () => {
         describe("encrypt stream", () => {
             const versions = [3, 4];
             const streamChunkSizes = [12, 6, 1];
-            const cryptoChunkSizes = [1, 4, 16];
+            const cryptoChunkSizes = [1, 4, 16, undefined];
             const pt = Buffer.from("Hello World!", "utf-8");
 
             for (const version of versions) {
