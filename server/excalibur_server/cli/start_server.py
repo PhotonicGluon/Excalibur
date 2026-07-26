@@ -101,8 +101,7 @@ def start_server(
     # Create fake user if it doesn't exist
     _create_fake_user()
 
-    # Release the database file lock held by the connection opened above, so the request-serving
-    # worker process (spawned by `uvicorn.run` below, especially when reloading) can acquire it.
+    # Release the database file lock held by the connection opened above
     from excalibur_server.src.db.operations.helpers import close_all_engines
 
     close_all_engines()
@@ -129,7 +128,7 @@ def start_server(
         reload_dirs=[Path(__file__).parent.parent],
         reload_excludes=["test_*.py"],
         workers=1,  # We do not support more than one worker
-        ws="websockets",
+        ws="websockets-sansio",
         ws_ping_interval=30.0,
     )
 
