@@ -88,30 +88,23 @@ describe("ExEF", () => {
         describe("encrypt stream", () => {
             const versions = [3, 4];
             const streamChunkSizes = [12, 6, 1];
-            const cryptoChunkSizes = [1, 4, 16, undefined];
             const pt = Buffer.from("Hello World!", "utf-8");
 
             for (const version of versions) {
                 const expected = version === 3 ? SAMPLE_V3_192 : SAMPLE_V4_192;
                 for (const streamChunkSize of streamChunkSizes) {
-                    for (const cryptoChunkSize of cryptoChunkSizes) {
-                        for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
-                            it(`ExEF v${version}, stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
-                                const parsed = new ExEF(KEY, {
-                                    version: version as ExEFVersion,
-                                    nonce: NONCE,
-                                    salt: SALT,
-                                    strength: 192,
-                                });
-                                const stream = parsed.encryptStream(
-                                    pt.length,
-                                    chunkData(pt, streamChunkSize),
-                                    cryptoChunkSize,
-                                );
-                                const output = await collectStream(stream);
-                                expect(output.toString("hex")).toBe(expected.toString("hex"));
+                    for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
+                        it(`ExEF v${version}, stream chunk ${streamChunkSize}`, async () => {
+                            const parsed = new ExEF(KEY, {
+                                version: version as ExEFVersion,
+                                nonce: NONCE,
+                                salt: SALT,
+                                strength: 192,
                             });
-                        }
+                            const stream = parsed.encryptStream(pt.length, chunkData(pt, streamChunkSize));
+                            const output = await collectStream(stream);
+                            expect(output.toString("hex")).toBe(expected.toString("hex"));
+                        });
                     }
                 }
             }
@@ -119,7 +112,7 @@ describe("ExEF", () => {
 
         it("(ExEF v4) should stream encrypt a multi-chunk payload", async () => {
             const parsed = new ExEF(KEY, { version: 4, salt: SALT, strength: 192, exponent: 12 });
-            const stream = parsed.encryptStream(MULTI_CHUNK_PT.length, chunkData(MULTI_CHUNK_PT, 777), 333);
+            const stream = parsed.encryptStream(MULTI_CHUNK_PT.length, chunkData(MULTI_CHUNK_PT, 123));
             expect(sha256(await collectStream(stream)).toString("hex")).toBe(MULTI_CHUNK_SHA256);
         });
 
@@ -174,11 +167,11 @@ describe("ExEF", () => {
             const pt = Buffer.from("Hello World!", "utf-8");
 
             const v3 = new ExEF(KEY, { version: 3, nonce: NONCE, strength: 192 });
-            const v3Out = await collectStream(v3.encryptStream(pt.length, chunkData(pt, 5), 4));
+            const v3Out = await collectStream(v3.encryptStream(pt.length, chunkData(pt, 5)));
             expect(v3Out.toString("hex")).toBe(SAMPLE_V3_192.toString("hex"));
 
             const v4 = new ExEF(KEY, { version: 4, salt: SALT, strength: 192 });
-            const v4Out = await collectStream(v4.encryptStream(pt.length, chunkData(pt, 5), 4));
+            const v4Out = await collectStream(v4.encryptStream(pt.length, chunkData(pt, 5)));
             expect(v4Out.toString("hex")).toBe(SAMPLE_V4_192.toString("hex"));
         });
     });

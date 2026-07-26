@@ -143,7 +143,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         auth.vaultInfo!.key,
                         response.e2ee ? auth.authInfo!.key! : null,
                         fileSize,
-                        settings.cryptoChunkSize,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {

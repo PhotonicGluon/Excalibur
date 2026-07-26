@@ -1,5 +1,3 @@
-import { chunkStream } from "@lib/util";
-
 import { BaseDecryptor, BaseEncryptor, KeyStrength, MAGIC } from "./base";
 import ExEFv3, { Decryptor as DecryptorV3 } from "./v3";
 import ExEFv4, { DEFAULT_EXPONENT, Decryptor as DecryptorV4 } from "./v4";
@@ -249,16 +247,14 @@ export default class ExEF {
      * Encrypts the given stream of plaintext data.
      *
      * @param ptLen plaintext length
-     * @param ptStream stream of plaintext
-     * @param chunkSize optional fixed size of each chunk read from {@link ptStream}
+     * @param stream stream of plaintext
      * @returns a stream of ExEF bytes
      */
-    encryptStream(ptLen: number, ptStream: ReadableStream<Buffer>, chunkSize?: number): ReadableStream<Buffer> {
+    encryptStream(ptLen: number, stream: ReadableStream<Buffer>): ReadableStream<Buffer> {
         const processor = this._processor;
         const encryptor: BaseEncryptor = processor.encryptor;
         encryptor.setParams(ptLen);
 
-        const stream = chunkSize ? chunkStream(ptStream, chunkSize) : ptStream;
         return new ReadableStream<Buffer>({
             async start(controller) {
                 // Yield header
@@ -313,24 +309,18 @@ export default class ExEF {
      * Decrypts the given stream of ExEF bytes, auto-detecting its version.
      *
      * @param key key to use for decryption
-     * @param exefStream stream of ExEF bytes
-     * @param chunkSize size of each chunk read from {@link exefStream}
+     * @param stream stream of ExEF bytes
      * @returns a stream of plaintext bytes
      * @throws {Error} if the data is malformed or of an unsupported version
      * @throws {Error} if the header MAC does not match the computed header MAC (ExEF v3)
      * @throws {Error} if the stream ends before all the data has been received
      * @throws {Error} if the data cannot be decrypted (e.g., tag mismatch)
      */
-    static decryptStream(
-        key: Buffer,
-        exefStream: ReadableStream<Uint8Array>,
-        chunkSize: number,
-    ): ReadableStream<Uint8Array> {
-        const chunkingStream = chunkStream(exefStream, chunkSize);
+    static decryptStream(key: Buffer, stream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
         return new ReadableStream<Uint8Array>({
             async start(controller) {
                 const decryptor = new AutoDecryptor(key);
-                const reader = chunkingStream.getReader();
+                const reader = stream.getReader();
 
                 while (true) {
                     const { done, value } = await reader.read();

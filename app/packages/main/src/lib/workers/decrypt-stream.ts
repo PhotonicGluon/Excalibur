@@ -10,25 +10,23 @@ const decryptionProcessor = {
      * Decrypts a doubly-encrypted stream of file data, reports progress in a callback, and returns
      * a decrypted blob.
      *
-     * @param eStream The readable stream of doubly-encrypted data
-     * @param vaultKey The vault key to use for decryption
-     * @param e2eeKey The E2EE key to use for decryption, or `null` if not E2EE encrypted
-     * @param fileSize The final, decrypted size of the file
-     * @param chunkSize The size of each chunk to decrypt
-     * @param onProgress A callback function to report progress (a value from 0 to 1)
-     * @returns A promise that resolves with the decrypted file data as a Blob
+     * @param eStream the readable stream of doubly-encrypted data
+     * @param vaultKey the vault key to use for decryption
+     * @param e2eeKey the E2EE key to use for decryption, or `null` if not E2EE encrypted
+     * @param fileSize the final, decrypted size of the file
+     * @param onProgress a callback function to report progress (a value from 0 to 1)
+     * @returns a promise that resolves with the decrypted file data as a Blob
      */
     async processStream(
         eStream: ReadableStream<Uint8Array>,
         vaultKey: Buffer,
         e2eeKey: Buffer | null,
         fileSize: number,
-        chunkSize: number,
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
         // Form nesting of streams for decryption
-        const vStream = e2eeKey ? ExEF.decryptStream(e2eeKey, eStream, chunkSize) : eStream;
-        const stream = ExEF.decryptStream(vaultKey, vStream, chunkSize);
+        const vStream = e2eeKey ? ExEF.decryptStream(e2eeKey, eStream) : eStream;
+        const stream = ExEF.decryptStream(vaultKey, vStream);
 
         // Generate decrypted chunks
         const reader = stream.getReader();
