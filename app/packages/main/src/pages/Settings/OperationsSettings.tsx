@@ -3,12 +3,14 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
+    IonCol,
     IonContent,
     IonGrid,
     IonHeader,
     IonIcon,
     IonLabel,
     IonPage,
+    IonRow,
     IonSelect,
     IonSelectOption,
     IonTitle,
@@ -23,7 +25,7 @@ import { CryptoChunkSize, SettingsPreferenceValues } from "@lib/preferences/sett
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@components/settings/context";
 
-const CryptoSettings: React.FC = () => {
+const OperationsSettings: React.FC = () => {
     // Contexts
     const router = useIonRouter();
     const settings = useSettings();
@@ -60,7 +62,7 @@ const CryptoSettings: React.FC = () => {
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
-                    <IonTitle>Crypto Settings</IonTitle>
+                    <IonTitle>Operations Settings</IonTitle>
                 </IonToolbar>
             </IonHeader>
 
@@ -68,6 +70,15 @@ const CryptoSettings: React.FC = () => {
             <IonContent fullscreen>
                 {/* Settings list */}
                 <IonGrid className="ion-padding-horizontal">
+                    {/* Crypto */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2 className="text-lg font-bold">Crypto</h2>
+                                <p>Affects the cryptographic operations of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
                     <SettingsItem
                         label={<IonLabel>Key Strength</IonLabel>}
                         input={
@@ -118,4 +129,4 @@ const CryptoSettings: React.FC = () => {
     );
 };
 
-export default CryptoSettings;
+export default OperationsSettings;
