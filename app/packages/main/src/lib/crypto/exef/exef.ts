@@ -58,7 +58,7 @@ export function identifyVersion(data: Buffer): ExEFVersion {
  * A streaming decryptor that identifies the ExEF version from the incoming stream and delegates to
  * the appropriate version-specific decryptor.
  */
-class AutoDecryptor extends BaseDecryptor {
+class _AutoDecryptor extends BaseDecryptor {
     private _buffer: Buffer = Buffer.alloc(0);
     private _delegate: BaseDecryptor | null = null;
     private _error: Error | null = null;
@@ -99,7 +99,7 @@ class AutoDecryptor extends BaseDecryptor {
     }
 
     // Public methods
-    update(data: Buffer): void {
+    async update(data: Buffer): Promise<void> {
         if (this._delegate !== null) {
             this._delegate.update(data);
             return;
@@ -127,8 +127,8 @@ class AutoDecryptor extends BaseDecryptor {
         this._delegate.verify();
     }
 
-    decrypt(exefData: Buffer): Buffer {
-        this.update(exefData);
+    async decrypt(exefData: Buffer): Promise<Buffer> {
+        await this.update(exefData);
         const output = this.get();
         this.verify();
         return output;
@@ -163,7 +163,7 @@ export default class ExEF {
 
     private readonly _options: ExEFOptions;
     private readonly _processor: ExEFv3 | ExEFv4;
-    private readonly _decryptor: AutoDecryptor;
+    private readonly _decryptor: _AutoDecryptor;
 
     /**
      * Creates a new ExEF instance.
@@ -187,7 +187,7 @@ export default class ExEF {
         this._processor = ExEF._buildProcessor(key, version, options);
 
         // The decryptor auto-detects the version of whatever stream it is fed
-        this._decryptor = new AutoDecryptor(key);
+        this._decryptor = new _AutoDecryptor(key);
     }
 
     // Properties
@@ -212,7 +212,7 @@ export default class ExEF {
     }
 
     /** The version-detecting decryptor object used for decryption */
-    get decryptor(): AutoDecryptor {
+    get decryptor(): _AutoDecryptor {
         return this._decryptor;
     }
 
@@ -237,10 +237,10 @@ export default class ExEF {
      * Encrypts the given data as the configured version.
      *
      * @param data the data to be encrypted, as bytes
-     * @returns the ExEF bytes
+     * @returns a promise that resolves to the ExEF bytes
      */
-    encrypt(data: Buffer): Buffer {
-        return this._processor.encrypt(data);
+    async encrypt(data: Buffer): Promise<Buffer> {
+        return await this._processor.encrypt(data);
     }
 
     /**
@@ -268,7 +268,7 @@ export default class ExEF {
                         break;
                     }
 
-                    encryptor.update(Buffer.from(value));
+                    await encryptor.update(Buffer.from(value));
                     const encBlock = encryptor.get();
                     if (encBlock.length > 0) {
                         controller.enqueue(encBlock);
@@ -296,13 +296,13 @@ export default class ExEF {
      *
      * @param key key to use for decryption
      * @param exefData data to decrypt
-     * @returns plaintext
+     * @returns a promise that resolves to plaintext
      * @throws {Error} if the data is malformed or of an unsupported version
      * @throws {Error} if the header MAC does not match the computed header MAC (ExEF v3)
      * @throws {Error} if the response data cannot be decrypted (e.g., tag mismatch)
      */
-    static decrypt(key: Buffer, exefData: Buffer): Buffer {
-        return new AutoDecryptor(key).decrypt(exefData);
+    static async decrypt(key: Buffer, exefData: Buffer): Promise<Buffer> {
+        return new _AutoDecryptor(key).decrypt(exefData);
     }
 
     /**
@@ -319,7 +319,7 @@ export default class ExEF {
     static decryptStream(key: Buffer, stream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
         return new ReadableStream<Uint8Array>({
             async start(controller) {
-                const decryptor = new AutoDecryptor(key);
+                const decryptor = new _AutoDecryptor(key);
                 const reader = stream.getReader();
 
                 while (true) {
@@ -328,7 +328,7 @@ export default class ExEF {
                         break;
                     }
 
-                    decryptor.update(Buffer.from(value));
+                    await decryptor.update(Buffer.from(value));
                     const decBlock = decryptor.get();
                     if (decBlock.length > 0) {
                         controller.enqueue(decBlock);
@@ -356,12 +356,13 @@ export default class ExEF {
      * @param key key to use for decryption
      * @param exefData data to decrypt
      * @param parse whether to parse the decrypted data as JSON
-     * @returns the decrypted JSON data, or null if the decrypted data is empty
+     * @returns a promise that resolves to the the decrypted JSON data, or null if the decrypted
+     *      data is empty
      * @throws {Error} if the keysize does not match
      * @throws {Error} if the response data cannot be decrypted (e.g., tag mismatch)
      */
-    static decryptJSON<T>(key: Buffer, exefData: Buffer, parse: boolean = true): T | null {
-        const decrypted = ExEF.decrypt(key, exefData);
+    static async decryptJSON<T>(key: Buffer, exefData: Buffer, parse: boolean = true): Promise<T | null> {
+        const decrypted = await ExEF.decrypt(key, exefData);
         if (parse) {
             const decryptedStr = decrypted.toString("utf-8");
             if (decryptedStr.length === 0) {
@@ -387,7 +388,7 @@ export default class ExEF {
         if (response.headers.get("X-Encrypted") === "true") {
             const arrayBuffer = await response.arrayBuffer();
             const responseData = Buffer.from(arrayBuffer);
-            data = ExEF.decryptJSON<T>(key, responseData, parse);
+            data = await ExEF.decryptJSON<T>(key, responseData, parse);
         } else {
             data = (await response.json()) as T;
         }

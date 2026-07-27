@@ -107,7 +107,7 @@ export abstract class BaseCryptor {
      *
      * @param data the data to process
      */
-    abstract update(data: Buffer): void;
+    abstract update(data: Buffer): Promise<void>;
 
     /**
      * Gets the next piece of processed data.
@@ -167,9 +167,9 @@ export abstract class BaseEncryptor extends BaseCryptor {
      * Encrypts the given plaintext in one shot.
      *
      * @param pt the plaintext to encrypt
-     * @returns the complete ExEF data
+     * @returns a promise that resolves to the complete ExEF data
      */
-    abstract encrypt(pt: Buffer): Buffer;
+    abstract encrypt(pt: Buffer): Promise<Buffer>;
 }
 
 /**
@@ -179,7 +179,7 @@ export abstract class BaseDecryptor extends BaseCryptor {
     /**
      * Verifies the integrity of the decrypted data.
      *
-     * @throws {Error} If the data is incomplete, malformed, or fails authentication
+     * @throws {Error} if the data is incomplete, malformed, or fails authentication
      */
     abstract verify(): void;
 
@@ -187,7 +187,7 @@ export abstract class BaseDecryptor extends BaseCryptor {
      * Decrypts the given ExEF data in one shot.
      *
      * @param exefData the ExEF data as bytes
-     * @returns the decrypted plaintext as bytes
+     * @returns a promise that resolves to the decrypted plaintext as bytes
      */
-    abstract decrypt(exefData: Buffer): Buffer;
+    abstract decrypt(exefData: Buffer): Promise<Buffer>;
 }

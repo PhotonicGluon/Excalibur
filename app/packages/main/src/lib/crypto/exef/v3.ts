@@ -245,7 +245,7 @@ export class Encryptor extends BaseEncryptor {
         this._header = new Header(this._strength, this.nonce, headerMAC, length);
     }
 
-    update(data: Buffer): void {
+    async update(data: Buffer): Promise<void> {
         this._queue.push(Buffer.from(this._cipher.update(data)));
         this._ctSentLen += data.length;
     }
@@ -276,9 +276,9 @@ export class Encryptor extends BaseEncryptor {
         return Buffer.alloc(0);
     }
 
-    encrypt(pt: Buffer): Buffer {
+    async encrypt(pt: Buffer): Promise<Buffer> {
         this.setParams(pt.length);
-        this.update(pt);
+        await this.update(pt);
         return Buffer.concat([this.get(), this.get(), this.get()]); // First is header, then body, then footer
     }
 }
@@ -337,7 +337,7 @@ export class Decryptor extends BaseDecryptor {
     }
 
     // Public methods
-    update(data: Buffer): void {
+    async update(data: Buffer): Promise<void> {
         // Handle header
         if (this._headerRemaining > 0) {
             this._buffer = Buffer.concat([this._buffer, data]);
@@ -406,8 +406,8 @@ export class Decryptor extends BaseDecryptor {
         }
     }
 
-    decrypt(exefData: Buffer): Buffer {
-        this.update(exefData);
+    async decrypt(exefData: Buffer): Promise<Buffer> {
+        await this.update(exefData);
         const output = this.get();
         this.verify();
         return output;
@@ -473,9 +473,9 @@ export default class ExEFv3 {
      * Encrypts the given data.
      *
      * @param data the data to encrypt
-     * @returns the encrypted data
+     * @returns a promise that resolves to the encrypted data
      */
-    encrypt(data: Buffer): Buffer {
+    async encrypt(data: Buffer): Promise<Buffer> {
         return this.encryptor.encrypt(data);
     }
 
@@ -483,11 +483,11 @@ export default class ExEFv3 {
      * Decrypts the given data.
      *
      * @param data the encrypted data
-     * @returns the decrypted data
-     * @throws {Error} If the header or footer have not been set
-     * @throws {Error} If the footer is not valid (e.g., wrong tag)
+     * @returns a promise that resolves to the decrypted data
+     * @throws {Error} if the header or footer have not been set
+     * @throws {Error} if the footer is not valid (e.g., wrong tag)
      */
-    decrypt(data: Buffer): Buffer {
+    async decrypt(data: Buffer): Promise<Buffer> {
         return this.decryptor.decrypt(data);
     }
 

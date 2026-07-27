@@ -416,14 +416,7 @@ export class Encryptor extends BaseEncryptor {
         writeUInt64BE(this._preBuffer, length, 0);
     }
 
-    /**
-     * Feeds plaintext to the encryptor, emitting whole chunks as they become available.
-     *
-     * @param data the plaintext data to encrypt
-     * @throws {Error} if parameters have not been set
-     * @throws {Error} if more plaintext is supplied than was declared to {@link setParams}
-     */
-    update(data: Buffer): void {
+    async update(data: Buffer): Promise<void> {
         if (this._headerBuffer === null) {
             throw new Error("parameters must be set");
         }
@@ -457,9 +450,9 @@ export class Encryptor extends BaseEncryptor {
         return this._drain();
     }
 
-    encrypt(pt: Buffer): Buffer {
+    async encrypt(pt: Buffer): Promise<Buffer> {
         this.setParams(pt.length);
-        this.update(pt);
+        await this.update(pt);
         return Buffer.concat([this.get(), this.get()]); // Header, then all body chunks
     }
 }
@@ -539,16 +532,7 @@ export class Decryptor extends BaseDecryptor {
     }
 
     // Public methods
-    /**
-     * Feeds ciphertext to the decryptor.
-     *
-     * Chunks are decrypted and verified as they become available. A failing tag does not throw
-     * immediately; the error is recorded and surfaced by {@link verify}, so that callers can
-     * distinguish a tampered stream from an incomplete one.
-     *
-     * @param data the ciphertext data
-     */
-    update(data: Buffer): void {
+    async update(data: Buffer): Promise<void> {
         if (this._failed) {
             return;
         }
@@ -624,8 +608,8 @@ export class Decryptor extends BaseDecryptor {
         }
     }
 
-    decrypt(exefData: Buffer): Buffer {
-        this.update(exefData);
+    async decrypt(exefData: Buffer): Promise<Buffer> {
+        await this.update(exefData);
         const output = this._drain();
         this.verify();
         return output;
@@ -688,26 +672,12 @@ export default class ExEFv4 {
     }
 
     // Convenience methods
-    /**
-     * Encrypts the given data.
-     *
-     * @param data the data to encrypt
-     * @returns the encrypted data
-     */
-    encrypt(data: Buffer): Buffer {
-        return this.encryptor.encrypt(data);
+    async encrypt(data: Buffer): Promise<Buffer> {
+        return await this.encryptor.encrypt(data);
     }
 
-    /**
-     * Decrypts the given data.
-     *
-     * @param data the encrypted data
-     * @returns the decrypted data
-     * @throws {Error} if the data is malformed
-     * @throws {Error} if the data fails authentication
-     */
-    decrypt(data: Buffer): Buffer {
-        return this.decryptor.decrypt(data);
+    async decrypt(data: Buffer): Promise<Buffer> {
+        return await this.decryptor.decrypt(data);
     }
 
     // Other methods

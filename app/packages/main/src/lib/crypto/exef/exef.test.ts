@@ -2,7 +2,8 @@ import { expect } from "vitest";
 
 import { sha256 } from "@lib/crypto/hashing";
 import { chunkData, collectStream } from "@lib/util";
-import ExEF, { ExEFv3, ExEFVersion, identifyVersion } from "./index";
+
+import ExEF, { ExEFVersion, ExEFv3, identifyVersion } from "./index";
 
 const KEY = Buffer.from("111111111111111111111111", "utf-8");
 const NONCE = Buffer.from("abababababababababababab", "hex");
@@ -72,15 +73,15 @@ describe("ExEF", () => {
             expect(ExEF.encryptedSize(MULTI_CHUNK_PT.length, 4, 12)).toBe(10352);
         });
 
-        it("should agree with what is actually produced", () => {
+        it("should agree with what is actually produced", async () => {
             for (const length of [0, 1, 12, 100, 1000, 5000, 10000]) {
                 const parsed = new ExEF(KEY, { salt: SALT, strength: 192, exponent: 12 });
-                expect(parsed.encrypt(Buffer.alloc(length)).length).toBe(parsed.encryptedSize(length));
+                expect((await parsed.encrypt(Buffer.alloc(length))).length).toBe(parsed.encryptedSize(length));
             }
         });
 
-        it("should default to producing version 4", () => {
-            expect(identifyVersion(new ExEF(KEY).encrypt(Buffer.from("hi")))).toBe(4);
+        it("should default to producing version 4", async () => {
+            expect(identifyVersion(await new ExEF(KEY).encrypt(Buffer.from("hi")))).toBe(4);
         });
     });
 
@@ -126,7 +127,7 @@ describe("ExEF", () => {
                     for (const cryptoChunkSize of cryptoChunkSizes) {
                         for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
                             it(`ExEF v${version}, stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
-                                const stream = ExEF.decryptStream(KEY, chunkData(ct, streamChunkSize), cryptoChunkSize);
+                                const stream = ExEF.decryptStream(KEY, chunkData(ct, streamChunkSize));
                                 const output = await collectStream(stream);
                                 expect(output.toString("utf-8")).toBe("Hello World!");
                             });
@@ -138,22 +139,22 @@ describe("ExEF", () => {
 
         it("(ExEF v4) should stream-decrypt a multi-chunk payload", async () => {
             const parsed = new ExEF(KEY, { version: 4, salt: SALT, strength: 192, exponent: 12 });
-            const encrypted = parsed.encrypt(MULTI_CHUNK_PT);
-            const output = await collectStream(ExEF.decryptStream(KEY, chunkData(encrypted, 999), 501));
+            const encrypted = await parsed.encrypt(MULTI_CHUNK_PT);
+            const output = await collectStream(ExEF.decryptStream(KEY, chunkData(encrypted, 999)));
             expect(output.toString("hex")).toBe(MULTI_CHUNK_PT.toString("hex"));
         });
 
         it("(ExEF v4) should fail loudly on a truncated stream", async () => {
             const truncated = SAMPLE_V4_192.subarray(0, -1);
-            const stream = ExEF.decryptStream(KEY, chunkData(truncated, 8), 8);
+            const stream = ExEF.decryptStream(KEY, chunkData(truncated, 8));
             await expect(collectStream(stream)).rejects.toThrow("incomplete ExEF data");
         });
     });
 
     describe("cross-version", () => {
-        it("should auto-detect the version when decrypting", () => {
-            expect(ExEF.decrypt(KEY, SAMPLE_V3_192).toString("utf-8")).toBe("Hello World!");
-            expect(ExEF.decrypt(KEY, SAMPLE_V4_192).toString("utf-8")).toBe("Hello World!");
+        it("should auto-detect the version when decrypting", async () => {
+            expect((await ExEF.decrypt(KEY, SAMPLE_V3_192)).toString("utf-8")).toBe("Hello World!");
+            expect((await ExEF.decrypt(KEY, SAMPLE_V4_192)).toString("utf-8")).toBe("Hello World!");
         });
 
         it("should validate both versions", () => {

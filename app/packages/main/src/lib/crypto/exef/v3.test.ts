@@ -59,9 +59,9 @@ describe("ExEF v3", () => {
         const strengths = Object.keys(EXEFS_V3).map((x) => parseInt(x));
         const expected = Object.values(EXEFS_V3);
         for (let i = 0; i < 3; i++) {
-            it(`strength of ${strengths[i]}`, () => {
+            it(`strength of ${strengths[i]}`, async () => {
                 const parsed = new ExEFv3(KEY, NONCE, strengths[i] as KeyStrength);
-                expect(parsed.encrypt(Buffer.from("Hello World!", "utf-8")).toString("hex")).toBe(
+                expect((await parsed.encrypt(Buffer.from("Hello World!", "utf-8"))).toString("hex")).toBe(
                     expected[i].toString("hex"),
                 );
             });
@@ -72,8 +72,8 @@ describe("ExEF v3", () => {
         const strengths = Object.keys(EXEFS_V3).map((x) => parseInt(x));
         const exefs = Object.values(EXEFS_V3);
         for (let i = 0; i < 3; i++) {
-            it(`strength of ${strengths[i]}`, () => {
-                const ptTest = new ExEFv3(KEY).decrypt(exefs[i]);
+            it(`strength of ${strengths[i]}`, async () => {
+                const ptTest = await new ExEFv3(KEY).decrypt(exefs[i]);
                 expect(ptTest.toString("utf-8")).toBe("Hello World!");
             });
         }
@@ -91,23 +91,25 @@ describe("ExEF v3", () => {
         it("should handle invalid key", () => {
             const fakeKey = Buffer.from(KEY);
             fakeKey[0] = 255 - fakeKey[0];
-            expect(() => new ExEFv3(fakeKey).decrypt(SAMPLE_V3_192)).toThrow("header MAC mismatch");
+            expect(async () => new ExEFv3(fakeKey).decrypt(SAMPLE_V3_192)).rejects.toThrow("header MAC mismatch");
         });
 
         it("should handle invalid magic", () => {
-            expect(() => new ExEFv3(KEY).decrypt(_generateInvalidMagic())).toThrow("data must start with 'ExEF'");
+            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidMagic())).rejects.toThrow(
+                "data must start with 'ExEF'",
+            );
         });
 
         it("should handle invalid version", () => {
-            expect(() => new ExEFv3(KEY).decrypt(_generateInvalidVersion())).toThrow("version must be 3");
+            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidVersion())).rejects.toThrow("version must be 3");
         });
 
         it("should handle invalid footer", () => {
-            expect(() => new ExEFv3(KEY).decrypt(_generateInvalidFooter())).toThrow();
+            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidFooter())).rejects.toThrow();
         });
 
         it("should handle invalid tag", () => {
-            expect(() => new ExEFv3(KEY).decrypt(_generateInvalidTag())).toThrow("MAC check failed");
+            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidTag())).rejects.toThrow("MAC check failed");
         });
     });
 });
