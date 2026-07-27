@@ -32,7 +32,7 @@ export async function searchFiles(
                 "X-Content-Type": "text/plain",
             },
             // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-            body: new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(query, "utf-8")),
+            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(query, "utf-8")),
         },
     );
     switch (response.status) {

@@ -152,7 +152,7 @@ export async function handshakeOPAQUE(
                     }
 
                     const encryptedAuthToken = response.data! as Buffer;
-                    const authToken = ExEF.decrypt(state.master!, encryptedAuthToken).toString("utf-8");
+                    const authToken = (await ExEF.decrypt(state.master!, encryptedAuthToken)).toString("utf-8");
                     resolve({ key: state.master!, token: authToken });
 
                     return;

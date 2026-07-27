@@ -39,21 +39,24 @@ const ExEFPage: React.FC = () => {
     const [decryptedPayload, setDecryptedPayload] = useState("");
 
     // Functions
-    function handleEncrypt() {
+    async function handleEncrypt() {
         const exef = new ExEF(Buffer.from(symmetricKey, "utf-8"), {
             version: 4,
             strength: keyStrength,
             salt: Buffer.from(encryptionSalt, "hex"),
         });
-        const encrypted = exef.encrypt(Buffer.from(plaintext, "utf-8"));
+        const encrypted = await exef.encrypt(Buffer.from(plaintext, "utf-8"));
         setEncryptedPayload(encrypted.toString("utf-8"));
         setEncryptedBase64(b64encodeURLSafe(encrypted));
         setEncryptedHex(encrypted.toString("hex"));
     }
 
-    function handleDecrypt() {
+    async function handleDecrypt() {
         try {
-            const decrypted = ExEF.decrypt(Buffer.from(symmetricKey, "utf-8"), b64decodeURLSafe(decryptionPayload));
+            const decrypted = await ExEF.decrypt(
+                Buffer.from(symmetricKey, "utf-8"),
+                b64decodeURLSafe(decryptionPayload),
+            );
             setDecryptedPayload(decrypted.toString("utf-8"));
         } catch (error: unknown) {
             console.error("Decryption failed:", error);

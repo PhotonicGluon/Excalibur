@@ -46,7 +46,7 @@ function connectToListener(
         }
         const data = event.data as Blob;
         const pathEncrypted = Buffer.from(await data.arrayBuffer());
-        const path = ExEF.decrypt(auth.authInfo!.key, pathEncrypted).toString("utf-8");
+        const path = (await ExEF.decrypt(auth.authInfo!.key, pathEncrypted)).toString("utf-8");
         console.debug(`Noticed '${path}' folder content change`);
         await onPathUpdateRef.current(path);
     });

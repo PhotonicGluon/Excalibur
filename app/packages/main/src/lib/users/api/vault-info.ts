@@ -83,7 +83,7 @@ export async function editVaultInfo(
             "X-Content-Type": "application/json",
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-        body: new ExEF(e2eeKey, { version: 4 }).encrypt(Buffer.from(JSON.stringify(rawBody), "utf-8")),
+        body: await new ExEF(e2eeKey, { version: 4 }).encrypt(Buffer.from(JSON.stringify(rawBody), "utf-8")),
     });
     switch (response.status) {
         case 200:

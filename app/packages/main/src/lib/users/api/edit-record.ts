@@ -31,9 +31,9 @@ export async function editRecord(
     showAlert?: (header: string, subheader: string | undefined, message: string | undefined) => void,
 ): Promise<{ success: boolean; error?: string }> {
     // Create special request handling
-    function sendResponse(ws: WebSocket, data: Buffer) {
+    async function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+        const encryptedData = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
             Buffer.from(JSON.stringify(serializedData)),
         );
         ws.send(encryptedData);
@@ -41,7 +41,7 @@ export async function editRecord(
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = ExEF.decrypt(
+            const decryptedData = await ExEF.decrypt(
                 auth.authInfo!.key!,
                 Buffer.from(await (eventData as Blob).arrayBuffer()),
             );
@@ -70,7 +70,7 @@ export async function editRecord(
             reject(e);
         });
 
-        ws.addEventListener("open", () => {
+        ws.addEventListener("open", async () => {
             console.log(`Connected to server; sending username '${newUsername}' and record update request`);
             const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
                 new TextEncoder().encode(newPassword),
@@ -79,7 +79,7 @@ export async function editRecord(
                 registrationRequest.serialize(),
                 new TextEncoder().encode(newUsername),
             ]);
-            sendResponse(ws, requestAndUsername);
+            await sendResponse(ws, requestAndUsername);
 
             state.blind = blind;
             setLoadingState?.("Waiting for record update response...");
@@ -110,7 +110,7 @@ export async function editRecord(
 
                     // Send new registration record alongside the new AUK salt and new encrypted vault key
                     const toSend = Buffer.concat([registrationRecord.serialize(), newAUKSalt, newEncryptedVaultKey]);
-                    sendResponse(ws, toSend);
+                    await sendResponse(ws, toSend);
                     state.stage = RegistrationStage.SENT_REGISTRATION_RECORD;
                     setLoadingState?.("Waiting for server confirmation...");
                     return;

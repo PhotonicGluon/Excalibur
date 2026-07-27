@@ -27,11 +27,12 @@ export async function uploadFile(
     signal: AbortSignal,
     onProgress: (progress: number) => void,
 ): Promise<{ success: boolean; error?: string }> {
+    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+        Buffer.from(`${path}/${file.name}`, "utf-8"),
+    );
+
     return new Promise((resolve, reject) => {
         // Set up an XHR with PoP
-        const encryptedPath = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-            Buffer.from(`${path}/${file.name}`, "utf-8"),
-        );
         const xhr = popXHR(
             `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedPath)}?force=true`,
             auth.getToken()!,

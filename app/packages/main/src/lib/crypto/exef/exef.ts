@@ -76,7 +76,7 @@ class _AutoDecryptor extends BaseDecryptor {
     /**
      * Ensures that the delegate decryptor is initialized, once enough bytes have arrived.
      */
-    private _ensureDelegate(): void {
+    private async _ensureDelegate(): Promise<void> {
         if (this._delegate !== null || this._error !== null) {
             return;
         }
@@ -95,18 +95,18 @@ class _AutoDecryptor extends BaseDecryptor {
         this._delegate = decryptorFor(version, this.key);
         const buffered = this._buffer;
         this._buffer = Buffer.alloc(0);
-        this._delegate.update(buffered);
+        await this._delegate.update(buffered);
     }
 
     // Public methods
     async update(data: Buffer): Promise<void> {
         if (this._delegate !== null) {
-            this._delegate.update(data);
+            await this._delegate.update(data);
             return;
         }
 
         this._buffer = Buffer.concat([this._buffer, data]);
-        this._ensureDelegate();
+        await this._ensureDelegate();
     }
 
     get(): Buffer {

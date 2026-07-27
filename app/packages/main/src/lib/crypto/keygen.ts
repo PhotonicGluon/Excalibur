@@ -192,7 +192,7 @@ export async function generateVaultKeys(
         onProgress,
     );
     const vaultKey = existingVaultKey ?? randomBytes(32);
-    const encryptedVaultKey = new ExEF(auk, { version: 4 }).encrypt(vaultKey);
+    const encryptedVaultKey = await new ExEF(auk, { version: 4 }).encrypt(vaultKey);
 
     return {
         auk: { key: Buffer.from(auk), salt: Buffer.from(aukSalt) },

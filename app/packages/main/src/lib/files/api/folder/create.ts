@@ -23,7 +23,7 @@ export async function mkdir(
     const rawName =
         obfuscateName && auth.vaultInfo!.info.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
 
-    const encryptedPath = new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
+    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/mkdir/${b64encodeURLSafe(encryptedPath)}`,
         auth.authInfo!.key!,
@@ -36,7 +36,7 @@ export async function mkdir(
                 "X-Content-Type": "text/plain",
             },
             // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-            body: new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(rawName, "utf-8")),
+            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(rawName, "utf-8")),
         },
     );
     switch (response.status) {

@@ -25,6 +25,6 @@ export async function getNewToken(auth: AuthProvider): Promise<{ success: boolea
             return { success: false, error: "Unknown error" };
     }
 
-    const token = ExEF.decrypt(auth.authInfo!.key, Buffer.from(await response.arrayBuffer())).toString("utf-8");
+    const token = (await ExEF.decrypt(auth.authInfo!.key, Buffer.from(await response.arrayBuffer()))).toString("utf-8");
     return { success: true, token };
 }
