@@ -1,6 +1,6 @@
+import { gcm } from "@noble/ciphers/webcrypto.js";
 import randomBytes from "randombytes";
 
-import { GCMCipher, GCMDecipher } from "@lib/crypto/cipher";
 import HKDF from "@lib/crypto/hkdf";
 import { readUInt64BE, writeUInt64BE } from "@lib/util";
 
@@ -350,35 +350,32 @@ export class Encryptor extends BaseEncryptor {
      * @param chunkPt the plaintext chunk to encrypt
      * @param isFinal whether this is the final chunk
      */
-    private _emitChunk(chunkPt: Buffer, isFinal: boolean): void {
+    private async _emitChunk(chunkPt: Buffer, isFinal: boolean): Promise<void> {
         const index = this._chunksEmitted;
-        const cipher = new GCMCipher(this.alg, this._cryptoKey, nonce(index), aad(this._headerBuffer!, index, isFinal));
+        const cipher = gcm(this._cryptoKey, nonce(index), aad(this._headerBuffer!, index, isFinal));
 
-        const head = Buffer.from(cipher.update(chunkPt));
-        const tag = Buffer.from(cipher.digest());
-
-        this._queue.push(Buffer.concat([head, tag]));
+        this._queue.push(Buffer.from(await cipher.encrypt(chunkPt)));
         this._chunksEmitted += 1;
     }
 
     /**
      * Emits all chunks that are fully available in the pre-encryption buffer.
      */
-    private _emitReadyChunks(): void {
+    private async _emitReadyChunks(): Promise<void> {
         const chunkSize = 1 << this.exponent;
 
         // Emit any complete non-final chunks
         while (this._chunksEmitted < this._chunkCount - 1 && this._preBuffer.length >= chunkSize) {
             const chunkPt = this._preBuffer.subarray(0, chunkSize);
             this._preBuffer = this._preBuffer.subarray(chunkSize);
-            this._emitChunk(chunkPt, false);
+            await this._emitChunk(chunkPt, false);
         }
 
         // Emit the final chunk once all padding is in place and only it remains
         if (this._paddingAdded && this._chunksEmitted === this._chunkCount - 1) {
             const chunkPt = this._preBuffer;
             this._preBuffer = Buffer.alloc(0);
-            this._emitChunk(chunkPt, true);
+            await this._emitChunk(chunkPt, true);
         }
     }
 
@@ -435,7 +432,7 @@ export class Encryptor extends BaseEncryptor {
             this._paddingAdded = true;
         }
 
-        this._emitReadyChunks();
+        await this._emitReadyChunks();
     }
 
     get(): Buffer {
@@ -564,24 +561,44 @@ export class Decryptor extends BaseDecryptor {
                 return;
             }
 
+            // const ct = this._ctBuffer.subarray(0, plaintextSize);
+            // const tag = this._ctBuffer.subarray(plaintextSize, expected);
+            // this._ctBuffer = this._ctBuffer.subarray(expected);
+
+            // const isFinal = this._chunkIndex === this._header.chunkCount - 1;
+            // const cipher = new GCMDecipher(
+            //     algForStrength(this._header.strength),
+            //     this._cryptoKey!,
+            //     nonce(this._chunkIndex),
+            //     aad(this._headerBytes!, this._chunkIndex, isFinal),
+            // );
+            // cipher.setAuthTag(tag);
+
+            // let chunkPt: Buffer;
+            // try {
+            //     chunkPt = Buffer.from(cipher.update(ct));
+            //     cipher.verify();
+            // } catch {
+            //     this._error = new Error("chunk authentication failed");
+            //     this._failed = true;
+            //     return;
+            // }
+
             const ct = this._ctBuffer.subarray(0, plaintextSize);
             const tag = this._ctBuffer.subarray(plaintextSize, expected);
             this._ctBuffer = this._ctBuffer.subarray(expected);
 
             const isFinal = this._chunkIndex === this._header.chunkCount - 1;
-            const cipher = new GCMDecipher(
-                algForStrength(this._header.strength),
+            const cipher = gcm(
                 this._cryptoKey!,
                 nonce(this._chunkIndex),
                 aad(this._headerBytes!, this._chunkIndex, isFinal),
             );
-            cipher.setAuthTag(tag);
 
             let chunkPt: Buffer;
             try {
-                chunkPt = Buffer.from(cipher.update(ct));
-                cipher.verify();
-            } catch {
+                chunkPt = Buffer.from(await cipher.decrypt(Buffer.concat([ct, tag])));
+            } catch (e) {
                 this._error = new Error("chunk authentication failed");
                 this._failed = true;
                 return;

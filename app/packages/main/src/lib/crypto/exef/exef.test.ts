@@ -94,19 +94,17 @@ describe("ExEF", () => {
             for (const version of versions) {
                 const expected = version === 3 ? SAMPLE_V3_192 : SAMPLE_V4_192;
                 for (const streamChunkSize of streamChunkSizes) {
-                    for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
-                        it(`ExEF v${version}, stream chunk ${streamChunkSize}`, async () => {
-                            const parsed = new ExEF(KEY, {
-                                version: version as ExEFVersion,
-                                nonce: NONCE,
-                                salt: SALT,
-                                strength: 192,
-                            });
-                            const stream = parsed.encryptStream(pt.length, chunkData(pt, streamChunkSize));
-                            const output = await collectStream(stream);
-                            expect(output.toString("hex")).toBe(expected.toString("hex"));
+                    it(`ExEF v${version}, stream chunk ${streamChunkSize}`, async () => {
+                        const parsed = new ExEF(KEY, {
+                            version: version as ExEFVersion,
+                            nonce: NONCE,
+                            salt: SALT,
+                            strength: 192,
                         });
-                    }
+                        const stream = parsed.encryptStream(pt.length, chunkData(pt, streamChunkSize));
+                        const output = await collectStream(stream);
+                        expect(output.toString("hex")).toBe(expected.toString("hex"));
+                    });
                 }
             }
         });
@@ -120,19 +118,14 @@ describe("ExEF", () => {
         describe("decrypt stream", () => {
             const versions = [3, 4];
             const streamChunkSizes = [12, 6, 1];
-            const cryptoChunkSizes = [1, 4, 16];
             for (const version of versions) {
                 const ct = version === 3 ? SAMPLE_V3_192 : SAMPLE_V4_192;
                 for (const streamChunkSize of streamChunkSizes) {
-                    for (const cryptoChunkSize of cryptoChunkSizes) {
-                        for (let strengthIdx = 0; strengthIdx < 3; strengthIdx++) {
-                            it(`ExEF v${version}, stream chunk ${streamChunkSize}, crypto chunk ${cryptoChunkSize}`, async () => {
-                                const stream = ExEF.decryptStream(KEY, chunkData(ct, streamChunkSize));
-                                const output = await collectStream(stream);
-                                expect(output.toString("utf-8")).toBe("Hello World!");
-                            });
-                        }
-                    }
+                    it(`ExEF v${version}, stream chunk ${streamChunkSize}`, async () => {
+                        const stream = ExEF.decryptStream(KEY, chunkData(ct, streamChunkSize));
+                        const output = await collectStream(stream);
+                        expect(output.toString("utf-8")).toBe("Hello World!");
+                    });
                 }
             }
         });
