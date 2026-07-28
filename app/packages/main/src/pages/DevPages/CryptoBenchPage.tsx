@@ -4,19 +4,15 @@ import React from "react";
 
 import { IonButton, IonContent, IonPage } from "@ionic/react";
 
+const ROUNDS = 10;
+
 function buf(n: number) {
     return new Uint8Array(n).fill(n % 251);
 }
 
 const buffers = [
-    { size: "16 B", data: buf(16) },
-    { size: "32 B", data: buf(32) },
-    { size: "64 B", data: buf(64) },
-    { size: "1 KiB", data: buf(1024) },
-    { size: "8 KiB", data: buf(1024 * 8) },
-    { size: "16 KiB", data: buf(1024 * 16) },
-    { size: "32 KiB", data: buf(1024 * 32) },
-    { size: "128 KiB", data: buf(1024 * 128) },
+    { size: "64 KiB", data: buf(64 * 1024) },
+    { size: "256 KiB", data: buf(256 * 1024) },
     { size: "1 MiB", data: buf(1024 * 1024) },
     { size: "4 MiB", data: buf(4 * 1024 * 1024) },
     { size: "16 MiB", data: buf(16 * 1024 * 1024) },
@@ -24,11 +20,14 @@ const buffers = [
 ];
 
 async function mark(name: string, fn: () => Promise<Uint8Array>) {
+    let output: Uint8Array;
     const start = performance.now();
-    const output = await fn();
+    for (let i = 0; i < ROUNDS; i++) {
+        output = await fn();
+    }
     const end = performance.now();
-    const tag = Buffer.from(output.subarray(output.length - 16, output.length)).toString("hex");
-    console.log(`${name}: ${Math.round((end - start) * 1e5) / 1e5}ms`);
+    const tag = Buffer.from(output!.subarray(output!.length - 16, output!.length)).toString("hex");
+    console.log(`${name}: ${Math.round((end - start) * ROUNDS * 1e5) / (ROUNDS * 1e5)}ms`);
     console.debug(`  Tag: ${tag}`);
 }
 
