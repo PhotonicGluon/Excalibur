@@ -29,7 +29,7 @@ export async function downloadFile(
 }> {
     let additionalHeaders = {};
     if (!IS_DEV) {
-        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+        const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
         path = b64encodeURLSafe(encryptedPath);
         additionalHeaders = { "X-Encrypted": "true" };
     }
@@ -65,7 +65,7 @@ export async function downloadFile(
             return { success: false, error: "Unknown error" };
     }
 
-    const fileSize = parseInt(response.headers.get("Content-Length")!) - ExEF.additionalSize;
+    const fileSize = parseInt(response.headers.get("Content-Length")!);
     return {
         success: true,
         fileSize: fileSize,

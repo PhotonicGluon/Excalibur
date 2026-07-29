@@ -1,5 +1,5 @@
 import ExEF from "@lib/crypto/exef";
-import { generateAUK, KeygenAdditionalInfo } from "@lib/crypto/keygen";
+import { KeygenAdditionalInfo, generateAUK } from "@lib/crypto/keygen";
 import { getVaultInfo } from "@lib/users/api";
 
 import { VaultInfo } from "./structures";
@@ -46,7 +46,7 @@ export async function retrieveVaultInfo(
     // Recover vault key
     console.debug("Decrypting obtained vault key...");
     try {
-        const vaultKey = ExEF.decrypt(auk, encryptedVaultKey);
+        const vaultKey = await ExEF.decrypt(auk, encryptedVaultKey);
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
         return {
             keygenAlgorithm,

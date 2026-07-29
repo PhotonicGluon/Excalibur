@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { bigIntToBytes, bytesToBigInt, bytesToHumanReadable, padNumber } from "./numbers";
+import { bigIntToBytes, bitLength, bytesToBigInt, bytesToHumanReadable, padNumber } from "./numbers";
 
 describe("padNumber", () => {
     test("pads numbers correctly", () => {
@@ -9,6 +9,18 @@ describe("padNumber", () => {
         expect(padNumber(123, 3)).toBe("123");
         expect(padNumber(123, 4)).toBe("0123");
         expect(padNumber(12, 5)).toBe("00012");
+    });
+});
+
+describe("bitLength", () => {
+    test("calculates bit length correctly", () => {
+        expect(bitLength(0n)).toBe(0n);
+        expect(bitLength(1n)).toBe(1n);
+        expect(bitLength(2n)).toBe(2n);
+        expect(bitLength(3n)).toBe(2n);
+        expect(bitLength(4n)).toBe(3n);
+        expect(bitLength(15n)).toBe(4n);
+        expect(bitLength(16n)).toBe(5n);
     });
 });
 

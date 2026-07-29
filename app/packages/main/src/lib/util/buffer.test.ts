@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { bufferToNumber, numberToBuffer, padBuffer, xorBuffer } from "./buffer";
+import { bufferToNumber, numberToBuffer, padBuffer, readUInt64BE, writeUInt64BE, xorBuffer } from "./buffer";
 
 test("numberToBuffer", () => {
     expect(numberToBuffer(3n)).toEqual(Buffer.from("03", "hex"));
@@ -62,4 +62,33 @@ test("xorBuffer", () => {
     expect(xorBuffer(Buffer.from("deadbeef", "hex"), Buffer.from("deadbeef", "hex"))).toEqual(
         Buffer.from("00000000", "hex"),
     );
+});
+
+test("writeUInt64BE", () => {
+    const buffer = Buffer.alloc(8);
+    writeUInt64BE(buffer, 0, 0);
+    expect(buffer).toEqual(Buffer.from("0000000000000000", "hex"));
+
+    writeUInt64BE(buffer, 0xdeadbeef, 0);
+    expect(buffer).toEqual(Buffer.from("00000000deadbeef", "hex"));
+
+    writeUInt64BE(buffer, Number.MAX_SAFE_INTEGER, 0);
+    expect(buffer).toEqual(Buffer.from("001fffffffffffff", "hex"));
+
+    // Writing at a non-zero offset should leave the surrounding bytes untouched
+    const offsetBuffer = Buffer.alloc(12, 0xff);
+    writeUInt64BE(offsetBuffer, 0x11111, 2);
+    expect(offsetBuffer).toEqual(Buffer.from("ffff0000000000011111ffff", "hex"));
+});
+
+test("readUInt64BE", () => {
+    expect(readUInt64BE(Buffer.from("0000000000000000", "hex"), 0)).toEqual(0);
+    expect(readUInt64BE(Buffer.from("00000000deadbeef", "hex"), 0)).toEqual(0xdeadbeef);
+    expect(readUInt64BE(Buffer.from("001fffffffffffff", "hex"), 0)).toEqual(Number.MAX_SAFE_INTEGER);
+
+    expect(readUInt64BE(Buffer.from("ffff0000000000011111ffff", "hex"), 2)).toEqual(0x11111);
+
+    // Anything above `Number.MAX_SAFE_INTEGER` is not exactly representable
+    expect(() => readUInt64BE(Buffer.from("0020000000000000", "hex"), 0)).toThrow();
+    expect(() => readUInt64BE(Buffer.from("ffffffffffffffff", "hex"), 0)).toThrow();
 });

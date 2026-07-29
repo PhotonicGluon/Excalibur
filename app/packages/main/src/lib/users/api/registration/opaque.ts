@@ -52,15 +52,17 @@ export async function registerUserOPAQUE(
     // Create special request handling
     let sessionKey: Buffer = Buffer.alloc(0);
 
-    function sendResponse(ws: WebSocket, data: Buffer) {
+    async function sendResponse(ws: WebSocket, data: Buffer) {
         const serializedData = generateResponse(data);
-        const encryptedData = new ExEF(sessionKey).encrypt(Buffer.from(JSON.stringify(serializedData)));
+        const encryptedData = await new ExEF(sessionKey, { version: 4 }).encrypt(
+            Buffer.from(JSON.stringify(serializedData)),
+        );
         ws.send(encryptedData);
     }
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = ExEF.decrypt(sessionKey, Buffer.from(await (eventData as Blob).arrayBuffer()));
+            const decryptedData = await ExEF.decrypt(sessionKey, Buffer.from(await (eventData as Blob).arrayBuffer()));
             return _parseResponse(decryptedData.toString("utf-8"));
         } catch (_e) {
             // Did the server send it in plaintext?
@@ -122,7 +124,7 @@ export async function registerUserOPAQUE(
                         registrationRequest.serialize(),
                         new TextEncoder().encode(username),
                     ]);
-                    sendResponse(ws, requestAndUsername);
+                    await sendResponse(ws, requestAndUsername);
 
                     state.stage = RegistrationStage.SENT_REGISTRATION_REQUEST;
                     state.blind = blind;
@@ -153,7 +155,7 @@ export async function registerUserOPAQUE(
 
                     // Send registration record, AUK salt, and encrypted AUK
                     const toSend = Buffer.concat([registrationRecord.serialize(), aukSalt, encryptedVaultKey]);
-                    sendResponse(ws, toSend);
+                    await sendResponse(ws, toSend);
                     state.stage = RegistrationStage.SENT_REGISTRATION_RECORD;
                     setLoadingState?.("Waiting for server confirmation...");
                     return;

@@ -18,7 +18,7 @@ export async function checkPath(
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
     let additionalHeaders = {};
     if (!IS_DEV) {
-        const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+        const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
         path = b64encodeURLSafe(encryptedPath);
         additionalHeaders = { "X-Encrypted": "true" };
     }
@@ -61,7 +61,7 @@ export async function checkDir(
     auth: AuthProvider,
     path: string,
 ): Promise<{ success: boolean; error?: string; isEmpty?: boolean }> {
-    const encryptedPath = new ExEF(auth.authInfo!.key!).encrypt(Buffer.from(path, "utf-8"));
+    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/check/dir/${b64encodeURLSafe(encryptedPath)}`,
         auth.authInfo!.key!,

@@ -42,9 +42,6 @@ def search_endpoint(
     score_threshold: Annotated[
         float, Query(description="Minimum similarity threshold to consider a match (0.0-1.0)", ge=0.0, le=1.0)
     ] = 0.6,
-    include_exef_size: Annotated[
-        bool, Query(description="Whether to include the additional ExEF size (i.e., header and footer) in file sizes")
-    ] = False,
 ) -> list[tuple[File, float]]:
     """
     Search for files in the user's file index.
@@ -67,7 +64,7 @@ def search_endpoint(
 
     output = []
     for fsitem, score in results:
-        item = File.from_fsitem(fsitem, include_exef_size=include_exef_size)
+        item = File.from_fsitem(fsitem)
         output.append((item, score))
 
     return output

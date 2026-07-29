@@ -69,7 +69,7 @@ export function useUploadFile() {
                             Filesystem.readFileInChunks(
                                 {
                                     path: rawFile.path!,
-                                    chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
+                                    chunkSize: settings.fileReadChunkSize,
                                 },
                                 (chunk, err) => {
                                     if (err) {
@@ -113,7 +113,7 @@ export function useUploadFile() {
                         auth.authInfo!.key!,
                         rawFileSize,
                         settings.cryptoKeyStrength,
-                        settings.cryptoChunkSize,
+                        settings.cryptoChunkSizeExponent,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {

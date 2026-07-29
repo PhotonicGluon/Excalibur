@@ -25,7 +25,6 @@ import {
 import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
-import ExEF from "@lib/crypto/exef";
 import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
@@ -126,7 +125,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                     throw new Error(response.error); // Propagate error to outer try-catch
                 }
 
-                const fileSize = response.fileSize! - ExEF.additionalSize;
+                const fileSize = response.fileSize!;
 
                 if (signal.aborted) throw new Error("Cancelled");
 
@@ -144,7 +143,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         auth.vaultInfo!.key,
                         response.e2ee ? auth.authInfo!.key! : null,
                         fileSize,
-                        settings.cryptoChunkSize,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {

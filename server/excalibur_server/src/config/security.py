@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.crypto.elliptic import Ristretto255
-from excalibur_server.src.crypto.exef.crypto import KeyStrength
+from excalibur_server.src.crypto.exef import KeyStrength
 
 
 class Security(BaseModel):

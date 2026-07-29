@@ -12,6 +12,16 @@ export function padNumber(num: number, length: number): string {
 }
 
 /**
+ * Gets the number of bits needed to represent the specified value.
+ *
+ * @param value value to measure
+ * @returns bit length of `value`
+ */
+export function bitLength(value: bigint): bigint {
+    return value === 0n ? 0n : BigInt(value.toString(2).length);
+}
+
+/**
  * Converts a given array of bytes into a bigint.
  *
  * @param bytes The array of bytes

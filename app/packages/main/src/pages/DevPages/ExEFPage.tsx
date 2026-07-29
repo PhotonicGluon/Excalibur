@@ -28,7 +28,9 @@ const ExEFPage: React.FC = () => {
     // States
     const [symmetricKey, setSymmetricKey] = useState("one demo 16B key");
     const [keyStrength, setKeyStrength] = useState<KeyStrength>(128);
-    const [encryptionNonce, setEncryptionNonce] = useState("303132333435363738396162");
+    const [encryptionSalt, setEncryptionSalt] = useState(
+        "3031323334353637383961626364656630313233343536373839616263646566",
+    );
     const [plaintext, setPlaintext] = useState("");
     const [encryptedPayload, setEncryptedPayload] = useState("");
     const [encryptedBase64, setEncryptedBase64] = useState("");
@@ -37,22 +39,24 @@ const ExEFPage: React.FC = () => {
     const [decryptedPayload, setDecryptedPayload] = useState("");
 
     // Functions
-    function handleEncrypt() {
-        const exef = new ExEF(
-            Buffer.from(symmetricKey, "utf-8"),
-            Buffer.from(encryptionNonce, "hex"),
-            "encrypt",
-            keyStrength,
-        );
-        const encrypted = exef.encrypt(Buffer.from(plaintext, "utf-8"));
+    async function handleEncrypt() {
+        const exef = new ExEF(Buffer.from(symmetricKey, "utf-8"), {
+            version: 4,
+            strength: keyStrength,
+            salt: Buffer.from(encryptionSalt, "hex"),
+        });
+        const encrypted = await exef.encrypt(Buffer.from(plaintext, "utf-8"));
         setEncryptedPayload(encrypted.toString("utf-8"));
         setEncryptedBase64(b64encodeURLSafe(encrypted));
         setEncryptedHex(encrypted.toString("hex"));
     }
 
-    function handleDecrypt() {
+    async function handleDecrypt() {
         try {
-            const decrypted = ExEF.decrypt(Buffer.from(symmetricKey, "utf-8"), b64decodeURLSafe(decryptionPayload));
+            const decrypted = await ExEF.decrypt(
+                Buffer.from(symmetricKey, "utf-8"),
+                b64decodeURLSafe(decryptionPayload),
+            );
             setDecryptedPayload(decrypted.toString("utf-8"));
         } catch (error: unknown) {
             console.error("Decryption failed:", error);
@@ -113,12 +117,12 @@ const ExEFPage: React.FC = () => {
                                     </IonItem>
 
                                     <IonItem>
-                                        <IonLabel position="stacked">12-byte Nonce (Hex)</IonLabel>
+                                        <IonLabel position="stacked">32-byte Salt (Hex)</IonLabel>
                                         <IonInput
                                             className="font-mono"
-                                            value={encryptionNonce}
-                                            onIonInput={(e) => setEncryptionNonce(e.detail.value || "")}
-                                            placeholder="Enter nonce"
+                                            value={encryptionSalt}
+                                            onIonInput={(e) => setEncryptionSalt(e.detail.value || "")}
+                                            placeholder="Enter salt"
                                         />
                                     </IonItem>
 

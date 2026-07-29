@@ -44,10 +44,10 @@ const SettingsMenu: React.FC<RouteComponentProps> = () => {
                             <p>Change how the interface of Excalibur looks and behaves.</p>
                         </IonLabel>
                     </IonItem>
-                    <IonItem id="settings-crypto" routerLink="/settings/crypto" routerDirection="forward">
+                    <IonItem id="settings-crypto" routerLink="/settings/operations" routerDirection="forward">
                         <IonLabel>
-                            <h2>Crypto</h2>
-                            <p>Affects the cryptographic operations of Excalibur.</p>
+                            <h2>Operations</h2>
+                            <p>Modify how Excalibur performs operations.</p>
                         </IonLabel>
                     </IonItem>
                     <IonItem id="settings-update" routerLink="/settings/update" routerDirection="forward">

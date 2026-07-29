@@ -50,3 +50,30 @@ export function padBuffer(buffer: Buffer, n: number): Buffer {
 export function xorBuffer(a: Buffer, b: Buffer): Buffer {
     return Buffer.from(a.map((value, index) => value ^ b[index]));
 }
+
+/**
+ * Writes an 8-byte big-endian unsigned integer into a buffer.
+ *
+ * @param buffer buffer to write into
+ * @param value value to write
+ * @param offset offset at which to write
+ */
+export function writeUInt64BE(buffer: Buffer, value: number, offset: number): void {
+    buffer.write(value.toString(16).padStart(16, "0"), offset, 8, "hex");
+}
+
+/**
+ * Reads an 8-byte big-endian unsigned integer from a buffer.
+ *
+ * @param buffer buffer to read from
+ * @param offset offset at which to read
+ * @returns the value read
+ * @throws {Error} if the value is not exactly representable as a number
+ */
+export function readUInt64BE(buffer: Buffer, offset: number): number {
+    const value = BigInt(`0x${buffer.toString("hex", offset, offset + 8)}`);
+    if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("64-bit field is too large");
+    }
+    return Number(value);
+}
