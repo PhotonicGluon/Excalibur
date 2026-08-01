@@ -1,7 +1,6 @@
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote_plus
 from uuid import uuid4
 
 import pytest
@@ -48,9 +47,9 @@ def _auth_websocket(user_id: str, key: bytes, path: str):
 
 def _make_websocket(user_id: str, key: bytes, path: str):
     auth_client, auth_token, pop_header = _auth_websocket(user_id, key, path)
-    with auth_client.websocket_connect(
-        f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-    ) as ws:
+    with auth_client.websocket_connect(path) as ws:
+        ws.send_text(f"{auth_token}:{pop_header}")
+        assert ws.receive_text() == "Authenticated"
         yield ws
 
 
@@ -196,12 +195,14 @@ class TestDirectoryChangesListener:
         auth_client, auth_token, pop_header = _auth_websocket(
             "01234567-89ab-dcef-0123-456789abcdef", KEY_1, LISTENER_PATH
         )
-        with auth_client.websocket_connect(
-            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-        ) as ws1:
-            with auth_client.websocket_connect(
-                f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-            ) as ws2:
+        with auth_client.websocket_connect(LISTENER_PATH) as ws1:
+            ws1.send_text(f"{auth_token}:{pop_header}")
+            assert ws1.receive_text() == "Authenticated"
+
+            with auth_client.websocket_connect(LISTENER_PATH) as ws2:
+                ws2.send_text(f"{auth_token}:{pop_header}")
+                assert ws2.receive_text() == "Authenticated"
+
                 response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid4().hex}")
                 assert response.status_code == 201
 
