@@ -69,7 +69,6 @@ async def demo_websocket_endpoint(
     websocket: WebSocket,
     credentials: Annotated[Credentials, Depends(get_credentials_ws)],
 ):
-    await websocket.accept()
     try:
         while True:
             text = await websocket.receive_text()

@@ -1,6 +1,5 @@
 import os
 from base64 import b64encode
-from urllib.parse import quote_plus
 
 import pytest
 from Crypto.Random import get_random_bytes
@@ -143,28 +142,28 @@ class TestHTTPPoPChecks:
 class TestWebsocketPoPChecks:
     def test_no_pop(self, auth_client: TestClient, auth_token: str):
         with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(f"/api/auth/pop-demo/ws?auth_token={auth_token}"):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+                websocket.send_text(f"{auth_token}:")
+                websocket.receive_text()  # Mocks awaiting for server response; this should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Missing PoP"
 
     def test_invalid_pop(self, auth_client: TestClient, auth_token: str):
         with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation=invalid-pop"
-            ):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+                websocket.send_text(f"{auth_token}:invalid-pop")
+                websocket.receive_text()  # Mocks awaiting for server response; this should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
+        assert e.value.reason == "Invalid PoP"
 
     def test_invalid_timestamp(self, auth_client: TestClient, auth_token: str):
         with pytest.raises(WebSocketDisconnect) as e:
             wrong_pop = "0 " + b64encode(_gen_nonce()).decode("UTF-8") + " " + b64encode(b"\x00" * 32).decode("UTF-8")
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation=" + quote_plus(wrong_pop),
-            ):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+                websocket.send_text(f"{auth_token}:{wrong_pop}")
+                websocket.receive_text()  # Mocks awaiting for server response; this should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Invalid timestamp"
@@ -181,10 +180,9 @@ class TestWebsocketPoPChecks:
         )
 
         with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}",
-            ):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+                websocket.send_text(f"{auth_token}:{pop_header}")
+                websocket.receive_text()  # Mocks awaiting for server response; this should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Invalid PoP"
@@ -200,10 +198,9 @@ class TestWebsocketPoPChecks:
             nonce=_gen_nonce(),
         )
         with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}",
-            ):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+                websocket.send_text(f"{auth_token}:{pop_header}")
+                websocket.receive_text()  # Mocks awaiting for server response; this should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Invalid PoP"
@@ -212,7 +209,7 @@ class TestWebsocketPoPChecks:
         import time
 
         nonce = _gen_nonce()
-        header = generate_pop_header(
+        pop_header = generate_pop_header(
             master_key=b"one demo 16B key",
             method="WEBSOCKET",
             path="/api/auth/pop-demo/ws",
@@ -221,17 +218,15 @@ class TestWebsocketPoPChecks:
         )
 
         # First request should succeed
-        with auth_client.websocket_connect(
-            f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(header)}",
-        ):
-            pass
+        with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+            websocket.send_text(f"{auth_token}:{pop_header}")
+            assert websocket.receive_text() == "Authenticated"
 
         # Second request should fail
         with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(header)}",
-            ):
-                pass
+            with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket2:
+                websocket2.send_text(f"{auth_token}:{pop_header}")
+                assert websocket2.receive_text()  # This should fail
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Nonce reused"
@@ -362,9 +357,9 @@ def test_websocket(auth_client: TestClient, auth_token: str):
         nonce=nonce,
     )
 
-    with auth_client.websocket_connect(
-        f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(header)}",
-    ) as websocket:
+    with auth_client.websocket_connect("/api/auth/pop-demo/ws") as websocket:
+        websocket.send_text(f"{auth_token}:{header}")
+        assert websocket.receive_text() == "Authenticated"
         websocket.send_text("hello world")
         response = websocket.receive_text()
         assert response == "01234567-89ab-dcef-0123-456789abcdef: hello world"

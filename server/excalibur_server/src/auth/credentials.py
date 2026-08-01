@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from hmac import compare_digest
 from typing import Annotated, Callable
 
-from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
+from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -101,7 +101,10 @@ async def _verify_and_extract_credentials(
     if not hmac_validation:
         raise raise_exception("Missing PoP")
 
-    timestamp, nonce, hmac = parse_pop_header(hmac_validation)
+    try:
+        timestamp, nonce, hmac = parse_pop_header(hmac_validation)
+    except Exception as e:
+        raise raise_exception("Invalid PoP") from e
 
     # Check if timestamp is within acceptable range
     # (We use 50% of the timestamp validity to make the full window the `timestamp_validity` value)
@@ -178,23 +181,11 @@ async def get_credentials(
     return credentials
 
 
-async def get_credentials_ws(
-    websocket: WebSocket,
-    auth_token: Annotated[str, Query(description="Authorization token")],
-    hmac_validation: Annotated[
-        str,
-        Query(
-            pattern=POP_HEADER_PATTERN,
-            description="HMAC for authentication",
-        ),
-    ] = "",
-) -> Credentials:
+async def get_credentials_ws(websocket: WebSocket) -> Credentials:
     """
     WebSocket-specific method that gets the authorization credentials.
 
     :param websocket: the WebSocket
-    :param auth_token: authorization credentials
-    :param hmac_validation: the SRP HMAC
     :raises CREDENTIALS_EXCEPTION: if the token is missing or invalid
     :return: the credentials
     """
@@ -208,8 +199,17 @@ async def get_credentials_ws(
             reason=reason,
         )
 
+    # Retrieve authentication information
+    await websocket.accept()
+    auth_info = await websocket.receive_text()
     try:
-        return await _verify_and_extract_credentials(
+        auth_token, hmac_validation = auth_info.split(":")
+    except ValueError:
+        raise_ws_exception("Invalid authentication format")
+
+    # Verify credentials
+    try:
+        credentials = await _verify_and_extract_credentials(
             get_path_and_method=get_path_and_method,
             raise_exception=raise_ws_exception,
             credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_token.removeprefix("Bearer ")),
@@ -220,3 +220,6 @@ async def get_credentials_ws(
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION, reason="Missing, invalid, or expired bearer token"
         )
+
+    await websocket.send_text("Authenticated")
+    return credentials
