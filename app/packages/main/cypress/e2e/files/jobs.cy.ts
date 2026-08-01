@@ -1,14 +1,15 @@
 import { createFile } from "./helpers";
 
-// import path = require("path");
+const SERVER_URL = Cypress.expose("serverURL");
 
 beforeEach(() => {
-    cy.login("http://127.0.0.1:8989", "test-user", "Password");
+    cy.signup(SERVER_URL, "test-user", "Password", false, false);
+    cy.login(SERVER_URL, "test-user", "Password");
 });
 
 afterEach(function () {
     // Stop other tests if any test fails
-    if (this.currentTest.state === "failed") {
+    if (this.currentTest?.state === "failed") {
         Cypress.stop();
         return;
     }
@@ -54,7 +55,7 @@ describe("Check Job Cancellations", () => {
         const fileName = createFile(1e6, true)[0];
         let fileElement = cy.get(`div[data-name='${fileName}']`);
         fileElement.should("exist");
-        cy.login("http://127.0.0.1:8989", "test-user", "Password"); // Log in afresh to remove the upload job
+        cy.login(SERVER_URL, "test-user", "Password"); // Log in afresh to remove the upload job
 
         // Create a file download task
         fileElement = cy.get(`div[data-name='${fileName}']`); // Need to get again due to the fresh login

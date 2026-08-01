@@ -2,6 +2,7 @@ describe("Check Preferences Page Contents", () => {
     const SERVER_URL = Cypress.expose("serverURL");
 
     beforeEach(() => {
+        cy.signup(SERVER_URL, "test-user", "Password", false, false);
         cy.login(SERVER_URL, "test-user", "Password");
         cy.gotoPreferences();
     });

@@ -56,49 +56,78 @@ Cypress.Commands.add("login", (serverURL: string, username: string, password: st
     });
 });
 
-Cypress.Commands.add("signup", (serverURL: string, username: string, password: string) => {
-    let ack: string[];
+Cypress.Commands.add(
+    "signup",
+    (
+        serverURL: string,
+        username: string,
+        password: string,
+        obfuscatedNames: boolean = true,
+        failIfExists: boolean = true,
+    ) => {
+        // Check if user already exists
+        cy.request({
+            url: `${serverURL}/api/users/check/${username}`,
+            method: "HEAD",
+            failOnStatusCode: false,
+        }).then((response) => {
+            expect(response).to.have.property("status");
+            if (failIfExists) {
+                expect(response.status).to.equal(404);
+            }
+            if (response.status === 200) {
+                return;
+            }
 
-    cy.onboard(serverURL);
-    cy.visit("/new-user");
+            // Sign up
+            let ack: string[];
 
-    // Initial checks
-    cy.get("#vault-key-modal").should("not.be.visible");
+            cy.onboard(serverURL);
+            cy.visit("/new-user");
 
-    // Get ACK
-    cy.request({
-        url: `${serverURL}/api/auth/ack`,
-        method: "GET",
-    }).then((response) => {
-        expect(response.body).to.have.length(24);
-        ack = response.body;
-    });
+            // Initial checks
+            cy.get("#vault-key-modal").should("not.be.visible");
 
-    // Fill in signup form
-    cy.get("[label='Username']").find("input").type(username);
-    cy.get("[label='Password']").find("input").type(password);
-    cy.get("[label='Confirm Password']").find("input").type(password);
+            // Get ACK
+            cy.request({
+                url: `${serverURL}/api/auth/ack`,
+                method: "GET",
+            }).then((response) => {
+                expect(response.body).to.have.length(24);
+                ack = response.body;
+            });
 
-    // Fill in Account Creation Key (ACK) by pasting into the first input box
-    cy.get("#ack-input")
-        .find("input")
-        .eq(0)
-        .trigger("paste", {
-            clipboardData: { getData: () => ack.join(" ") },
+            // Fill in signup form
+            cy.get("[label='Username']").find("input").type(username);
+            cy.get("[label='Password']").find("input").type(password);
+            cy.get("[label='Confirm Password']").find("input").type(password);
+
+            if (!obfuscatedNames) {
+                cy.get("ion-checkbox").click();
+            }
+
+            // Fill in Account Creation Key (ACK) by pasting into the first input box
+            cy.get("#ack-input")
+                .find("input")
+                .eq(0)
+                .trigger("paste", {
+                    clipboardData: { getData: () => ack.join(" ") },
+                });
+
+            cy.contains("ion-button", "Confirm").click();
+
+            // Assert that the vault key dialog shows up
+            cy.get("#vault-key-modal").should("be.visible");
+            cy.get("#vault-key-modal-close").click();
+
+            // We should have been redirected to the files page (i.e., logged in successfully)
+            cy.url().should("include", "/files/");
+
+            // Wait for the "User created" toast to clear so later toast assertions cannot match it
+            cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
         });
-
-    cy.contains("ion-button", "Confirm").click();
-
-    // Assert that the vault key dialog shows up
-    cy.get("#vault-key-modal").should("be.visible");
-    cy.get("#vault-key-modal-close").click();
-
-    // We should have been redirected to the files page (i.e., logged in successfully)
-    cy.url().should("include", "/files/");
-
-    // Wait for the "User created" toast to clear so later toast assertions cannot match it
-    cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
-});
+    },
+);
 
 Cypress.Commands.add("gotoPreferences", () => {
     cy.get("#ellipsis-button").click();
@@ -127,7 +156,13 @@ declare global {
         interface Chainable {
             onboard(serverURL: string): Chainable<void>;
             login(serverURL: string, username: string, password: string, expectToFail?: boolean): Chainable<void>;
-            signup(serverURL: string, username: string, password: string): Chainable<void>;
+            signup(
+                serverURL: string,
+                username: string,
+                password: string,
+                obfuscatedNames?: boolean,
+                failIfExists?: boolean,
+            ): Chainable<void>;
             gotoPreferences(): Chainable<void>;
             pullRefresh(): Chainable<void>;
         }

@@ -1,8 +1,11 @@
 import { createFile, createFolder } from "../helpers";
 import { LARGE_SIZE, SMALL_SIZE } from "./constants";
 
+const SERVER_URL = Cypress.expose("serverURL");
+
 beforeEach(() => {
-    cy.login("http://127.0.0.1:8989", "test-user", "Password");
+    cy.signup(SERVER_URL, "test-user", "Password", false, false);
+    cy.login(SERVER_URL, "test-user", "Password");
 
     // Wait for listener to connect
     cy.get("#directory-list-stats").should("exist");
@@ -11,7 +14,7 @@ beforeEach(() => {
 
 afterEach(function () {
     // Stop other tests if any test fails
-    if (this.currentTest.state === "failed") {
+    if (this.currentTest?.state === "failed") {
         Cypress.stop();
         return;
     }
