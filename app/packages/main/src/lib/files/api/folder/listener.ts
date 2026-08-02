@@ -1,14 +1,22 @@
 import { RefObject } from "react";
 
+import { generatePoPHeader } from "@lib/auth/pop";
 import ExEF from "@lib/crypto/exef";
-import { getAuthenticatedWS } from "@lib/network/websocket";
+import { getURLEncodedPath } from "@lib/url";
 import { sleep } from "@lib/util";
 
 import { AuthProvider } from "@components/auth/context";
 
+const LISTENER_PATH = "/files/listen";
+
 const RETRY_COUNT = 5;
 const RETRY_BACKOFF_MULTIPLIER = 2;
 const RETRY_INITIAL_DELAY = 100; // In ms
+
+enum ListenerStage {
+    SENT_AUTH,
+    LISTENING,
+}
 
 /**
  * Helper function that handles connection to the file listener WebSocket and sets up message event
@@ -29,21 +37,43 @@ function connectToListener(
     onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
     isCleaningUp: () => boolean,
 ): WebSocket {
-    const ws = getAuthenticatedWS(auth, "/files/listen");
+    const wsURL = new URL(`${auth.serverInfo!.apiURL!.replace("http", "ws")}${LISTENER_PATH}`);
+    console.log(wsURL.toString());
+    const ws = new WebSocket(wsURL.toString());
+    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(wsURL.toString()));
 
+    let stage: ListenerStage = ListenerStage.SENT_AUTH;
     ws.addEventListener("open", () => {
         if (isCleaningUp()) {
             ws.close();
             return;
         }
-        console.log("Connected to server; listening for directory changes");
-        onConnect();
+
+        // Send authentication
+        console.log("Connected to server; sending authentication for listener");
+        ws.send(`${auth.getToken()}:${popHeader}`);
     });
 
     ws.addEventListener("message", async (event) => {
         if (isCleaningUp()) {
             return;
         }
+
+        if (stage === ListenerStage.SENT_AUTH) {
+            const data = event.data as string;
+            if (data !== "Authenticated") {
+                console.error("Failed to authenticate to listener WebSocket");
+                ws.close();
+                return;
+            }
+
+            stage = ListenerStage.LISTENING;
+            console.log("Authenticated; listening for directory changes");
+            onConnect();
+            return;
+        }
+
+        // Listening stage
         const data = event.data as Blob;
         const pathEncrypted = Buffer.from(await data.arrayBuffer());
         const path = (await ExEF.decrypt(auth.authInfo!.key, pathEncrypted)).toString("utf-8");

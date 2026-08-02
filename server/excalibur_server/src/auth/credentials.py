@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from hmac import compare_digest
 from typing import Annotated, Callable
 
-from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketException, status
+from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketDisconnect, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -201,7 +201,11 @@ async def get_credentials_ws(websocket: WebSocket) -> Credentials:
 
     # Retrieve authentication information
     await websocket.accept()
-    auth_info = await websocket.receive_text()
+    try:
+        auth_info = await websocket.receive_text()
+    except WebSocketDisconnect:
+        raise_ws_exception("Disconnected before authentication")
+
     try:
         auth_token, hmac_validation = auth_info.split(":")
     except ValueError:

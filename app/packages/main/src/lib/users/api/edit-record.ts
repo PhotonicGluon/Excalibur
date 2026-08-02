@@ -1,10 +1,20 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
+import { generatePoPHeader } from "@lib/auth/pop";
 import ExEF from "@lib/crypto/exef";
-import { parseResponse as _parseResponse, generateResponse, getAuthenticatedWS } from "@lib/network/websocket";
+import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
+import { getURLEncodedPath } from "@lib/url";
 
 import { AuthProvider } from "@components/auth/context";
 
 import { RegistrationStage, RegistrationState } from "./registration/opaque";
+
+const EDIT_RECORD_PATH = "/auth/opaque/edit-record";
+
+enum _EditStage {
+    LISTENING,
+}
+type EditStage = RegistrationStage | _EditStage;
+type EditState = Omit<RegistrationState, "stage"> & { stage: EditStage };
 
 /**
  * Updates a user's OPAQUE registration record.
@@ -52,12 +62,14 @@ export async function editRecord(
         }
     }
 
-    const ws = getAuthenticatedWS(auth, "/auth/opaque/edit-record");
+    const wsURL = new URL(`${auth.serverInfo!.apiURL!.replace("http", "ws")}${EDIT_RECORD_PATH}`);
+    const ws = new WebSocket(wsURL.toString());
+    const popHeader = generatePoPHeader(auth.authInfo!.key, "WEBSOCKET", getURLEncodedPath(wsURL.toString()));
 
     // Perform record updating
-    setLoadingState?.("Sending record updating request...");
-    const state: RegistrationState = {
-        stage: RegistrationStage.SENT_REGISTRATION_REQUEST,
+    setLoadingState?.("Sending authentication request...");
+    const state: EditState = {
+        stage: _EditStage.LISTENING,
     };
 
     const recordUpdatePromise = new Promise<void>((resolve, reject) => {
@@ -71,23 +83,45 @@ export async function editRecord(
         });
 
         ws.addEventListener("open", async () => {
-            console.log(`Connected to server; sending username '${newUsername}' and record update request`);
-            const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
-                new TextEncoder().encode(newPassword),
-            );
-            const requestAndUsername = Buffer.concat([
-                registrationRequest.serialize(),
-                new TextEncoder().encode(newUsername),
-            ]);
-            await sendResponse(ws, requestAndUsername);
-
-            state.blind = blind;
-            setLoadingState?.("Waiting for record update response...");
+            console.log(`Connected to server; sending authentication for edit record`);
+            ws.send(`${auth.getToken()}:${popHeader}`);
+            setLoadingState?.("Waiting for authentication response...");
         });
 
         ws.addEventListener("message", async (event: MessageEvent<Blob | string>) => {
-            const response = await parseResponse(event.data);
             try {
+                if (state.stage === _EditStage.LISTENING) {
+                    if (event.data !== "Authenticated") {
+                        console.error("Failed to authenticate to listener WebSocket");
+                        ws.close();
+                        stopLoading?.();
+                        showAlert?.(
+                            "Record Update Failed",
+                            undefined,
+                            "Failed to authenticate to edit record WebSocket",
+                        );
+                        reject("Failed to authenticate to edit record WebSocket");
+                        return;
+                    }
+
+                    console.log(`Authenticated; sending username '${newUsername}' and record update request`);
+                    const [registrationRequest, blind] = OPAQUE.createRegistrationRequest(
+                        new TextEncoder().encode(newPassword),
+                    );
+                    const requestAndUsername = Buffer.concat([
+                        registrationRequest.serialize(),
+                        new TextEncoder().encode(newUsername),
+                    ]);
+                    await sendResponse(ws, requestAndUsername);
+
+                    state.blind = blind;
+                    state.stage = RegistrationStage.SENT_REGISTRATION_REQUEST;
+                    setLoadingState?.("Waiting for record update response...");
+                    return;
+                }
+
+                // Authenticated; subsequent messages use standard WebSocket message structure
+                const response = await parseResponse(event.data);
                 if (state.stage === RegistrationStage.SENT_REGISTRATION_REQUEST) {
                     if (response.status === "ERR") {
                         ws.close();
