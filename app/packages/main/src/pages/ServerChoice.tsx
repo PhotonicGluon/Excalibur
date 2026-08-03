@@ -15,7 +15,7 @@ import {
 import { settings } from "ionicons/icons";
 
 import { useEffectOnce } from "@lib/hooks";
-import { APICheckResult, checkAPIUrl, getServerInfo, timedFetch } from "@lib/network";
+import { APICheckResult, checkAPIUrl, getServerVersion, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 import { IS_DEV } from "@lib/util";
@@ -121,21 +121,25 @@ const ServerChoice: React.FC = () => {
         }
 
         // Get server info
-        const response = await getServerInfo(outcome.url);
+        const response = await getServerVersion(outcome.url);
         if (!response.success) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
-                message: "Failed to retrieve server information.",
+                message: "Failed to retrieve server version.",
                 buttons: ["OK"],
             });
             return;
         }
 
         const serverVersion = response.version!;
-        const maxUploadSize = response.maxUploadSize!;
-        const serverTime = response.time!;
-        const deltaTime = serverTime.getTime() - new Date().getTime();
+
+        // TODO: Get these values
+        // const maxUploadSize = response.maxUploadSize!;
+        // const serverTime = response.time!;
+        // const deltaTime = serverTime.getTime() - new Date().getTime();
+        const maxUploadSize = 52_428_800; // 50 MB
+        const deltaTime = 0;
 
         // Update preferences
         Preferences.set({
