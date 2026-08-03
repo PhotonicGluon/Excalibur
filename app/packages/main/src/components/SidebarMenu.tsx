@@ -14,8 +14,11 @@ import {
 } from "@ionic/react";
 import { logOutOutline, settingsOutline } from "ionicons/icons";
 
+import { bytesToHumanReadable } from "@lib/util";
+
 import Versions from "@components/Versions";
 import { useAuth } from "@components/auth/context";
+import { useSettings } from "@components/settings/context";
 
 interface ContainerProps {
     /** ID of the main content to attach this menu to */
@@ -39,6 +42,7 @@ const SidebarMenu: React.FC<ContainerProps> = ({
 }) => {
     // Get contexts
     const auth = useAuth();
+    const settings = useSettings();
     const router = useIonRouter();
 
     // Render
@@ -90,9 +94,26 @@ const SidebarMenu: React.FC<ContainerProps> = ({
                 {/* Details */}
                 <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block *:text-xs md:*:text-sm">
                     <Versions />
-                    <IonText color="medium">
-                        Delta time: <span className="font-mono">{auth.serverInfo!.deltaTime} ms</span>
-                    </IonText>
+                    <div className="h-2"></div>
+                    {auth.authInfo && (
+                        <>
+                            <IonText color="medium">
+                                Time offset:{" "}
+                                <span className="font-mono">
+                                    {auth.authInfo!.timeOffset > 0
+                                        ? `+${auth.authInfo!.timeOffset}`
+                                        : auth.authInfo!.timeOffset}{" "}
+                                    ms
+                                </span>
+                            </IonText>
+                            <IonText color="medium">
+                                Max upload size:{" "}
+                                <span className="font-mono">
+                                    {bytesToHumanReadable(auth.authInfo!.maxUploadSize, settings.fileSizeUnits)}
+                                </span>
+                            </IonText>
+                        </>
+                    )}
                 </div>
             </IonContent>
         </IonMenu>

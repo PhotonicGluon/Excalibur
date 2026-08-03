@@ -69,6 +69,7 @@ async def comms_endpoint(websocket: WebSocket):
 
         # Wait for client to send final key exchange message
         ke3_raw = (await ws_manager.receive()).data
+        recv_time = datetime.now().astimezone()
         ke3 = OPAQUE.deserialize_ke3(ke3_raw)
 
         # Finalize the key exchange, generating the session key
@@ -86,8 +87,8 @@ async def comms_endpoint(websocket: WebSocket):
         uuid = uuid4().hex
         MASTER_KEYS_CACHE[uuid] = master_key
 
-        # Send the auth token for client to use
-        await _send_auth_token(ws_manager, user.id, uuid)
+        # Give client authentication information
+        await _send_auth_response(ws_manager, user.id, uuid, recv_time)
 
         # Finally, close connection
         await ws_manager.close()
@@ -95,22 +96,27 @@ async def comms_endpoint(websocket: WebSocket):
         pass
 
 
-async def _send_auth_token(ws_manager: WebSocketManager, user_id: UUID, comm_uuid: str) -> None:
+async def _send_auth_response(ws_manager: WebSocketManager, user_id: UUID, comm_uuid: str, recv_time: datetime) -> None:
     """
-    Send the authentication token to the client.
+    Send the authentication response to the client, which includes the time-sync timestamps, maximum
+    file size, and auth token for the client to use.
 
-    Encrypts the authentication token using the master value and sends it to the client.
+    The values are all encrypted using the master key and then sent to the client.
 
     :param ws_manager: the WebSocket manager
     :param user_id: the ID of the user
     :param comm_uuid: the UUID of the communication session
+    :param recv_time: time on that server that the server received the client's KE3 message
     """
 
     auth_token = generate_auth_token(
         str(user_id), comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
     )
-    encrypted_auth_token = ExEF(MASTER_KEYS_CACHE[comm_uuid]).encrypt(auth_token.encode("UTF-8"))
-    await ws_manager.send(WebSocketMsg(encrypted_auth_token))
+    tx_time = datetime.now().astimezone()
+
+    response = f"{recv_time.isoformat()} {tx_time.isoformat()} {CONFIG.storage.max_upload_size} {auth_token}"
+    encrypted_response = ExEF(MASTER_KEYS_CACHE[comm_uuid]).encrypt(response.encode("UTF-8"))
+    await ws_manager.send(WebSocketMsg(encrypted_response))
 
 
 # Monkeypatch Functions

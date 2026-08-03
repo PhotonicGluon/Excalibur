@@ -85,28 +85,12 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
 
-            // // Get latest server info
-            // getServerInfo(serverInfo.apiURL!).then((info) => {
-            //     if (info) {
-            //         const newServerInfo = {
-            //             ...serverInfo,
-            //             version: info.version!,
-            //             maxUploadSize: info.maxUploadSize!,
-            //             deltaTime: info.time!.getTime() - new Date().getTime(),
-            //         };
-            //         setServerInfoFunc(newServerInfo);
-            //     }
-            // });
-
             // Get latest server version
             getServerVersion(serverInfo.apiURL!).then((result) => {
                 if (result && result.success) {
                     const newServerInfo = {
                         ...serverInfo,
                         version: result.version!,
-                        // TODO: Get these values
-                        maxUploadSize: 52_428_800, // 50 MB
-                        deltaTime: 0,
                     };
                     setServerInfoFunc(newServerInfo);
                 }

@@ -120,7 +120,7 @@ const ServerChoice: React.FC = () => {
             return;
         }
 
-        // Get server info
+        // Get server version
         const response = await getServerVersion(outcome.url);
         if (!response.success) {
             setIsLoading(false);
@@ -134,13 +134,6 @@ const ServerChoice: React.FC = () => {
 
         const serverVersion = response.version!;
 
-        // TODO: Get these values
-        // const maxUploadSize = response.maxUploadSize!;
-        // const serverTime = response.time!;
-        // const deltaTime = serverTime.getTime() - new Date().getTime();
-        const maxUploadSize = 52_428_800; // 50 MB
-        const deltaTime = 0;
-
         // Update preferences
         Preferences.set({
             server: serverURL,
@@ -151,8 +144,6 @@ const ServerChoice: React.FC = () => {
             apiURL: outcome.url,
             isFixed,
             version: serverVersion,
-            maxUploadSize,
-            deltaTime,
         });
 
         // Continue with login

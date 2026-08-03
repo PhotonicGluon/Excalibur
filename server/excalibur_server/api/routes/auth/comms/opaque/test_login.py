@@ -88,10 +88,11 @@ def test_login(test_idx: int, monkeypatch: pytest.MonkeyPatch):
         # Send KE3 message
         ws.send_json({"data": b64encode(OPAQUETestVectors.KE3[test_idx]).decode("utf-8"), "binary": True})
 
-        # Check received auth token
+        # Check received auth response
         expected_master_key = mock_server.kdf.expand(OPAQUETestVectors.SESSION_KEYS[test_idx], b"Master Key", 32)
         response: dict = ws.receive_json()
-        assert response.get("binary"), "Auth token message should be binary"
-        assert response.get("data"), "Auth token message should have data"
-        auth_token_data = b64decode(response["data"])
-        ExEF(expected_master_key).decrypt(auth_token_data)
+        assert response.get("binary"), "Auth response message should be binary"
+        assert response.get("data"), "Auth response message should have data"
+        encrypted_response_data = b64decode(response["data"])
+        auth_response = ExEF(expected_master_key).decrypt(encrypted_response_data).decode("utf-8")
+        assert len(auth_response.split(" ")) == 4

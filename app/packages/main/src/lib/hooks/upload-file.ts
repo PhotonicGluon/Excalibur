@@ -195,10 +195,10 @@ export function useUploadFile() {
         explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
         for (const file of files) {
             // Check if file size acceptable
-            if (file.size > auth.serverInfo!.maxUploadSize) {
+            if (file.size > auth.authInfo!.maxUploadSize) {
                 // We use an alert to make it more visible
-                console.warn(`File '${file.name}' is too large (${file.size} > ${auth.serverInfo!.maxUploadSize})`);
-                alert(`File '${file.name}' is too large (max ${auth.serverInfo!.maxUploadSize} bytes)`);
+                console.warn(`File '${file.name}' is too large (${file.size} > ${auth.authInfo!.maxUploadSize})`);
+                alert(`File '${file.name}' is too large (max ${auth.authInfo!.maxUploadSize} bytes)`);
                 continue;
             }
 

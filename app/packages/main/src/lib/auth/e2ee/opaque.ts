@@ -15,6 +15,10 @@ interface HandshakeState {
     stage: HandshakeStage;
     /** Bilaterally agreed master key */
     master?: Buffer;
+    /** Time that the client transmitted the KE3 message */
+    clientTxTime?: Date;
+    /** Time that the client received the server's auth response message */
+    clientRecvTime?: Date;
 }
 
 /**
@@ -66,6 +70,7 @@ export async function handshakeOPAQUE(
         });
 
         ws.addEventListener("message", async (event) => {
+            state.clientRecvTime = new Date(); // Used for delta time calculation
             const response = parseResponse(event.data as string);
             try {
                 if (state.stage === HandshakeStage.SENT_KE1_AND_USERNAME) {
@@ -122,6 +127,7 @@ export async function handshakeOPAQUE(
 
                     // Send response
                     setLoadingState?.("Sending key exchange message 3...");
+                    state.clientTxTime = new Date(); // Used for delta time calculation
                     sendResponse(ws, Buffer.from(ke3.serialize()));
 
                     // Derive master key
@@ -151,10 +157,25 @@ export async function handshakeOPAQUE(
                         return;
                     }
 
-                    const encryptedAuthToken = response.data! as Buffer;
-                    const authToken = (await ExEF.decrypt(state.master!, encryptedAuthToken)).toString("utf-8");
-                    resolve({ key: state.master!, token: authToken });
+                    const encryptedAuthResponse = response.data! as Buffer;
+                    const authResponse = (await ExEF.decrypt(state.master!, encryptedAuthResponse)).toString("utf-8");
+                    const [serverRecvTimeStr, serverTxTimeStr, maxUploadSize, authToken] = authResponse.split(" ");
 
+                    // See RFC5905 section 8 calculation for theta (i.e., time offset)
+                    const t1 = state.clientTxTime!.getTime();
+                    const t2 = new Date(serverRecvTimeStr).getTime();
+                    const t3 = new Date(serverTxTimeStr).getTime();
+                    const t4 = state.clientRecvTime!.getTime();
+                    const timeOffset = 0.5 * (t2 - t1 + t3 - t4); // Offset of server relative to client
+                    console.debug("Times for offset calculation:", { t1, t2, t3, t4, timeOffset });
+
+                    // Return authentication information
+                    resolve({
+                        key: state.master!,
+                        token: authToken,
+                        maxUploadSize: parseInt(maxUploadSize),
+                        timeOffset,
+                    });
                     return;
                 }
             } catch (e: unknown) {
