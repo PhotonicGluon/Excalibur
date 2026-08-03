@@ -42,7 +42,6 @@ jobs:
               working-directory: server
               run: |
                   uv run excalibur init -r
-                  uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=
 
             - name: Run Tests
               working-directory: server
