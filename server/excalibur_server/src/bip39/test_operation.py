@@ -85,9 +85,9 @@ def test_invalid_length():
 
 def test_invalid_mnemonic():
     with pytest.raises(ValueError, match="is not in list"):
-        from_mnemonic("not-real zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong".split(" "))
+        from_mnemonic(["not-real", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "wrong"])
 
 
 def test_invalid_checksum():
     with pytest.raises(ValueError, match="Invalid checksum"):
-        from_mnemonic("zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo".split(" "))
+        from_mnemonic(["zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo", "zoo"])

@@ -52,10 +52,7 @@ class WebSocketLogFilter(logging.Filter):
         if "WebSocket" in log_message or log_message in {"connection open", "connection closed"}:
             return False
 
-        if record.levelno == logging.DEBUG and log_message[0] in {"<", "=", ">", "x", "%"}:
-            return False
-
-        return True
+        return record.levelno != logging.DEBUG or log_message[0] not in {"<", "=", ">", "x", "%"}
 
 
 # Add endpoint filter to access logger

@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from functools import cached_property
-from typing import Callable
 
 from Crypto.Random import get_random_bytes
 

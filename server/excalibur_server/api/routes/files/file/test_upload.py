@@ -42,7 +42,7 @@ class TestUpload:
         uuid = uuid4().hex
 
         transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(content)
-        file_path_encrypted = ExEF(b"one demo 16B key").encrypt(f"./test-{uuid}.txt.exef".encode("utf-8"))
+        file_path_encrypted = ExEF(b"one demo 16B key").encrypt(f"./test-{uuid}.txt.exef".encode())
         response = auth_client.post(
             f"/api/files/upload/{b64encode(file_path_encrypted, altchars=b'-_').decode()}",
             headers=headers,

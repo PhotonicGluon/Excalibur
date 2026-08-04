@@ -1,7 +1,8 @@
 import shelve
 import time
 from collections import OrderedDict
-from typing import Callable, Iterator, Mapping, TypeVar
+from collections.abc import Callable, Iterator, Mapping
+from typing import TypeVar
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
@@ -39,10 +40,7 @@ class TTLCache(Mapping[_KT, _VT]):
 
         # If key expired, pretend it doesn't exist (clean up later)
         _, expires_at = self._cache[key]
-        if self._timer() > expires_at:
-            return False
-
-        return True
+        return self._timer() <= expires_at
 
     def __getitem__(self, key: _KT) -> _VT:
         if key not in self._cache:

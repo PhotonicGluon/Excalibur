@@ -11,9 +11,8 @@ def add_user(user: User):
     :param user: the user to add
     """
 
-    with get_session() as session:
-        with session.begin():
-            session.add(user)
+    with get_session() as session, session.begin():
+        session.add(user)
 
 
 def get_user(username: str) -> User | None:
@@ -54,9 +53,8 @@ def remove_user_from_id(user_id: str):
     :raises ValueError: if the user does not exist
     """
 
-    with get_session() as session:
-        with session.begin():
-            user = session.get(User, user_id)
-            if user is None:
-                raise ValueError(f"User '{user_id}' does not exist.")
-            session.delete(user)
+    with get_session() as session, session.begin():
+        user = session.get(User, user_id)
+        if user is None:
+            raise ValueError(f"User '{user_id}' does not exist.")
+        session.delete(user)

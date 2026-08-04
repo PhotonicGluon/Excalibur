@@ -1,3 +1,4 @@
+# ruff: noqa: SIM117
 import os
 from base64 import b64encode
 from urllib.parse import quote_plus
@@ -150,11 +151,11 @@ class TestWebsocketPoPChecks:
         assert e.value.reason == "Missing PoP"
 
     def test_invalid_pop(self, auth_client: TestClient, auth_token: str):
-        with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
-                f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation=invalid-pop"
-            ):
-                pass
+        with (
+            pytest.raises(WebSocketDisconnect) as e,
+            auth_client.websocket_connect(f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation=invalid-pop"),
+        ):
+            pass
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
 
@@ -180,11 +181,13 @@ class TestWebsocketPoPChecks:
             nonce=_gen_nonce(),
         )
 
-        with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
+        with (
+            pytest.raises(WebSocketDisconnect) as e,
+            auth_client.websocket_connect(
                 f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}",
-            ):
-                pass
+            ),
+        ):
+            pass
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Invalid PoP"
@@ -199,11 +202,13 @@ class TestWebsocketPoPChecks:
             timestamp=int(time.time()),
             nonce=_gen_nonce(),
         )
-        with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
+        with (
+            pytest.raises(WebSocketDisconnect) as e,
+            auth_client.websocket_connect(
                 f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}",
-            ):
-                pass
+            ),
+        ):
+            pass
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Invalid PoP"
@@ -227,11 +232,13 @@ class TestWebsocketPoPChecks:
             pass
 
         # Second request should fail
-        with pytest.raises(WebSocketDisconnect) as e:
-            with auth_client.websocket_connect(
+        with (
+            pytest.raises(WebSocketDisconnect) as e,
+            auth_client.websocket_connect(
                 f"/api/auth/pop-demo/ws?auth_token={auth_token}&hmac_validation={quote_plus(header)}",
-            ):
-                pass
+            ),
+        ):
+            pass
 
         assert e.value.code == status.WS_1008_POLICY_VIOLATION
         assert e.value.reason == "Nonce reused"

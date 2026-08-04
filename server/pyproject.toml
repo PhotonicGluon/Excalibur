@@ -11,7 +11,7 @@ dependencies = [
     "duckdb~=1.5.5",
     "duckdb-engine>=0.17.0",
     "fastapi>=0.139.2",
-    "gitpython>=3.1.55",
+    "gitpython>=3.1.57",
     "httptools>=0.8.0",
     "packaging>=26.2",
     "pycryptodome>=3.23.0",
@@ -26,9 +26,9 @@ dependencies = [
     "toml>=0.10.2",
     "tomlkit>=0.15.1",
     "typer>=0.27.0",
-    "uvicorn>=0.51.0",
+    "uvicorn>=0.52.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
-    "websockets>=16.1.1",
+    "websockets>=17.0",
 ]
 requires-python = ">=3.11"
 authors = [
@@ -46,8 +46,8 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.15.0", "ruff>=0.15.22", "watchfiles>=1.2.0"]
-test = ["httpx2>=2.7.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
+dev = ["ipython~=9.15.0", "ruff>=0.16.0", "watchfiles>=1.2.0"]
+test = ["httpx2>=2.9.1", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []
@@ -74,8 +74,27 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = [
+    "E401", # multiple-imports-on-one-line 
+    "E402", # module-import-not-at-top-of-file
     "E501", # line-too-long
+    "E701", # multiple-statements-on-one-line-colon
+    "E702", # multiple-statements-on-one-line-semicolon
+    "E703", # useless-semicolon
+    "E711", # none-comparison
+    "E712", # true-false-comparison
+    "E713", # not-in-test
+    "E714", # not-is-test
+    "E721", # type-comparison
+    "E731", # lambda-assignment
+    "E741", # ambiguous-variable-name
+    "E742", # ambiguous-class-name
+    "E743", # ambiguous-function-name
+    "F403", # undefined-local-with-import-star
+    "F405", # undefined-local-with-import-star-usage
+    "F406", # undefined-local-with-nested-import-star-usage
     "C901", # too-complex
-    "I001", # unsorted-imports
     "I002", # missing-required-import
+]
+ignore = [
+    "B008", # function-call-in-default-argument
 ]
