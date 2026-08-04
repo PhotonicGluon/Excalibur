@@ -1,3 +1,4 @@
+# ruff: noqa: RUF012
 import pytest
 
 from excalibur_server.src.auth.opaque.operation import OPAQUEClient, OPAQUEServer

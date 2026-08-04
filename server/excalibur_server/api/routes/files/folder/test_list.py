@@ -82,7 +82,7 @@ class TestListdir:
         from base64 import b64encode
 
         path_encrypted_data = ExEF(b"one demo 16B key").encrypt(
-            f"{get_item_fullpath(dir_with_items.id)}".encode("UTF-8")
+            f"{get_item_fullpath(dir_with_items.id)}".encode()
         )
 
         response = auth_client.get(

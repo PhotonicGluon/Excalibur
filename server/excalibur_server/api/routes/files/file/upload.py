@@ -1,7 +1,8 @@
 import os
 import tempfile
+from collections.abc import Generator
 from pathlib import Path as PathlibPath
-from typing import Annotated, Generator
+from typing import Annotated
 
 import aiofiles
 from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, Request, status
@@ -25,7 +26,7 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
     :yield: the spooled temporary file
     """
 
-    spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)
+    spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)  # noqa: SIM115
     try:
         async for chunk in request.stream():
             spooled_file.write(chunk)

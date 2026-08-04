@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from hmac import compare_digest
-from typing import Annotated, Callable
+from typing import Annotated
 
 from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -31,7 +32,7 @@ def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -
         sub=user_id,
         data={"uuid": comm_uuid},
         key=CONFIG.security.jwt_key,
-        expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
+        expiry=round(expiry_timestamp - datetime.now(tz=UTC).timestamp()),
     )
 
 
@@ -48,10 +49,7 @@ def check_auth_token(token: str) -> bool:
         return False
 
     comm_uuid = decoded.pop("uuid")
-    if comm_uuid not in MASTER_KEYS_CACHE:
-        return False
-
-    return True
+    return comm_uuid in MASTER_KEYS_CACHE
 
 
 class Credentials(BaseModel):
@@ -105,7 +103,7 @@ async def _verify_and_extract_credentials(
 
     # Check if timestamp is within acceptable range
     # (We use 50% of the timestamp validity to make the full window the `timestamp_validity` value)
-    if abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
+    if abs(datetime.now(tz=UTC).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
         raise raise_exception("Invalid timestamp")
 
     # Check if nonce is fresh

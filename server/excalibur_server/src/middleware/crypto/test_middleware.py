@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,7 +26,7 @@ def auth_header():
     token = generate_auth_token(
         "01234567-89ab-dcef-0123-456789abcdef",
         TEST_COMM_UUID,
-        datetime.now(tz=timezone.utc).timestamp() + 9999,
+        datetime.now(tz=UTC).timestamp() + 9999,
     )
     return {"Authorization": f"Bearer {token}"}
 

@@ -46,7 +46,7 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.15.0", "ruff>=0.15.22", "watchfiles>=1.2.0"]
+dev = ["ipython~=9.15.0", "ruff>=0.16.0", "watchfiles>=1.2.0"]
 test = ["httpx2>=2.9.1", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
@@ -74,8 +74,27 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = [
+    "E401", # multiple-imports-on-one-line 
+    "E402", # module-import-not-at-top-of-file
     "E501", # line-too-long
+    "E701", # multiple-statements-on-one-line-colon
+    "E702", # multiple-statements-on-one-line-semicolon
+    "E703", # useless-semicolon
+    "E711", # none-comparison
+    "E712", # true-false-comparison
+    "E713", # not-in-test
+    "E714", # not-is-test
+    "E721", # type-comparison
+    "E731", # lambda-assignment
+    "E741", # ambiguous-variable-name
+    "E742", # ambiguous-class-name
+    "E743", # ambiguous-function-name
+    "F403", # undefined-local-with-import-star
+    "F405", # undefined-local-with-import-star-usage
+    "F406", # undefined-local-with-nested-import-star-usage
     "C901", # too-complex
-    "I001", # unsorted-imports
     "I002", # missing-required-import
+]
+ignore = [
+    "B008", # function-call-in-default-argument
 ]

@@ -35,8 +35,8 @@ class TestCreateDir:
         }
         uuid = uuid4().hex
 
-        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(".".encode("UTF-8"))
-        transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"test-dir-{uuid}".encode("UTF-8"))
+        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(b".")
+        transit_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"test-dir-{uuid}".encode())
         response = auth_client.post(
             f"/api/files/mkdir/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
             headers=headers,

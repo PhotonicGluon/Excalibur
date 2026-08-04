@@ -8,7 +8,7 @@ def test_removes_leading_and_trailing_whitespace():
 
     password = "  password  "
     result = normalize_password(password)
-    expected = "password".encode("utf-8")
+    expected = b"password"
     assert result == expected
 
 
@@ -19,7 +19,7 @@ def test_normalizes_the_password_to_nfkd():
 
     password = "ﬃ"
     result = normalize_password(password)
-    expected = "ffi".encode("utf-8")
+    expected = b"ffi"
     assert result == expected
 
 
@@ -29,7 +29,7 @@ def test_slow_hash():
     hashing algorithm is correct.
     """
 
-    password = "password".encode("utf-8")
+    password = b"password"
     salt = bytes.fromhex("deadbeef")
     result = slow_hash(password, salt)
 

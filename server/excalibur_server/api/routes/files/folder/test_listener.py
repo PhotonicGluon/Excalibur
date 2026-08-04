@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -30,7 +30,7 @@ def _auth_websocket(user_id: str, key: bytes, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = key
-    token = generate_auth_token(user_id, uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(user_id, uuid, datetime.now(tz=UTC).timestamp() + 9999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
     # Generate PoP header
@@ -198,15 +198,14 @@ class TestDirectoryChangesListener:
         )
         with auth_client.websocket_connect(
             f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-        ) as ws1:
-            with auth_client.websocket_connect(
-                f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-            ) as ws2:
-                response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid4().hex}")
-                assert response.status_code == 201
+        ) as ws1, auth_client.websocket_connect(
+            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
+        ) as ws2:
+            response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid4().hex}")
+            assert response.status_code == 201
 
-                assert ExEF(KEY_1).decrypt(ws1.receive_bytes()).decode("utf-8") == "."
-                assert ExEF(KEY_1).decrypt(ws2.receive_bytes()).decode("utf-8") == "."
+            assert ExEF(KEY_1).decrypt(ws1.receive_bytes()).decode("utf-8") == "."
+            assert ExEF(KEY_1).decrypt(ws2.receive_bytes()).decode("utf-8") == "."
 
     def test_multi_requests(self, auth_client: TestClient, ws_client: WebSocketTestSession):
         # Create folders
