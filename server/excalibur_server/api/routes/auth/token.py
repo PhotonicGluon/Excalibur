@@ -1,3 +1,4 @@
+from datetime import UTC
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
@@ -10,7 +11,7 @@ from excalibur_server.src.config import CONFIG
 
 
 def _gen_token(user_id: str, master_key: bytes, expiry_time: int):
-    from datetime import datetime, timezone
+    from datetime import datetime
     from uuid import uuid4
 
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
@@ -21,7 +22,7 @@ def _gen_token(user_id: str, master_key: bytes, expiry_time: int):
     token = generate_auth_token(
         user_id,
         uuid,
-        datetime.now(tz=timezone.utc).timestamp() + expiry_time,
+        datetime.now(tz=UTC).timestamp() + expiry_time,
     )
 
     return token

@@ -1,3 +1,4 @@
+# ruff: noqa: RUF012
 import json
 
 from fastapi.testclient import TestClient

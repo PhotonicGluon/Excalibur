@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
@@ -90,7 +90,7 @@ class FSItem(SQLModel, table=True):
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=timezone.utc).timestamp()))
+    timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=UTC).timestamp()))
     "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
     # Ensure no two items have the same name in the same folder

@@ -7,7 +7,7 @@ Create Date: 2026-03-31 19:27:28.343528
 Update Date: 2026-05-01 20:15:19.123456
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlmodel

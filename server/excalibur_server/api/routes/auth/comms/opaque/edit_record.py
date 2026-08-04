@@ -63,14 +63,13 @@ async def edit_record_endpoint(
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
         # Amend user's record
-        with get_session() as session:
-            with session.begin():
-                db_user = session.get(User, credentials.user_id)
-                db_user.username = new_username
-                db_user.registration_record = registration_record_raw
-                db_user.auk_salt = auk_salt
-                db_user.key_enc = key_enc
-                session.add(db_user)
+        with get_session() as session, session.begin():
+            db_user = session.get(User, credentials.user_id)
+            db_user.username = new_username
+            db_user.registration_record = registration_record_raw
+            db_user.auk_salt = auk_salt
+            db_user.key_enc = key_enc
+            session.add(db_user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))

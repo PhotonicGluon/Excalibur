@@ -15,9 +15,8 @@ def add_item(item: FSItem):
     :param item: the filesystem item to add
     """
 
-    with get_session() as session:
-        with session.begin():
-            session.add(item)
+    with get_session() as session, session.begin():
+        session.add(item)
 
 
 def get_item(item_id: str) -> FSItem | None:
@@ -154,9 +153,8 @@ def remove_item(item_id: str):
     :raises ValueError: if the filesystem item does not exist
     """
 
-    with get_session() as session:
-        with session.begin():
-            item = session.get(FSItem, item_id)
-            if item is None:
-                raise ValueError(f"Filesystem item '{item_id}' does not exist.")
-            session.delete(item)
+    with get_session() as session, session.begin():
+        item = session.get(FSItem, item_id)
+        if item is None:
+            raise ValueError(f"Filesystem item '{item_id}' does not exist.")
+        session.delete(item)

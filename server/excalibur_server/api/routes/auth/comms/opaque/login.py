@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -107,7 +107,7 @@ async def _send_auth_token(ws_manager: WebSocketManager, user_id: UUID, comm_uui
     """
 
     auth_token = generate_auth_token(
-        str(user_id), comm_uuid, datetime.now(tz=timezone.utc).timestamp() + CONFIG.security.session_duration
+        str(user_id), comm_uuid, datetime.now(tz=UTC).timestamp() + CONFIG.security.session_duration
     )
     encrypted_auth_token = ExEF(MASTER_KEYS_CACHE[comm_uuid]).encrypt(auth_token.encode("UTF-8"))
     await ws_manager.send(WebSocketMsg(encrypted_auth_token))

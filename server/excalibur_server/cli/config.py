@@ -12,7 +12,7 @@ def validate_config():
     """
 
     # Just importing is enough to validate the config
-    from excalibur_server.src.config import CONFIG as CONFIG
+    from excalibur_server.src.config import CONFIG as CONFIG  # noqa: PLC0414
 
     typer.secho("Config is valid!", fg="green")
 
@@ -120,10 +120,8 @@ def update_config():
         config["security"]["account_creation_key"] = get_random_bytes(32).hex()
 
         # Update rate limit if current values are below new defaults
-        if config["server"]["rate_limit"]["capacity"] < 250:
-            config["server"]["rate_limit"]["capacity"] = 250
-        if config["server"]["rate_limit"]["refill_rate"] < 25:
-            config["server"]["rate_limit"]["refill_rate"] = 25
+        config["server"]["rate_limit"]["capacity"] = max(config["server"]["rate_limit"]["capacity"], 250)
+        config["server"]["rate_limit"]["refill_rate"] = max(config["server"]["rate_limit"]["refill_rate"], 25)
 
         # Add new `max_log_age` field
         config["logging"] = _add_new_field(
@@ -291,8 +289,8 @@ def generate_keys(
         # Check if the config is valid
         # (Just importing is enough to validate the config)
         try:
-            from excalibur_server.src.config import CONFIG as CONFIG
-        except Exception as e:
+            from excalibur_server.src.config import CONFIG as CONFIG  # noqa: PLC0414
+        except ImportError as e:
             typer.secho(f"Config is invalid: {e}", fg="red")
             raise typer.Exit(1)
 

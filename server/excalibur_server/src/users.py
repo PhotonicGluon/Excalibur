@@ -62,4 +62,4 @@ def remove_user(username: str):
 get_user = _get_user
 get_user_from_id = _get_user_from_id
 
-__all__ = ["is_user", "add_user", "get_user_from_id", "remove_user", "User", "get_user"]
+__all__ = ["User", "add_user", "get_user", "get_user_from_id", "is_user", "remove_user"]

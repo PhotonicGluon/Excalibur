@@ -95,3 +95,6 @@ extend-select = [
     "C901", # too-complex
     "I002", # missing-required-import
 ]
+ignore = [
+    "B008", # function-call-in-default-argument
+]

@@ -76,13 +76,15 @@ def revision(
             "Required when the given head is not itself a head.",
         ),
     ] = False,
-    branch_label: Annotated[str, typer.Option(help="Specify a branch label to apply to the new revision.")] = None,
+    branch_label: Annotated[
+        str | None, typer.Option(help="Specify a branch label to apply to the new revision.")
+    ] = None,
     version_path: Annotated[
-        str,
+        str | None,
         typer.Option(help="Specify a specific directory from which to locate Alembic version files."),
     ] = None,
-    revision_id: Annotated[str, typer.Option(help="Specify a revision ID to apply to the new revision.")] = None,
-    depends_on: Annotated[str, typer.Option(help="List of 'depends on' identifiers.")] = None,
+    revision_id: Annotated[str | None, typer.Option(help="Specify a revision ID to apply to the new revision.")] = None,
+    depends_on: Annotated[str | None, typer.Option(help="List of 'depends on' identifiers.")] = None,
 ):
     """
     Creates a new revision file.

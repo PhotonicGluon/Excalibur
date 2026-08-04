@@ -1,4 +1,4 @@
-# ruff: noqa: E501
+# ruff: noqa: E501, RUF012
 import pytest
 
 from excalibur_server.src.auth.opaque.oprf import OPRFRistrettoSHA512

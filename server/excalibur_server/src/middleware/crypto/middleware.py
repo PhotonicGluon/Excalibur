@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from starlette import status
 from starlette.datastructures import MutableHeaders
