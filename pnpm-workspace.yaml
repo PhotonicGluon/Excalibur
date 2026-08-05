@@ -8,7 +8,7 @@ auditConfig:
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
 minimumReleaseAgeExclude:
-  - fast-uri@3.1.4
+  - fast-uri@3.1.5
 
 blockExoticSubdeps: true
 
@@ -28,27 +28,22 @@ trustPolicyIgnoreAfter: 43200 # 30 days, expressed in minutes
 
 overrides:
   # Main
-  globals@>=17.0.0 <=17.7.0: "^17.7.0" # To make sure globals v17 versions are consistent
+  esbuild@<0.28.1: ^0.28.1 # To make sure esbuild versions are consistent
+  globals@>=17.0.0 <17.8.0: "^17.8.0" # To make sure globals v17 versions are consistent
   plist@>=3.0.0 <4.0.0: "^3.1.1" # To fix `electron-build` issues
   prettier@<3.8.4: ">=3.8.4"
-  readable-stream@<=4: ">=4"
+  readable-stream@<4: ">=4"
   # Security
-  "@babel/core@<=7.29.0": ^7.29.1
-  axios@<1.18.0: ^1.18.0
-  brace-expansion@<1.1.16: ^1.1.16
-  brace-expansion@>=2.0.0 <2.1.2: ^2.1.2
-  esbuild@>=0.17.0 <0.28.1: ^0.28.1
-  fast-uri@>=3.0.0 <=3.1.3: ^3.1.4
-  form-data@>=4.0.0 <4.0.6: ^4.0.6
-  js-yaml@<=4.3.0: ^4.3.0
+  brace-expansion@<1.1.18: ^1.1.18
+  brace-expansion@>=2.0.0 <2.1.4: ^2.1.4
+  brace-expansion@>=4.0.0 <5.0.9: ^5.0.9
+  fast-uri@>=3.0.0 <3.1.5: ^3.1.5
   minimatch@<3.1.4: ^3.1.4
-  qs@>=6.11.1 <=6.15.1: ^6.15.2
+  postcss@<8.5.23: ^8.5.23
   sharp@<0.35.0: ^0.35.0
-  systeminformation@<=5.31.6: ^5.31.7
-  tar@<=7.5.18: ^7.5.19
-  tmp@<0.2.6: ^0.2.6
-  undici@<6.27.0: ^6.27.0
-  undici@>=7.0.0 <7.28.0: ^7.28.0
+  tar@<7.5.21: ^7.5.21
+  undici@<6.28.0: ^6.28.0
+  undici@>=7.0.0 <7.29.0: ^7.29.0
   uuid@<11.1.1: ^11.1.1
 
 patchedDependencies:
