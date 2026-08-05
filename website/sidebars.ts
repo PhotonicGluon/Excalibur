@@ -40,7 +40,7 @@ const sidebars: SidebarsConfig = {
                 type: "doc",
                 id: "reference/exef/index",
             },
-            items: ["reference/exef/v3", "reference/exef/v2"],
+            items: ["reference/exef/v4", "reference/exef/v3", "reference/exef/v2"],
         },
     ],
     server_api: [
