@@ -1,7 +1,8 @@
 from abc import ABC
+from collections.abc import Callable
 from hashlib import sha512
 from math import ceil
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.crypto.misc import i2osp, xor

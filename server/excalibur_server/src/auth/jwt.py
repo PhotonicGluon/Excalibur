@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -33,7 +33,7 @@ def generate_token(sub: str, data: dict, key: bytes, expiry: int = 3600) -> str:
     """
 
     data = data.copy()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(tz=UTC)
     data.update({"sub": sub, "iat": now, "exp": now + timedelta(seconds=expiry)})
     return jwt.encode(data, _generate_key(sub, key), algorithm="HS256")
 
@@ -69,7 +69,7 @@ def decode_token(token: str, key: bytes) -> dict | None:
     except InvalidTokenError:
         return None
 
-    now = datetime.now().timestamp()
+    now = datetime.now(tz=UTC).timestamp()
     if issued_at > now or expiry < now:
         return None
 

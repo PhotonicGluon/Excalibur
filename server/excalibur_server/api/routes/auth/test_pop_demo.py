@@ -1,3 +1,4 @@
+# ruff: noqa: SIM117
 import os
 from base64 import b64encode
 

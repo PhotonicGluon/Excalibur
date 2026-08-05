@@ -10,7 +10,7 @@ from excalibur_server.cli import app
 def run_tests(
     verbose: Annotated[int, typer.Option("--verbose", "-v", help="Verbosity level.", count=True)] = 0,
     files: Annotated[
-        list[Path], typer.Argument(exists=True, help="Files to run tests on. Leave empty to run all tests.")
+        list[Path] | None, typer.Argument(exists=True, help="Files to run tests on. Leave empty to run all tests.")
     ] = None,
 ):
     """

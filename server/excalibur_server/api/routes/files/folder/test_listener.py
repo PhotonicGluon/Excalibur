@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -29,7 +29,7 @@ def _auth_websocket(user_id: str, key: bytes, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = key
-    token = generate_auth_token(user_id, uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(user_id, uuid, datetime.now(tz=UTC).timestamp() + 9999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
     # Generate PoP header
