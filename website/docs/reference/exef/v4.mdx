@@ -57,7 +57,7 @@ The table below describes the fields present in the header. All multi-byte integ
 | `0-3`   | **ExEF Magic**          | 4            | The ASCII string `ExEF`.                                                                                                            |
 | `4`     | **Version**             | 1            | `0x04` for this version.                                                                                                            |
 | `5`     | **Cipher ID**           | 1            | A 1-byte identifier for the encryption algorithm. See table below.                                                                  |
-| `6`     | **Chunk Size Exponent**, $E$ | 1            | A 1-byte unsigned integer representing the base-2 exponent of the chunk size. Note that the plaintext chunk size is $C = 2^E$ bytes. **Must** satisfy $12 \leq E \leq 30$ (4 KiB to 1 GiB).                        |
+| `6`     | **Chunk Size Exponent**, $E$ | 1            | A 1-byte unsigned integer representing the base-2 exponent of the chunk size. Note that the plaintext chunk size is $C = 2^E$ bytes. **Must** satisfy $4 \leq E \leq 30$ (16 B to 1 GiB).                        |
 | `7-10` | **Chunk Count**, $N$         | 4            | The number of chunks in the body as a 4-byte unsigned integer. **Must** be at least 1.                                        |
 | `11-18` | **Padded Size**, $L_p$ | 8            | The total number of *plaintext* bytes across all chunks, as an 8-byte unsigned integer. This includes the encrypted length prefix and padding, but **not** the per-chunk tags. |
 | `19-50` | **Salt**                | 32           | A 32-byte cryptographically random salt, used as the HKDF salt. **Must be freshly generated for every file.**                       |
@@ -241,7 +241,7 @@ The `is_final` marker is technically redundant, since the `Chunk Count` is part 
 We assume that an encryptor knows the full plaintext length $L$ before proceeding with encryption.
 
 1. Compute the padded size $L_p = 8 + \mathrm{PADME}(L)$. Reject if $L_p$ exceeds the [size limits](#size-limits) (i.e. if $L_p > 2^{64}-1$).
-2. Choose the chunk size exponent $E$ (with $12 \leq E \leq 30$), let $C = 2^E$, and compute $N = \lceil \frac{L_p}{C} \rceil$. Reject if $N \geq 2^{32}$.
+2. Choose the chunk size exponent $E$ (with $4 \leq E \leq 30$), let $C = 2^E$, and compute $N = \lceil \frac{L_p}{C} \rceil$. Reject if $N \geq 2^{32}$.
 3. Generate a fresh 32-byte random `Salt` using a cryptographically secure random generator.
 4. Using $K$ and the `Salt`, derive the crypto key $k_c$.
 5. Build the pre-encryption plaintext [as described above](#pre-encryption-plaintext).
@@ -252,7 +252,7 @@ We assume that an encryptor knows the full plaintext length $L$ before proceedin
 ### Decryption
 
 1. Read the 56-byte header. Reject if the magic, version, or cipher ID is unrecognised, or if any reserved byte is non-zero.
-2. From the header, obtain the chunk size exponent $E$ and chunk count $N$. Assert $12 \leq E \leq 30$, $8 \leq L_p \leq 2^{64}-1$, $\mathrm{PADME}(L_p - 8) = L_p - 8$, $N \geq 1$, $N = \lceil \frac{L_p}{C} \rceil$, _in that order_. Reject on any mismatch.
+2. From the header, obtain the chunk size exponent $E$ and chunk count $N$. Assert $4 \leq E \leq 30$, $8 \leq L_p \leq 2^{64}-1$, $\mathrm{PADME}(L_p - 8) = L_p - 8$, $N \geq 1$, $N = \lceil \frac{L_p}{C} \rceil$, _in that order_. Reject on any mismatch.
    - If the total size is known in advance (i.e. the input is a seekable file rather than a stream), also assert that the total size is $56 + L_p + 16N$.
    - Note that a streaming decryptor cannot perform this check up front and instead enforces it at end-of-file, via steps 5 and 6.
 3. Reject if $L_p - 8$ exceeds the caller's policy limit on plaintext size. This check uses caller policy, **not** the header, to decide what is acceptable. A decryptor **should** likewise cap the acceptable chunk size exponent $E$ by policy, since $E$ is attacker-supplied and is only authenticated once chunk 0 verifies.
