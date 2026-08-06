@@ -128,11 +128,11 @@ describe("ExEF v4", () => {
         });
 
         it("should reject an out-of-range exponent", () => {
-            expect(async () => new ExEFv4(KEYS[192]).decrypt(_mutate(6, 0x0b))).rejects.toThrow(
-                "exponent must be between 12 and 30",
+            expect(async () => new ExEFv4(KEYS[192]).decrypt(_mutate(6, 0x03))).rejects.toThrow(
+                "exponent must be between",
             );
             expect(async () => new ExEFv4(KEYS[192]).decrypt(_mutate(6, 0x1f))).rejects.toThrow(
-                "exponent must be between 12 and 30",
+                "exponent must be between",
             );
         });
 
@@ -202,7 +202,7 @@ describe("ExEF v4", () => {
         });
 
         it("should reject an out-of-range exponent when encrypting", () => {
-            expect(() => new ExEFv4(KEYS[192], SALT, undefined, 31)).toThrow("exponent must be between 12 and 30");
+            expect(() => new ExEFv4(KEYS[192], SALT, undefined, 31)).toThrow("exponent must be betwee");
         });
     });
 });

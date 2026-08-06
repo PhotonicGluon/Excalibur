@@ -53,8 +53,7 @@ const ExEFPage: React.FC = () => {
 
     async function handleDecrypt() {
         try {
-            const decrypted = await ExEF.decrypt(
-                Buffer.from(symmetricKey, "utf-8"),
+            const decrypted = await new ExEF(Buffer.from(symmetricKey, "utf-8")).decrypt(
                 b64decodeURLSafe(decryptionPayload),
             );
             setDecryptedPayload(decrypted.toString("utf-8"));

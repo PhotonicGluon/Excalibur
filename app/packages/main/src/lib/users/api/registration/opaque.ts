@@ -62,7 +62,9 @@ export async function registerUserOPAQUE(
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = await ExEF.decrypt(sessionKey, Buffer.from(await (eventData as Blob).arrayBuffer()));
+            const decryptedData = await new ExEF(sessionKey).decrypt(
+                Buffer.from(await (eventData as Blob).arrayBuffer()),
+            );
             return _parseResponse(decryptedData.toString("utf-8"));
         } catch (_e) {
             // Did the server send it in plaintext?

@@ -26,7 +26,7 @@ export const LENGTH_PREFIX_SIZE = 8;
 export const RESERVED_SIZE = 5;
 
 // Chunk size exponent bounds (inclusive)
-export const MIN_EXPONENT = 12; // 4 KiB
+export const MIN_EXPONENT = 4; // 16 bytes
 export const MAX_EXPONENT = 30; // 1 GiB
 export const DEFAULT_EXPONENT = 16; // 64 KiB
 

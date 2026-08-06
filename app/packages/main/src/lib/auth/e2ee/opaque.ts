@@ -158,7 +158,9 @@ export async function handshakeOPAQUE(
                     }
 
                     const encryptedAuthResponse = response.data! as Buffer;
-                    const authResponse = (await ExEF.decrypt(state.master!, encryptedAuthResponse)).toString("utf-8");
+                    const authResponse = (await new ExEF(state.master!).decrypt(encryptedAuthResponse)).toString(
+                        "utf-8",
+                    );
                     const [serverRecvTimeStr, serverTxTimeStr, maxUploadSize, authToken] = authResponse.split(" ");
 
                     // See RFC5905 section 8 calculation for theta (i.e., time offset)

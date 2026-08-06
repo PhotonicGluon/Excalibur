@@ -40,12 +40,12 @@ export async function getVaultInfo(
             return { success: false, error: "Unknown error" };
     }
 
-    const data = (await ExEF.decryptResponse<{
+    const data = (await new ExEF(e2eeKey).decryptResponse<{
         keygen_algorithm: string;
         auk_salt: string;
         key_enc: string;
         vault_info: string;
-    }>(e2eeKey, response))!;
+    }>(response))!;
     return {
         success: true,
         keygenAlgorithm: data.keygen_algorithm as KeyGenAlgorithm,

@@ -86,7 +86,7 @@ class TestHeader:
         with pytest.raises(ValueError, match="reserved bytes must be zero"):
             Header.from_serialized(bytes(raw))
 
-    @pytest.mark.parametrize("exponent", [0, 11, 31, 255])
+    @pytest.mark.parametrize("exponent", [0, 3, 31, 255])
     def test_exponent_out_of_range(self, exponent: int):
         raw = bytearray(SAMPLE_EXEF_128[:HEADER_SIZE])
         raw[6] = exponent

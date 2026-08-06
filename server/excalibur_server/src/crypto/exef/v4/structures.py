@@ -14,7 +14,7 @@ TAG_SIZE = 16
 LENGTH_PREFIX_SIZE = 8
 
 # Chunk size exponent bounds (inclusive)
-MIN_EXPONENT = 12  # 4 KiB
+MIN_EXPONENT = 4  # 16 bytes
 MAX_EXPONENT = 30  # 1 GiB
 DEFAULT_EXPONENT = 16  # 64 KiB
 
