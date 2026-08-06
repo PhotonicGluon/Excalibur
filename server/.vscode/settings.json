@@ -21,6 +21,7 @@
         "keygen",
         "keysize",
         "maxfail",
+        "Merkle",
         "OPRF",
         "priv",
         "repr",

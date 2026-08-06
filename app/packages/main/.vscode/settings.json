@@ -17,6 +17,7 @@
         "fullpath",
         "keysize",
         "listdir",
+        "Merkle",
         "mimetypes",
         "oprf",
         "popover",
