@@ -1,0 +1,52 @@
+# Content Integrity
+
+:::warning
+
+This document is a draft and is subject to change.
+
+:::
+
+The integrity of data on the server is maintained using a Merkle tree. TODO: Add
+
+## Keys
+
+The vault key $K$ is used as the master key for generating the other keys used for the Merkle tree, using **HKDF-SHA256**.
+
+### Content Message Authentication Code (MAC) Key
+
+The content MAC key $k_m$ is used to authenticate the _plaintext_ content of the file.
+
+We do not directly use the vault key ($K$) for encrypting data. It is generated with the following parameters (following [Wikipedia's format](https://en.wikipedia.org/wiki/HKDF#Mechanism)):
+
+- `salt`: the user's UUID, expressed as 32 bytes.
+- `IKM` (input key material): the vault key $K$.
+- `info`: the ASCII-encoded string `Excalibur Merkle v1 - Content MAC Key`.
+- `length`: 32 bytes.
+
+## Content Authentication
+
+The plaintext content of an [ExEF file](./exef/index.mdx) is authenticated using the content MAC. It is generated using the content MAC key $k_m$ using **BLAKE2b-256** in keyed mode with the following common parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the content MAC key $k_m$
+- `keylen`: 32 bytes
+
+The input data for the MAC (i.e., the `in` parameter) depends on the specific version of ExEF that was used to encrypt the file.
+
+### ExEF v4
+
+:::warning
+
+ExEF v4 specification is a draft and is subject to change.
+
+:::
+
+[ExEF v4](./exef/v4.mdx)'s plaintext is encrypted in chunks, with each chunk carrying a tag that authenticates the chunk's plaintext along with any additional authenticated data, including the header. These tags can thus be used to authenticate the plaintext content of the file as a whole.
+
+In particular, the `in` parameter for the MAC is the **concatenation of all of these tags**. Specifically, for an ExEF file with $N$ chunks, there will be $N$ tags of 16 bytes each that form the input data for the MAC. The input length will thus be $16N$ bytes.
+
+### ExEF v3 (Legacy)
+
+[ExEF v3](./exef/v3.mdx)'s plaintext is encrypted as one singular chunk with one tag. This tag, however, does not cover the header's content, which is not encrypted. Therefore, the content MAC must authenticate both the plaintext and the header.
+
+In particular, the `in` parameter for the MAC is the **concatenation of the header _and_ the footer** (which consists of only the tag). The input length will thus be 56 bytes (comprising of the header and footer).

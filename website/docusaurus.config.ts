@@ -100,7 +100,7 @@ const config: Config = {
                 blogSidebarCount: "ALL",
                 postsPerPage: 5,
                 showReadingTime: true,
-                readingTime: ({ content }) => content.length,
+                readingTime: ({ content }: { content: any }) => content.length,
                 onUntruncatedBlogPosts: "ignore",
                 processBlogPosts: ({ blogPosts }: { blogPosts: BlogPost[] }) => {
                     return blogPosts.sort((a, b) => {
