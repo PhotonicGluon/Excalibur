@@ -36,8 +36,8 @@ function _generateInvalidMagic() {
     return Buffer.concat([Buffer.from("NOPE"), SAMPLE_V3_192.subarray(4)]);
 }
 
-function _generateInvalidVersion() {
-    return Buffer.concat([SAMPLE_V3_192.subarray(0, 4), Buffer.from([0xff]), SAMPLE_V3_192.subarray(5)]);
+function _generateInvalidVersion(version: number) {
+    return Buffer.concat([SAMPLE_V3_192.subarray(0, 4), Buffer.from([version]), SAMPLE_V3_192.subarray(5)]);
 }
 
 // Tests
@@ -47,16 +47,18 @@ describe("identifyVersion", () => {
         expect(identifyVersion(SAMPLE_V4_192)).toBe(4);
     });
 
+    it("should identify a generic version", () => {
+        expect(identifyVersion(_generateInvalidVersion(0))).toBe(0);
+        expect(identifyVersion(_generateInvalidVersion(5))).toBe(5);
+        expect(identifyVersion(_generateInvalidVersion(255))).toBe(255);
+    });
+
     it("should reject a truncated stream", () => {
         expect(() => identifyVersion(SAMPLE_V4_192.subarray(0, 4))).toThrow("data too short");
     });
 
     it("should reject bad magic", () => {
         expect(() => identifyVersion(_generateInvalidMagic())).toThrow("data must start with 'ExEF'");
-    });
-
-    it("should reject an unsupported version", () => {
-        expect(() => identifyVersion(_generateInvalidVersion())).toThrow("unsupported ExEF version: 255");
     });
 });
 
@@ -154,7 +156,7 @@ describe("ExEF", () => {
             expect(ExEF.validate(SAMPLE_V3_192)).toBe(true);
             expect(ExEF.validate(SAMPLE_V4_192)).toBe(true);
             expect(ExEF.validate(_generateInvalidMagic())).toBe(false);
-            expect(ExEF.validate(_generateInvalidVersion())).toBe(false);
+            expect(ExEF.validate(_generateInvalidVersion(255))).toBe(false);
         });
 
         it("should let `encryptStream()` select the version per call", async () => {

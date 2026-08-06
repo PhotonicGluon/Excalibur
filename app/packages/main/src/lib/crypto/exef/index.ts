@@ -2,7 +2,7 @@ import ExEF from "./exef";
 
 export default ExEF;
 
-export { DEFAULT_VERSION, identifyVersion, SUPPORTED_VERSIONS, type ExEFOptions, type ExEFVersion } from "./exef";
+export { CURRENT_VERSION, identifyVersion, SUPPORTED_VERSIONS, type ExEFOptions, type ExEFVersion } from "./exef";
 
 export { type CipherID, type KeyStrength } from "./base";
 export { default as PADME } from "./padme";

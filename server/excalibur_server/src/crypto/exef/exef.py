@@ -15,7 +15,7 @@ MIN_IDENTIFY_BYTES = VERSION_OFFSET + 1
 _PROCESSORS: dict[int, type] = {4: ExEFv4}
 
 
-def identify_version(data: bytes) -> Literal[CURRENT_VERSION]:
+def identify_version(data: bytes) -> int:
     """
     Identifies the ExEF version of a data stream from its header.
 
@@ -25,8 +25,7 @@ def identify_version(data: bytes) -> Literal[CURRENT_VERSION]:
     :param data: the (start of the) ExEF data
     :raises ValueError: if the magic is wrong
     :raises ValueError: if the stream is too short
-    :raises ValueError: if the version is unsupported
-    :return: the current ExEF version number
+    :return: the detected version number
     """
 
     if len(data) < MIN_IDENTIFY_BYTES:
@@ -35,8 +34,6 @@ def identify_version(data: bytes) -> Literal[CURRENT_VERSION]:
         raise ValueError("data must start with 'ExEF'")
 
     version = data[VERSION_OFFSET]
-    if version != CURRENT_VERSION:
-        raise ValueError(f"unsupported ExEF version: {version}")
     return version
 
 
@@ -83,6 +80,10 @@ class _AutoDecryptor(BaseDecryptor):
             version = identify_version(self._buffer)
         except ValueError as e:
             self._error = e
+            return
+
+        if version != CURRENT_VERSION:
+            self._error = ValueError(f"unsupported ExEF version: {version}")
             return
 
         self._delegate = _PROCESSORS[version](self.key).decryptor
@@ -217,6 +218,10 @@ class ExEF:
             version = identify_version(data)
         except ValueError:
             return False
+
+        if version not in _PROCESSORS:
+            return False
+
         return _PROCESSORS[version].validate(data)
 
     @classmethod

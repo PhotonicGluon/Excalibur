@@ -2,7 +2,7 @@ import { expect } from "vitest";
 
 import { ExEFFooter, ExEFHeader, ExEFv3, KeyStrength } from "./index";
 
-const KEY = Buffer.from("111111111111111111111111", "utf-8");
+const KEY = Buffer.from("1".repeat(24), "utf-8");
 const NONCE = Buffer.from("abababababababababababab", "hex");
 
 const SAMPLE_V3_128 = Buffer.from(
@@ -60,10 +60,9 @@ describe("ExEF v3", () => {
         const expected = Object.values(EXEFS_V3);
         for (let i = 0; i < 3; i++) {
             it(`strength of ${strengths[i]}`, async () => {
-                const parsed = new ExEFv3(KEY, NONCE, strengths[i] as KeyStrength);
-                expect((await parsed.encrypt(Buffer.from("Hello World!", "utf-8"))).toString("hex")).toBe(
-                    expected[i].toString("hex"),
-                );
+                const exef = new ExEFv3(KEY, NONCE, strengths[i] as KeyStrength);
+                const ct = await exef.encrypt(Buffer.from("Hello World!", "utf-8"));
+                expect(ct.toString("hex")).toBe(expected[i].toString("hex"));
             });
         }
     });
@@ -73,8 +72,9 @@ describe("ExEF v3", () => {
         const exefs = Object.values(EXEFS_V3);
         for (let i = 0; i < 3; i++) {
             it(`strength of ${strengths[i]}`, async () => {
-                const ptTest = await new ExEFv3(KEY).decrypt(exefs[i]);
-                expect(ptTest.toString("utf-8")).toBe("Hello World!");
+                const exef = new ExEFv3(KEY);
+                const pt = await exef.decrypt(exefs[i]);
+                expect(pt.toString("utf-8")).toBe("Hello World!");
             });
         }
     });

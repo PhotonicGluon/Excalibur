@@ -3,7 +3,7 @@ import ExEFv3, { Decryptor as DecryptorV3 } from "./v3";
 import ExEFv4, { DEFAULT_EXPONENT, Decryptor as DecryptorV4 } from "./v4";
 
 /** The ExEF version produced when encrypting, unless overridden */
-export const DEFAULT_VERSION = 4;
+export const CURRENT_VERSION = 4;
 
 export const SUPPORTED_VERSIONS = [3, 4] as const;
 export type ExEFVersion = (typeof SUPPORTED_VERSIONS)[number];
@@ -32,12 +32,11 @@ function decryptorFor(version: ExEFVersion, key: Buffer): BaseDecryptor {
  * as a minimal amount of data is present for identification.
  *
  * @param data the (start of the) ExEF data
- * @returns the ExEF version number
+ * @returns the detected ExEF version number
  * @throws {Error} if the stream is too short
  * @throws {Error} if the magic is wrong
- * @throws {Error} if the version is unsupported
  */
-export function identifyVersion(data: Buffer): ExEFVersion {
+export function identifyVersion(data: Buffer): number {
     if (data.length < MIN_IDENTIFY_BYTES) {
         throw new Error("data too short to identify ExEF version");
     }
@@ -46,10 +45,6 @@ export function identifyVersion(data: Buffer): ExEFVersion {
     }
 
     const version = data.readUInt8(VERSION_OFFSET);
-    if (version !== 3 && version !== 4) {
-        throw new Error(`unsupported ExEF version: ${version}`);
-    }
-
     return version;
 }
 
@@ -86,7 +81,11 @@ class _AutoDecryptor extends BaseDecryptor {
 
         let version: ExEFVersion;
         try {
-            version = identifyVersion(this._buffer);
+            const rawVersion = identifyVersion(this._buffer);
+            if (rawVersion !== 3 && rawVersion !== 4) {
+                throw new Error(`unsupported ExEF version: ${rawVersion}`);
+            }
+            version = rawVersion;
         } catch (error) {
             this._error = error as Error;
             return;
@@ -137,7 +136,7 @@ class _AutoDecryptor extends BaseDecryptor {
 
 /** Options accepted when constructing an {@link ExEF} instance */
 export interface ExEFOptions {
-    /** The ExEF version to produce when encrypting, defaults to {@link DEFAULT_VERSION} */
+    /** The ExEF version to produce when encrypting, defaults to {@link CURRENT_VERSION} */
     version?: ExEFVersion;
     /** The key strength to use for encryption, defaults to the length of the key in bits */
     strength?: KeyStrength;
@@ -153,7 +152,7 @@ export interface ExEFOptions {
  * Excalibur Encryption Format (ExEF) processor.
  *
  * Encryption produces the version given by the `version` option (defaulting to
- * {@link DEFAULT_VERSION}), while decryption auto-detects the version of whatever data it is fed.
+ * {@link CURRENT_VERSION}), while decryption auto-detects the version of whatever data it is fed.
  */
 export default class ExEF {
     /** Encryption key */
@@ -174,7 +173,7 @@ export default class ExEF {
      * @throws {Error} if the key size is not 128, 192, or 256 bits
      */
     constructor(key: Buffer, options: ExEFOptions = {}) {
-        const version = options.version ?? (DEFAULT_VERSION as ExEFVersion);
+        const version = options.version ?? (CURRENT_VERSION as ExEFVersion);
         if (!SUPPORTED_VERSIONS.includes(version)) {
             throw new Error(`unsupported ExEF version: ${version}`);
         }
@@ -406,7 +405,11 @@ export default class ExEF {
     static validate(data: Buffer): boolean {
         let version: ExEFVersion;
         try {
-            version = identifyVersion(data);
+            const rawVersion = identifyVersion(data);
+            if (rawVersion !== 3 && rawVersion !== 4) {
+                return false;
+            }
+            version = rawVersion;
         } catch {
             return false;
         }
@@ -417,13 +420,13 @@ export default class ExEF {
      * Computes the total encrypted size for a plaintext of the given length.
      *
      * @param plaintextLen the plaintext length, in bytes
-     * @param version the ExEF version, defaults to {@link DEFAULT_VERSION}
+     * @param version the ExEF version, defaults to {@link CURRENT_VERSION}
      * @param exponent (ExEF v4 only) the chunk size exponent
      * @returns the total encrypted size, in bytes
      */
     static encryptedSize(
         plaintextLen: number,
-        version: ExEFVersion = DEFAULT_VERSION as ExEFVersion,
+        version: ExEFVersion = CURRENT_VERSION as ExEFVersion,
         exponent: number = DEFAULT_EXPONENT,
     ): number {
         if (version === 3) {
@@ -436,13 +439,13 @@ export default class ExEF {
      * Computes the encrypted overhead (encrypted size minus plaintext size).
      *
      * @param plaintextLen the plaintext length, in bytes
-     * @param version the ExEF version, defaults to {@link DEFAULT_VERSION}
+     * @param version the ExEF version, defaults to {@link CURRENT_VERSION}
      * @param exponent (ExEF v4 only) the chunk size exponent
      * @returns the overhead, in bytes
      */
     static overhead(
         plaintextLen: number,
-        version: ExEFVersion = DEFAULT_VERSION as ExEFVersion,
+        version: ExEFVersion = CURRENT_VERSION as ExEFVersion,
         exponent: number = DEFAULT_EXPONENT,
     ): number {
         return ExEF.encryptedSize(plaintextLen, version, exponent) - plaintextLen;
