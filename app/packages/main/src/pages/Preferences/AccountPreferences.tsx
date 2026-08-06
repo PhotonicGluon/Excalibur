@@ -70,7 +70,7 @@ const AccountPreferences: React.FC = () => {
         );
 
         try {
-            await ExEF.decrypt(proposedAUK, auth.vaultInfo!.encryptedKey);
+            await new ExEF(proposedAUK).decrypt(auth.vaultInfo!.encryptedKey);
         } catch (e) {
             console.error("Password is likely incorrect, causing", e);
             presentToast({

@@ -46,7 +46,7 @@ export async function retrieveVaultInfo(
     // Recover vault key
     console.debug("Decrypting obtained vault key...");
     try {
-        const vaultKey = await ExEF.decrypt(auk, encryptedVaultKey);
+        const vaultKey = await new ExEF(auk).decrypt(encryptedVaultKey);
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
         return {
             keygenAlgorithm,

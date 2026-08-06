@@ -25,8 +25,8 @@ const decryptionProcessor = {
         onProgress: (progress: number) => void,
     ): Promise<Blob> {
         // Form nesting of streams for decryption
-        const vStream = e2eeKey ? ExEF.decryptStream(e2eeKey, eStream) : eStream;
-        const stream = ExEF.decryptStream(vaultKey, vStream);
+        const vStream = e2eeKey ? new ExEF(e2eeKey).decryptStream(eStream) : eStream;
+        const stream = new ExEF(vaultKey).decryptStream(vStream);
 
         // Generate decrypted chunks
         const reader = stream.getReader();

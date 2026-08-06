@@ -122,7 +122,7 @@ describe("ExEF", () => {
                 const ct = version === 3 ? SAMPLE_V3_192 : SAMPLE_V4_192;
                 for (const streamChunkSize of streamChunkSizes) {
                     it(`ExEF v${version}, stream chunk ${streamChunkSize}`, async () => {
-                        const stream = ExEF.decryptStream(KEY, chunkData(ct, streamChunkSize));
+                        const stream = new ExEF(KEY).decryptStream(chunkData(ct, streamChunkSize));
                         const output = await collectStream(stream);
                         expect(output.toString("utf-8")).toBe("Hello World!");
                     });
@@ -133,21 +133,21 @@ describe("ExEF", () => {
         it("(ExEF v4) should stream-decrypt a multi-chunk payload", async () => {
             const parsed = new ExEF(KEY, { version: 4, salt: SALT, strength: 192, exponent: 12 });
             const encrypted = await parsed.encrypt(MULTI_CHUNK_PT);
-            const output = await collectStream(ExEF.decryptStream(KEY, chunkData(encrypted, 999)));
+            const output = await collectStream(new ExEF(KEY).decryptStream(chunkData(encrypted, 999)));
             expect(output.toString("hex")).toBe(MULTI_CHUNK_PT.toString("hex"));
         });
 
         it("(ExEF v4) should fail loudly on a truncated stream", async () => {
             const truncated = SAMPLE_V4_192.subarray(0, -1);
-            const stream = ExEF.decryptStream(KEY, chunkData(truncated, 8));
+            const stream = new ExEF(KEY).decryptStream(chunkData(truncated, 8));
             await expect(collectStream(stream)).rejects.toThrow("incomplete ExEF data");
         });
     });
 
     describe("cross-version", () => {
         it("should auto-detect the version when decrypting", async () => {
-            expect((await ExEF.decrypt(KEY, SAMPLE_V3_192)).toString("utf-8")).toBe("Hello World!");
-            expect((await ExEF.decrypt(KEY, SAMPLE_V4_192)).toString("utf-8")).toBe("Hello World!");
+            expect((await new ExEF(KEY).decrypt(SAMPLE_V3_192)).toString("utf-8")).toBe("Hello World!");
+            expect((await new ExEF(KEY).decrypt(SAMPLE_V4_192)).toString("utf-8")).toBe("Hello World!");
         });
 
         it("should validate both versions", () => {

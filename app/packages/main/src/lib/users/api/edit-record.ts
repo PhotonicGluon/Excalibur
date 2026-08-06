@@ -51,8 +51,7 @@ export async function editRecord(
 
     async function parseResponse(eventData: Blob | string) {
         try {
-            const decryptedData = await ExEF.decrypt(
-                auth.authInfo!.key!,
+            const decryptedData = await new ExEF(auth.authInfo!.key!).decrypt(
                 Buffer.from(await (eventData as Blob).arrayBuffer()),
             );
             return _parseResponse(decryptedData.toString("utf-8"));

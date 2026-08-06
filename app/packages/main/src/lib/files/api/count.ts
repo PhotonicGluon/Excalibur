@@ -34,6 +34,6 @@ export async function getCount(auth: AuthProvider): Promise<{ success: boolean; 
             return { success: false, error: "Unknown error" };
     }
 
-    const count = await ExEF.decryptResponse<number>(auth.authInfo!.key, response);
+    const count = await new ExEF(auth.authInfo!.key).decryptResponse<number>(response);
     return { success: true, count: count! };
 }

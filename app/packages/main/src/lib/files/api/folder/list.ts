@@ -50,7 +50,7 @@ export async function listdir(
                 return { success: false, error: "Unknown error" };
         }
 
-        const directory = await ExEF.decryptResponse<Directory>(auth.authInfo!.key, response);
+        const directory = await new ExEF(auth.authInfo!.key!).decryptResponse<Directory>(response);
         return { success: true, directory: directory! };
     } catch (_error) {
         return { success: false, error: "Unknown error occurred" };
