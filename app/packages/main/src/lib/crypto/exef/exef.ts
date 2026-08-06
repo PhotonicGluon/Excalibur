@@ -67,6 +67,10 @@ class _AutoDecryptor extends BaseDecryptor {
         return this._delegate !== null && this._delegate.fullyProcessed;
     }
 
+    get contentMACInput(): Buffer | null {
+        return this._delegate?.contentMACInput ?? null;
+    }
+
     // Helper methods
     /**
      * Ensures that the delegate decryptor is initialized, once enough bytes have arrived.
@@ -213,6 +217,21 @@ export default class ExEF {
     /** The version-detecting decryptor object used for decryption */
     get decryptor(): _AutoDecryptor {
         return this._decryptor;
+    }
+
+    /**
+     * The content MAC input buffer, if available.
+     *
+     * @throws {Error} if the content MAC input is not available
+     */
+    get contentMACInput(): Buffer {
+        if (this.encryptor.contentMACInput !== null) {
+            return this.encryptor.contentMACInput;
+        }
+        if (this.decryptor.contentMACInput !== null) {
+            return this.decryptor.contentMACInput;
+        }
+        throw new Error("Content MAC input not available");
     }
 
     // Helper methods

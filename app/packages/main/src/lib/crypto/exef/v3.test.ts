@@ -88,28 +88,34 @@ describe("ExEF v3", () => {
             expect(() => new ExEFv3(KEY, Buffer.from("123", "utf-8"))).toThrow("nonce must be 12 bytes");
         });
 
-        it("should handle invalid key", () => {
+        it("should handle invalid key", async () => {
             const fakeKey = Buffer.from(KEY);
             fakeKey[0] = 255 - fakeKey[0];
-            expect(async () => new ExEFv3(fakeKey).decrypt(SAMPLE_V3_192)).rejects.toThrow("header MAC mismatch");
+            await expect(async () => await new ExEFv3(fakeKey).decrypt(SAMPLE_V3_192)).rejects.toThrow(
+                "header MAC mismatch",
+            );
         });
 
-        it("should handle invalid magic", () => {
-            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidMagic())).rejects.toThrow(
+        it("should handle invalid magic", async () => {
+            await expect(async () => await new ExEFv3(KEY).decrypt(_generateInvalidMagic())).rejects.toThrow(
                 "data must start with 'ExEF'",
             );
         });
 
-        it("should handle invalid version", () => {
-            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidVersion())).rejects.toThrow("version must be 3");
+        it("should handle invalid version", async () => {
+            await expect(async () => await new ExEFv3(KEY).decrypt(_generateInvalidVersion())).rejects.toThrow(
+                "version must be 3",
+            );
         });
 
-        it("should handle invalid footer", () => {
-            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidFooter())).rejects.toThrow();
+        it("should handle invalid footer", async () => {
+            await expect(async () => await new ExEFv3(KEY).decrypt(_generateInvalidFooter())).rejects.toThrow();
         });
 
-        it("should handle invalid tag", () => {
-            expect(async () => new ExEFv3(KEY).decrypt(_generateInvalidTag())).rejects.toThrow("MAC check failed");
+        it("should handle invalid tag", async () => {
+            await expect(async () => await new ExEFv3(KEY).decrypt(_generateInvalidTag())).rejects.toThrow(
+                "MAC check failed",
+            );
         });
     });
 });

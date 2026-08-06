@@ -2,10 +2,10 @@ import { expect } from "vitest";
 
 import { MerkleKeys } from "./keys";
 
-const KEY = Buffer.from("1".repeat(64), "hex");
+const KEY = Buffer.from("1".repeat(24), "utf-8");
 const USER_ID = Buffer.from("0".repeat(32), "hex");
 
-const CONTENT_MAC_KEY = Buffer.from("b2f74f7089faca62e95aab6e00b94724a16c1bcbfa78acc61bb3a25fdb08a8bf", "hex");
+const CONTENT_MAC_KEY = Buffer.from("1676e9386cf8cbfead3491f0778059f77a90f9e2043b6500196c2d8a6b83c3e1", "hex");
 
 describe("MerkleKeys", () => {
     it("should derive the correct content MAC key", () => {
