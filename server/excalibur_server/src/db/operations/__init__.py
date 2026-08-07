@@ -8,6 +8,7 @@ from .fsitem import is_dir_empty as is_dir_empty
 from .fsitem import remove_item as remove_item
 from .helpers import close_all_engines as close_all_engines
 from .helpers import get_session as get_session
+from .root_attestation import get_latest_attestation as get_latest_attestation
 from .user import add_user as add_user
 from .user import get_user as get_user
 from .user import get_user_from_id as get_user_from_id

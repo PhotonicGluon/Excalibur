@@ -93,6 +93,7 @@ extend-select = [
     "F405", # undefined-local-with-import-star-usage
     "F406", # undefined-local-with-nested-import-star-usage
     "C901", # too-complex
+    "I001", # unsorted-imports
     "I002", # missing-required-import
 ]
 ignore = [
