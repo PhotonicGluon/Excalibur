@@ -1,11 +1,14 @@
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import ClassVar
 
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
+from excalibur_server.src.crypto.merkle.enums import MerkleStatus
+from excalibur_server.src.crypto.misc import frame
 
 
 class User(SQLModel, table=True):
@@ -91,6 +94,33 @@ class FSItem(SQLModel, table=True):
     timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=UTC).timestamp()))
     "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
+    # Integrity
+    ciphertext_hash: bytes | None = Field(default=None, nullable=True)
+    """
+    Unkeyed BLAKE2b hash of the on-disk file, or None for folders and for files not yet migrated.
+    
+    Server-computed, for bit-rot scrubbing only. **Not** part of the Merkle tree.
+    """
+
+    content_mac: bytes | None = Field(nullable=True)
+    """
+    Keyed MAC binding this file's AEAD tags to its identity, or None for folders and for files not
+    yet migrated.
+
+    Computed by the client; the server never verifies it.
+    """
+    node_hash: bytes | None = Field(nullable=True)
+    """
+    Keyed MAC of the subtree rooted at this item, or None if the subtree is dirty or has not been
+    migrated.
+    """
+    version: int = Field(nullable=False, default=1)
+    """
+    Monotonic counter bumped on every mutation to this node.
+
+    This allows clients to detect changes without fully comparing the Merkle tree.
+    """
+
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
 
@@ -111,3 +141,67 @@ class FSItem(SQLModel, table=True):
         level_2 = file_id[2:4]
         rest = file_id[4:]
         return Path(level_1, level_2, rest + ".exef")
+
+
+class VaultState(SQLModel, table=True):
+    """
+    Contains the state of a user's vault.
+    """
+
+    root_id: uuid.UUID = Field(primary_key=True)
+    """
+    ID of the user's root filesystem item.
+
+    This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
+    foreign keys.
+    """
+    merkle_status: MerkleStatus = Field(sa_column=Column(Enum(MerkleStatus), nullable=False, default=MerkleStatus.NONE))
+    "Status of the Merkle tree for the vault."
+    current_generation: int = Field(nullable=False, default=0)
+    "Current generation of the vault."
+    migrated_count: int = Field(nullable=False, default=0)
+    "Number of items that have been migrated to the new generation."
+    total_count: int | None = Field(nullable=True, default=None)
+    "Total number of items in the vault."
+
+
+class RootAttestation(SQLModel, table=True):
+    """
+    An attestation of a user's vault state.
+    """
+
+    ATTESTATION_EPOCH: ClassVar[bytes] = b"Excalibur Merkle v1"
+
+    root_id: uuid.UUID = Field(primary_key=True)
+    """
+    ID of the tree root that this is attesting.
+
+    This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
+    foreign keys.
+    """
+    generation: int = Field(primary_key=True)
+    "Generation of the vault."
+    root_hash: bytes = Field(nullable=False)
+    "Merkle root hash of the tree."
+    prev_root_hash: bytes | None = Field(nullable=True)
+    "Previous root hash, or None for the first generation."
+    timestamp: int = Field(nullable=False)
+    "Timestamp when this root was generated"
+    tag: bytes = Field(nullable=False)
+    "Tag for this root"
+
+    @property
+    def attestation(self) -> bytes:
+        """
+        Get the attestation for this root.
+
+        :returns: the attestation bytes
+        """
+
+        return self.ATTESTATION_EPOCH + frame(
+            self.root_id.bytes,
+            self.generation.to_bytes(8, "big"),
+            self.root_hash,
+            self.prev_root_hash or b"",
+            self.timestamp.to_bytes(8, "big"),
+        )
