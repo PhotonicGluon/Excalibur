@@ -1,8 +1,10 @@
 import uuid
+from base64 import b64encode
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
+from pydantic import field_serializer
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
@@ -205,3 +207,14 @@ class RootAttestation(SQLModel, table=True):
             self.prev_root_hash or b"",
             self.timestamp.to_bytes(8, "big"),
         )
+
+    # Field serialization
+    @field_serializer("root_hash", "prev_root_hash", "tag")
+    def serialize_bytes(self, value: bytes | None) -> str | None:
+        if value is None:
+            return None
+        return b64encode(value).decode("utf-8")
+
+    @field_serializer("root_id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)

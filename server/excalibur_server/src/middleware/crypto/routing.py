@@ -90,6 +90,23 @@ FILES_ROUTING_TREE = RoutingTree(
         ),
     },
 )
+MERKLE_ROUTING_TREE = RoutingTree(
+    segment="merkle",
+    subtrees={
+        "attestation": RoutingTree(
+            segment="attestation",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+        "attestations": RoutingTree(
+            segment="attestations",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+    },
+)
 USERS_ROUTING_TREE = RoutingTree(
     segment="users",
     subtrees={
@@ -109,6 +126,7 @@ ROUTING_TREE = RoutingTree(
     subtrees={
         "auth": AUTH_ROUTING_TREE,
         "files": FILES_ROUTING_TREE,
+        "merkle": MERKLE_ROUTING_TREE,
         "users": USERS_ROUTING_TREE,
     },
 )
