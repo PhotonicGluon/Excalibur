@@ -16,13 +16,9 @@ class User(SQLModel, table=True):
     # Basic information
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True)
-    fsitem_id: uuid.UUID = Field(nullable=True)  # TODO: Remove nullable in next version
+    fsitem_id: uuid.UUID = Field(nullable=False)
     """
     ID of the user's root filesystem item.
-
-    A `None` means that the user does not use a database-based filesystem. This is for legacy users
-    who were created before the database-based filesystem was implemented, and meant for migration
-    purposes.
 
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
