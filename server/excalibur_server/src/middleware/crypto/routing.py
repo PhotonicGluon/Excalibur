@@ -105,6 +105,13 @@ MERKLE_ROUTING_TREE = RoutingTree(
                 "GET": EncryptedRoute(),
             },
         ),
+        "proof": RoutingTree(
+            segment="proof",
+            has_path_param=True,
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
     },
 )
 USERS_ROUTING_TREE = RoutingTree(

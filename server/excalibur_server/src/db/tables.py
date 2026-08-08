@@ -144,6 +144,17 @@ class FSItem(SQLModel, table=True):
         rest = file_id[4:]
         return Path(level_1, level_2, rest + ".exef")
 
+    # Field serialization
+    @field_serializer("id", "parent_id", "root_id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)
+
+    @field_serializer("content_mac", "node_hash")
+    def serialize_bytes(self, value: bytes | None) -> str | None:
+        if value is None:
+            return None
+        return b64encode(value).decode("utf-8")
+
 
 class VaultState(SQLModel, table=True):
     """
@@ -209,12 +220,12 @@ class Attestation(SQLModel, table=True):
         )
 
     # Field serialization
+    @field_serializer("root_id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)
+
     @field_serializer("root_hash", "prev_root_hash", "tag")
     def serialize_bytes(self, value: bytes | None) -> str | None:
         if value is None:
             return None
         return b64encode(value).decode("utf-8")
-
-    @field_serializer("root_id")
-    def serialize_uuid(self, value: uuid.UUID) -> str:
-        return str(value)
