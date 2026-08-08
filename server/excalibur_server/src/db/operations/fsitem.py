@@ -1,5 +1,5 @@
-import uuid
 from pathlib import PurePosixPath
+from uuid import UUID
 
 from sqlalchemy.orm import aliased
 from sqlmodel import select
@@ -19,7 +19,7 @@ def add_item(item: FSItem):
         session.add(item)
 
 
-def get_item(item_id: str) -> FSItem | None:
+def get_item(item_id: UUID) -> FSItem | None:
     """
     Gets a filesystem item from the database.
 
@@ -34,7 +34,7 @@ def get_item(item_id: str) -> FSItem | None:
         return item
 
 
-def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
+def get_item_by_path(root_id: UUID, path: str) -> FSItem | None:
     """
     Gets a filesystem item from the database by its path.
 
@@ -71,7 +71,7 @@ def get_item_by_path(root_id: uuid.UUID, path: str) -> FSItem | None:
         return result.model_copy() if result else None
 
 
-def get_items_in_folder(folder_id: str) -> list[FSItem]:
+def get_items_in_folder(folder_id: UUID) -> list[FSItem]:
     """
     Lists the contents of a directory.
 
@@ -84,7 +84,7 @@ def get_items_in_folder(folder_id: str) -> list[FSItem]:
         return [item.model_copy() for item in items]
 
 
-def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
+def get_items_in_root(root_id: UUID) -> list[FSItem]:
     """
     Gets all items in a user's root directory.
 
@@ -97,7 +97,7 @@ def get_items_in_root(root_id: uuid.UUID) -> list[FSItem]:
         return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
 
 
-def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
+def get_item_fullpath(item_id: UUID) -> PurePosixPath:
     """
     Gets the full path of a filesystem item, relative to the user's root directory.
 
@@ -133,7 +133,7 @@ def get_item_fullpath(item_id: uuid.UUID) -> PurePosixPath:
     return fullpath
 
 
-def is_dir_empty(folder_id: uuid.UUID) -> bool:
+def is_dir_empty(folder_id: UUID) -> bool:
     """
     Checks if a directory is empty.
 
@@ -145,7 +145,7 @@ def is_dir_empty(folder_id: uuid.UUID) -> bool:
         return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
 
 
-def remove_item(item_id: str):
+def remove_item(item_id: UUID):
     """
     Removes a filesystem item from the database.
 
