@@ -6,13 +6,13 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef.exef import ExEF
-from excalibur_server.src.db.tables import RootAttestation
+from excalibur_server.src.db.tables import Attestation
 
 N_ATTESTATIONS = 10
 
 
 @pytest.fixture
-def attestations(test_user, db_session: Session) -> list[RootAttestation]:
+def attestations(test_user, db_session: Session) -> list[Attestation]:
     root_id = test_user["root_id"]
 
     # Create attestation chain
@@ -20,7 +20,7 @@ def attestations(test_user, db_session: Session) -> list[RootAttestation]:
     current_root_hash = None
 
     for gen in range(1, N_ATTESTATIONS + 1):
-        attestation = RootAttestation(
+        attestation = Attestation(
             root_id=root_id,
             generation=gen,
             root_hash=f"root_hash_{gen}".encode(),
@@ -38,7 +38,7 @@ def attestations(test_user, db_session: Session) -> list[RootAttestation]:
 
     # Clean up
     for attestation in generated_attestations:
-        db_session.delete(db_session.get(RootAttestation, (attestation.root_id, attestation.generation)))
+        db_session.delete(db_session.get(Attestation, (attestation.root_id, attestation.generation)))
     db_session.commit()
 
 
@@ -47,7 +47,7 @@ class TestGetLatestAttestation:
         response = TestClient(app).get("/api/merkle/attestation")
         assert response.status_code == 401
 
-    def test_get(self, auth_client: TestClient, attestations: list[RootAttestation]):
+    def test_get(self, auth_client: TestClient, attestations: list[Attestation]):
         response = auth_client.get("/api/merkle/attestation")
         assert response.status_code == 200
 
@@ -81,7 +81,7 @@ class TestGetAttestationChain:
         ],
     )
     def test_get(
-        self, auth_client: TestClient, attestations: list[RootAttestation], from_gen: int | None, to_gen: int | None
+        self, auth_client: TestClient, attestations: list[Attestation], from_gen: int | None, to_gen: int | None
     ):
         params = {}
         if from_gen is not None:

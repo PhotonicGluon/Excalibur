@@ -17,6 +17,8 @@ down_revision: str | Sequence[str] | None = "611ae3f20e58"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+merkle_status = sa.Enum("NONE", "MIGRATING", "ACTIVE", name="merklestatus")
+
 
 def upgrade() -> None:
     """
@@ -24,7 +26,7 @@ def upgrade() -> None:
     """
 
     op.create_table(
-        "rootattestation",
+        "attestation",
         sa.Column("root_id", sa.Uuid(), nullable=False),
         sa.Column("generation", sa.Integer(), nullable=False),
         sa.Column("root_hash", sa.LargeBinary(), nullable=False),
@@ -36,7 +38,7 @@ def upgrade() -> None:
     op.create_table(
         "vaultstate",
         sa.Column("root_id", sa.Uuid(), nullable=False),
-        sa.Column("merkle_status", sa.Enum("NONE", "MIGRATING", "ACTIVE", name="merklestatus"), nullable=False),
+        sa.Column("merkle_status", merkle_status, nullable=False),
         sa.Column("current_generation", sa.Integer(), nullable=False),
         sa.Column("migrated_count", sa.Integer(), nullable=False),
         sa.Column("total_count", sa.Integer(), nullable=True),
@@ -59,4 +61,5 @@ def downgrade() -> None:
     op.drop_column("fsitem", "content_mac")
     op.drop_column("fsitem", "ciphertext_hash")
     op.drop_table("vaultstate")
-    op.drop_table("rootattestation")
+    op.drop_table("attestation")
+    merkle_status.drop(op.get_bind())

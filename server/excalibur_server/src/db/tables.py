@@ -167,7 +167,7 @@ class VaultState(SQLModel, table=True):
     "Total number of items in the vault."
 
 
-class RootAttestation(SQLModel, table=True):
+class Attestation(SQLModel, table=True):
     """
     An attestation of a user's vault state.
     """
