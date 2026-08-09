@@ -13,6 +13,7 @@ encrypted_router = APIRouter(
 # Add endpoints
 from .attestation import get_all_attestations_endpoint as get_all_attestations_endpoint
 from .attestation import get_latest_attestation_endpoint as get_latest_attestation_endpoint
+from .content_mac import content_mac_inputs_endpoint as content_mac_inputs_endpoint
 from .proof import inclusion_proof_endpoint as inclusion_proof_endpoint
 
 # Add encrypted routes to overall router

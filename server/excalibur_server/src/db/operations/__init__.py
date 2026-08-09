@@ -5,7 +5,7 @@ from .fsitem import get_item as get_item
 from .fsitem import get_item_by_path as get_item_by_path
 from .fsitem import get_item_fullpath as get_item_fullpath
 from .fsitem import get_items_in_folder as get_items_in_folder
-from .fsitem import get_items_in_root as get_items_in_root
+from .fsitem import get_items_with_root as get_items_with_root
 from .fsitem import is_dir_empty as is_dir_empty
 from .fsitem import remove_item as remove_item
 from .helpers import close_all_engines as close_all_engines

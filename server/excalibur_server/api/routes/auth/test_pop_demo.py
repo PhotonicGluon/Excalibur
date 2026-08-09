@@ -120,7 +120,7 @@ class TestHTTPPoPChecks:
             "/api/auth/pop-demo",
             headers={"X-Auth-PoP": header[:-2] + "0="},
         )
-        assert response.status_code == 401, response.json()["detail"]
+        assert response.status_code == 401, response.json()
         assert response.json()["detail"] == "Invalid PoP"
 
         # Next request with valid header should succeed (and not fail with nonce reuse)

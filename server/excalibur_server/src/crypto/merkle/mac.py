@@ -4,6 +4,7 @@ from excalibur_server.src.crypto.exef.v4 import ExEFv4, HeaderV4
 SUPPORTED_EXEF_VERSIONS = (3, 4)
 
 
+# TODO: Support file pointers
 def get_content_mac_input(exef_data: bytes) -> bytes:
     """
     Get the content MAC input for the given ExEF data.

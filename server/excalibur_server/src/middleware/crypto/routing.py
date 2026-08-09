@@ -105,6 +105,12 @@ MERKLE_ROUTING_TREE = RoutingTree(
                 "GET": EncryptedRoute(),
             },
         ),
+        "content-mac-inputs": RoutingTree(
+            segment="content-mac-inputs",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
         "proof": RoutingTree(
             segment="proof",
             has_path_param=True,

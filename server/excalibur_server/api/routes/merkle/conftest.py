@@ -1,12 +1,13 @@
 import pytest
 from sqlalchemy.orm import Session
 
+from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
 
 
 @pytest.fixture(scope="module")
-def merkle_folder(test_user, db_session: Session) -> FSItem:
+def merkle_folder(test_user, db_session: Session) -> dict:
     root_id = test_user["root_id"]
 
     # Create folders
@@ -79,4 +80,59 @@ def merkle_folder(test_user, db_session: Session) -> FSItem:
         db_session.delete(subfolder)
         db_session.delete(subfolder2)
         db_session.delete(folder)
+        db_session.commit()
+
+
+@pytest.fixture(scope="module")
+def merkle_files_with_content(test_user, db_session: Session, merkle_folder):
+    root_id = test_user["root_id"]
+    merkle_folder_id = merkle_folder["top_folder"]
+
+    # Make test files
+    file1 = FSItem(
+        parent_id=merkle_folder_id,
+        root_id=root_id,
+        name="exef3.txt.exef",
+        is_folder=False,
+    )
+    file_contents_1 = bytes.fromhex(
+        "457845460301abababababababababababab3ae89cecf3e7cb56042e43d824ec000000000000000cb52c1501910110d2afcb7b114b29d231367c43770ada41198c9a96a4"
+    )
+    file_path_1 = CONFIG.storage.vault_folder / file1.system_path
+    file_path_1.parent.mkdir(parents=True, exist_ok=True)
+    file1.size = file_path_1.write_bytes(file_contents_1)
+
+    file2 = FSItem(
+        parent_id=merkle_folder_id,
+        root_id=root_id,
+        name="exef4.txt.exef",
+        is_folder=False,
+    )
+    file_contents_2 = bytes.fromhex(
+        "4578454604010c000000010000000000000014abababababababababababababababababababababababababababababababab0000000000f37280d2e17260e417fcfa9ab22ea25127b62d6df1bc07b6e5b0cc73afc42b21924ed9d6"
+    )
+    file_path_2 = CONFIG.storage.vault_folder / file2.system_path
+    file_path_2.parent.mkdir(parents=True, exist_ok=True)
+    file2.size = file_path_2.write_bytes(file_contents_2)
+
+    db_session.add(file1)
+    db_session.add(file2)
+
+    # Commit and yield
+    db_session.commit()
+    yield {"file1": (str(file1.id), file_contents_1), "file2": (str(file2.id), file_contents_2)}
+
+    # Clean up
+    if file_path_1.exists():
+        file_path_1.unlink()
+
+    if file_path_2.exists():
+        file_path_2.unlink()
+
+    if get_item(file1.id) is not None:
+        db_session.delete(file1)
+        db_session.commit()
+
+    if get_item(file2.id) is not None:
+        db_session.delete(file2)
         db_session.commit()

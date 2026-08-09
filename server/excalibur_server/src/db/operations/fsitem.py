@@ -84,9 +84,9 @@ def get_items_in_folder(folder_id: UUID) -> list[FSItem]:
         return [item.model_copy() for item in items]
 
 
-def get_items_in_root(root_id: UUID) -> list[FSItem]:
+def get_items_with_root(root_id: UUID) -> list[FSItem]:
     """
-    Gets all items in a user's root directory.
+    Gets all items with a specified root directory.
 
     :param root_id: the ID of the root directory
     :return: a list of filesystem items

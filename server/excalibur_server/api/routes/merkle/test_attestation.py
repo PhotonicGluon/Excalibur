@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
-from excalibur_server.src.crypto.exef.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.tables import Attestation
 
 N_ATTESTATIONS = 10

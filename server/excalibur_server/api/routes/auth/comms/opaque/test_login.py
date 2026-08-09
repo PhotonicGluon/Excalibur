@@ -7,7 +7,7 @@ from excalibur_server.api.app import app
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
-from excalibur_server.src.crypto.exef.exef import ExEF
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.tables import User
 
 client = TestClient(app)
