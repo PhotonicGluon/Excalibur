@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item
+from excalibur_server.src.db.operations import get_item, get_items_in_folder
 
 
 class TestInclusionProofEndpoint:
@@ -36,8 +36,9 @@ class TestInclusionProofEndpoint:
         assert len(inclusion_proof["steps"]) == 1
         step = inclusion_proof["steps"][0]
         assert step["id"] == str(root_id)
-        assert len(step["children"]) == 1
-        assert step["children"][0] == [
+        assert len(step["children"]) == len(get_items_in_folder(root_id))
+        top_folder_idx = [child[0] for child in step["children"]].index(str(actual_top_folder.id))
+        assert step["children"][top_folder_idx] == [
             str(actual_top_folder.id),
             b64encode(actual_top_folder.node_hash).decode("utf-8"),
         ]
@@ -57,11 +58,11 @@ class TestInclusionProofEndpoint:
 
         step_1 = inclusion_proof["steps"][0]
         assert step_1["id"] == str(top_folder_id)
-        assert len(step_1["children"]) == 4
+        assert len(step_1["children"]) == len(get_items_in_folder(top_folder_id))
 
         step_2 = inclusion_proof["steps"][1]
         assert step_2["id"] == str(root_id)
-        assert len(step_2["children"]) == 1
+        assert len(step_2["children"]) == len(get_items_in_folder(root_id))
 
     def test_get_item_in_sub_folder(self, auth_client: TestClient, merkle_folder: dict):
         sub_sub_folder_id = merkle_folder["sub_sub_folder"]
