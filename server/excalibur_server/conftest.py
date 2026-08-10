@@ -15,7 +15,7 @@ from excalibur_server.consts import ROOT_FOLDER
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.tables import FSItem, User
+from excalibur_server.src.db.tables import Attestation, FSItem, User
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -83,8 +83,19 @@ def test_user(db_session: Session):
     root_folder = FSItem(name=str(user.id), parent_id=None, is_folder=True)
     root_folder.root_id = root_folder.id
     user.fsitem_id = root_folder.id
+
+    root_attestation = Attestation(
+        root_id=root_folder.id,
+        generation=1,
+        root_hash=b"test_root_hash",
+        prev_root_hash=None,
+        timestamp=1,
+        tag=b"demo-tag",
+    )
+
     db_session.add(root_folder)
     db_session.add(user)
+    db_session.add(root_attestation)
     db_session.commit()
 
     return {"user": user, "root_id": root_folder.id}
@@ -97,8 +108,6 @@ def auth_client(test_user) -> TestClient:
     """
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token(
-        str(test_user["user"].id), "some-uuid", datetime.now(tz=UTC).timestamp() + 9999
-    )
+    token = generate_auth_token(str(test_user["user"].id), "some-uuid", datetime.now(tz=UTC).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client

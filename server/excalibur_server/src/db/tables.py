@@ -1,16 +1,15 @@
 import uuid
-from base64 import b64encode
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Self
 
-from pydantic import field_serializer
+from pydantic import Base64Bytes, field_serializer
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.crypto.merkle.enums import MerkleStatus
 from excalibur_server.src.crypto.misc import frame
+from excalibur_server.src.misc import get_current_timestamp
 
 
 class User(SQLModel, table=True):
@@ -93,7 +92,7 @@ class FSItem(SQLModel, table=True):
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=UTC).timestamp()))
+    timestamp: int = Field(nullable=False, default_factory=get_current_timestamp)
     "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
 
     # Integrity
@@ -104,14 +103,14 @@ class FSItem(SQLModel, table=True):
     Server-computed, for bit-rot scrubbing only. **Not** part of the Merkle tree.
     """
 
-    content_mac: bytes | None = Field(nullable=True)
+    content_mac: Base64Bytes | None = Field(nullable=True)
     """
     Keyed MAC binding this file's AEAD tags to its identity, or None for folders and for files not
     yet migrated.
 
     Computed by the client; the server never verifies it.
     """
-    node_hash: bytes | None = Field(nullable=True)
+    node_hash: Base64Bytes | None = Field(nullable=True)
     """
     Keyed MAC of the subtree rooted at this item, or None if the subtree is dirty or has not been
     migrated.
@@ -148,12 +147,6 @@ class FSItem(SQLModel, table=True):
     @field_serializer("id", "parent_id", "root_id")
     def serialize_uuid(self, value: uuid.UUID) -> str:
         return str(value)
-
-    @field_serializer("content_mac", "node_hash")
-    def serialize_bytes(self, value: bytes | None) -> str | None:
-        if value is None:
-            return None
-        return b64encode(value).decode("utf-8")
 
 
 class VaultState(SQLModel, table=True):
@@ -194,13 +187,13 @@ class Attestation(SQLModel, table=True):
     """
     generation: int = Field(primary_key=True)
     "Generation of the vault."
-    root_hash: bytes = Field(nullable=False)
+    root_hash: Base64Bytes = Field(nullable=False)
     "Merkle root hash of the tree."
-    prev_root_hash: bytes | None = Field(nullable=True)
+    prev_root_hash: Base64Bytes | None = Field(nullable=True)
     "Previous root hash, or None for the first generation."
     timestamp: int = Field(nullable=False)
     "Timestamp when this root was generated"
-    tag: bytes = Field(nullable=False)
+    tag: Base64Bytes = Field(nullable=False)
     "Tag for this root"
 
     @property
@@ -219,13 +212,32 @@ class Attestation(SQLModel, table=True):
             self.timestamp.to_bytes(8, "big"),
         )
 
+    # Class methods
+    @classmethod
+    def from_prev(cls, prev_attestation: Self, tag: bytes, timestamp: int | None = None):
+        """
+        Generate an attestation from a previous attestation.
+
+        Used as a helper function for testing only.
+
+        :param prev_attestation: previous attestation
+        :param tag: new attestation's tag
+        :param timestamp: timestamp of the new attestation, defaults to the current timestamp
+        :return: the new attestation
+        """
+
+        if timestamp is None:
+            timestamp = get_current_timestamp()
+
+        return cls(
+            root_id=prev_attestation.root_id,
+            generation=prev_attestation.generation + 1,
+            prev_root_hash=prev_attestation.root_hash,
+            timestamp=timestamp,
+            tag=tag,
+        )
+
     # Field serialization
     @field_serializer("root_id")
     def serialize_uuid(self, value: uuid.UUID) -> str:
         return str(value)
-
-    @field_serializer("root_hash", "prev_root_hash", "tag")
-    def serialize_bytes(self, value: bytes | None) -> str | None:
-        if value is None:
-            return None
-        return b64encode(value).decode("utf-8")

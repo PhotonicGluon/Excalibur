@@ -14,3 +14,4 @@ from .user import add_user as add_user
 from .user import get_user as get_user
 from .user import get_user_from_id as get_user_from_id
 from .user import remove_user_from_id as remove_user_from_id
+from .vault_state import update_vault_state_generation as update_vault_state_generation

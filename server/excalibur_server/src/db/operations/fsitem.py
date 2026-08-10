@@ -1,7 +1,7 @@
 from pathlib import PurePosixPath
 from uuid import UUID
 
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import Session, aliased
 from sqlmodel import select
 
 from excalibur_server.src.db.operations.helpers import get_session
@@ -133,6 +133,32 @@ def get_item_fullpath(item_id: UUID) -> PurePosixPath:
     return fullpath
 
 
+def get_item_ancestors(item_id: UUID) -> list[FSItem]:
+    """
+    Gets all ancestors of a filesystem item.
+
+    :param item_id: the ID of the filesystem item
+    :return: a list of filesystem items
+    """
+
+    curr_id = item_id
+    seen_ids = set()
+    ancestors = []
+    with get_session() as session:
+        while curr_id is not None:
+            if curr_id in seen_ids:
+                raise ValueError("Circular reference detected in filesystem item hierarchy")
+            seen_ids.add(curr_id)
+
+            item = session.execute(select(FSItem).where(FSItem.id == curr_id)).scalars().first()
+            if item is None:
+                break
+            ancestors.append(item.model_copy())
+            curr_id = item.parent_id
+
+    return ancestors
+
+
 def is_dir_empty(folder_id: UUID) -> bool:
     """
     Checks if a directory is empty.
@@ -143,6 +169,27 @@ def is_dir_empty(folder_id: UUID) -> bool:
 
     with get_session() as session:
         return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
+
+
+def has_unverified(existing_session: Session, root_id: UUID) -> bool:
+    """
+    Checks if a root has unverified items.
+
+    Must use an existing session in order to not leave the Merkle tree in an unverified state.
+
+    :param existing_session: an existing database session
+    :param root_id: the ID of the root
+    :return: True if the root has unverified items, False otherwise
+    """
+
+    holes = existing_session.execute(
+        select(FSItem.id).where(
+            FSItem.root_id == root_id,
+            # Reject if node hash is not provided OR if it's a file lacking a content MAC
+            (FSItem.node_hash.is_(None)) | (not FSItem.is_folder & FSItem.content_mac.is_(None)),
+        )
+    ).all()
+    return holes is not None
 
 
 def remove_item(item_id: UUID):

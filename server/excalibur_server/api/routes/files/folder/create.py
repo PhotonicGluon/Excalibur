@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.src.crypto.merkle.mutation import Mutation, get_mutation
 from excalibur_server.src.db.operations import add_item, get_item_by_path
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.users import get_user_from_id
@@ -31,6 +32,7 @@ async def create_directory_endpoint(
         str, Path(description="The path to create the new directory at (use `.` to specify root directory)")
     ],
     name: Annotated[str, Body(description="The name of the new directory")],
+    mutation: Mutation = Depends(get_mutation),
     processed_path: str = Depends(process_path_param("path")),
 ):
     """
