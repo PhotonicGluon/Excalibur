@@ -16,7 +16,7 @@
         "@electron-toolkit/tsconfig": "^2.0.0",
         "@electron-toolkit/utils": "^4.0.0",
         "@tailwindcss/vite": "^4.3.3",
-        "@vitejs/plugin-react": "^6.0.3",
+        "@vitejs/plugin-react": "^6.0.5",
         "dmg-builder": "^26.15.3",
         "electron": "^41.10.3",
         "electron-builder": "^26.15.3",
