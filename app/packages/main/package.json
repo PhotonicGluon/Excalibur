@@ -24,7 +24,7 @@
         "@capacitor/preferences": "^8.0.1",
         "@capacitor/privacy-screen": "^2.0.1",
         "@capacitor/screen-orientation": "^8.0.1",
-        "@capawesome/capacitor-file-picker": "^8.0.3",
+        "@capawesome/capacitor-file-picker": "^8.0.4",
         "@ionic/core": "^8.8.14",
         "@ionic/react": "^8.8.14",
         "@ionic/react-router": "^8.8.14",
