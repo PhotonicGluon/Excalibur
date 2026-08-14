@@ -1,7 +1,8 @@
 from pathlib import PurePosixPath
 from uuid import UUID
 
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy import not_
+from sqlalchemy.orm import aliased
 from sqlmodel import select
 
 from excalibur_server.src.db.operations.helpers import get_session
@@ -171,25 +172,37 @@ def is_dir_empty(folder_id: UUID) -> bool:
         return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
 
 
-def has_unverified(existing_session: Session, root_id: UUID) -> bool:
+def get_unverified(root_id: UUID) -> set[UUID]:
+    """
+    Gets the IDs of the unverified files.
+
+    :param root_id: the ID of the root
+    :return: the set of unverified item IDs
+    """
+
+    with get_session() as session:
+        return set(
+            session.execute(
+                select(FSItem.id).where(
+                    FSItem.root_id == root_id,
+                    # Reject if node hash is not provided OR if it's a file lacking a content MAC
+                    (FSItem.node_hash.is_(None)) | (not_(FSItem.is_folder) & FSItem.content_mac.is_(None)),
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+
+def has_unverified(root_id: UUID) -> bool:
     """
     Checks if a root has unverified items.
 
-    Must use an existing session in order to not leave the Merkle tree in an unverified state.
-
-    :param existing_session: an existing database session
     :param root_id: the ID of the root
     :return: True if the root has unverified items, False otherwise
     """
 
-    holes = existing_session.execute(
-        select(FSItem.id).where(
-            FSItem.root_id == root_id,
-            # Reject if node hash is not provided OR if it's a file lacking a content MAC
-            (FSItem.node_hash.is_(None)) | (not FSItem.is_folder & FSItem.content_mac.is_(None)),
-        )
-    ).all()
-    return holes is not None
+    return len(get_unverified(root_id)) > 0
 
 
 def remove_item(item_id: UUID):

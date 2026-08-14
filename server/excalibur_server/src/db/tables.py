@@ -161,14 +161,23 @@ class VaultState(SQLModel, table=True):
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
     """
-    merkle_status: MerkleStatus = Field(sa_column=Column(Enum(MerkleStatus), nullable=False, default=MerkleStatus.NONE))
-    "Status of the Merkle tree for the vault."
+    merkle_status: MerkleStatus = Field(sa_column=Column(Enum(MerkleStatus), nullable=False), default=MerkleStatus.NONE)
+    "Status of the Merkle tree for the vault"
     current_generation: int = Field(nullable=False, default=0)
-    "Current generation of the vault."
+    "Current generation of the vault"
     migrated_count: int = Field(nullable=False, default=0)
-    "Number of items that have been migrated to the new generation."
+    "Number of items that have been migrated to the new generation"
     total_count: int | None = Field(nullable=True, default=None)
-    "Total number of items in the vault."
+    "Total number of items in the vault, or None if not migrated yet"
+
+    # Field serialization
+    @field_serializer("root_id")
+    def serialize_root_id(self, value: uuid.UUID) -> str:
+        return str(value)
+
+    @field_serializer("merkle_status")
+    def serialize_merkle_status(self, value: MerkleStatus) -> str:
+        return value.value
 
 
 class Attestation(SQLModel, table=True):
@@ -186,11 +195,11 @@ class Attestation(SQLModel, table=True):
     foreign keys.
     """
     generation: int = Field(primary_key=True)
-    "Generation of the vault."
+    "Generation of the vault"
     root_hash: Base64Bytes = Field(nullable=False)
-    "Merkle root hash of the tree."
+    "Merkle root hash of the tree"
     prev_root_hash: Base64Bytes | None = Field(nullable=True)
-    "Previous root hash, or None for the first generation."
+    "Previous root hash, or None for the first generation"
     timestamp: int = Field(nullable=False)
     "Timestamp when this root was generated"
     tag: Base64Bytes = Field(nullable=False)

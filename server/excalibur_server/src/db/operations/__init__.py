@@ -6,6 +6,8 @@ from .fsitem import get_item_by_path as get_item_by_path
 from .fsitem import get_item_fullpath as get_item_fullpath
 from .fsitem import get_items_in_folder as get_items_in_folder
 from .fsitem import get_items_with_root as get_items_with_root
+from .fsitem import get_unverified as get_unverified
+from .fsitem import has_unverified as has_unverified
 from .fsitem import is_dir_empty as is_dir_empty
 from .fsitem import remove_item as remove_item
 from .helpers import close_all_engines as close_all_engines
@@ -14,4 +16,5 @@ from .user import add_user as add_user
 from .user import get_user as get_user
 from .user import get_user_from_id as get_user_from_id
 from .user import remove_user_from_id as remove_user_from_id
+from .vault_state import get_vault_state as get_vault_state
 from .vault_state import update_vault_state_generation as update_vault_state_generation

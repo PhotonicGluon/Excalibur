@@ -1,7 +1,5 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body
 from pydantic import Base64Bytes, BaseModel
 
 from excalibur_server.src.crypto.merkle.enums import MerkleStatus
@@ -56,12 +54,3 @@ def mutation_check(
         return f"Missing hashes for nodes: {missing}"
 
     return None
-
-
-async def get_mutation(
-    mutation: Annotated[Mutation, Body(description="Mutation to apply to the Merkle tree")],
-) -> Mutation:
-    # TODO: Add documentation
-
-    # TODO: Check the provided mutation
-    return mutation

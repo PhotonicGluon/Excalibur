@@ -5,9 +5,8 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.merkle.mutation import Mutation
-from excalibur_server.src.db.operations import get_items_in_folder, get_latest_attestation
-from excalibur_server.src.db.tables import Attestation, FSItem
+from excalibur_server.src.db.operations import get_items_in_folder
+from excalibur_server.src.db.tables import FSItem
 
 
 class TestCreateDir:
@@ -18,23 +17,9 @@ class TestCreateDir:
 
     def test_create_directory_no_transit_encryption(self, auth_client: TestClient, test_user):
         root_id = test_user["root_id"]
-        attestation = get_latest_attestation(root_id)
-
-        mutation = Mutation(
-            expected_generation=attestation.generation,
-            path_hashes={str(root_id): b"test"},
-            attestation=Attestation.from_prev(attestation, b"test"),
-        ).model_dump(mode="json")
-        print(mutation)
 
         uuid = uuid4().hex
-        response = auth_client.post(
-            "/api/files/mkdir/.",
-            json={
-                "name": f"test-dir-{uuid}",
-                "mutation": mutation,
-            },
-        )
+        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
         assert response.status_code == 201
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
