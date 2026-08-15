@@ -100,7 +100,7 @@ const config: Config = {
                 blogSidebarCount: "ALL",
                 postsPerPage: 5,
                 showReadingTime: true,
-                readingTime: ({ content }) => content.length,
+                readingTime: ({ content }: { content: any }) => content.length,
                 onUntruncatedBlogPosts: "ignore",
                 processBlogPosts: ({ blogPosts }: { blogPosts: BlogPost[] }) => {
                     return blogPosts.sort((a, b) => {
@@ -196,7 +196,7 @@ const config: Config = {
         },
     } satisfies Preset.ThemeConfig,
     customFields: {
-        latestVersion: "0.7.3",
+        latestVersion: "0.7.4",
     },
 };
 
