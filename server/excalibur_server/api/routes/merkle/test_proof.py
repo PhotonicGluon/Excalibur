@@ -32,7 +32,7 @@ class TestInclusionProofEndpoint:
 
         inclusion_proof = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
         actual_top_folder = get_item(top_folder_id)
-        assert inclusion_proof["item"] == actual_top_folder.model_dump()
+        assert inclusion_proof["item"] == actual_top_folder.model_dump(mode="json")
         assert len(inclusion_proof["steps"]) == 1
         step = inclusion_proof["steps"][0]
         assert step["id"] == str(root_id)
@@ -53,7 +53,7 @@ class TestInclusionProofEndpoint:
 
         inclusion_proof = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
         actual_sub_folder = get_item(sub_folder_id)
-        assert inclusion_proof["item"] == actual_sub_folder.model_dump()
+        assert inclusion_proof["item"] == actual_sub_folder.model_dump(mode="json")
         assert len(inclusion_proof["steps"]) == 2
 
         step_1 = inclusion_proof["steps"][0]
@@ -72,5 +72,5 @@ class TestInclusionProofEndpoint:
 
         inclusion_proof = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
         actual_sub_sub_folder = get_item(sub_sub_folder_id)
-        assert inclusion_proof["item"] == actual_sub_sub_folder.model_dump()
+        assert inclusion_proof["item"] == actual_sub_sub_folder.model_dump(mode="json")
         assert len(inclusion_proof["steps"]) == 3

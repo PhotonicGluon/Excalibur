@@ -13,7 +13,7 @@ class Mutation(BaseModel):
 
     expected_generation: int
     "Expected generation of the Merkle tree _before_ the mutation."
-    path_hashes: dict[UUID, Base64Bytes]
+    node_hashes: dict[UUID, Base64Bytes]
     """
     Mapping of every node that will be modified to its new hash value.
 
@@ -43,14 +43,18 @@ def mutation_check(
     attestation = mutation.attestation
     if attestation.generation != mutation.expected_generation + 1:
         return "Attestation's generation must be exactly one greater than the expected generation"
-    if attestation.root_hash != mutation.path_hashes.get(root_id):
+    if attestation.root_hash != mutation.node_hashes.get(root_id):
         return "Attestation's root hash does not match submitted root node's hash"
     if previous_attestation is not None and attestation.prev_root_hash != previous_attestation.root_hash:
         return "Attestation does not chain to current head"
 
-    # Check if all hashes are provided
-    missing = need_updating_ids - mutation.path_hashes.keys()
+    # Ensure that only required hashes are provided
+    node_ids = mutation.node_hashes.keys()
+    missing = need_updating_ids - node_ids
+    extra = node_ids - need_updating_ids
     if missing:
         return f"Missing hashes for nodes: {missing}"
+    if extra:
+        return f"Extra hashes provided for nodes: {extra}"
 
     return None

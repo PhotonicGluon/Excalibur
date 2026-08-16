@@ -11,7 +11,7 @@ from excalibur_server.src.crypto.merkle.mac import get_content_mac_input
 from excalibur_server.src.db.operations import get_item, get_user_from_id
 
 
-@encrypted_router.post("/content-mac-inputs")
+@encrypted_router.post("/content-mac-inputs", name="Get Content MAC Inputs")
 def content_mac_inputs_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     ids: Annotated[list[UUID], Body(description="List of item IDs to get content MAC inputs for")],
