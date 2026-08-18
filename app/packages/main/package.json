@@ -29,7 +29,7 @@
         "@ionic/react": "^8.8.14",
         "@ionic/react-router": "^8.8.14",
         "@noble/ciphers": "^2.2.0",
-        "@noble/hashes": "^2.2.0",
+        "@noble/hashes": "^2.3.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-react": "^6.0.5",
         "buffer": "^6.0.3",
