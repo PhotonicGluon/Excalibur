@@ -16,9 +16,9 @@
     },
     "type": "module",
     "dependencies": {
-        "@capacitor/android": "8.4.0",
+        "@capacitor/android": "8.5.0",
         "@capacitor/app": "^8.1.1",
-        "@capacitor/core": "8.4.0",
+        "@capacitor/core": "8.5.0",
         "@capacitor/filesystem": "^8.1.2",
         "@capacitor/keyboard": "^8.0.5",
         "@capacitor/preferences": "^8.0.1",
