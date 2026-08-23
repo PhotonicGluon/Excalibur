@@ -1,3 +1,4 @@
+from base64 import b64decode
 from uuid import UUID
 
 from pydantic import Base64Bytes, BaseModel
@@ -41,11 +42,16 @@ def mutation_check(
 
     # Attestation structural checks
     attestation = mutation.attestation
+    # FIXME: Why is `attestation.root_hash` a Base64 string?
     if attestation.generation != mutation.expected_generation + 1:
         return "Attestation's generation must be exactly one greater than the expected generation"
-    if attestation.root_hash != mutation.node_hashes.get(root_id):
-        return "Attestation's root hash does not match submitted root node's hash"
-    if previous_attestation is not None and attestation.prev_root_hash != previous_attestation.root_hash:
+    # if attestation.root_hash != mutation.node_hashes.get(root_id):
+    #     return f"Attestation's root hash ({attestation.root_hash}) does not match submitted root node's hash ({mutation.node_hashes.get(root_id)})"
+    # if previous_attestation is not None and attestation.prev_root_hash != previous_attestation.root_hash:
+    #     return "Attestation does not chain to current head"
+    if b64decode(attestation.root_hash) != mutation.node_hashes.get(root_id):
+        return f"Attestation's root hash ({attestation.root_hash}) does not match submitted root node's hash ({mutation.node_hashes.get(root_id)})"
+    if previous_attestation is not None and b64decode(attestation.prev_root_hash) != previous_attestation.root_hash:
         return "Attestation does not chain to current head"
 
     # Ensure that only required hashes are provided
