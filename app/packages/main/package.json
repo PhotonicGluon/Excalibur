@@ -39,7 +39,7 @@
         "create-hmac": "^1.1.7",
         "crypto-browserify": "^3.12.1",
         "immer": "^11.1.15",
-        "ionicons": "^8.0.13",
+        "ionicons": "^8.1.0",
         "jsonwebtoken": "^9.0.3",
         "mime": "^4.1.0",
         "natural-compare": "^1.4.0",
