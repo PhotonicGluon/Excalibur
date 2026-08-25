@@ -23,7 +23,7 @@
     "devDependencies": {
         "cross-env": "^10.1.0",
         "husky": "^9.1.7",
-        "start-server-and-test": "^3.0.11",
+        "start-server-and-test": "^3.0.12",
         "supports-color": "~8.1.1"
     },
     "engines": {

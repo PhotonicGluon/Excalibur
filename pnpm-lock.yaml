@@ -38,8 +38,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       start-server-and-test:
-        specifier: ^3.0.11
-        version: 3.0.11(supports-color@8.1.1)
+        specifier: ^3.0.12
+        version: 3.0.12(supports-color@8.1.1)
       supports-color:
         specifier: ~8.1.1
         version: 8.1.1
@@ -68,8 +68,8 @@ importers:
         specifier: ^7.1.1
         version: 7.1.1(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)
       eslint-plugin-react-refresh:
-        specifier: ^0.5.3
-        version: 0.5.3(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))
+        specifier: ^0.5.4
+        version: 0.5.4(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))
       globals:
         specifier: ^17.8.0
         version: 17.8.0
@@ -134,47 +134,47 @@ importers:
   app/packages/main:
     dependencies:
       '@capacitor/android':
-        specifier: 8.4.0
-        version: 8.4.0(@capacitor/core@8.4.0)
+        specifier: 8.5.0
+        version: 8.5.0(@capacitor/core@8.5.0)
       '@capacitor/app':
         specifier: ^8.1.1
-        version: 8.1.1(@capacitor/core@8.4.0)
+        version: 8.1.1(@capacitor/core@8.5.0)
       '@capacitor/core':
-        specifier: 8.4.0
-        version: 8.4.0
+        specifier: 8.5.0
+        version: 8.5.0
       '@capacitor/filesystem':
         specifier: ^8.1.2
-        version: 8.1.2(@capacitor/core@8.4.0)
+        version: 8.1.2(@capacitor/core@8.5.0)
       '@capacitor/keyboard':
         specifier: ^8.0.5
-        version: 8.0.5(@capacitor/core@8.4.0)
+        version: 8.0.5(@capacitor/core@8.5.0)
       '@capacitor/preferences':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.4.0)
+        version: 8.0.1(@capacitor/core@8.5.0)
       '@capacitor/privacy-screen':
         specifier: ^2.0.1
-        version: 2.0.1(@capacitor/core@8.4.0)
+        version: 2.0.1(@capacitor/core@8.5.0)
       '@capacitor/screen-orientation':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.4.0)
+        version: 8.0.1(@capacitor/core@8.5.0)
       '@capawesome/capacitor-file-picker':
         specifier: ^8.0.4
-        version: 8.0.4(@capacitor/core@8.4.0)
+        version: 8.0.4(@capacitor/core@8.5.0)
       '@ionic/core':
         specifier: ^8.8.14
         version: 8.8.14
       '@ionic/react':
         specifier: ^8.8.14
-        version: 8.8.14(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 8.8.14(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@ionic/react-router':
         specifier: ^8.8.14
-        version: 8.8.14(react-dom@19.2.7(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)
+        version: 8.8.14(react-dom@19.2.8(react@19.2.8))(react-router-dom@5.3.4(react@19.2.8))(react-router@5.3.4(react@19.2.8))(react@19.2.8)
       '@noble/ciphers':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^2.3.0
+        version: 2.3.0
       '@noble/hashes':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^2.3.0
+        version: 2.3.0
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
@@ -186,7 +186,7 @@ importers:
         version: 6.0.3
       capacitor-blob-writer:
         specifier: ^1.1.20
-        version: 1.1.20(@capacitor/core@8.4.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.4.0))
+        version: 1.1.20(@capacitor/core@8.5.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.5.0))
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -203,8 +203,8 @@ importers:
         specifier: ^11.1.15
         version: 11.1.15
       ionicons:
-        specifier: ^8.0.13
-        version: 8.0.13
+        specifier: ^8.1.0
+        version: 8.1.0
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -221,20 +221,20 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(patch_hash=25f3e2609867ff24297c87403691e02ff4e571c9354cdb4328ba5ea9d21a6529)
       react:
-        specifier: 19.2.7
-        version: 19.2.7
+        specifier: 19.2.8
+        version: 19.2.8
       react-circular-progressbar:
         specifier: ^2.2.0
-        version: 2.2.0(react@19.2.7)
+        version: 2.2.0(react@19.2.8)
       react-dom:
-        specifier: 19.2.7
-        version: 19.2.7(react@19.2.7)
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       react-router:
         specifier: ^5.3.4
-        version: 5.3.4(react@19.2.7)
+        version: 5.3.4(react@19.2.8)
       react-router-dom:
         specifier: ^5.3.4
-        version: 5.3.4(react@19.2.7)
+        version: 5.3.4(react@19.2.8)
       seedrandom:
         specifier: ^3.0.5
         version: 3.0.5
@@ -249,7 +249,7 @@ importers:
         version: 4.3.3
       use-immer:
         specifier: ^0.11.0
-        version: 0.11.0(immer@11.1.15)(react@19.2.7)
+        version: 0.11.0(immer@11.1.15)(react@19.2.8)
       util:
         specifier: ^0.12.5
         version: 0.12.5
@@ -291,11 +291,11 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       '@types/react':
-        specifier: 19.2.17
-        version: 19.2.17
+        specifier: 19.2.18
+        version: 19.2.18
       '@types/react-dom':
         specifier: 19.2.3
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.3(@types/react@19.2.18)
       '@types/react-router':
         specifier: ^5.1.20
         version: 5.1.20
@@ -309,8 +309,8 @@ importers:
         specifier: ^2.10.44
         version: 2.10.44
       cypress:
-        specifier: ^15.20.0
-        version: 15.20.0
+        specifier: ^15.21.0
+        version: 15.21.0
       globals:
         specifier: ^17.8.0
         version: 17.8.0
@@ -447,10 +447,10 @@ packages:
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
 
-  '@capacitor/android@8.4.0':
-    resolution: {integrity: sha512-K1ZPkQzvRzPEALz9nBdLx5p5nAPzp5fsTYWk7LRiKZeH/NXqjDvqfTv7lrLgrziQNoDeaL6ijg64oBREzXiV+g==}
+  '@capacitor/android@8.5.0':
+    resolution: {integrity: sha512-Rb3prJeQiTp0pQhSSOReJuG9VgibOGMG4ECs+UhMwr6TCCHZ3NCZO811bDA0HxD0xrT/gCrJAsY5yfEATu84JQ==}
     peerDependencies:
-      '@capacitor/core': ^8.4.0
+      '@capacitor/core': ^8.5.0
 
   '@capacitor/app@8.1.1':
     resolution: {integrity: sha512-xM2ZTX5jK60tFtmjsmJv+Cdj1Qsb6NcavkqmdEnCPQBeya9oKhamZJxYOnQNj1ZvcJM7sWfG6BEtSLx42pisbA==}
@@ -472,8 +472,8 @@ packages:
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.4.0':
-    resolution: {integrity: sha512-LrS1xPIrqLtJABBIPDGXxxKmI9OyesrzWw8DiHbxhSC9JoiLUleUAJlX1a0LWIVLRbuY4Szgf9huFeRqYH2SAQ==}
+  '@capacitor/core@8.5.0':
+    resolution: {integrity: sha512-Ca4krtqH1hothjtBIwf2J2TW7IhYq1ujp8QeItTiJohNsqij8ja2DYYH3DU0l8RmxCWaBAFTGA2TgOgOMCSNsQ==}
 
   '@capacitor/filesystem@8.1.2':
     resolution: {integrity: sha512-doaaMfGoFR2hWU6aV6u83I+5ZsGyJVq+Gz4r9lMpJzUKMm1eMu0hLnFdV1aXZlU9FlK/RndFrVD8oRZfNOqWgQ==}
@@ -1099,16 +1099,16 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@noble/ciphers@2.2.0':
-    resolution: {integrity: sha512-Z6pjIZ/8IJcCGzb2S/0Px5J81yij85xASuk1teLNeg75bfT07MV3a/O2Mtn1I2se43k3lkVEcFaR10N4cgQcZA==}
+  '@noble/ciphers@2.3.0':
+    resolution: {integrity: sha512-Clu/xdfgVTf9o7ngLOURaxePwR0j8sjclKEtVij10/jGulwFsPWCvvRgG/XjUVf8Nei+jLG6uwyXzUTGY1DQrw==}
     engines: {node: '>= 20.19.0'}
 
   '@noble/hashes@1.4.0':
     resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
     engines: {node: '>= 16'}
 
-  '@noble/hashes@2.2.0':
-    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
+  '@noble/hashes@2.3.0':
+    resolution: {integrity: sha512-oN+QwyX7VSHotibwubG3kpzbwKrfnyR6OOO+3Nk/53ADL7FmgHHz4TgrbaYKvvOw09u6QTx0oiH1cNCIOuN0CQ==}
     engines: {node: '>= 20.19.0'}
 
   '@oxc-project/types@0.139.0':
@@ -1297,11 +1297,6 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
-
-  '@stencil/core@4.43.4':
-    resolution: {integrity: sha512-QWawMM1XIpSz4k+k+VyHZMr2YSxlCNAPWO/jTdJ+2kdgdN7ZQVEFZpc4WBm3E3mrDPTZ79lLcnIPa399bg4XOg==}
-    engines: {node: '>=16.0.0', npm: '>=7.10.0'}
-    hasBin: true
 
   '@stencil/core@4.43.5':
     resolution: {integrity: sha512-cgWD+GeuvJpTe1WQn40p02+BJ2j0j1YJ17GdkF2qKIQ23s2e3Zivq5yISXS3dcuV6oUJFN93jprdk+nk/sq99Q==}
@@ -1523,8 +1518,8 @@ packages:
   '@types/react-router@5.1.20':
     resolution: {integrity: sha512-jGjmu/ZqS7FjSH6owMcD5qpq19+1RS9DeVRqfl1FeBMxTDQAGwlMWOcs52NDoXaNKyG3d1cYQFMs9rCrb88o9Q==}
 
-  '@types/react@19.2.17':
-    resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
+  '@types/react@19.2.18':
+    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
@@ -1651,6 +1646,7 @@ packages:
   '@xmldom/xmldom@0.9.10':
     resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
@@ -1703,8 +1699,8 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
-  ansi-regex@6.2.2:
-    resolution: {integrity: sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==}
+  ansi-regex@6.3.0:
+    resolution: {integrity: sha512-WpDfL7NO6j7tH88IDBNVdUJxDh9nmCteAVW9dsep846XdwF4naCBK+/tGLX3KJgcpgMRXCFlTM2hKGoK9FsdrQ==}
     engines: {node: '>=12'}
 
   ansi-styles@3.2.1:
@@ -2030,6 +2026,10 @@ packages:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
 
+  chrome-remote-interface@0.33.3:
+    resolution: {integrity: sha512-zNnn0prUL86Teru6UCAZ1yU1XeXljHl3gj7OrfPcarEfU62OUU4IujDPdTDW3dAWwRqN3ZMG/Chhkh2gPL/wiw==}
+    hasBin: true
+
   chromium-pickle-js@0.2.0:
     resolution: {integrity: sha512-1R5Fho+jBq0DDydt+/vHWj5KJNJCKdARKOCwZUen84I5BreWoLqRLANH1U87eJy1tiASPtMnGqJJq0ZsLoRPOw==}
 
@@ -2104,6 +2104,9 @@ packages:
   commander@14.0.3:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
+
+  commander@2.11.0:
+    resolution: {integrity: sha512-b0553uYA5YAEGgyYIGYROzKQ7X5RAqedkfjiZxwi0kL1g3bOaBNNZfYkzt/CL0umgD5wc9Jec2FbB98CjkMRvQ==}
 
   commander@5.1.0:
     resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
@@ -2259,8 +2262,8 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  cypress@15.20.0:
-    resolution: {integrity: sha512-yrt6z9YERlggq5FReDx+PkbjrNoEQPeM03MQC1GvLlFGItk8ervC0A/7fjzWoWVRRXjsem+Pj3cunknARl/37g==}
+  cypress@15.21.0:
+    resolution: {integrity: sha512-6uPy5GUjao97t/QDIwlPyJz4JUqPpFIPq5lNazN95LSA3ynJoYC1sHZ3W+aj4f+K1OFGbMfno0+OX2Gx0OmlPA==}
     engines: {node: ^20.1.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
 
@@ -2583,8 +2586,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-react-refresh@0.5.3:
-    resolution: {integrity: sha512-5EMmLCV98Pi4o/f/3DP/v/tNqLHMIc9I8LKClNDWhZ9JTho89/kQcitCXQBMG7sAfVRK0Ie3T2EDOzp1YXYiVA==}
+  eslint-plugin-react-refresh@0.5.4:
+    resolution: {integrity: sha512-7bqTKz7T0r+HKWFarNXByDE9/5+73wI2ru+M3zuqGbR7s/b/5/pQJXZoufWlrngqGqoZto73ZkGumCdLxk+4rw==}
     peerDependencies:
       eslint: ^9 || ^10
 
@@ -2613,6 +2616,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -2852,7 +2856,7 @@ packages:
   git-raw-commits@2.0.11:
     resolution: {integrity: sha512-VnctFhw+xfj8Va1xtfEqCUD2XDrbAPSJx+hSrE5K7fGdjZruW7XV+QOrN7LF/RJyvspRiD2I0asWsxFp0ya26A==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -2862,7 +2866,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -3092,8 +3096,8 @@ packages:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
 
-  ionicons@8.0.13:
-    resolution: {integrity: sha512-2QQVyG2P4wszne79jemMjWYLp0DBbDhr4/yFroPCxvPP1wtMxgdIV3l5n+XZ5E9mgoXU79w7yTWpm2XzJsISxQ==}
+  ionicons@8.1.0:
+    resolution: {integrity: sha512-XSM2gYWTXxSYTwjmKWAoy4yR7AbAFDjpc5ZIivAiGXskM0fe5CdMPfs6InQRUcrYtVb2WZ/0HQ1/jeh3JW78SA==}
 
   is-arguments@1.2.0:
     resolution: {integrity: sha512-7bVbi0huj/wrIAOzb8U1aszg9kdi3KN/CyU19CTI7tAoZYEZoL9yCDXpbXN+uPsuWnP02cyug1gleqq+TU+YCA==}
@@ -3302,8 +3306,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  joi@18.2.1:
-    resolution: {integrity: sha512-2/OKlogiESf2Nh3TFCrRjrr9z1DRHeW0I+KReF67+4J0Ns+8hBtHRmoWAZ2OFU6I5+TWLEe6sVlSdXPjHm5UbQ==}
+  joi@18.2.5:
+    resolution: {integrity: sha512-+gEA7rLfaNWx9JzawWPrPetSZwT16NUqHtECDgjyAJreXcs4TM7tx2Pa+VVJJK0YHM83ybrVdaT6UekHH50FJQ==}
     engines: {node: '>= 20'}
 
   js-tokens@4.0.0:
@@ -4177,10 +4181,10 @@ packages:
     peerDependencies:
       react: '>=0.14.0'
 
-  react-dom@19.2.7:
-    resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
+  react-dom@19.2.8:
+    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
     peerDependencies:
-      react: ^19.2.7
+      react: ^19.2.8
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -4195,8 +4199,8 @@ packages:
     peerDependencies:
       react: '>=15'
 
-  react@19.2.7:
-    resolution: {integrity: sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ==}
+  react@19.2.8:
+    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
     engines: {node: '>=0.10.0'}
 
   read-binary-file-arch@1.0.6:
@@ -4529,8 +4533,8 @@ packages:
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
-  start-server-and-test@3.0.11:
-    resolution: {integrity: sha512-NRapOwJl6jr1DNSaQ+SRukHI2OKcFZA2Iv2tfTW9fI/S+6YmJGiwacR+0MG3o5p39lY4xWUOE5JFkKJBZUjxuQ==}
+  start-server-and-test@3.0.12:
+    resolution: {integrity: sha512-JhW9LiYXqJxyzmgMvBQ6JxVcz16wV+c5IE6rTHofqLBKjSE075Yr9e6sTr8QgrkHMHlHqkDegzKpQfVKxwauJw==}
     engines: {node: ^22 || >=24}
     hasBin: true
 
@@ -5028,8 +5032,8 @@ packages:
   vm-browserify@1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
 
-  wait-on@9.0.10:
-    resolution: {integrity: sha512-rCoJEhvMr0X6alHmwc9abbrA5ZrLZFKpFQVKPNFwl2h7DapXOGdmimIHDtLOWhT4PjhZhxFEtZoQgEXbkDWdZw==}
+  wait-on@9.1.0:
+    resolution: {integrity: sha512-PymrLXHLBM1Ju/Xspb2ADUhbPSMvbnuNvy/mN2hWtpbJ3da0h3Ky1LqwKPG5QSVR57liyO0iUpfipYl/s5qNvA==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
@@ -5102,6 +5106,18 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  ws@7.5.13:
+    resolution: {integrity: sha512-rsKI6xDBFVf4r/x8XyChGK04QR/XHroxs/jUcoWvtEZM8TPU/X/uIY9B1CsSzYws9ZJb/6bbBu7dPhFW00CAoA==}
+    engines: {node: '>=8.3.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   xcode@3.0.1:
     resolution: {integrity: sha512-kCz5k7J7XbJtjABOvkc5lJmkiDh8VhjVCGNiqdKCscmVpdVUpEAyXv1xmCLkQJ5dsHqx3IPO4XW+NTDhU/fatA==}
@@ -5363,13 +5379,13 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@capacitor/android@8.4.0(@capacitor/core@8.4.0)':
+  '@capacitor/android@8.5.0(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
-  '@capacitor/app@8.1.1(@capacitor/core@8.4.0)':
+  '@capacitor/app@8.1.1(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
   '@capacitor/assets@3.0.5(@types/node@26.1.2)(supports-color@8.1.1)(typescript@6.0.2)':
     dependencies:
@@ -5437,36 +5453,36 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.4.0':
+  '@capacitor/core@8.5.0':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.2(@capacitor/core@8.4.0)':
+  '@capacitor/filesystem@8.1.2(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
       '@capacitor/synapse': 1.0.4
 
-  '@capacitor/keyboard@8.0.5(@capacitor/core@8.4.0)':
+  '@capacitor/keyboard@8.0.5(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
-  '@capacitor/preferences@8.0.1(@capacitor/core@8.4.0)':
+  '@capacitor/preferences@8.0.1(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
-  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.4.0)':
+  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
-  '@capacitor/screen-orientation@8.0.1(@capacitor/core@8.4.0)':
+  '@capacitor/screen-orientation@8.0.1(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
   '@capacitor/synapse@1.0.4': {}
 
-  '@capawesome/capacitor-file-picker@8.0.4(@capacitor/core@8.4.0)':
+  '@capawesome/capacitor-file-picker@8.0.4(@capacitor/core@8.5.0)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.5.0
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -5903,24 +5919,24 @@ snapshots:
   '@ionic/core@8.8.14':
     dependencies:
       '@stencil/core': 4.43.5
-      ionicons: 8.0.13
+      ionicons: 8.1.0
       tslib: 2.8.1
 
-  '@ionic/react-router@8.8.14(react-dom@19.2.7(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)':
+  '@ionic/react-router@8.8.14(react-dom@19.2.8(react@19.2.8))(react-router-dom@5.3.4(react@19.2.8))(react-router@5.3.4(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@ionic/react': 8.8.14(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      react-router: 5.3.4(react@19.2.7)
-      react-router-dom: 5.3.4(react@19.2.7)
+      '@ionic/react': 8.8.14(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      react-router: 5.3.4(react@19.2.8)
+      react-router-dom: 5.3.4(react@19.2.8)
       tslib: 2.8.1
 
-  '@ionic/react@8.8.14(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@ionic/react@8.8.14(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@ionic/core': 8.8.14
-      ionicons: 8.0.13
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
+      ionicons: 8.1.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
       tslib: 2.8.1
 
   '@ionic/utils-array@2.1.6(supports-color@8.1.1)':
@@ -6084,11 +6100,11 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@noble/ciphers@2.2.0': {}
+  '@noble/ciphers@2.3.0': {}
 
   '@noble/hashes@1.4.0': {}
 
-  '@noble/hashes@2.2.0': {}
+  '@noble/hashes@2.3.0': {}
 
   '@oxc-project/types@0.139.0': {}
 
@@ -6209,17 +6225,6 @@ snapshots:
   '@sindresorhus/is@4.6.0': {}
 
   '@standard-schema/spec@1.1.0': {}
-
-  '@stencil/core@4.43.4':
-    optionalDependencies:
-      '@rollup/rollup-darwin-arm64': 4.44.0
-      '@rollup/rollup-darwin-x64': 4.44.0
-      '@rollup/rollup-linux-arm64-gnu': 4.44.0
-      '@rollup/rollup-linux-arm64-musl': 4.44.0
-      '@rollup/rollup-linux-x64-gnu': 4.44.0
-      '@rollup/rollup-linux-x64-musl': 4.44.0
-      '@rollup/rollup-win32-arm64-msvc': 4.44.0
-      '@rollup/rollup-win32-x64-msvc': 4.44.0
 
   '@stencil/core@4.43.5':
     optionalDependencies:
@@ -6441,22 +6446,22 @@ snapshots:
     dependencies:
       '@types/node': 26.1.2
 
-  '@types/react-dom@19.2.3(@types/react@19.2.17)':
+  '@types/react-dom@19.2.3(@types/react@19.2.18)':
     dependencies:
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
 
   '@types/react-router-dom@5.3.3':
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
       '@types/react-router': 5.1.20
 
   '@types/react-router@5.1.20':
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
 
-  '@types/react@19.2.17':
+  '@types/react@19.2.18':
     dependencies:
       csstype: 3.2.3
 
@@ -6668,7 +6673,7 @@ snapshots:
 
   ansi-regex@5.0.1: {}
 
-  ansi-regex@6.2.2: {}
+  ansi-regex@6.3.0: {}
 
   ansi-styles@3.2.1:
     dependencies:
@@ -6690,7 +6695,7 @@ snapshots:
       '@electron/rebuild': 4.0.4(supports-color@8.1.1)
       '@electron/universal': 2.0.3(supports-color@8.1.1)
       '@malept/flatpak-bundler': 0.4.0(supports-color@8.1.1)
-      '@noble/hashes': 2.2.0
+      '@noble/hashes': 2.3.0
       '@peculiar/webcrypto': 1.7.1
       '@types/fs-extra': 9.0.13
       ajv: 8.20.0
@@ -7058,10 +7063,10 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capacitor-blob-writer@1.1.20(@capacitor/core@8.4.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.4.0)):
+  capacitor-blob-writer@1.1.20(@capacitor/core@8.5.0)(@capacitor/filesystem@8.1.2(@capacitor/core@8.5.0)):
     dependencies:
-      '@capacitor/core': 8.4.0
-      '@capacitor/filesystem': 8.1.2(@capacitor/core@8.4.0)
+      '@capacitor/core': 8.5.0
+      '@capacitor/filesystem': 8.1.2(@capacitor/core@8.5.0)
 
   caseless@0.12.0: {}
 
@@ -7085,6 +7090,14 @@ snapshots:
       regexp-to-ast: 0.5.0
 
   chownr@3.0.0: {}
+
+  chrome-remote-interface@0.33.3:
+    dependencies:
+      commander: 2.11.0
+      ws: 7.5.13
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   chromium-pickle-js@0.2.0: {}
 
@@ -7161,6 +7174,8 @@ snapshots:
   commander@12.1.0: {}
 
   commander@14.0.3: {}
+
+  commander@2.11.0: {}
 
   commander@5.1.0: {}
 
@@ -7357,7 +7372,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  cypress@15.20.0:
+  cypress@15.21.0:
     dependencies:
       '@cypress/request': 4.0.1
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
@@ -7370,6 +7385,7 @@ snapshots:
       buffer: 5.7.1
       cachedir: 2.4.0
       chalk: 4.1.2
+      chrome-remote-interface: 0.33.3
       ci-info: 4.4.0
       cli-table3: 0.6.1
       commander: 6.2.1
@@ -7397,6 +7413,9 @@ snapshots:
       tree-kill: 1.2.2
       untildify: 4.0.0
       yauzl: 3.4.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   dargs@7.0.0: {}
 
@@ -7857,7 +7876,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-react-refresh@0.5.3(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1)):
+  eslint-plugin-react-refresh@0.5.4(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       eslint: 9.39.5(jiti@2.7.0)(supports-color@8.1.1)
 
@@ -8442,9 +8461,9 @@ snapshots:
       hasown: 2.0.3
       side-channel: 1.1.0
 
-  ionicons@8.0.13:
+  ionicons@8.1.0:
     dependencies:
-      '@stencil/core': 4.43.4
+      '@stencil/core': 4.43.5
 
   is-arguments@1.2.0:
     dependencies:
@@ -8636,7 +8655,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@18.2.1:
+  joi@18.2.5:
     dependencies:
       '@hapi/address': 5.1.1
       '@hapi/formula': 3.0.2
@@ -9464,29 +9483,29 @@ snapshots:
       randombytes: 2.1.0(patch_hash=25f3e2609867ff24297c87403691e02ff4e571c9354cdb4328ba5ea9d21a6529)
       safe-buffer: 5.2.1
 
-  react-circular-progressbar@2.2.0(react@19.2.7):
+  react-circular-progressbar@2.2.0(react@19.2.8):
     dependencies:
-      react: 19.2.7
+      react: 19.2.8
 
-  react-dom@19.2.7(react@19.2.7):
+  react-dom@19.2.8(react@19.2.8):
     dependencies:
-      react: 19.2.7
+      react: 19.2.8
       scheduler: 0.27.0
 
   react-is@16.13.1: {}
 
-  react-router-dom@5.3.4(react@19.2.7):
+  react-router-dom@5.3.4(react@19.2.8):
     dependencies:
       '@babel/runtime': 7.29.2
       history: 4.10.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.2.7
-      react-router: 5.3.4(react@19.2.7)
+      react: 19.2.8
+      react-router: 5.3.4(react@19.2.8)
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  react-router@5.3.4(react@19.2.7):
+  react-router@5.3.4(react@19.2.8):
     dependencies:
       '@babel/runtime': 7.29.2
       history: 4.10.1
@@ -9494,12 +9513,12 @@ snapshots:
       loose-envify: 1.4.0
       path-to-regexp: 1.9.0
       prop-types: 15.8.1
-      react: 19.2.7
+      react: 19.2.8
       react-is: 16.13.1
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  react@19.2.7: {}
+  react@19.2.8: {}
 
   read-binary-file-arch@1.0.6(supports-color@8.1.1):
     dependencies:
@@ -9920,7 +9939,7 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  start-server-and-test@3.0.11(supports-color@8.1.1):
+  start-server-and-test@3.0.12(supports-color@8.1.1):
     dependencies:
       arg: 5.0.2
       check-more-types: 2.24.0
@@ -9928,7 +9947,7 @@ snapshots:
       execa: 5.1.1
       lazy-ass: 2.0.3
       tree-kill: 1.2.2
-      wait-on: 9.0.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      wait-on: 9.1.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -10028,7 +10047,7 @@ snapshots:
 
   strip-ansi@7.2.0:
     dependencies:
-      ansi-regex: 6.2.2
+      ansi-regex: 6.3.0
 
   strip-bom@3.0.0: {}
 
@@ -10318,10 +10337,10 @@ snapshots:
       punycode: 1.4.1
       qs: 6.15.3
 
-  use-immer@0.11.0(immer@11.1.15)(react@19.2.7):
+  use-immer@0.11.0(immer@11.1.15)(react@19.2.8):
     dependencies:
       immer: 11.1.15
-      react: 19.2.7
+      react: 19.2.8
 
   utf8-byte-length@1.0.5: {}
 
@@ -10401,10 +10420,10 @@ snapshots:
 
   vm-browserify@1.1.2: {}
 
-  wait-on@9.0.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
+  wait-on@9.1.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
       axios: 1.18.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      joi: 18.2.1
+      joi: 18.2.5
       lodash: 4.18.1
       minimist: 1.2.8
       rxjs: 7.8.2
@@ -10510,6 +10529,8 @@ snapshots:
       strip-ansi: 7.2.0
 
   wrappy@1.0.2: {}
+
+  ws@7.5.13: {}
 
   xcode@3.0.1:
     dependencies:
