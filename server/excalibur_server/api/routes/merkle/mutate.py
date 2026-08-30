@@ -12,7 +12,7 @@ from excalibur_server.src.db.operations import (
     get_user_from_id,
     get_vault_state,
 )
-from excalibur_server.src.db.tables import FSItem, VaultState
+from excalibur_server.src.db.tables import Attestation, FSItem, VaultState
 
 
 @encrypted_router.put(
@@ -44,7 +44,7 @@ def mutation_endpoint(
     if error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error)
 
-    new_attestation = mutation.attestation
+    new_attestation = Attestation.from_base(mutation.attestation, root_id)
     with get_session() as session, session.begin():
         # Write node hashes and bump node versions
         for node_id, node_hash in mutation.node_hashes.items():

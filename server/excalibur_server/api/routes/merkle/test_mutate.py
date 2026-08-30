@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +13,8 @@ from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef.exef import ExEF
 from excalibur_server.src.crypto.merkle.enums import MerkleStatus
 from excalibur_server.src.crypto.merkle.mutation import Mutation
+from excalibur_server.src.crypto.merkle.structures import AttestationBase
+from excalibur_server.src.db.operations import get_item, get_unverified, get_vault_state
 from excalibur_server.src.db.operations.attestation import get_latest_attestation
 from excalibur_server.src.db.tables import Attestation, FSItem, User, VaultState
 
@@ -42,6 +44,16 @@ def mutation_user(db_session: Session):
     root_folder.root_id = root_folder.id
     user.fsitem_id = root_folder.id
 
+    # A dirty file, so that the mutation has to cover more than just the root
+    file = FSItem(
+        parent_id=root_folder.id,
+        root_id=root_folder.id,
+        name="mutation-file.exef",
+        size=1234,
+        content_mac=b"mutation-file-content-mac",
+        node_hash=None,
+    )
+
     root_attestation = Attestation(
         root_id=root_folder.id,
         generation=1,
@@ -53,18 +65,19 @@ def mutation_user(db_session: Session):
     vault_state = VaultState(
         root_id=root_folder.id,
         merkle_status=MerkleStatus.ACTIVE,
-        current_generation=1234,
+        current_generation=root_attestation.generation,
         migrated_count=5678,
         total_count=5678,
     )
 
     db_session.add(root_folder)
+    db_session.add(file)
     db_session.add(user)
     db_session.add(root_attestation)
     db_session.add(vault_state)
     db_session.commit()
 
-    return {"user": user, "root_id": root_folder.id}
+    return {"user": user, "root_id": root_folder.id, "file_id": file.id}
 
 
 @pytest.fixture(scope="class")
@@ -80,24 +93,30 @@ def mutation_client(mutation_user) -> TestClient:
 
 
 # Helper functions
-def _create_mutation(mutation_user, new_root_hash: bytes, other_node_hashes: dict[UUID, bytes]):
+def _create_mutation(mutation_user, new_root_hash: bytes, other_node_hashes: dict[UUID, bytes]) -> Mutation:
+    """
+    Creates a mutation that chains onto the user's latest attestation.
+    """
+
     prev_attestation = get_latest_attestation(mutation_user["root_id"])
-    new_attestation = Attestation(
-        root_id=prev_attestation.root_id,
+    attestation = AttestationBase(
         generation=prev_attestation.generation + 1,
-        root_hash=new_root_hash,
-        prev_root_hash=prev_attestation.root_hash,
+        root_hash=b64encode(new_root_hash),
+        prev_root_hash=b64encode(prev_attestation.root_hash),
         timestamp=prev_attestation.timestamp + 1,
-        tag=prev_attestation.tag,
+        tag=b64encode(prev_attestation.tag),
     )
 
-    mutation = Mutation(
+    return Mutation(
         expected_generation=prev_attestation.generation,
         node_hashes={id: b64encode(hash) for id, hash in other_node_hashes.items()}
-        | {prev_attestation.root_id: b64encode(new_root_hash)},
-        attestation=new_attestation,
+        | {mutation_user["root_id"]: b64encode(new_root_hash)},
+        attestation=attestation,
     )
-    return mutation
+
+
+def _decrypt(response) -> bytes:
+    return ExEF(b"one demo 16B key").decrypt(response.content)
 
 
 # Test class
@@ -106,12 +125,63 @@ class TestMutate:
         response = TestClient(app).put("/api/merkle/mutate", json={"ids": ["sample"]})
         assert response.status_code == 401
 
-    def test_mutation_ok(self, mutation_user, mutation_client: TestClient):
-        mutation = _create_mutation(mutation_user, b"new-root-hash", {})
-        print(mutation.model_dump(mode="json"))
+    def test_reject_wrong_generation(self, mutation_user, mutation_client: TestClient):
+        mutation = _create_mutation(mutation_user, b"new-root-hash", {mutation_user["file_id"]: b"new-file-hash"})
+        mutation.expected_generation += 1
 
-        response = mutation_client.put(
-            "/api/merkle/mutate",
-            json=mutation.model_dump(mode="json"),
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"generation" in _decrypt(response)
+
+    def test_reject_non_chaining_attestation(self, mutation_user, mutation_client: TestClient):
+        mutation = _create_mutation(mutation_user, b"new-root-hash", {mutation_user["file_id"]: b"new-file-hash"})
+        mutation.attestation.prev_root_hash = b"not-the-current-head"
+
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"chain" in _decrypt(response)
+
+    def test_reject_missing_hashes(self, mutation_user, mutation_client: TestClient):
+        # The dirty file's hash is not included
+        mutation = _create_mutation(mutation_user, b"new-root-hash", {})
+
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"Missing hashes" in _decrypt(response)
+
+    def test_reject_extra_hashes(self, mutation_user, mutation_client: TestClient):
+        mutation = _create_mutation(
+            mutation_user,
+            b"new-root-hash",
+            {mutation_user["file_id"]: b"new-file-hash", uuid4(): b"not-a-dirty-node"},
         )
-        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content)
+
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"Extra hashes" in _decrypt(response)
+
+    def test_mutation_ok(self, mutation_user, mutation_client: TestClient):
+        root_id = mutation_user["root_id"]
+        file_id = mutation_user["file_id"]
+        prev_attestation = get_latest_attestation(root_id)
+        old_version = get_item(root_id).version
+
+        mutation = _create_mutation(mutation_user, b"new-root-hash", {file_id: b"new-file-hash"})
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 200, _decrypt(response)
+
+        # The hashes must be stored as the raw bytes that were attested, not as their Base64 form
+        new_attestation = get_latest_attestation(root_id)
+        assert new_attestation.generation == prev_attestation.generation + 1
+        assert new_attestation.root_hash == b"new-root-hash"
+        assert new_attestation.prev_root_hash == prev_attestation.root_hash
+        assert new_attestation.root_id == root_id
+
+        root = get_item(root_id)
+        assert root.node_hash == b"new-root-hash"
+        assert root.version == old_version + 1
+        assert get_item(file_id).node_hash == b"new-file-hash"
+
+        # The vault is now clean and on the new generation
+        assert get_vault_state(root_id).current_generation == new_attestation.generation
+        assert get_unverified(root_id) == set()

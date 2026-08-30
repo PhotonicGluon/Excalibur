@@ -8,6 +8,7 @@ from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstrain
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.crypto.merkle.enums import MerkleStatus
+from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.crypto.misc import frame
 from excalibur_server.src.misc import get_current_timestamp
 
@@ -180,7 +181,7 @@ class VaultState(SQLModel, table=True):
         return value.value
 
 
-class Attestation(SQLModel, table=True):
+class Attestation(AttestationBase, table=True):
     """
     An attestation of a user's vault state.
     """
@@ -196,14 +197,6 @@ class Attestation(SQLModel, table=True):
     """
     generation: int = Field(primary_key=True)
     "Generation of the vault"
-    root_hash: Base64Bytes = Field(nullable=False)
-    "Merkle root hash of the tree"
-    prev_root_hash: Base64Bytes | None = Field(nullable=True)
-    "Previous root hash, or None for the first generation"
-    timestamp: int = Field(nullable=False)
-    "Timestamp when this root was generated"
-    tag: Base64Bytes = Field(nullable=False)
-    "Tag for this root"
 
     @property
     def attestation(self) -> bytes:
@@ -222,6 +215,18 @@ class Attestation(SQLModel, table=True):
         )
 
     # Class methods
+    @classmethod
+    def from_base(cls, base: AttestationBase, root_id: uuid.UUID):
+        """
+        Create an attestation from an `AttestationBase` and a root ID.
+
+        :param base: the base attestation
+        :param root_id: the root ID
+        :return: the attestation
+        """
+
+        return cls(root_id=root_id, **dict(base))
+
     @classmethod
     def from_prev(cls, prev_attestation: Self, tag: bytes, timestamp: int | None = None):
         """

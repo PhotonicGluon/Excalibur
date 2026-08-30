@@ -87,7 +87,10 @@ def attestations(attestation_user, db_session: Session) -> list[Attestation]:
 
     # Clean up
     for attestation in generated_attestations:
-        db_session.delete(db_session.get(Attestation, (attestation.root_id, attestation.generation)))
+        # The composite key is given as a mapping so that it does not depend on column ordering
+        db_session.delete(
+            db_session.get(Attestation, {"root_id": attestation.root_id, "generation": attestation.generation})
+        )
     db_session.commit()
 
 
