@@ -306,8 +306,8 @@ importers:
         specifier: ^3.0.8
         version: 3.0.8
       baseline-browser-mapping:
-        specifier: ^2.10.44
-        version: 2.10.44
+        specifier: ^2.11.19
+        version: 2.11.19
       cypress:
         specifier: ^15.21.0
         version: 15.21.0
@@ -1837,6 +1837,11 @@ packages:
 
   baseline-browser-mapping@2.10.44:
     resolution: {integrity: sha512-T3ghW+sl/ZJ8w1v/yQx3qvJ9040DWoLBz8JT/CILbAKcFyG9b2MRe75v6W5uXjv6uH1lumK2Kv46y2zSkcej0Q==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  baseline-browser-mapping@2.11.19:
+    resolution: {integrity: sha512-Grytf1xOxOEMTGRwx6rLGKkTabd4vMg3VrKdj/7joCmV0qgh4QwMMO6xh34YEXQqirAuUdgQGa5orJQQ+69RBw==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -6867,6 +6872,8 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.10.44: {}
+
+  baseline-browser-mapping@2.11.19: {}
 
   bcrypt-pbkdf@1.0.2:
     dependencies:
