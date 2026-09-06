@@ -1,4 +1,5 @@
-from base64 import b64encode
+import json
+from base64 import b64decode, b64encode
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -14,7 +15,7 @@ from excalibur_server.src.crypto.exef.exef import ExEF
 from excalibur_server.src.crypto.merkle.enums import MerkleStatus
 from excalibur_server.src.crypto.merkle.mutation import Mutation
 from excalibur_server.src.crypto.merkle.structures import AttestationBase
-from excalibur_server.src.db.operations import get_item, get_unverified, get_vault_state
+from excalibur_server.src.db.operations import get_item, get_unverified, get_vault_state, mark_dirty, remove_item
 from excalibur_server.src.db.operations.attestation import get_latest_attestation
 from excalibur_server.src.db.tables import Attestation, FSItem, User, VaultState
 
@@ -93,7 +94,12 @@ def mutation_client(mutation_user) -> TestClient:
 
 
 # Helper functions
-def _create_mutation(mutation_user, new_root_hash: bytes, other_node_hashes: dict[UUID, bytes]) -> Mutation:
+def _create_mutation(
+    mutation_user,
+    new_root_hash: bytes,
+    other_node_hashes: dict[UUID, bytes],
+    content_macs: dict[UUID, bytes] | None = None,
+) -> Mutation:
     """
     Creates a mutation that chains onto the user's latest attestation.
     """
@@ -111,6 +117,7 @@ def _create_mutation(mutation_user, new_root_hash: bytes, other_node_hashes: dic
         expected_generation=prev_attestation.generation,
         node_hashes={id: b64encode(hash) for id, hash in other_node_hashes.items()}
         | {mutation_user["root_id"]: b64encode(new_root_hash)},
+        content_macs={id: b64encode(mac) for id, mac in (content_macs or {}).items()},
         attestation=attestation,
     )
 
@@ -185,3 +192,109 @@ class TestMutate:
         # The vault is now clean and on the new generation
         assert get_vault_state(root_id).current_generation == new_attestation.generation
         assert get_unverified(root_id) == set()
+
+
+class TestMutateReturnsAttestation:
+    def test_returns_the_committed_attestation(self, mutation_user, mutation_client: TestClient):
+        root_id = mutation_user["root_id"]
+        prev_attestation = get_latest_attestation(root_id)
+
+        # The root is clean at this point, so dirty it again to have something to mutate
+        mark_dirty(root_id)
+
+        mutation = _create_mutation(mutation_user, b"another-root-hash", {})
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 200, _decrypt(response)
+
+        attestation = json.loads(_decrypt(response))
+        assert attestation["generation"] == prev_attestation.generation + 1
+        assert b64decode(attestation["root_hash"]) == b"another-root-hash"
+        assert b64decode(attestation["prev_root_hash"]) == prev_attestation.root_hash
+        assert attestation["root_id"] == str(root_id)
+
+
+class TestMutateContentMacs:
+    """
+    A newly uploaded file has no content MAC, so `/mutate` must demand one before the file counts as
+    clean.
+    """
+
+    @pytest.fixture
+    def fresh_upload(self, mutation_user, db_session: Session):
+        file = FSItem(
+            parent_id=mutation_user["root_id"],
+            root_id=mutation_user["root_id"],
+            name="fresh-upload.exef",
+            size=10,
+        )
+        file_id = file.id
+
+        db_session.add(file)
+        db_session.commit()
+        mark_dirty(file_id)  # As an upload would
+
+        yield file_id
+
+        if get_item(file_id) is not None:
+            remove_item(file_id)
+
+    def test_reject_missing_content_mac(self, mutation_user, mutation_client: TestClient, fresh_upload):
+        mutation = _create_mutation(mutation_user, b"root-with-upload", {fresh_upload: b"upload-hash"})
+
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"Missing content MACs" in _decrypt(response)
+
+    def test_reject_extra_content_mac(self, mutation_user, mutation_client: TestClient, fresh_upload):
+        mutation = _create_mutation(
+            mutation_user,
+            b"root-with-upload",
+            {fresh_upload: b"upload-hash"},
+            {fresh_upload: b"upload-mac", mutation_user["root_id"]: b"folders-have-no-mac"},
+        )
+
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 409, _decrypt(response)
+        assert b"Extra content MACs" in _decrypt(response)
+
+    def test_mutation_with_content_mac_ok(self, mutation_user, mutation_client: TestClient, fresh_upload):
+        root_id = mutation_user["root_id"]
+
+        mutation = _create_mutation(
+            mutation_user, b"root-with-upload", {fresh_upload: b"upload-hash"}, {fresh_upload: b"upload-mac"}
+        )
+        response = mutation_client.put("/api/merkle/mutate", json=mutation.model_dump(mode="json"))
+        assert response.status_code == 200, _decrypt(response)
+
+        uploaded = get_item(fresh_upload)
+        assert uploaded.node_hash == b"upload-hash"
+        assert uploaded.content_mac == b"upload-mac"
+
+        # The file no longer counts as dirty, so the vault is clean
+        assert get_unverified(root_id) == set()
+
+
+class TestMutateWithoutMerkleTree:
+    def test_reject_if_vault_has_no_merkle_tree(self, test_user, auth_client: TestClient):
+        """
+        `test_user` has no vault state row, so its vault reports the `none` status.
+        """
+
+        assert get_vault_state(test_user["root_id"]).merkle_status == MerkleStatus.NONE
+
+        mutation = {
+            "expected_generation": 0,
+            "node_hashes": {str(test_user["root_id"]): b64encode(b"root-hash").decode()},
+            "content_macs": {},
+            "attestation": {
+                "generation": 1,
+                "root_hash": b64encode(b"root-hash").decode(),
+                "prev_root_hash": None,
+                "timestamp": 1,
+                "tag": b64encode(b"tag").decode(),
+            },
+        }
+
+        response = auth_client.put("/api/merkle/mutate", json=mutation)
+        assert response.status_code == 409, _decrypt(response)
+        assert b"migrate the vault" in _decrypt(response)

@@ -27,6 +27,8 @@ PREV_ATTESTATION = Attestation(
 def _make_mutation(
     *,
     node_hashes: dict[UUID, bytes] | None = None,
+    content_macs: dict[UUID, bytes] | None = None,
+    expected_generation: int = 1234,
     generation: int = 1235,
     root_hash: bytes = b"new-root-hash",
     prev_root_hash: bytes = b"root-hash",
@@ -40,10 +42,13 @@ def _make_mutation(
 
     if node_hashes is None:
         node_hashes = {ROOT_ID: root_hash}
+    if content_macs is None:
+        content_macs = {}
 
     return Mutation(
-        expected_generation=1234,
+        expected_generation=expected_generation,
         node_hashes={id: b64encode(hash) for id, hash in node_hashes.items()},
+        content_macs={id: b64encode(mac) for id, mac in content_macs.items()},
         attestation=AttestationBase(
             generation=generation,
             root_hash=b64encode(root_hash),
@@ -68,6 +73,40 @@ class TestMutationCheck:
             )
             == "Vault is upgrading; cannot mutate"
         )
+
+    def test_reject_if_no_merkle_tree(self):
+        vault_state = VAULT_STATE.model_copy()
+        vault_state.merkle_status = MerkleStatus.NONE
+        assert (
+            mutation_check(
+                ROOT_ID,
+                vault_state=vault_state,
+                mutation=_make_mutation(),
+                need_updating_ids={ROOT_ID},
+                previous_attestation=PREV_ATTESTATION,
+            )
+            == "Vault has no Merkle tree; migrate the vault before mutating"
+        )
+
+    def test_reject_if_expected_generation_is_stale(self):
+        error = mutation_check(
+            ROOT_ID,
+            vault_state=VAULT_STATE,
+            mutation=_make_mutation(expected_generation=1233, generation=1234),
+            need_updating_ids={ROOT_ID},
+            previous_attestation=PREV_ATTESTATION,
+        )
+        assert error == "Expected generation 1233 does not match the vault's current generation 1234"
+
+    def test_reject_if_expected_generation_is_ahead(self):
+        error = mutation_check(
+            ROOT_ID,
+            vault_state=VAULT_STATE,
+            mutation=_make_mutation(expected_generation=1235, generation=1236),
+            need_updating_ids={ROOT_ID},
+            previous_attestation=PREV_ATTESTATION,
+        )
+        assert error == "Expected generation 1235 does not match the vault's current generation 1234"
 
     def test_reject_if_attestation_generation_incorrect(self):
         assert (
@@ -134,6 +173,41 @@ class TestMutationCheck:
             need_updating_ids=set(),
             previous_attestation=PREV_ATTESTATION,
         ).startswith("Extra hashes")
+
+    def test_reject_missing_content_macs(self):
+        assert mutation_check(
+            ROOT_ID,
+            vault_state=VAULT_STATE,
+            mutation=_make_mutation(),
+            need_updating_ids={ROOT_ID},
+            previous_attestation=PREV_ATTESTATION,
+            need_content_mac_ids={OTHER_ID},
+        ).startswith("Missing content MACs")
+
+    def test_reject_extra_content_macs(self):
+        assert mutation_check(
+            ROOT_ID,
+            vault_state=VAULT_STATE,
+            mutation=_make_mutation(content_macs={OTHER_ID: b"a-content-mac"}),
+            need_updating_ids={ROOT_ID},
+            previous_attestation=PREV_ATTESTATION,
+        ).startswith("Extra content MACs")
+
+    def test_accept_ok_content_macs(self):
+        assert (
+            mutation_check(
+                ROOT_ID,
+                vault_state=VAULT_STATE,
+                mutation=_make_mutation(
+                    node_hashes={ROOT_ID: b"new-root-hash", OTHER_ID: b"child-hash"},
+                    content_macs={OTHER_ID: b"a-content-mac"},
+                ),
+                need_updating_ids={ROOT_ID, OTHER_ID},
+                previous_attestation=PREV_ATTESTATION,
+                need_content_mac_ids={OTHER_ID},
+            )
+            is None
+        )
 
     def test_accept_ok_mutation(self):
         assert (

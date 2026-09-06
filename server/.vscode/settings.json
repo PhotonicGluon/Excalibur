@@ -25,6 +25,7 @@
         "OPRF",
         "priv",
         "repr",
+        "resumable",
         "ristretto",
         "secho",
         "sessionmaker",

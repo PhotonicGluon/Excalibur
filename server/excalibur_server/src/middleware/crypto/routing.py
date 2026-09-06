@@ -117,6 +117,26 @@ MERKLE_ROUTING_TREE = RoutingTree(
                 "GET": EncryptedRoute(),
             },
         ),
+        "migrate": RoutingTree(
+            segment="migrate",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+            subtrees={
+                "fill": RoutingTree(
+                    segment="fill",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
+                "complete": RoutingTree(
+                    segment="complete",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
+            },
+        ),
         "mutate": RoutingTree(
             segment="mutate",
             encrypted_routes={

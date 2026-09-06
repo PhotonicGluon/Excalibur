@@ -16,6 +16,9 @@ from .attestation import get_latest_attestation_endpoint as get_latest_attestati
 from .content_mac import content_mac_inputs_endpoint as content_mac_inputs_endpoint
 from .dirty import get_dirty_items_endpoint as get_dirty_items_endpoint
 from .dirty import has_dirty_items_endpoint as has_dirty_items_endpoint
+from .migrate import begin_migration_endpoint as begin_migration_endpoint
+from .migrate import complete_migration_endpoint as complete_migration_endpoint
+from .migrate import fill_migration_endpoint as fill_migration_endpoint
 from .mutate import mutation_endpoint as mutation_endpoint
 from .proof import inclusion_proof_endpoint as inclusion_proof_endpoint
 from .state import get_vault_state_endpoint as get_vault_state_endpoint
