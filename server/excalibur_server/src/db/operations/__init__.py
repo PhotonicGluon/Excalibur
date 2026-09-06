@@ -12,6 +12,7 @@ from .fsitem import get_unverified as get_unverified
 from .fsitem import get_unverified_items as get_unverified_items
 from .fsitem import has_unverified as has_unverified
 from .fsitem import is_dir_empty as is_dir_empty
+from .fsitem import is_unverified as is_unverified
 from .fsitem import mark_dirty as mark_dirty
 from .fsitem import remove_item as remove_item
 from .helpers import close_all_engines as close_all_engines

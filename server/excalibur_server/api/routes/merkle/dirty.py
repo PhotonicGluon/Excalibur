@@ -1,12 +1,20 @@
 from typing import Annotated, Self
 from uuid import UUID
 
-from fastapi import Depends, Query, status
+from fastapi import Depends, Path, Query, Response, status
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel, field_serializer
 
+from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.merkle import encrypted_router, router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_unverified_items, get_user_from_id, has_unverified
+from excalibur_server.src.db.operations import (
+    get_item,
+    get_unverified_items,
+    get_user_from_id,
+    has_unverified,
+    is_unverified,
+)
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -60,7 +68,10 @@ class DirtyItem(BaseModel):
         status.HTTP_200_OK: {"description": "Dirty items found"},
     },
 )
-def has_dirty_items_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]):
+def has_dirty_items_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    response: Response,
+):
     """
     Checks if the authenticated user has any dirty items.
     """
@@ -68,9 +79,8 @@ def has_dirty_items_endpoint(credentials: Annotated[Credentials, Depends(get_cre
     user = get_user_from_id(credentials.user_id)
     root_id = user.fsitem_id
     has_dirty_items = has_unverified(root_id)
-    if has_dirty_items:
-        return status.HTTP_200_OK
-    return status.HTTP_204_NO_CONTENT
+
+    response.status_code = status.HTTP_200_OK if has_dirty_items else status.HTTP_204_NO_CONTENT
 
 
 @encrypted_router.get("/dirty", name="Get Dirty Items", response_model=list[DirtyItem])
@@ -90,3 +100,34 @@ def get_dirty_items_endpoint(
     user = get_user_from_id(credentials.user_id)
     root_id = user.fsitem_id
     return [DirtyItem.from_fsitem(item) for item in get_unverified_items(root_id, limit=limit, offset=offset)]
+
+
+@encrypted_router.head(
+    "/dirty/{item_id}",
+    name="Check If Item Is Dirty",
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Item is not dirty"},
+        status.HTTP_200_OK: {"description": "Item is dirty"},
+        status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
+    },
+)
+def is_dirty_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    item_id: Annotated[UUID, Path(description="The item ID to check")],
+    response: Response,
+    processed_item_id: str = Depends(process_path_param("item_id")),
+):
+    """
+    Checks if a specific item is dirty.
+    """
+
+    item_id: UUID = UUID(processed_item_id)
+    user_id = credentials.user_id
+
+    # Get item and verify it belongs to the user
+    root_id = get_user_from_id(user_id).fsitem_id
+    item = get_item(item_id)
+    if not item or item.root_id != root_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    response.status_code = status.HTTP_200_OK if is_unverified(item.id) else status.HTTP_204_NO_CONTENT

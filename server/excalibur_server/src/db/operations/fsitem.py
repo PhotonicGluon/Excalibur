@@ -176,6 +176,21 @@ def is_dir_empty(folder_id: UUID) -> bool:
         return session.execute(select(FSItem.id).where(FSItem.parent_id == folder_id).limit(1)).first() is None
 
 
+def is_unverified(item_id: UUID) -> bool:
+    """
+    Checks if a filesystem item is unverified.
+
+    :param item_id: the ID of the filesystem item
+    :return: True if the filesystem item is unverified, False otherwise
+    """
+
+    with get_session() as session:
+        return (
+            session.execute(select(FSItem.id).where(FSItem.id == item_id, UNVERIFIED_CONDITION).limit(1)).first()
+            is not None
+        )
+
+
 def get_unverified(root_id: UUID, session: Session | None = None) -> set[UUID]:
     """
     Gets the IDs of the unverified files.

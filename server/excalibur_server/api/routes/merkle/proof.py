@@ -42,7 +42,7 @@ class InclusionProof(BaseModel):
 )
 def inclusion_proof_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    item_id: Annotated[str, Path(description="The item ID to get the inclusion proof of")],
+    item_id: Annotated[UUID, Path(description="The item ID to get the inclusion proof of")],
     processed_item_id: str = Depends(process_path_param("item_id")),
 ):
     """
