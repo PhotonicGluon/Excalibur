@@ -23,6 +23,8 @@ def content_mac_inputs_endpoint(
     - the item does not exist;
     - the item does not belong to the user; or
     - the item is a folder
+
+    Otherwise the content MAC input is represented as a Base64-encoded string.
     """
 
     user = get_user_from_id(credentials.user_id)
@@ -41,6 +43,6 @@ def content_mac_inputs_endpoint(
             continue
 
         with open(path, "rb") as f:
-            content_mac_inputs[id] = b64encode(get_content_mac_input(f.read())).decode("utf-8")
+            content_mac_inputs[id] = b64encode(get_content_mac_input(f)).decode("utf-8")
 
     return content_mac_inputs

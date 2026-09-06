@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import pytest
 
 from excalibur_server.src.crypto.merkle.mac import get_content_mac_input
@@ -25,13 +27,19 @@ CONTENT_MAC_INPUT_V4_LONG = bytes.fromhex(
 class TestContentMACInput:
     def test_v3(self):
         assert get_content_mac_input(EXEF_V3_SAMPLE) == CONTENT_MAC_INPUT_V3
+        assert get_content_mac_input(BytesIO(EXEF_V3_SAMPLE)) == CONTENT_MAC_INPUT_V3
 
     def test_v4(self):
         assert get_content_mac_input(EXEF_V4_SAMPLE) == CONTENT_MAC_INPUT_V4
+        assert get_content_mac_input(BytesIO(EXEF_V4_SAMPLE)) == CONTENT_MAC_INPUT_V4
 
     def test_v4_long(self):
         assert get_content_mac_input(EXEF_V4_SAMPLE_LONG) == CONTENT_MAC_INPUT_V4_LONG
+        assert get_content_mac_input(BytesIO(EXEF_V4_SAMPLE_LONG)) == CONTENT_MAC_INPUT_V4_LONG
 
     def test_invalid_version(self):
         with pytest.raises(ValueError, match="Unsupported ExEF version"):
             get_content_mac_input(EXEF_V3_SAMPLE[:4] + b"\xff")
+
+        with pytest.raises(ValueError, match="Unsupported ExEF version"):
+            get_content_mac_input(BytesIO(EXEF_V3_SAMPLE[:4] + b"\xff"))
