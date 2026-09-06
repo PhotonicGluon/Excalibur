@@ -2,6 +2,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from hmac import compare_digest
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketDisconnect, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -57,7 +58,7 @@ class Credentials(BaseModel):
     The credentials of a user.
     """
 
-    user_id: str
+    user_id: UUID
     comm_uuid: str
     encrypted: bool = False
 
@@ -85,7 +86,7 @@ async def _verify_and_extract_credentials(
     decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
-    user_id = decoded["sub"]
+    user_id = UUID(decoded["sub"])
     comm_uuid = decoded["uuid"]
 
     if comm_uuid not in MASTER_KEYS_CACHE:

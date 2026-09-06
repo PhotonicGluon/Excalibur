@@ -78,7 +78,9 @@ if is_debug():
         Generate an authentication token for a user.
         """
 
-        return _gen_token(username, master_key.encode("utf-8"), expiry_time)
+        from excalibur_server.src.users import get_user
+
+        return _gen_token(str(get_user(username).id), master_key.encode("utf-8"), expiry_time)
 
     @router.get("/generate-pop", name="Generate PoP", tags=["debug"], response_class=PlainTextResponse)
     def generate_pop_endpoint(
