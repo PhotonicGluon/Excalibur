@@ -170,8 +170,8 @@ importers:
         specifier: ^8.8.14
         version: 8.8.14(react-dom@19.2.8(react@19.2.8))(react-router-dom@5.3.4(react@19.2.8))(react-router@5.3.4(react@19.2.8))(react@19.2.8)
       '@noble/ciphers':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.4.0
+        version: 2.4.0
       '@noble/hashes':
         specifier: ^2.3.0
         version: 2.3.0
@@ -1099,8 +1099,8 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@noble/ciphers@2.3.0':
-    resolution: {integrity: sha512-Clu/xdfgVTf9o7ngLOURaxePwR0j8sjclKEtVij10/jGulwFsPWCvvRgG/XjUVf8Nei+jLG6uwyXzUTGY1DQrw==}
+  '@noble/ciphers@2.4.0':
+    resolution: {integrity: sha512-AnjFn0Jv92laAkvMrghlFZq4qQCIN/4DxFV/eooqtC2YTjB7kBeLMS2T9KJX4Dn+ZVXLOwK0lSgqDtx9gvxtiw==}
     engines: {node: '>= 20.19.0'}
 
   '@noble/hashes@1.4.0':
@@ -6100,7 +6100,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@noble/ciphers@2.3.0': {}
+  '@noble/ciphers@2.4.0': {}
 
   '@noble/hashes@1.4.0': {}
 
