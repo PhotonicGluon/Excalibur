@@ -1,4 +1,4 @@
-import { Apple, Globe, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
+import { Apple, Laptop, Monitor, Server, Smartphone, Terminal } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import Layout from "@theme/Layout";
@@ -32,11 +32,6 @@ const appDownloads: DownloadInfo[] = [
         platform: "Android",
         icon: <Smartphone className="size-5" />,
         links: [{ label: "Android Package Kit (.apk)", assetID: "app-android-apk" }],
-    },
-    {
-        platform: "Progressive Web App (PWA)",
-        icon: <Globe className="size-5" />,
-        links: [{ label: "Web Assets (.zip)", assetID: "app-pwa" }],
     },
 ];
 
@@ -99,7 +94,7 @@ const DownloadPage: React.FC = () => {
                             <div className="*:mb-0">
                                 <h2 className="text-2xl font-semibold dark:text-slate-100">Application</h2>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    Available on Desktop, Mobile, and Web
+                                    Available on Desktop and Mobile
                                 </p>
                             </div>
                         </div>
