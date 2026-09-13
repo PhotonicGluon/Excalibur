@@ -84,21 +84,40 @@ X-Auth-PoP: 1700000000 qInFLPAe9Wf/hXPDSmyptQ== Fu832VLTGarkN1DfP81OQzMg7s0PmbB3
 
 ### WebSocket Requests {/* #ws-pop */}
 
-For WebSocket connections, instead of providing headers, provide the following values _as query parameters_ in the WebSocket request:
+For WebSocket connections, instead of providing headers, the authentication will be performed using additional WebSocket messages. The process is as follows:
+
+<div className="text-center">
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+
+    C->>S: "{auth_token}:{pop_header}"
+    S->>C: "Authenticated"
+    Note over C,S: Continue
+```
+
+</div>
+
+In particular, the first message from the client to the server consists of two parts:
 
 - **`auth_token`**: The JWT authentication token obtained during initial authentication with the server.
-- **`hmac_validation`**: The `X-Auth-PoP` value computed as described above, but URL-encoded.
+- **`pop_header`**: The `X-Auth-PoP` value computed as described above.
 
-:::danger[Authentication Failure]
+These two parts are joined together with a colon (`:`).
 
-Failure to provide the correct `hmac_validation` value will result in the connection being closed with code `1008 Policy Violation`.
+If the authentication is successful, the server will respond with the plain text `Authenticated`. Otherwise, a failure to:
+- authenticate before disconnecting;
+- follow the correct format; or
+- providing a valid `auth_token` and `pop_header`
 
-:::
+will result in the connection being closed with code `1008 Policy Violation`.
 
-Here's an example of what the query parameters could look like when sending a request to a fake `/demo/websocket` endpoint on an Excalibur server listening on `localhost` port `52419`:
+Here's an example of what the initial message from the client to the server could look like when sending a request to a fake `/demo/websocket` endpoint on an Excalibur server listening on `localhost` port `52419`:
 
+```text
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:1700000000 qInFLPAe9Wf/hXPDSmyptQ== Fu832VLTGarkN1DfP81OQzMg7s0PmbB3labVaQuljPA=
 ```
-ws://localhost:52419/demo/websocket?auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&hmac_validation=1700000000+qInFLPAe9Wf%2FhXPDSmyptQ%3D%3D+Fu832VLTGarkN1DfP81OQzMg7s0PmbB3labVaQuljPA%3D
-```
 
-Note that the `auth_token` is the same as the `Authorization` header value from the HTTP request example above, and the `hmac_validation` is the same as the `X-Auth-PoP` header value from the HTTP request example above.
+Note that the `auth_token` is the same as the `Authorization` header value from the HTTP request example above (just without the preceeding `Bearer`), and the `pop_header` is the same as the `X-Auth-PoP` header value from the HTTP request example above.
