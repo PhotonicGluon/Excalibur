@@ -77,8 +77,8 @@ jobs:
                       app/packages/electron/dist/*.tar.gz
                   if-no-files-found: error
 
-    build-app-pwa-mobile:
-        name: Build App (PWA & Mobile)
+    build-app-mobile:
+        name: Build App (Mobile)
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -124,22 +124,7 @@ jobs:
 
             - name: Build PWA
               working-directory: ./app/packages/main
-              run: |
-                  pnpm run build
-                  zip -r app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip ./dist
-
-            - name: Attest
-              uses: actions/attest-build-provenance@v3
-              if: ${{ !env.ACT && !github.event.repository.private }}
-              with:
-                  subject-path: "app/packages/main/app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip"
-
-            - name: Upload PWA Artifact
-              uses: actions/upload-artifact@v6
-              with:
-                  name: app-pwa
-                  path: app/packages/main/app-${{ env.MODIFIED_BRANCH_NAME }}-pwa.zip
-                  if-no-files-found: error
+              run: pnpm run build
 
             - name: Sync Capacitor
               working-directory: ./app/packages/main
@@ -230,7 +215,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         name: Create Release
         runs-on: ubuntu-latest
-        needs: [build-app-electron, build-app-pwa-mobile, build-server]
+        needs: [build-app-electron, build-app-mobile, build-server]
         permissions:
             contents: write
         steps:
@@ -296,7 +281,6 @@ jobs:
                   body: ${{ steps.prepare_release_notes.outputs.body }}
                   files: |
                       artifacts/server/*
-                      artifacts/app-pwa/*
                       artifacts/app-electron-*/*
                       artifacts/app-android/*
                   preserve_order: true
