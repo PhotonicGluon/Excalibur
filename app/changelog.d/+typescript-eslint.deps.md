@@ -1,0 +1,1 @@
+⬆️ Updated `typescript-eslint` development dependency from `8.66.0` to `8.69.0` ([#172](https://github.com/PhotonicGluon/Excalibur/pull/172), [#175](https://github.com/PhotonicGluon/Excalibur/pull/175))
