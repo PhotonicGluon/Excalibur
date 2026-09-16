@@ -205,7 +205,7 @@ requires-dist = [
     { name = "rapidfuzz", specifier = ">=3.14.5" },
     { name = "semver", specifier = ">=3.0.4" },
     { name = "sqlalchemy", specifier = "<=2.0.44" },
-    { name = "sqlmodel", specifier = ">=0.0.39" },
+    { name = "sqlmodel", specifier = ">=0.0.42" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "tomlkit", specifier = ">=0.15.1" },
     { name = "typer", specifier = ">=0.27.1" },
