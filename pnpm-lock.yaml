@@ -168,10 +168,10 @@ importers:
         version: 8.8.14
       '@ionic/react':
         specifier: ^8.8.14
-        version: 8.8.14(react-dom@19.2.8(react@19.3.0))(react@19.3.0)
+        version: 8.8.14(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@ionic/react-router':
         specifier: ^8.8.14
-        version: 8.8.14(react-dom@19.2.8(react@19.3.0))(react-router-dom@5.3.4(react@19.3.0))(react-router@5.3.4(react@19.3.0))(react@19.3.0)
+        version: 8.8.14(react-dom@19.3.0(react@19.3.0))(react-router-dom@5.3.4(react@19.3.0))(react-router@5.3.4(react@19.3.0))(react@19.3.0)
       '@noble/ciphers':
         specifier: ^2.4.0
         version: 2.4.0
@@ -230,8 +230,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(react@19.3.0)
       react-dom:
-        specifier: 19.2.8
-        version: 19.2.8(react@19.3.0)
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
       react-router:
         specifier: ^5.3.4
         version: 5.3.4(react@19.3.0)
@@ -297,8 +297,8 @@ importers:
         specifier: 19.3.0
         version: 19.3.0
       '@types/react-dom':
-        specifier: 19.2.3
-        version: 19.2.3(@types/react@19.3.0)
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       '@types/react-router':
         specifier: ^5.1.20
         version: 5.1.20
@@ -1513,10 +1513,10 @@ packages:
   '@types/randombytes@2.0.3':
     resolution: {integrity: sha512-+NRgihTfuURllWCiIAhm1wsJqzsocnqXM77V/CalsdJIYSRGEHMnritxh+6EsBklshC+clo1KgnN14qgSGeQdw==}
 
-  '@types/react-dom@19.2.3':
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
+  '@types/react-dom@19.3.0':
+    resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
     peerDependencies:
-      '@types/react': ^19.2.0
+      '@types/react': ^19.3.0
 
   '@types/react-router-dom@5.3.3':
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
@@ -2866,7 +2866,7 @@ packages:
   git-raw-commits@2.0.11:
     resolution: {integrity: sha512-VnctFhw+xfj8Va1xtfEqCUD2XDrbAPSJx+hSrE5K7fGdjZruW7XV+QOrN7LF/RJyvspRiD2I0asWsxFp0ya26A==}
     engines: {node: '>=10'}
-    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -2876,7 +2876,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -4192,10 +4192,10 @@ packages:
     peerDependencies:
       react: '>=0.14.0'
 
-  react-dom@19.2.8:
-    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
+  react-dom@19.3.0:
+    resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
-      react: ^19.2.8
+      react: ^19.3.0
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -4369,8 +4369,8 @@ packages:
     resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
     engines: {node: '>=11.0.0'}
 
-  scheduler@0.27.0:
-    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+  scheduler@0.28.0:
+    resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
   seedrandom@3.0.5:
     resolution: {integrity: sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==}
@@ -5938,21 +5938,21 @@ snapshots:
       ionicons: 8.1.0
       tslib: 2.8.1
 
-  '@ionic/react-router@8.8.14(react-dom@19.2.8(react@19.3.0))(react-router-dom@5.3.4(react@19.3.0))(react-router@5.3.4(react@19.3.0))(react@19.3.0)':
+  '@ionic/react-router@8.8.14(react-dom@19.3.0(react@19.3.0))(react-router-dom@5.3.4(react@19.3.0))(react-router@5.3.4(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@ionic/react': 8.8.14(react-dom@19.2.8(react@19.3.0))(react@19.3.0)
+      '@ionic/react': 8.8.14(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react: 19.3.0
-      react-dom: 19.2.8(react@19.3.0)
+      react-dom: 19.3.0(react@19.3.0)
       react-router: 5.3.4(react@19.3.0)
       react-router-dom: 5.3.4(react@19.3.0)
       tslib: 2.8.1
 
-  '@ionic/react@8.8.14(react-dom@19.2.8(react@19.3.0))(react@19.3.0)':
+  '@ionic/react@8.8.14(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@ionic/core': 8.8.14
       ionicons: 8.1.0
       react: 19.3.0
-      react-dom: 19.2.8(react@19.3.0)
+      react-dom: 19.3.0(react@19.3.0)
       tslib: 2.8.1
 
   '@ionic/utils-array@2.1.6(supports-color@8.1.1)':
@@ -6462,7 +6462,7 @@ snapshots:
     dependencies:
       '@types/node': 26.1.2
 
-  '@types/react-dom@19.2.3(@types/react@19.3.0)':
+  '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:
       '@types/react': 19.3.0
 
@@ -9505,10 +9505,10 @@ snapshots:
     dependencies:
       react: 19.3.0
 
-  react-dom@19.2.8(react@19.3.0):
+  react-dom@19.3.0(react@19.3.0):
     dependencies:
       react: 19.3.0
-      scheduler: 0.27.0
+      scheduler: 0.28.0
 
   react-is@16.13.1: {}
 
@@ -9742,7 +9742,7 @@ snapshots:
 
   sax@1.6.0: {}
 
-  scheduler@0.27.0: {}
+  scheduler@0.28.0: {}
 
   seedrandom@3.0.5: {}
 
