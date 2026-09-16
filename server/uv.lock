@@ -195,7 +195,7 @@ requires-dist = [
     { name = "duckdb", specifier = "~=1.5.5" },
     { name = "duckdb-engine", specifier = ">=0.17.0" },
     { name = "fastapi", specifier = ">=0.141.1" },
-    { name = "gitpython", specifier = ">=3.1.59" },
+    { name = "gitpython", specifier = ">=3.1.62" },
     { name = "httptools", specifier = ">=0.8.0" },
     { name = "packaging", specifier = ">=26.3" },
     { name = "pycryptodome", specifier = ">=3.23.0" },
