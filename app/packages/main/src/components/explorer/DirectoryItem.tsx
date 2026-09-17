@@ -113,7 +113,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             });
 
             if (Capacitor.getPlatform() === "web") {
-                explorerContext.presentSnackbar("Downloading...");
+                await explorerContext.presentSnackbar("Downloading...");
             }
             console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
@@ -121,7 +121,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 // Send request for file
                 const response = await downloadFile(auth, props.fullpath!, signal);
                 if (!response.success) {
-                    explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
                     throw new Error(response.error); // Propagate error to outer try-catch
                 }
 
@@ -155,9 +155,12 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
                     const err = e as Error;
                     if (err.message.includes("header MAC")) {
-                        explorerContext.presentSnackbar(`Failed to decrypt file: vault key may be incorrect`, "danger");
+                        await explorerContext.presentSnackbar(
+                            `Failed to decrypt file: vault key may be incorrect`,
+                            "danger",
+                        );
                     } else {
-                        explorerContext.presentSnackbar(`Failed to decrypt file: ${err.message}`, "danger");
+                        await explorerContext.presentSnackbar(`Failed to decrypt file: ${err.message}`, "danger");
                     }
                     throw e; // Propagate error to outer try-catch
                 } finally {
@@ -183,7 +186,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 0);
-                        explorerContext.presentSnackbar("File downloaded", "success");
+                        await explorerContext.presentSnackbar("File downloaded", "success");
                     } else {
                         // Write file to documents folder
                         await writeBlob({
@@ -195,10 +198,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                 console.error(error);
                             },
                         });
-                        explorerContext.presentSnackbar("File saved to the documents folder", "success");
+                        await explorerContext.presentSnackbar("File saved to the documents folder", "success");
                     }
                 } catch (e) {
-                    explorerContext.presentSnackbar(`Failed to save file: ${(e as Error).message}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to save file: ${(e as Error).message}`, "danger");
                 }
             } catch (e) {
                 const err = e as Error;
@@ -223,7 +226,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 });
 
                 // If no error was thrown, that means that the file already exists on device
-                explorerContext.presentAlert({
+                await explorerContext.presentAlert({
                     header: "File already exists",
                     message: "Do you want to override the existing file?",
                     buttons: [
@@ -231,15 +234,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             text: "No",
                             role: "cancel",
                             handler: () => {
-                                explorerContext.presentSnackbar("Download cancelled", "warning");
+                                /* async */ explorerContext.presentSnackbar("Download cancelled", "warning");
                             },
                         },
                         {
                             text: "Yes",
                             role: "confirm",
                             handler: () => {
-                                _handleDownload();
-                                explorerContext.dismissAlert();
+                                /* async */ _handleDownload();
+                                /* async */ explorerContext.dismissAlert();
                             },
                         },
                     ],

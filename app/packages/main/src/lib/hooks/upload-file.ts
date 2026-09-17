@@ -71,9 +71,9 @@ export function useUploadFile() {
                                     path: rawFile.path!,
                                     chunkSize: settings.fileReadChunkSize,
                                 },
-                                (chunk, err) => {
+                                async (chunk, err) => {
                                     if (err) {
-                                        explorerContext.presentSnackbar("Failed to read file chunk", "danger");
+                                        await explorerContext.presentSnackbar("Failed to read file chunk", "danger");
                                         jobsManager.deleteJob(jobID);
                                         controller.error(err);
                                         return;
@@ -123,7 +123,7 @@ export function useUploadFile() {
                     );
                 } catch (e) {
                     if (signal.aborted) throw new Error("Cancelled");
-                    explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
                     throw e;
                 } finally {
                     // Free up resources
@@ -153,7 +153,7 @@ export function useUploadFile() {
                     },
                 ); // Always force upload
                 if (!uploadResponse.success) {
-                    explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                     throw new Error(uploadResponse.error);
                 }
             } catch (e) {
@@ -186,13 +186,13 @@ export function useUploadFile() {
                     console.debug("Cancelled upload of file");
                     return;
                 }
-                explorerContext.presentSnackbar(`Failed to pick file: ${message}`, "danger");
+                await explorerContext.presentSnackbar(`Failed to pick file: ${message}`, "danger");
                 return;
             }
         }
 
         // Upload all files
-        explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
+        await explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
         for (const file of files) {
             // Check if file size acceptable
             if (file.size > auth.authInfo!.maxUploadSize) {
@@ -216,14 +216,14 @@ export function useUploadFile() {
                         // Make directory
                         const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir), false);
                         if (!createDirResponse.success) {
-                            explorerContext.presentSnackbar(
+                            await explorerContext.presentSnackbar(
                                 `Failed to create containing directory: ${createDirResponse.error}`,
                                 "danger",
                             );
                             return;
                         }
                     } else {
-                        explorerContext.presentSnackbar(
+                        await explorerContext.presentSnackbar(
                             `Failed to check containing directory: ${checkDirResponse.error}`,
                             "danger",
                         );
@@ -242,13 +242,16 @@ export function useUploadFile() {
                         // This is good -- the file doesn't exist, so we can just carry on
                         break;
                     case "Illegal or invalid path":
-                        explorerContext.presentSnackbar("Illegal or invalid file name", "danger");
+                        await explorerContext.presentSnackbar("Illegal or invalid file name", "danger");
                         return;
                     case "Path too long":
-                        explorerContext.presentSnackbar("File path too long", "danger");
+                        await explorerContext.presentSnackbar("File path too long", "danger");
                         return;
                     default:
-                        explorerContext.presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
+                        await explorerContext.presentSnackbar(
+                            `Failed to check file path: ${checkResponse.error}`,
+                            "danger",
+                        );
                         return;
                 }
             }
@@ -258,7 +261,7 @@ export function useUploadFile() {
 
                 let haltUploads = false;
                 await new Promise<void>((resolve) => {
-                    explorerContext.presentAlert({
+                    /* async */ explorerContext.presentAlert({
                         header: `${file.rawName} already exists`,
                         message: "Do you want to override the existing file?",
                         onDidDismiss: () => {
@@ -269,7 +272,7 @@ export function useUploadFile() {
                                 text: "No",
                                 role: "cancel",
                                 handler: () => {
-                                    explorerContext.presentSnackbar("File upload cancelled", "warning");
+                                    /* async */ explorerContext.presentSnackbar("File upload cancelled", "warning");
                                     haltUploads = true;
                                 },
                             },

@@ -88,18 +88,18 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     async function handleMove() {
         if (destFolder === explorerContext.path) {
-            explorerContext.presentSnackbar("Item was already at this location", "warning");
+            await explorerContext.presentSnackbar("Item was already at this location", "warning");
             props.onDidDismiss();
             return;
         }
 
         const moveResponse = await moveItem(auth, props.path, destFolder);
         if (!moveResponse.success) {
-            explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
+            await explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
             return;
         }
 
-        explorerContext.presentSnackbar("Item moved", "success");
+        await explorerContext.presentSnackbar("Item moved", "success");
         props.onDidDismiss();
     }
 
