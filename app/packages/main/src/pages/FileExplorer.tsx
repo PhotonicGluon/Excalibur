@@ -32,6 +32,8 @@ import {
     documentOutline,
     ellipsisVertical,
     folderOutline,
+    grid,
+    list,
     listOutline,
     personOutline,
     searchOutline,
@@ -42,6 +44,7 @@ import { useTokenManager, useUploadFile } from "@lib/hooks";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
+import SegmentedToggle from "@components/SegmentedToggle";
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
@@ -92,6 +95,8 @@ const FileExplorer: React.FC = () => {
     // States
     const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast, dismissToast] = useIonToast();
+
+    const [_viewLayout, setViewLayout] = useState<"list" | "grid">("list"); // TODO: Do something with view layout
 
     const [showJobsModal, setShowJobsModal] = useState(false);
 
@@ -425,15 +430,21 @@ const FileExplorer: React.FC = () => {
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
 
-                            {/* Breadcrumbs */}
+                            {/* Top bar */}
                             <div
                                 ref={topBarRef}
-                                className="ml-1 w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-1 hover:scrollbar-thumb-blue-500/50"
+                                className="ml-1 flex w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-2 hover:scrollbar-thumb-blue-500/50"
                             >
                                 <DirectoryBreadcrumbs
-                                    className="flex-nowrap"
+                                    className="grow flex-nowrap"
                                     path={requestedPath}
                                     noc={auth.vaultInfo!.info.obfuscatedNames ? auth.noc! : undefined}
+                                />
+                                <SegmentedToggle<"list" | "grid">
+                                    className="h-8 pr-4"
+                                    values={["list", "grid"]}
+                                    displayNodes={[<IonIcon icon={list} />, <IonIcon icon={grid} />]}
+                                    onChange={(value) => setViewLayout(value as "list" | "grid")}
                                 />
                             </div>
 
