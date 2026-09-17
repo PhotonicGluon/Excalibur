@@ -23,6 +23,7 @@ describe("<DirectoryItem />", () => {
         },
     ) {
         const defaultProps: ContainerProps = {
+            isGridType: false,
             oddRow: true,
             name: "Sample File.txt.exef",
             creation_time: 1577934245, // 2020-01-02 03:04:05

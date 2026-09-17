@@ -81,6 +81,7 @@ describe("<DirectoryList />", () => {
                             id="directory-list"
                             directory={pretendPending ? null : defaultProps}
                             listenerConnected={listenerConnected}
+                            viewLayout="list"
                         />
                     </settingsContext.Provider>
                 </explorerContext.Provider>

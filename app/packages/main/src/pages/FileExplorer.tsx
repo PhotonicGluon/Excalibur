@@ -50,6 +50,7 @@ import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
 import SearchDialog from "@components/dialog/SearchDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
+import { ViewLayout } from "@components/explorer/DirectoryList";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
 import JobsModal from "@components/explorer/jobs/JobsModal";
@@ -96,7 +97,7 @@ const FileExplorer: React.FC = () => {
     const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast, dismissToast] = useIonToast();
 
-    const [_viewLayout, setViewLayout] = useState<"list" | "grid">("list"); // TODO: Do something with view layout
+    const [viewLayout, setViewLayout] = useState<ViewLayout>("list"); // TODO: Make this a setting?
 
     const [showJobsModal, setShowJobsModal] = useState(false);
 
@@ -440,19 +441,22 @@ const FileExplorer: React.FC = () => {
                                     path={requestedPath}
                                     noc={auth.vaultInfo!.info.obfuscatedNames ? auth.noc! : undefined}
                                 />
-                                <SegmentedToggle<"list" | "grid">
-                                    className="h-8 pr-4"
-                                    values={["list", "grid"]}
-                                    displayNodes={[<IonIcon icon={list} />, <IonIcon icon={grid} />]}
-                                    onChange={(value) => setViewLayout(value as "list" | "grid")}
-                                />
+                                <div className="hidden xl:block">
+                                    {" "}
+                                    <SegmentedToggle<ViewLayout>
+                                        className="h-8 pr-4"
+                                        values={["list", "grid"]}
+                                        displayNodes={[<IonIcon icon={list} />, <IonIcon icon={grid} />]}
+                                        onChange={(value) => setViewLayout(value)}
+                                    />
+                                </div>
                             </div>
 
                             {/* Fab button */}
                             <FabButton isJobsDialogOpen={showJobsModal} onCreateFolder={onCreateFolder} />
 
                             {/* Files */}
-                            <FilesArea refreshTrigger={refreshTrigger} />
+                            <FilesArea viewLayout={viewLayout} refreshTrigger={refreshTrigger} />
 
                             {/* Jobs modal */}
                             <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />

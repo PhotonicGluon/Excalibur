@@ -132,6 +132,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
                     path={destFolder}
                     directory={destFolderContents}
                     sortValues={{ sortType: SortType.NAME, sortAsc: true }}
+                    viewLayout="list"
                     onParentClickOverride={onClickFolder}
                     directoryItemPropsOverride={(item) => ({
                         disabled: item.type === "file",

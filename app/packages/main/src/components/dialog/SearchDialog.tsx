@@ -127,6 +127,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                                 <DirectoryItem
                                     key={idx}
                                     ellipsisMenuEnabled={false}
+                                    isGridType={false}
                                     oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
                                     name={name}
                                     fullpath={file.fullpath}

@@ -39,7 +39,7 @@ function SegmentedToggle<T extends string>(props: ContainerProps<T>) {
     return (
         <div
             className={
-                "inline-flex rounded-full text-sm leading-none *:inline-flex *:min-w-12 *:items-center *:justify-center *:border *:border-(--ion-color-dark) *:text-(--ion-color-dark) *:transition-colors *:duration-100 *:ease-in *:hover:bg-(--ion-color-light) " +
+                "inline-flex rounded-full text-sm leading-none *:inline-flex *:min-w-12 *:items-center *:justify-center *:border *:border-(--ion-color-dark) *:text-(--ion-color-dark) *:transition-colors *:duration-100 *:ease-in " +
                 props.className
             }
         >
@@ -47,8 +47,8 @@ function SegmentedToggle<T extends string>(props: ContainerProps<T>) {
                 className={
                     "rounded-l-full " +
                     (value === props.values[0]
-                        ? "bg-(--ion-color-primary)/50 text-(--ion-color-primary-contrast)"
-                        : "bg-transparent")
+                        ? "bg-(--ion-color-primary)/50 text-(--ion-color-primary-contrast) hover:bg-(--ion-color-primary)"
+                        : "bg-transparent hover:bg-(--ion-color-light)")
                 }
                 onClick={() => onChange(props.values[0])}
                 aria-selected={value === props.values[0]}
@@ -58,10 +58,10 @@ function SegmentedToggle<T extends string>(props: ContainerProps<T>) {
             </button>
             <button
                 className={
-                    "rounded-r-full " +
+                    "-ml-px rounded-r-full " +
                     (value === props.values[1]
-                        ? "bg-(--ion-color-primary)/50 text-(--ion-color-primary-contrast)"
-                        : "bg-transparent")
+                        ? "bg-(--ion-color-primary)/50 text-(--ion-color-primary-contrast) hover:bg-(--ion-color-primary)"
+                        : "bg-transparent hover:bg-(--ion-color-light)")
                 }
                 onClick={() => onChange(props.values[1])}
                 aria-selected={value === props.values[1]}

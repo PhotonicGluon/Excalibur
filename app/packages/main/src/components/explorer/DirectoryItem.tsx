@@ -51,7 +51,9 @@ export interface ContainerProps extends FileLikePartial {
     id?: string;
     /** Whether the item should be disabled */
     disabled?: boolean;
-    /** Whether the item is on an even row */
+    /** Whether the item is displayed as a grid item */
+    isGridType: boolean;
+    /** Whether the item is on an odd row */
     oddRow: boolean;
     /** Whether to keep the `.exef` extension when displaying the name */
     keepExEF?: boolean;
@@ -281,9 +283,12 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     }
 
     // Render
-    const lighter = "[--background:var(--ion-background-color)]";
-    const darker =
-        "light:[--background:var(--ion-background-color-step-100)] dark:[--background:var(--ion-background-color-step-50)] ";
+    const lighter = props.isGridType
+        ? "[--background:var(--ion-background-color-step-50)]"
+        : "[--background:var(--ion-background-color)]";
+    const darker = props.isGridType
+        ? "light:[--background:var(--ion-background-color-step-150)] dark:[--background:var(--ion-background-color-step-100)]"
+        : "light:[--background:var(--ion-background-color-step-100)] dark:[--background:var(--ion-background-color-step-50)]";
     let rowColourClass;
     switch (settings.rowAlternatingColours) {
         case "off":
@@ -335,8 +340,13 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         </IonContent>
     );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
-    return (
-        <IonItem id={props.id} className={rowColourClass} button={!props.disabled && !isLoading}>
+
+    const ListElement = (
+        <IonItem
+            id={props.id}
+            className={rowColourClass + " " + (props.type === "parent" ? "col-span-full" : "")}
+            button={!props.disabled && !isLoading}
+        >
             {/* Main item content */}
             <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
                 <IonGrid
@@ -387,6 +397,68 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             )}
         </IonItem>
     );
+    const GridElement = (
+        <IonItem id={props.id} className={"rounded-2xl " + rowColourClass} button={!props.disabled && !isLoading}>
+            <div className="flex h-20 w-full items-center" data-name={nameNoExEF}>
+                {/* Main item content */}
+                <IonGrid
+                    onClick={!props.disabled && !isLoading ? onClickItem : undefined}
+                    onContextMenu={(e) => {
+                        if (props.disabled || isLoading || !ellipsisMenuEnabled) return;
+                        e.preventDefault();
+                        showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
+                    }}
+                >
+                    <IonRow className="ion-align-items-center">
+                        <IonCol className="flex w-72 flex-col space-y-1">
+                            <div className="flex flex-row items-center space-x-2">
+                                {!isLoading && (
+                                    <>
+                                        <IonThumbnail className="size-6 *:size-full">
+                                            <IonIcon icon={icon} color={props.disabled ? "light" : undefined} />
+                                        </IonThumbnail>
+                                        <IonLabel className="truncate" color={props.disabled ? "light" : undefined}>
+                                            {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
+                                        </IonLabel>
+                                    </>
+                                )}
+                                {isLoading && <IonSkeletonText animated={true} />}
+                            </div>
+
+                            <div className="flex flex-col">
+                                {!isLoading && (
+                                    <>
+                                        {props.size !== undefined && (
+                                            <IonNote className="text-sm" color={props.disabled ? "medium" : undefined}>
+                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
+                                            </IonNote>
+                                        )}
+                                        {props.creation_time !== undefined && (
+                                            <IonNote className="text-xs" color={props.disabled ? "dark" : undefined}>
+                                                {timestampToDateString(props.creation_time!)}
+                                            </IonNote>
+                                        )}
+                                    </>
+                                )}
+                                {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
+                            </div>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+
+                {!props.disabled && !isLoading && ellipsisMenuEnabled && (
+                    <IonButtons className="m-0 size-12 justify-end">
+                        {/* Ellipsis menu button */}
+                        <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
+                            <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
+                        </IonButton>
+                    </IonButtons>
+                )}
+            </div>
+        </IonItem>
+    );
+
+    return props.isGridType ? GridElement : ListElement;
 };
 
 export default DirectoryItem;
