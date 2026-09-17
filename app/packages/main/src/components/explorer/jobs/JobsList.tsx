@@ -1,3 +1,5 @@
+import { useCallback, useMemo } from "react";
+
 import { IonLabel } from "@ionic/react";
 
 import JobEntry, { Job } from "./JobEntry";
@@ -10,17 +12,17 @@ const JobsList: React.FC = () => {
     // Functions
     /**
      * Assigns a rank to a job for comparison.
-     * 
+     *
      * The ranks are assigned as follows:
      * 1. Jobs that are in-progress (but not indeterminate)
      * 2. Jobs that are indeterminate
      * 3. Jobs that have failed
      * 4. Jobs that have completed
-     * 
+     *
      * @param job job to rank
      * @returns the job's rank
      */
-    function _rankJob(job: Job): number {
+    const _rankJob = useCallback((job: Job): number => {
         const progress = job.progress;
 
         if (typeof progress === "number") {
@@ -36,38 +38,55 @@ const JobsList: React.FC = () => {
         }
 
         return 4;
-    }
+    }, []);
 
     /**
      * Compares two jobs.
-     * 
+     *
      * @param job1 first job
      * @param job2 second job
      * @returns -1 if the first job should go before the second, 1 if the second should go before
      *      the first, and 0 otherwise
      */
-    function _compareJobs(job1: Job, job2: Job): -1 | 0 | 1 {
-        const rank1 = _rankJob(job1);
-        const rank2 = _rankJob(job2);
+    const _compareJobs = useCallback(
+        (job1: Job, job2: Job): -1 | 0 | 1 => {
+            const rank1 = _rankJob(job1);
+            const rank2 = _rankJob(job2);
 
-        if (rank1 < rank2) {
-            return -1; // Job 1 should appear before job 2
-        }
-        if (rank1 > rank2) {
-            return 1; // Job 2 should appear before job 1
-        }
-        return 0;
-    }
+            if (rank1 < rank2) {
+                return -1; // Job 1 should appear before job 2
+            }
+            if (rank1 > rank2) {
+                return 1; // Job 2 should appear before job 1
+            }
+            return 0;
+        },
+        [_rankJob],
+    );
 
     /**
      * Sorts a list of job entries.
-     * 
+     *
      * @param entries an array of ID-job pairs
      * @returns the sorted array of ID-job pairs
      */
-    function _sortJobs(entries: [string, Job][]): [string,Job][] {
-        return entries.sort(([_id1, job1], [_id2, job2]) => _compareJobs(job1, job2));
-    }
+    const _sortJobs = useCallback(
+        (entries: [string, Job][]): [string, Job][] => {
+            return entries.sort(([_id1, job1], [_id2, job2]) => _compareJobs(job1, job2));
+        },
+        [_compareJobs],
+    );
+
+    // Derived states
+    /**
+     * Sorts the jobs in the manager by rank.
+     *
+     * Memoized to avoid re-sorting on every render.
+     */
+    const sortedJobEntries = useMemo(
+        () => _sortJobs(Array.from(jobsManager.jobs.entries())),
+        [jobsManager.jobs, _sortJobs],
+    );
 
     // Render
     if (jobsManager.jobs.size === 0) {
@@ -76,7 +95,7 @@ const JobsList: React.FC = () => {
 
     return (
         <div className="flex flex-col">
-            {_sortJobs(Array.from(jobsManager.jobs.entries())).map(([jobID, job]) => (
+            {sortedJobEntries.map(([jobID, job]) => (
                 <JobEntry key={jobID} {...job} onCancel={() => jobsManager.cancelJob(jobID)} />
             ))}
         </div>
