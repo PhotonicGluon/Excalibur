@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { directoryChangesListener, listdir } from "@lib/files/api";
 import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
+
+import { directoryChangesListener, listdir } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";

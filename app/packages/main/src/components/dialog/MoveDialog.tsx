@@ -13,10 +13,11 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
-import { listdir, moveItem } from "@lib/files/api";
 import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
+
+import { listdir, moveItem } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryListRaw from "@components/explorer/DirectoryListRaw";

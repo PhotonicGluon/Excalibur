@@ -5,22 +5,27 @@ import { b64encodeURLSafe } from "@lib/util";
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Moves the item at the given path to the new destination folder.
+ * Creates a directory at the given path.
  *
- * @param auth The current authentication provider
- * @param path The path to the item to move
- * @param destFolder The new destination path for the item
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param path the path to create the new directory at
+ * @param name the name of the new directory
+ * @param obfuscateName whether to obfuscate the directory name
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
-export async function moveItem(
+export async function mkdir(
     auth: AuthProvider,
     path: string,
-    destFolder: string,
+    name: string,
+    obfuscateName: boolean = true,
 ): Promise<{ success: boolean; error?: string }> {
+    const rawName =
+        obfuscateName && auth.vaultInfo!.info.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
+
     const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/move/${b64encodeURLSafe(encryptedPath)}`,
+        `${auth.serverInfo!.apiURL}/files/mkdir/${b64encodeURLSafe(encryptedPath)}`,
         auth.authInfo!.key!,
         {
             method: "POST",
@@ -31,25 +36,23 @@ export async function moveItem(
                 "X-Content-Type": "text/plain",
             },
             // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(destFolder, "utf-8")),
+            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(rawName, "utf-8")),
         },
     );
     switch (response.status) {
-        case 200:
+        case 201:
             // Continue with normal flow
             break;
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:
-            return { success: false, error: "Item/destination not found" };
+            return { success: false, error: "Path not found or is not a directory" };
         case 406:
             return { success: false, error: "Illegal or invalid path" };
         case 409:
-            return { success: false, error: "Item with name already exists at destination" };
-        case 412:
-            return { success: false, error: "Cannot move root directory" };
+            return { success: false, error: "Directory already exists" };
         case 414:
-            return { success: false, error: "Path too long" };
+            return { success: false, error: "Directory path too long" };
         case 422:
             return { success: false, error: "Validation error" };
         default:

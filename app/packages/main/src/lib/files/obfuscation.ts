@@ -1,7 +1,8 @@
 import seedrandom from "seedrandom";
 
-import { getAllItems, getCount, renameItem } from "@lib/files/api";
 import { Directory } from "@lib/files/structures";
+
+import { getAllItems, getCount, renameItem } from "@api/files";
 
 import { AuthProvider } from "@components/auth/context";
 

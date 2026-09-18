@@ -4,10 +4,11 @@ import * as Comlink from "comlink";
 import { DragEvent } from "react";
 
 import { randID } from "@lib/auth/util";
-import { checkPath, mkdir, uploadFile } from "@lib/files/api";
 import { getAllFileEntries } from "@lib/files/webkit";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
+
+import { checkPath, mkdir, uploadFile } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";

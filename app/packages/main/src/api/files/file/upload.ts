@@ -10,14 +10,14 @@ import { AuthProvider } from "@components/auth/context";
  * This function does **not** check if the file already exists. It will overwrite the file on the
  * server if it already exists.
  *
- * @param auth The current authentication provider
- * @param path The path to upload the file to
- * @param file The file to upload
- * @param signal An abort signal to cancel the request
- * @param onProgress A callback function to report progress (a value from 0 to 1)
- * @throws {Error} If there is a network error during upload
- * @throws {Error} If the upload is cancelled
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param path the path to upload the file to
+ * @param file the file to upload
+ * @param signal an abort signal to cancel the request
+ * @param onProgress a callback function to report progress (a value from 0 to 1)
+ * @throws {Error} if there is a network error during upload
+ * @throws {Error} if the upload is cancelled
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function uploadFile(

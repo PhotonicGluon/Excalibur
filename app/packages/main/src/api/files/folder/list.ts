@@ -8,9 +8,9 @@ import { AuthProvider } from "@components/auth/context";
 /**
  * Lists the contents of a directory.
  *
- * @param auth The current authentication provider
- * @param path The path to list
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param path the path to list
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message or the directory object
  */
 export async function listdir(

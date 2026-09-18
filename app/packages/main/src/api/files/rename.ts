@@ -7,10 +7,10 @@ import { AuthProvider } from "@components/auth/context";
 /**
  * Renames the item at the given path to the new name.
  *
- * @param auth The current authentication provider
- * @param path The path to the item to rename
- * @param newName The new name for the item
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param path the path to the item to rename
+ * @param newName the new name for the item
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function renameItem(
