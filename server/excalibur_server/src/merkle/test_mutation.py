@@ -1,10 +1,10 @@
 from base64 import b64encode
 from uuid import UUID
 
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
-from excalibur_server.src.crypto.merkle.mutation import Mutation, mutation_check
-from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.db.tables import Attestation, VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.mutation import Mutation, mutation_check
+from excalibur_server.src.merkle.structures import AttestationBase
 
 ROOT_ID = UUID("00000000-0000-0000-0000-000000000000")
 OTHER_ID = UUID("10000000-0000-0000-0000-000000000000")

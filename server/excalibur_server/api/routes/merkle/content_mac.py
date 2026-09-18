@@ -7,8 +7,8 @@ from fastapi import Body, Depends
 from excalibur_server.api.routes.merkle import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.crypto.merkle.mac import get_content_mac_input
 from excalibur_server.src.db.operations import get_item, get_user_from_id
+from excalibur_server.src.merkle.mac import get_content_mac_input
 
 
 @encrypted_router.post("/content-mac-inputs", name="Get Content MAC Inputs")

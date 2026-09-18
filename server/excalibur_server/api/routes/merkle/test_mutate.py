@@ -12,12 +12,12 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef.exef import ExEF
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
-from excalibur_server.src.crypto.merkle.mutation import Mutation
-from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.db.operations import get_item, get_unverified, get_vault_state, mark_dirty, remove_item
 from excalibur_server.src.db.operations.attestation import get_latest_attestation
 from excalibur_server.src.db.tables import Attestation, FSItem, User, VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.mutation import Mutation
+from excalibur_server.src.merkle.structures import AttestationBase
 
 MUTATION_USER = "mutation-user"
 

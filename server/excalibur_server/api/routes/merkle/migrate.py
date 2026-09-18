@@ -7,8 +7,6 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.routes.merkle import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
-from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.db.operations import (
     count_items_with_root,
     get_session,
@@ -16,6 +14,8 @@ from excalibur_server.src.db.operations import (
     get_user_from_id,
 )
 from excalibur_server.src.db.tables import Attestation, FSItem, VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.structures import AttestationBase
 
 
 class MigrationEntry(BaseModel):

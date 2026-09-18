@@ -2,9 +2,9 @@ from uuid import UUID
 
 from pydantic import Base64Bytes, BaseModel
 
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
-from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.db.tables import Attestation, VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.structures import AttestationBase
 
 
 class Mutation(BaseModel):

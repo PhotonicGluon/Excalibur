@@ -13,7 +13,6 @@ from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
 from excalibur_server.src.db.operations import (
     get_item,
     get_latest_attestation,
@@ -22,6 +21,7 @@ from excalibur_server.src.db.operations import (
     get_vault_state,
 )
 from excalibur_server.src.db.tables import Attestation, FSItem, User, VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
 
 MIGRATION_USER = "migration-user"
 

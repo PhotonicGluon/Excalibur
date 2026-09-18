@@ -2,7 +2,7 @@ from io import BytesIO
 
 import pytest
 
-from excalibur_server.src.crypto.merkle.mac import get_content_mac_input
+from excalibur_server.src.merkle.mac import get_content_mac_input
 
 EXEF_V3_SAMPLE = bytes.fromhex(
     "457845460302abababababababababababab3a5a8758e2c946869e38d6ae9d7f000000000000000c01a2d354eb2527742fa264b5b50d70e450d7892345f7ce463da59d22"

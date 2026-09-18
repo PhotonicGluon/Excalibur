@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.merkle.mac import get_content_mac_input
+from excalibur_server.src.merkle.mac import get_content_mac_input
 
 
 class TestContentMACInputs:

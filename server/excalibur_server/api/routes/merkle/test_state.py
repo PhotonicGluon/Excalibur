@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
 from excalibur_server.src.db.tables import VaultState
+from excalibur_server.src.merkle.enums import MerkleStatus
 
 
 @pytest.fixture

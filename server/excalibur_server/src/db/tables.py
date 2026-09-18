@@ -7,9 +7,9 @@ from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstrain
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.merkle.enums import MerkleStatus
-from excalibur_server.src.crypto.merkle.structures import AttestationBase
 from excalibur_server.src.crypto.misc import frame
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.structures import AttestationBase
 from excalibur_server.src.misc import get_current_timestamp
 
 

@@ -4,7 +4,6 @@ from fastapi import Body, Depends, HTTPException, status
 
 from excalibur_server.api.routes.merkle import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.crypto.merkle.mutation import Mutation, mutation_check
 from excalibur_server.src.db.operations import (
     count_items_with_root,
     get_latest_attestation,
@@ -15,6 +14,7 @@ from excalibur_server.src.db.operations import (
     get_vault_state,
 )
 from excalibur_server.src.db.tables import Attestation, FSItem, VaultState
+from excalibur_server.src.merkle.mutation import Mutation, mutation_check
 
 
 @encrypted_router.put(
