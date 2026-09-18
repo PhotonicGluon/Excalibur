@@ -20,7 +20,7 @@ def _gen_token(user_id: UUID, master_key: bytes, expiry_time: int):
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = master_key
     token = generate_auth_token(
-        str(user_id),
+        user_id,
         uuid,
         datetime.now(tz=UTC).timestamp() + expiry_time,
     )

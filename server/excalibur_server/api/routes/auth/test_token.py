@@ -32,7 +32,7 @@ def test_get_token(auth_client: TestClient, test_user):
     from excalibur_server.src.auth.pop import generate_pop_header
     from excalibur_server.src.crypto.exef import ExEF
 
-    user_id = str(test_user["user"].id)
+    user_id = test_user["user"].id
     comm_uuid = "00000000000000000000000000000000"
     MASTER_KEYS_CACHE[comm_uuid] = b"one demo 16B key"
     token = generate_auth_token(user_id, comm_uuid, datetime.now(tz=UTC).timestamp() + 9999)

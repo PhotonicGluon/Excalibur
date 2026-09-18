@@ -54,7 +54,7 @@ def attestation_client(attestation_user) -> TestClient:
 
     MASTER_KEYS_CACHE["attestation-uuid"] = b"one demo 16B key"
     token = generate_auth_token(
-        str(attestation_user["user"].id), "attestation-uuid", datetime.now(tz=UTC).timestamp() + 9999
+        attestation_user["user"].id, "attestation-uuid", datetime.now(tz=UTC).timestamp() + 9999
     )
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client

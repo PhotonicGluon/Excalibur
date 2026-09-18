@@ -108,6 +108,6 @@ def auth_client(test_user) -> TestClient:
     """
 
     MASTER_KEYS_CACHE["some-uuid"] = b"one demo 16B key"
-    token = generate_auth_token(str(test_user["user"].id), "some-uuid", datetime.now(tz=UTC).timestamp() + 9999)
+    token = generate_auth_token(test_user["user"].id, "some-uuid", datetime.now(tz=UTC).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client

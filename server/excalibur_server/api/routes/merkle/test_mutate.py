@@ -88,7 +88,7 @@ def mutation_client(mutation_user) -> TestClient:
     """
 
     MASTER_KEYS_CACHE["mutation-uuid"] = b"one demo 16B key"
-    token = generate_auth_token(str(mutation_user["user"].id), "mutation-uuid", datetime.now(tz=UTC).timestamp() + 9999)
+    token = generate_auth_token(mutation_user["user"].id, "mutation-uuid", datetime.now(tz=UTC).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
 

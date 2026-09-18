@@ -83,9 +83,7 @@ def migration_user(db_session: Session):
 @pytest.fixture(scope="function")
 def migration_client(migration_user) -> TestClient:
     MASTER_KEYS_CACHE["migration-uuid"] = b"one demo 16B key"
-    token = generate_auth_token(
-        str(migration_user["user"].id), "migration-uuid", datetime.now(tz=UTC).timestamp() + 9999
-    )
+    token = generate_auth_token(migration_user["user"].id, "migration-uuid", datetime.now(tz=UTC).timestamp() + 9999)
     with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
         yield client
 
