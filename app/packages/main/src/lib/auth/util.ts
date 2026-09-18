@@ -5,8 +5,8 @@ import { bufferToNumber } from "@lib/util";
 /**
  * Generates a random number with the specified number of bits.
  *
- * @param bits The number of bits for the generated number.
- * @returns A random number with the specified number of bits.
+ * @param bits the number of bits for the generated number.
+ * @returns a random number with the specified number of bits.
  */
 export function randbits(bits: number): bigint {
     const mask = BigInt((1n << BigInt(bits)) - 1n);
@@ -15,7 +15,7 @@ export function randbits(bits: number): bigint {
 }
 
 /**
- * @returns A random ID
+ * @returns a random ID
  */
 export function randID() {
     const LENGTH = 32;

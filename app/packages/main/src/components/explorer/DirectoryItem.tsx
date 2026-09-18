@@ -25,13 +25,14 @@ import {
 import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
-import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
 import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
 import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
+
+import { downloadFile } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";

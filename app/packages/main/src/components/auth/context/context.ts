@@ -1,8 +1,9 @@
 import { createContext, useContext } from "react";
 
-import { E2EEData } from "@lib/auth/e2ee";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { VaultInfo } from "@lib/users/structures";
+
+import { E2EEData } from "@api/auth/e2ee";
 
 export interface AuthInfo extends E2EEData {
     username: string;

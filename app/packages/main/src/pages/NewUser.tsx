@@ -20,10 +20,11 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { e2ee } from "@lib/auth/e2ee";
 import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
-import { editVaultInfo, registerUser } from "@lib/users/api";
 import { UserVaultInfo } from "@lib/users/structures";
+
+import { e2ee } from "@api/auth";
+import { editVaultInfo, registerUser } from "@api/users";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";

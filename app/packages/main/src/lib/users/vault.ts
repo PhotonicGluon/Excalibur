@@ -1,6 +1,7 @@
 import ExEF from "@lib/crypto/exef";
 import { KeygenAdditionalInfo, generateAUK } from "@lib/crypto/keygen";
-import { getVaultInfo } from "@lib/users/api";
+
+import { getVaultInfo } from "@api/users";
 
 import { VaultInfo } from "./structures";
 

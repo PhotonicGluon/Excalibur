@@ -15,8 +15,9 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
-import { searchFiles } from "@lib/files/api";
 import { File } from "@lib/files/structures";
+
+import { searchFiles } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryItem from "@components/explorer/DirectoryItem";

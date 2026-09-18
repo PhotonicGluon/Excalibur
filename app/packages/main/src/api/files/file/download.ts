@@ -1,16 +1,17 @@
 import ExEF from "@lib/crypto/exef";
-import { popFetch } from "@lib/network";
 import { IS_DEV, b64encodeURLSafe } from "@lib/util";
+
+import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
  * Downloads a file from the server.
  *
- * @param auth The current authentication provider
- * @param path The path to the file to download
- * @param signal An abort signal to cancel the request
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param path the path to the file to download
+ * @param signal an abort signal to cancel the request
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message, or the file size, a boolean indicating whether the file is encrypted using the
  *      E2EE key, and a ReadableStream of data. Note that this stream may be encrypted using the
  *      vault key only (`e2ee = false`) or double-encrypted using both the vault key and the E2EE

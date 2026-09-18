@@ -15,6 +15,7 @@
         "externalstorage",
         "filelike",
         "fullpath",
+        "keyshare",
         "keysize",
         "listdir",
         "Merkle",

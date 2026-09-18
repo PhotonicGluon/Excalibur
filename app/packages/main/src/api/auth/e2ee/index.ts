@@ -1,9 +1,9 @@
 import { AlertButton } from "@ionic/core";
 
-import { E2EEData } from "@lib/auth/e2ee/structures";
-import { AuthProtocol } from "@lib/auth/enums";
-import { getAuthInfo } from "@lib/users/api";
+import { E2EEData } from "@api/auth/e2ee/structures";
+import { getAuthInfo } from "@api/users";
 
+import { AuthProtocol } from "./enums";
 import { handshakeOPAQUE } from "./opaque";
 
 /**
