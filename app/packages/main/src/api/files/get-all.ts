@@ -1,18 +1,24 @@
 import ExEF from "@lib/crypto/exef";
-import { popFetch } from "@lib/network";
+import { FileLike } from "@lib/files/structures";
+
+import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Counts the number of items owned by the current user.
+ * Gets all items owned by the current user.
  *
  * @param auth the current authentication provider
+ * @param timeout the timeout for the request in seconds
  * @returns a promise which resolves to an object with a success boolean and optionally an error
- *      message or the item count
+ *      message or the items
  */
-export async function getCount(auth: AuthProvider): Promise<{ success: boolean; error?: string; count?: number }> {
+export async function getAllItems(
+    auth: AuthProvider,
+    timeout?: number,
+): Promise<{ success: boolean; error?: string; items?: FileLike[] }> {
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/count`,
+        `${auth.serverInfo!.apiURL}/files/all`,
         auth.authInfo!.key!,
         {
             method: "GET",
@@ -20,7 +26,7 @@ export async function getCount(auth: AuthProvider): Promise<{ success: boolean; 
                 Authorization: `Bearer ${auth.getToken()}`,
             },
         },
-        null,
+        timeout,
     );
     switch (response.status) {
         case 200:
@@ -34,6 +40,6 @@ export async function getCount(auth: AuthProvider): Promise<{ success: boolean; 
             return { success: false, error: "Unknown error" };
     }
 
-    const count = await new ExEF(auth.authInfo!.key).decryptResponse<number>(response);
-    return { success: true, count: count! };
+    const items = await new ExEF(auth.authInfo!.key).decryptResponse<FileLike[]>(response);
+    return { success: true, items: items! };
 }

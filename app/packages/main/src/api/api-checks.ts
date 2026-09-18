@@ -18,9 +18,9 @@ export interface APICheckResult {
 /**
  * Checks if the given API url is valid.
  *
- * @param apiURL The API URL to check
- * @param timeout The timeout for the request
- * @returns A promise that resolves to an APICheckResult
+ * @param apiURL the API URL to check
+ * @param timeout the timeout for the request
+ * @returns a promise that resolves to an APICheckResult
  */
 export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<APICheckResult> {
     // Check connectivity (and validity) of the API server
@@ -49,13 +49,13 @@ export async function checkAPIUrl(apiURL: string, timeout?: number): Promise<API
 /**
  * Checks if the given API url is valid.
  *
- * @param apiURL The API URL to check
- * @param timeout The timeout for the request
- * @returns A promise that resolves to an object with three properties:
- *      - `reachable`: Whether the server is reachable
- *      - `valid`: Whether the URL is a valid API URL
- *      - `version`: The version of the API server
- *      - `error`: An optional error message
+ * @param apiURL the API URL to check
+ * @param timeout the timeout for the request
+ * @returns a promise that resolves to an object with three properties:
+ *      - `reachable`: whether the server is reachable
+ *      - `valid`: whether the URL is a valid API URL
+ *      - `version`: the version of the API server
+ *      - `error`: an optional error message
  */
 async function checkValidity(
     apiURL: string,
@@ -77,8 +77,8 @@ async function checkValidity(
 /**
  * Checks if the API is compatible with the current version of Excalibur.
  *
- * @param apiURL The API URL
- * @returns A promise which resolves to an object with a valid boolean
+ * @param apiURL the API URL
+ * @returns a promise which resolves to an object with a valid boolean
  */
 async function checkCompatibility(apiURL: string): Promise<{ valid: boolean }> {
     try {

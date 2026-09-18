@@ -18,10 +18,11 @@ import {
     useIonRouter,
 } from "@ionic/react";
 
-import { e2ee } from "@lib/auth/e2ee";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 import { retrieveVaultInfo } from "@lib/users/vault";
+
+import { e2ee } from "@api/auth";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";

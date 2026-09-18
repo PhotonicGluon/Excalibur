@@ -15,10 +15,13 @@ import {
 import { settings } from "ionicons/icons";
 
 import { useEffectOnce } from "@lib/hooks";
-import { APICheckResult, checkAPIUrl, getServerVersion, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 import { IS_DEV } from "@lib/util";
+
+import { APICheckResult, checkAPIUrl } from "@api/api-checks";
+import { timedFetch } from "@api/fetch";
+import { getServerVersion } from "@api/well-known";
 
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";

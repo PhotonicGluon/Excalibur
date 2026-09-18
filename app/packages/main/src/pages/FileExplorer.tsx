@@ -39,8 +39,9 @@ import {
     searchOutline,
 } from "ionicons/icons";
 
-import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
+
+import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@api/files";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 

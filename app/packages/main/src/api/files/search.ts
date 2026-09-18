@@ -1,24 +1,25 @@
 import ExEF from "@lib/crypto/exef";
 import { File } from "@lib/files/structures";
-import { popFetch } from "@lib/network";
+
+import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
  * Searches for files matching the given query.
  *
- * @param auth The current authentication provider
- * @param query The search query
- * @param limit The maximum number of results to return
- * @param score_threshold The minimum similarity score (0.0-1.0) for results
- * @returns A promise which resolves to an object with a success boolean and optionally an error
+ * @param auth the current authentication provider
+ * @param query the search query
+ * @param limit the maximum number of results to return
+ * @param score_threshold the minimum similarity score (0.0-1.0) for results
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message or search results
  */
 export async function searchFiles(
     auth: AuthProvider,
     query: string,
     limit: number = 10,
-    score_threshold: number = 0.6,
+    score_threshold: number = 0.6, // TODO: Rename this parameter
 ): Promise<{ success: boolean; error?: string; results?: { file: File; similarity: number }[] }> {
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/search?limit=${limit}&score_threshold=${score_threshold}`,

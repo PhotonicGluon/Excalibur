@@ -1,10 +1,10 @@
-import { timedFetch } from "./fetch";
+import { timedFetch } from "@api/fetch";
 
 /**
  * Gets the server version.
  *
- * @param apiURL The API URL
- * @returns A promise which resolves to an object with a success boolean and optionally the server
+ * @param apiURL the API URL
+ * @returns a promise which resolves to an object with a success boolean and optionally the server
  *      version
  */
 export async function getServerVersion(apiURL: string): Promise<{ success: boolean; version?: string }> {
