@@ -1,7 +1,8 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { NoiseNK, Ristretto255 } from "@lib/crypto/elliptic";
 import ExEF from "@lib/crypto/exef";
-import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
+
+import { parseResponse as _parseResponse, generateResponse } from "@api/websocket";
 
 export enum RegistrationStage {
     SENT_NOISE_NK_CLIENT_MESSAGE,

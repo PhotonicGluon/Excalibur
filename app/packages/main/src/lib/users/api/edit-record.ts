@@ -1,8 +1,9 @@
 import { OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { generatePoPHeader } from "@lib/auth/pop";
 import ExEF from "@lib/crypto/exef";
-import { parseResponse as _parseResponse, generateResponse } from "@lib/network/websocket";
 import { getURLEncodedPath } from "@lib/url";
+
+import { parseResponse as _parseResponse, generateResponse } from "@api/websocket";
 
 import { AuthProvider } from "@components/auth/context";
 

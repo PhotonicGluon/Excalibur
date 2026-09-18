@@ -1,5 +1,6 @@
 import ExEF from "@lib/crypto/exef";
-import { popFetch } from "@lib/network";
+
+import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 

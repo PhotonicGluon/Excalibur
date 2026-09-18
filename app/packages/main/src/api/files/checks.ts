@@ -1,6 +1,7 @@
 import ExEF from "@lib/crypto/exef";
-import { popFetch } from "@lib/network";
 import { IS_DEV, b64encodeURLSafe } from "@lib/util";
+
+import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 

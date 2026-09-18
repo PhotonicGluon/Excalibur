@@ -1,7 +1,8 @@
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
 import ExEF from "@lib/crypto/exef";
-import { parseResponse, sendResponse } from "@lib/network/websocket";
+
+import { parseResponse, sendResponse } from "@api/websocket";
 
 import { E2EEData } from "./structures";
 

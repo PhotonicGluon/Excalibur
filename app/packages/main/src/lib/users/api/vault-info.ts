@@ -1,7 +1,8 @@
 import ExEF from "@lib/crypto/exef";
 import { KeyGenAlgorithm } from "@lib/crypto/keygen";
-import { popFetch } from "@lib/network";
 import { UserVaultInfo } from "@lib/users/structures";
+
+import { popFetch } from "@api/fetch";
 
 /**
  * Retrieves the vault info from the server.

@@ -1,5 +1,6 @@
 import { AuthProtocol } from "@lib/auth/enums";
-import { timedFetch } from "@lib/network";
+
+import { timedFetch } from "@api/fetch";
 
 /**
  * Retrieves the authentication info of the user from the server.
