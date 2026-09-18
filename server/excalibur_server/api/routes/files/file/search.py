@@ -21,6 +21,7 @@ from excalibur_server.src.users import get_user_from_id
                     "example": [
                         [
                             {
+                                "id": "00000000-0000-0000-0000-000000000000",
                                 "name": "example.txt",
                                 "creation_time": 1100000000,
                                 "fullpath": "example.txt",

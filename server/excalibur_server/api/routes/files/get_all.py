@@ -18,6 +18,7 @@ from excalibur_server.src.users import get_user_from_id
                 "application/json": {
                     "example": [
                         {
+                            "id": "00000000-0000-0000-0000-000000000000",
                             "name": "example.txt",
                             "creation_time": 1100000000,
                             "fullpath": "example.txt",
@@ -25,6 +26,7 @@ from excalibur_server.src.users import get_user_from_id
                             "size": 1024,
                         },
                         {
+                            "id": "00000000-0000-0000-0000-000000000001",
                             "name": "folder-1",
                             "creation_time": 1200000000,
                             "fullpath": "folder-1",
