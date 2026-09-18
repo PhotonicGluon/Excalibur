@@ -23,8 +23,8 @@ import { arrowBack } from "ionicons/icons";
 
 import ExEF from "@lib/crypto/exef";
 import { KeyGenAlgorithm, generateAUK, generateVaultKeys } from "@lib/crypto/keygen";
-import { editVaultInfo } from "@lib/users/api";
-import { editRecord } from "@lib/users/api/edit-record";
+
+import { editRecord, editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
 import PasswordDialog from "@components/dialog/PasswordDialog";

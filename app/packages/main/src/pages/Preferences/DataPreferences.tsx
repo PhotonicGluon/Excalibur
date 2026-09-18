@@ -22,8 +22,9 @@ import { arrowBack, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/auth/bip39";
 import { toggleObfuscationForAllFiles } from "@lib/files/obfuscation";
-import { editVaultInfo } from "@lib/users/api";
 import { UserVaultInfo } from "@lib/users/structures";
+
+import { editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";

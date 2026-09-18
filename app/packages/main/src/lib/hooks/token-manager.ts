@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { decodeJWT } from "@lib/auth/token";
 
-import { getNewToken } from "@api/auth/api";
+import { getNewToken } from "@api/auth";
 
 import { useAuth } from "@components/auth/context";
 

@@ -1,5 +1,4 @@
-import { AuthProtocol } from "@lib/auth/enums";
-
+import { AuthProtocol } from "@api/auth/e2ee/enums";
 import { timedFetch } from "@api/fetch";
 
 /**
