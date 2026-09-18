@@ -6,8 +6,8 @@ import { AuthProvider } from "@components/auth/context";
 /**
  * Fetches a new authentication token from the server.
  *
- * @param auth The authentication provider
- * @returns A promise which resolves to an object with a success boolean and the new token, or an
+ * @param auth the authentication provider
+ * @returns a promise which resolves to an object with a success boolean and the new token, or an
  *      error message
  */
 export async function getNewToken(auth: AuthProvider): Promise<{ success: boolean; error?: string; token?: string }> {
