@@ -21,7 +21,7 @@ def _gen_nonce():
     return get_random_bytes(16)
 
 
-def test_get_token():
+def test_get_token(auth_client: TestClient, test_user):
     import time
     from datetime import datetime
 
@@ -32,9 +32,10 @@ def test_get_token():
     from excalibur_server.src.auth.pop import generate_pop_header
     from excalibur_server.src.crypto.exef import ExEF
 
-    uuid = "00000000000000000000000000000000"
-    MASTER_KEYS_CACHE[uuid] = b"one demo 16B key"
-    token = generate_auth_token("test-user", uuid, datetime.now(tz=UTC).timestamp() + 9999)
+    user_id = str(test_user["user"].id)
+    comm_uuid = "00000000000000000000000000000000"
+    MASTER_KEYS_CACHE[comm_uuid] = b"one demo 16B key"
+    token = generate_auth_token(user_id, comm_uuid, datetime.now(tz=UTC).timestamp() + 9999)
 
     for _ in range(5):  # Make sure that the new token is actually valid by refreshing it
         client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
@@ -63,7 +64,7 @@ def test_get_token():
         new_token = ExEF(key=b"one demo 16B key").decrypt(encrypted_new_token).decode("UTF-8")
 
         # Check that the old UUID was invalidated
-        assert uuid not in MASTER_KEYS_CACHE
+        assert comm_uuid not in MASTER_KEYS_CACHE
 
         # Check that the new token is valid
         assert check_auth_token(new_token)
@@ -71,16 +72,16 @@ def test_get_token():
         # Update fields
         token = new_token
         data = decode(token, options={"verify_signature": False})
-        uuid = data["uuid"]
+        comm_uuid = data["uuid"]
 
 
 @pytest.mark.skipif(not is_debug(), reason="Debug mode required for generating token without auth")
-def test_generate_token():
+def test_generate_token(auth_client: TestClient):
     client = TestClient(app)
     response = client.get(
         "/api/auth/generate-token",
         # Since this is only a demo route, we can assume that all parameters will be correct
-        params={"username": "some-username-here", "expiry_time": 60, "master-key": "one demo 16B key"},
+        params={"username": "test-user", "expiry_time": 60, "master-key": "one demo 16B key"},
     )
     assert response.status_code == 200
     token = response.text

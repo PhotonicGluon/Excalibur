@@ -86,6 +86,7 @@ async def _verify_and_extract_credentials(
     decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
+    print(decoded)
     user_id = UUID(decoded["sub"])
     comm_uuid = decoded["uuid"]
 
