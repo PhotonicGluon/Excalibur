@@ -32,6 +32,8 @@ import {
     documentOutline,
     ellipsisVertical,
     folderOutline,
+    grid,
+    list,
     listOutline,
     personOutline,
     searchOutline,
@@ -42,11 +44,13 @@ import { useTokenManager, useUploadFile } from "@lib/hooks";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
+import SegmentedToggle from "@components/SegmentedToggle";
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
 import SearchDialog from "@components/dialog/SearchDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
+import { ViewLayout } from "@components/explorer/DirectoryList";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
 import JobsModal from "@components/explorer/jobs/JobsModal";
@@ -92,6 +96,8 @@ const FileExplorer: React.FC = () => {
     // States
     const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast, dismissToast] = useIonToast();
+
+    const [viewLayout, setViewLayout] = useState<ViewLayout>("list"); // TODO: Make this a setting?
 
     const [showJobsModal, setShowJobsModal] = useState(false);
 
@@ -425,23 +431,32 @@ const FileExplorer: React.FC = () => {
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
 
-                            {/* Breadcrumbs */}
+                            {/* Top bar */}
                             <div
                                 ref={topBarRef}
-                                className="ml-1 w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-1 hover:scrollbar-thumb-blue-500/50"
+                                className="ml-1 flex w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-2 hover:scrollbar-thumb-blue-500/50"
                             >
                                 <DirectoryBreadcrumbs
-                                    className="flex-nowrap"
+                                    className="grow flex-nowrap"
                                     path={requestedPath}
                                     noc={auth.vaultInfo!.info.obfuscatedNames ? auth.noc! : undefined}
                                 />
+                                <div className="hidden xl:block">
+                                    {" "}
+                                    <SegmentedToggle<ViewLayout>
+                                        className="h-8 pr-4"
+                                        values={["list", "grid"]}
+                                        displayNodes={[<IonIcon icon={list} />, <IonIcon icon={grid} />]}
+                                        onChange={(value) => setViewLayout(value)}
+                                    />
+                                </div>
                             </div>
 
                             {/* Fab button */}
                             <FabButton isJobsDialogOpen={showJobsModal} onCreateFolder={onCreateFolder} />
 
                             {/* Files */}
-                            <FilesArea refreshTrigger={refreshTrigger} />
+                            <FilesArea viewLayout={viewLayout} refreshTrigger={refreshTrigger} />
 
                             {/* Jobs modal */}
                             <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />
