@@ -6,6 +6,8 @@ export class MerkleKeys {
 
     /** Content MAC Key */
     public content: Buffer;
+    /** Attestation Key */
+    public attestation: Buffer;
 
     /**
      * Creates keys for use in a Merkle tree.
@@ -18,6 +20,7 @@ export class MerkleKeys {
         this._userID = userID;
 
         this.content = this._deriveMerkleKey("Content MAC Key");
+        this.attestation = this._deriveMerkleKey("Attestation Key");
     }
 
     // Helper methods

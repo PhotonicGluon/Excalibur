@@ -28,6 +28,7 @@ def test_xor():
 
 
 def test_frame():
-    assert frame(b"hello") == b"\x00\x00\x00\x05hello"
-    assert frame(b"hello", b"world") == b"\x00\x00\x00\x05hello\x00\x00\x00\x05world"
-    assert frame(b"hello", b"world", prefix_len=2) == b"\x00\x05hello\x00\x05world"
+    assert frame(b"\xab", b"\xcd") == b"\x00\x00\x00\x01\xab\x00\x00\x00\x01\xcd"
+    assert frame(b"\xab", b"\xcd", prefix_len=2) == b"\x00\x01\xab\x00\x01\xcd"
+    assert frame(b"", b"\xab") == b"\x00\x00\x00\x00\x00\x00\x00\x01\xab"
+    assert frame(b"\xab", b"\xcd\xef") != frame(b"\xab\xcd", b"\xef")

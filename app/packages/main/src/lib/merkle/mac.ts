@@ -1,6 +1,5 @@
-import { blake2b } from "@noble/hashes/blake2.js";
-
 import { ExEFv3, ExEFv4, HeaderV4, identifyVersion } from "@lib/crypto/exef";
+import { blake2b } from "@lib/crypto/hashing";
 
 import { MerkleKeys } from "./keys";
 
@@ -46,7 +45,5 @@ export function getContentMACInput(exefData: Buffer): Buffer {
  * @returns the computed MAC
  */
 export function computeContentMAC(merkleKeys: MerkleKeys, input: Buffer): Buffer {
-    const hash = blake2b.create({ dkLen: 32, key: merkleKeys.content });
-    hash.update(input);
-    return Buffer.from(hash.digest());
+    return blake2b(input, merkleKeys.content);
 }

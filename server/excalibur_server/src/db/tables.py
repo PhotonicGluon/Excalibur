@@ -201,9 +201,7 @@ class Attestation(AttestationBase, table=True):
     @property
     def attestation(self) -> bytes:
         """
-        Get the attestation for this root.
-
-        :returns: the attestation bytes
+        :returns: the bytes that an attestation's tag authenticates
         """
 
         return self.ATTESTATION_EPOCH + frame(
