@@ -1,7 +1,8 @@
 import { expect } from "vitest";
 
-import { AttestationBase, buildAttestation, verifyAttestationTag } from "./attestation";
+import { buildAttestation, verifyAttestationTag } from "./attestation";
 import { MerkleKeys } from "./keys";
+import { AttestationBase } from "./structures";
 
 const KEY = Buffer.from("1".repeat(24), "utf-8");
 const USER_ID = Buffer.from("0".repeat(32), "hex");
