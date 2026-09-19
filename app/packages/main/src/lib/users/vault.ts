@@ -1,6 +1,8 @@
 import ExEF from "@lib/crypto/exef";
 import { KeygenAdditionalInfo, generateAUK } from "@lib/crypto/keygen";
+import { MerkleKeys } from "@lib/merkle/keys";
 
+import { E2EEData } from "@api/auth";
 import { getVaultInfo } from "@api/users";
 
 import { VaultInfo } from "./structures";
@@ -9,8 +11,7 @@ import { VaultInfo } from "./structures";
  * Retrieves the vault info from the server.
  *
  * @param apiURL the URL of the API server to query
- * @param token authentication token for accessing the server
- * @param password the password to use for deriving the AUK
+ * @param e2eeData the E2EE data returned after login
  * @param additionalInfo additional information to use for deriving the AUK
  * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
  * @param onError a function to call if an error occurs, which takes a string argument. The string
@@ -21,8 +22,7 @@ import { VaultInfo } from "./structures";
  */
 export async function retrieveVaultInfo(
     apiURL: string,
-    token: string,
-    e2eeKey: Buffer,
+    e2eeData: E2EEData,
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     onError: (error: string) => void,
@@ -30,7 +30,7 @@ export async function retrieveVaultInfo(
 ): Promise<VaultInfo | null> {
     // Get the vault info
     console.debug("Retrieving vault info");
-    const vaultInfoResponse = await getVaultInfo(apiURL, token, e2eeKey);
+    const vaultInfoResponse = await getVaultInfo(apiURL, e2eeData.token, e2eeData.key);
     if (!vaultInfoResponse.success) {
         onError(`Could not retrieve vault info: ${vaultInfoResponse.error}`);
         return null;
@@ -54,6 +54,7 @@ export async function retrieveVaultInfo(
             aukSalt,
             encryptedKey: encryptedVaultKey,
             key: vaultKey,
+            merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
             info: vaultInfo,
         };
     } catch (error: unknown) {

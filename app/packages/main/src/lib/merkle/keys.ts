@@ -1,4 +1,5 @@
 import HKDF from "@lib/crypto/hkdf";
+import { uuidToBytes } from "@lib/util";
 
 export class MerkleKeys {
     private _vaultKey: Buffer;
@@ -6,6 +7,8 @@ export class MerkleKeys {
 
     /** Content MAC Key */
     public content: Buffer;
+    /** Node Hash Key */
+    public nodeHash: Buffer;
     /** Attestation Key */
     public attestation: Buffer;
 
@@ -13,13 +16,17 @@ export class MerkleKeys {
      * Creates keys for use in a Merkle tree.
      *
      * @param vaultKey the vault key
-     * @param userID the user ID, expressed in bytes instead of a UUID
+     * @param userID the user ID, expressed in either a UUID string or bytes
      */
-    constructor(vaultKey: Buffer, userID: Buffer) {
+    constructor(vaultKey: Buffer, userID: string | Buffer) {
         this._vaultKey = vaultKey;
+        if (typeof userID === "string") {
+            userID = uuidToBytes(userID);
+        }
         this._userID = userID;
 
         this.content = this._deriveMerkleKey("Content MAC Key");
+        this.nodeHash = this._deriveMerkleKey("Node Hash Key");
         this.attestation = this._deriveMerkleKey("Attestation Key");
     }
 
