@@ -2,7 +2,7 @@ from base64 import b64encode
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body, Depends
+from fastapi import Body, Depends, status
 
 from excalibur_server.api.routes.merkle import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
@@ -11,7 +11,20 @@ from excalibur_server.src.db.operations import get_item, get_user_from_id
 from excalibur_server.src.merkle.mac import get_content_mac_input
 
 
-@encrypted_router.post("/content-mac-inputs", name="Get Content MAC Inputs")
+@encrypted_router.post(
+    "/content-mac-inputs",
+    name="Get Content MAC Inputs",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Content MAC inputs retrieved successfully",
+            "example": {
+                "item_id": "base64_string",
+                "item_id_2": "another_base64_string",
+                "non_existent": None,
+            },
+        },
+    },
+)
 def content_mac_inputs_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     ids: Annotated[list[UUID], Body(description="List of item IDs to get content MAC inputs for")],
@@ -19,7 +32,7 @@ def content_mac_inputs_endpoint(
     """
     Gets the inputs for the content MAC for the given items.
 
-    The item's content MAC inputs will be `null` if either:
+    The item's content MAC inputs will be `null` if either
     - the item does not exist;
     - the item does not belong to the user; or
     - the item is a folder

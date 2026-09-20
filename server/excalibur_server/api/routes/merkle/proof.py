@@ -13,6 +13,10 @@ from excalibur_server.src.db.tables import FSItem
 
 
 class InclusionProofStep(BaseModel):
+    """
+    One step of an inclusion proof: a parent node and the node hashes of all its children.
+    """
+
     id: UUID
     "Unique identifier for the filesystem item"
     children: list[tuple[UUID, bytes | None]]
@@ -28,6 +32,10 @@ class InclusionProofStep(BaseModel):
 
 
 class InclusionProof(BaseModel):
+    """
+    An inclusion proof for a single item.
+    """
+
     item: FSItem
     steps: list[InclusionProofStep]
 

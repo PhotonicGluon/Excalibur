@@ -5,6 +5,15 @@ import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
+interface AttestationWire {
+    root_id: string;
+    generation: number;
+    root_hash: Buffer;
+    prev_root_hash: Buffer | null;
+    timestamp: number;
+    tag: Buffer;
+}
+
 /**
  * Gets the latest attestation for the current user's vault.
  *
@@ -28,25 +37,19 @@ export async function getLatestAttestation(
             return { success: false, error: "Unknown error" };
     }
 
-    const attestation = await new ExEF(auth.authInfo!.key!).decryptResponse<{
-        root_id: string;
-        generation: number;
-        root_hash: Buffer;
-        prev_root_hash: Buffer | null;
-        timestamp: number;
-        tag: Buffer;
-    } | null>(response);
+    const attestation = await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire | null>(response);
+    if (attestation === null) {
+        return { success: true, attestation: null };
+    }
     return {
         success: true,
-        attestation: attestation
-            ? {
-                  rootID: attestation.root_id,
-                  generation: attestation.generation,
-                  rootHash: attestation.root_hash,
-                  prevRootHash: attestation.prev_root_hash,
-                  timestamp: attestation.timestamp,
-                  tag: attestation.tag,
-              }
-            : null,
+        attestation: {
+            rootID: attestation.root_id,
+            generation: attestation.generation,
+            rootHash: attestation.root_hash,
+            prevRootHash: attestation.prev_root_hash,
+            timestamp: attestation.timestamp,
+            tag: attestation.tag,
+        },
     };
 }
