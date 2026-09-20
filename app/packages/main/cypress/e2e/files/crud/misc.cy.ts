@@ -1,13 +1,16 @@
 import { createFolder } from "../helpers";
 
+const SERVER_URL = Cypress.expose("serverURL");
+
 describe("Miscellaneous Operations", () => {
     beforeEach(() => {
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
+        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.login(SERVER_URL, "test-user", "Password");
     });
 
     afterEach(function () {
         // Stop other tests if any test fails
-        if (this.currentTest.state === "failed") {
+        if (this.currentTest?.state === "failed") {
             Cypress.stop();
             return;
         }

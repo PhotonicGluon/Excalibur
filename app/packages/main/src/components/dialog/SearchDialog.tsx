@@ -15,8 +15,9 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
-import { searchFiles } from "@lib/files/api";
 import { File } from "@lib/files/structures";
+
+import { searchFiles } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryItem from "@components/explorer/DirectoryItem";
@@ -127,6 +128,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                                 <DirectoryItem
                                     key={idx}
                                     ellipsisMenuEnabled={false}
+                                    isGridType={false}
                                     oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
                                     name={name}
                                     fullpath={file.fullpath}

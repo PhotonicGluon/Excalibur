@@ -8,7 +8,7 @@ from excalibur_server.api.app import app
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.src.auth.credentials import generate_auth_token
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.crypto.exef.structures import Footer, Header
+from excalibur_server.src.crypto.exef.v4.structures import HEADER_SIZE, TAG_SIZE
 
 TEST_KEY = b"one demo 16B key"
 TEST_COMM_UUID = "middleware-test-uuid"
@@ -35,14 +35,15 @@ def _valid_encrypted_body(plaintext: bytes) -> bytes:
     return ExEF(TEST_KEY).encrypt(plaintext)
 
 
-def _strip_footer(exef_data: bytes) -> bytes:
-    return exef_data[: -Footer.size]
+def _strip_tag(exef_data: bytes) -> bytes:
+    # Drop the trailing authentication tag, making the final chunk incomplete
+    return exef_data[:-TAG_SIZE]
 
 
 def _flip_ciphertext_bit(exef_data: bytes) -> bytes:
     data = bytearray(exef_data)
-    ct_start = Header.size
-    ct_end = len(data) - Footer.size
+    ct_start = HEADER_SIZE  # First body byte, immediately after the header
+    ct_end = len(data) - TAG_SIZE
     if ct_start < ct_end:
         data[ct_start] ^= 0x01
     return bytes(data)
@@ -67,9 +68,9 @@ class TestEncryptedBodyIntegrity:
         # 200 OK with the decrypted payload echoed back (encrypted)
         assert response.status_code == 200
 
-    def test_footer_stripped_body_is_rejected(self, auth_header):
+    def test_tag_stripped_body_is_rejected(self, auth_header):
         body = json.dumps("hello world").encode()
-        tampered = _strip_footer(_valid_encrypted_body(body))
+        tampered = _strip_tag(_valid_encrypted_body(body))
 
         with TestClient(app) as client:
             response = client.post(

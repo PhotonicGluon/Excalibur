@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 dep_names = os.environ.get("DEP_NAMES", "")
 prev_version = os.environ.get("PREV_VERSION", "")
@@ -7,13 +8,15 @@ new_version = os.environ.get("NEW_VERSION", "")
 directory = os.environ.get("DIRECTORY", "")
 
 if "/server" in directory:
-    folder = "server"
+    # folder = "server"
+    print("Skipping server (uv) dependencies")
+    sys.exit(0)
 else:
     folder = "app"
 
 if not folder:
     print(f"Could not determine folder from directory: {directory}")
-    exit(0)
+    sys.exit(1)
 
 for dep_name in dep_names.split(","):
     dep_name = dep_name.strip()

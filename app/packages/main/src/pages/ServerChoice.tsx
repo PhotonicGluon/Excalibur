@@ -15,10 +15,13 @@ import {
 import { settings } from "ionicons/icons";
 
 import { useEffectOnce } from "@lib/hooks";
-import { APICheckResult, checkAPIUrl, getServerInfo, timedFetch } from "@lib/network";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
 import { IS_DEV } from "@lib/util";
+
+import { APICheckResult, checkAPIUrl } from "@api/api-checks";
+import { timedFetch } from "@api/fetch";
+import { getServerVersion } from "@api/well-known";
 
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
@@ -120,22 +123,19 @@ const ServerChoice: React.FC = () => {
             return;
         }
 
-        // Get server info
-        const response = await getServerInfo(outcome.url);
+        // Get server version
+        const response = await getServerVersion(outcome.url);
         if (!response.success) {
             setIsLoading(false);
             presentAlert({
                 header: "Connection Failure",
-                message: "Failed to retrieve server information.",
+                message: "Failed to retrieve server version.",
                 buttons: ["OK"],
             });
             return;
         }
 
         const serverVersion = response.version!;
-        const maxUploadSize = response.maxUploadSize!;
-        const serverTime = response.time!;
-        const deltaTime = serverTime.getTime() - new Date().getTime();
 
         // Update preferences
         Preferences.set({
@@ -147,8 +147,6 @@ const ServerChoice: React.FC = () => {
             apiURL: outcome.url,
             isFixed,
             version: serverVersion,
-            maxUploadSize,
-            deltaTime,
         });
 
         // Continue with login

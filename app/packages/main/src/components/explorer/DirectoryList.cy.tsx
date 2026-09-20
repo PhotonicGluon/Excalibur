@@ -68,8 +68,9 @@ describe("<DirectoryList />", () => {
                             iconStyle: "default",
                             rowAlternatingColours,
                             fileSizeUnits: "si",
+                            fileReadChunkSize: 262144,
                             cryptoKeyStrength: 128,
-                            cryptoChunkSize: 262144,
+                            cryptoChunkSizeExponent: 16,
                             change: () => {},
                             save: () => Promise.resolve(),
                             checkUpdate: false,
@@ -80,6 +81,7 @@ describe("<DirectoryList />", () => {
                             id="directory-list"
                             directory={pretendPending ? null : defaultProps}
                             listenerConnected={listenerConnected}
+                            viewLayout="list"
                         />
                     </settingsContext.Provider>
                 </explorerContext.Provider>

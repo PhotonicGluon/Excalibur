@@ -23,6 +23,7 @@ describe("<DirectoryItem />", () => {
         },
     ) {
         const defaultProps: ContainerProps = {
+            isGridType: false,
             oddRow: true,
             name: "Sample File.txt.exef",
             creation_time: 1577934245, // 2020-01-02 03:04:05
@@ -40,8 +41,9 @@ describe("<DirectoryItem />", () => {
                         iconStyle: "default",
                         rowAlternatingColours: "normal",
                         fileSizeUnits: "si",
+                        fileReadChunkSize: 262144,
                         cryptoKeyStrength: 128,
-                        cryptoChunkSize: 262144,
+                        cryptoChunkSizeExponent: 16,
                         change: () => {},
                         save: () => Promise.resolve(),
                         checkUpdate: false,

@@ -1,9 +1,10 @@
 import { IonApp } from "@ionic/react";
 import packageInfo from "@root/package.json";
 
+import { KeyGenAlgorithm } from "@lib/crypto/keygen";
+
 import { authContext } from "@components/auth/context";
 
-import { KeyGenAlgorithm } from "@lib/crypto/keygen";
 import Versions from "./Versions";
 
 describe("<Versions />", () => {
@@ -16,8 +17,6 @@ describe("<Versions />", () => {
                         serverInfo: {
                             apiURL: "",
                             version: "x.y.z", // Just need this for the test
-                            deltaTime: 0,
-                            maxUploadSize: 0,
                         },
                         vaultInfo: {
                             aukSalt: Buffer.alloc(0),

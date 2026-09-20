@@ -6,12 +6,11 @@ from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.structures import Directory, File
 
 
-def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory | None:
+def listdir(folder_id: uuid.UUID) -> Directory | None:
     """
     Lists the contents of a directory.
 
     :param folder_id: the ID of the folder to list
-    :param include_exef_size: whether to include the size of the `.exef` file in the response
     :return: a `Directory` object with a list of `File` and `Directory` objects, or `None` if the
         folder does not exist or is not a directory
     """
@@ -28,7 +27,7 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
         if fsitem.is_folder:
             items.append(Directory.from_fsitem(fsitem, parent_dir_path=parent_dir_path))
         else:
-            items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path, include_exef_size=include_exef_size))
+            items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path))
 
     return Directory(name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items)
 

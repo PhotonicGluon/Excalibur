@@ -38,8 +38,8 @@ import AccountPreferences from "@pages/Preferences/AccountPreferences";
 import DataPreferences from "@pages/Preferences/DataPreferences";
 import PreferencesMenu from "@pages/Preferences/PreferencesMenu";
 import ServerChoice from "@pages/ServerChoice";
-import CryptoSettings from "@pages/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Settings/InterfaceSettings";
+import OperationsSettings from "@pages/Settings/OperationsSettings";
 import SettingsMenu from "@pages/Settings/SettingsMenu";
 import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
@@ -150,7 +150,7 @@ const App: React.FC = () => {
                     {/* Configuration pages */}
                     <Route exact path="/settings" component={SettingsMenu} />
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
-                    <Route exact path="/settings/crypto" component={CryptoSettings} />
+                    <Route exact path="/settings/operations" component={OperationsSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
 
                     <PrivateRoute exact path="/preferences" component={PreferencesMenu} />

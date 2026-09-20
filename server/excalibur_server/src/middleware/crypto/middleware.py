@@ -227,7 +227,7 @@ class EncryptionHandler:
             if content_length is None:
                 raise ValueError("Content-Length header not found")
             content_length = int(content_length)
-            new_content_length = content_length + ExEF.additional_size
+            new_content_length = ExEF.compute_encrypted_size(content_length)
 
             # Set headers
             headers["Content-Type"] = "application/octet-stream"
@@ -310,7 +310,7 @@ class EncryptionHandler:
                     return message
 
             if self._exef is None:
-                self._exef = ExEF(self._e2ee_key, nonce=None, strength=CONFIG.security.key_strength)
+                self._exef = ExEF(self._e2ee_key, strength=CONFIG.security.key_strength, version=4, salt=None)
 
             return await self._decrypt_request(message)
 
@@ -354,7 +354,7 @@ class EncryptionHandler:
                     return await self._raise_credentials_exception()
 
             if self._exef is None and not self._started_response:
-                self._exef = ExEF(self._e2ee_key, nonce=None, strength=CONFIG.security.key_strength)
+                self._exef = ExEF(self._e2ee_key, strength=CONFIG.security.key_strength, version=4, salt=None)
 
             await self._encrypt_response(message)
 

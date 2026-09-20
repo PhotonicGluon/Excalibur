@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Query, status
+from fastapi import Depends, HTTPException, Path, status
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
@@ -38,9 +38,6 @@ from excalibur_server.src.users import get_user_from_id
 def listdir_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     path: Annotated[str, Path(description="The path to list (use `.` to specify root directory)")],
-    include_exef_size: Annotated[
-        bool, Query(description="Whether to include the additional ExEF size (i.e., header and footer) in file sizes")
-    ] = False,
     processed_path: str = Depends(process_path_param("path")),
 ):
     """
@@ -61,4 +58,4 @@ def listdir_endpoint(
     folder_id = folder.id
 
     # List the directory
-    return listdir(folder_id, include_exef_size=include_exef_size)
+    return listdir(folder_id)

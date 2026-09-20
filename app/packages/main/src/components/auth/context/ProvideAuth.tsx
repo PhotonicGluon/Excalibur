@@ -3,8 +3,10 @@ import { useRef, useState } from "react";
 import HKDF from "@lib/crypto/hkdf";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { useEffectOnce } from "@lib/hooks";
-import { checkAPIUrl, getServerInfo } from "@lib/network";
 import { VaultInfo } from "@lib/users/structures";
+
+import { checkAPIUrl } from "@api/api-checks";
+import { getServerVersion } from "@api/well-known";
 
 import { AuthInfo, AuthProvider, ServerInfo, authContext } from "./context";
 
@@ -85,14 +87,12 @@ function useProvideAuth(): AuthProvider {
                 return;
             }
 
-            // Get latest server info
-            getServerInfo(serverInfo.apiURL!).then((info) => {
-                if (info) {
+            // Get latest server version
+            getServerVersion(serverInfo.apiURL!).then((result) => {
+                if (result && result.success) {
                     const newServerInfo = {
                         ...serverInfo,
-                        version: info.version!,
-                        maxUploadSize: info.maxUploadSize!,
-                        deltaTime: info.time!.getTime() - new Date().getTime(),
+                        version: result.version!,
                     };
                     setServerInfoFunc(newServerInfo);
                 }

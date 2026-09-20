@@ -76,7 +76,6 @@ class FileUpdateManager:
         :param encrypted: whether the connection should be encrypted
         """
 
-        await websocket.accept()
         self._active_sockets[credentials.comm_uuid].append(Socket(websocket=websocket, encrypted=encrypted))
         self._connections[credentials.user_id].append(credentials.comm_uuid)
 

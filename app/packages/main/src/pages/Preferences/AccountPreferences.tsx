@@ -21,15 +21,15 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import ExEF from "@lib/crypto/exef";
 import { KeyGenAlgorithm, generateAUK, generateVaultKeys } from "@lib/crypto/keygen";
-import { editVaultInfo } from "@lib/users/api";
-import { editRecord } from "@lib/users/api/edit-record";
+
+import { editRecord, editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
 import PasswordDialog from "@components/dialog/PasswordDialog";
 import PasswordInput from "@components/inputs/PasswordInput";
 import SettingsItem from "@components/settings/SettingsItem";
-import ExEF from "@lib/crypto/exef";
 
 const AccountPreferences: React.FC = () => {
     // Contexts
@@ -70,7 +70,7 @@ const AccountPreferences: React.FC = () => {
         );
 
         try {
-            ExEF.decrypt(proposedAUK, auth.vaultInfo!.encryptedKey);
+            await new ExEF(proposedAUK).decrypt(auth.vaultInfo!.encryptedKey);
         } catch (e) {
             console.error("Password is likely incorrect, causing", e);
             presentToast({

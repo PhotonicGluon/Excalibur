@@ -13,10 +13,11 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
-import { listdir, moveItem } from "@lib/files/api";
 import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
+
+import { listdir, moveItem } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryListRaw from "@components/explorer/DirectoryListRaw";
@@ -88,18 +89,18 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     async function handleMove() {
         if (destFolder === explorerContext.path) {
-            explorerContext.presentSnackbar("Item was already at this location", "warning");
+            await explorerContext.presentSnackbar("Item was already at this location", "warning");
             props.onDidDismiss();
             return;
         }
 
         const moveResponse = await moveItem(auth, props.path, destFolder);
         if (!moveResponse.success) {
-            explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
+            await explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
             return;
         }
 
-        explorerContext.presentSnackbar("Item moved", "success");
+        await explorerContext.presentSnackbar("Item moved", "success");
         props.onDidDismiss();
     }
 
@@ -132,6 +133,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
                     path={destFolder}
                     directory={destFolderContents}
                     sortValues={{ sortType: SortType.NAME, sortAsc: true }}
+                    viewLayout="list"
                     onParentClickOverride={onClickFolder}
                     directoryItemPropsOverride={(item) => ({
                         disabled: item.type === "file",

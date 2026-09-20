@@ -26,11 +26,11 @@ const DirectoryBreadcrumbs: React.FC<ContainerProps> = (props) => {
                 return (
                     <IonBreadcrumb key={idx} routerLink={routerLink} routerDirection="back">
                         {idx === 0 ? (
-                            <IonIcon slot="" icon={home} />
+                            <IonIcon className="size-4" slot="" icon={home} />
                         ) : (
                             <span className="max-w-64 truncate">{displayFragment}</span>
                         )}
-                        <IonIcon slot="separator" icon={chevronForward} />
+                        <IonIcon className="size-4" slot="separator" icon={chevronForward} />
                     </IonBreadcrumb>
                 );
             })}

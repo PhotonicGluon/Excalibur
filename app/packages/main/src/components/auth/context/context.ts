@@ -1,8 +1,9 @@
 import { createContext, useContext } from "react";
 
-import { E2EEData } from "@lib/auth/e2ee";
 import { SubstitutionCipher } from "@lib/files/obfuscation";
 import { VaultInfo } from "@lib/users/structures";
+
+import { E2EEData } from "@api/auth/e2ee";
 
 export interface AuthInfo extends E2EEData {
     username: string;
@@ -15,10 +16,6 @@ export interface ServerInfo {
     isFixed?: boolean;
     /** Server version */
     version: string;
-    /** Maximum file size that can be uploaded, in bytes */
-    maxUploadSize: number;
-    /** Delta of time between server and client */
-    deltaTime: number;
 }
 
 export interface AuthProvider {

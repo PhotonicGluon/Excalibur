@@ -16,11 +16,11 @@ export interface ExplorerContext {
     /** Function to call when deletion is requested */
     onDelete: (path: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
-    presentAlert: (options: AlertOptions & HookOverlayOptions) => void;
+    presentAlert: (options: AlertOptions & HookOverlayOptions) => Promise<void>;
     /** Dismiss a presented alert */
-    dismissAlert: () => void;
+    dismissAlert: () => Promise<void>;
     /** Present a snackbar */
-    presentSnackbar: (message: string, colour?: Color) => void;
+    presentSnackbar: (message: string, colour?: Color) => Promise<void>;
 }
 
 export const explorerContext = createContext<ExplorerContext>(null!);

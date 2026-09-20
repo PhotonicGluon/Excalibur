@@ -69,7 +69,7 @@ export default class NoiseNK {
 
     private _encryptAndHash(k: Buffer, pt: Buffer): Buffer {
         const cipher = new GCMCipher("aes-256-gcm", k, Buffer.alloc(12));
-        const ct = Buffer.concat([cipher.update(pt), cipher.final(), cipher.getAuthTag()]);
+        const ct = Buffer.concat([cipher.update(pt), cipher.digest()]);
         this._mixHash(ct);
         return ct;
     }
@@ -81,7 +81,8 @@ export default class NoiseNK {
 
         const cipher = new GCMDecipher("aes-256-gcm", k, Buffer.alloc(12));
         cipher.setAuthTag(tag);
-        const pt = Buffer.concat([cipher.update(ciphertext), cipher.final()]);
+        const pt = Buffer.from(cipher.update(ciphertext));
+        cipher.verify();
         return pt;
     }
 
