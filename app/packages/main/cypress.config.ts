@@ -1,13 +1,11 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
-    allowCypressEnv: false,
+    keystrokeDelay: 10,
+
     e2e: {
         // Base configurations
         baseUrl: "http://localhost:5173",
-        setupNodeEvents(on, config) {
-            // implement node event listeners here
-        },
         expose: {
             serverURL: "http://127.0.0.1:8989",
         },
