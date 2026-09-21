@@ -1,6 +1,7 @@
 import {
     Attestation,
     AttestationBase,
+    DirtyItem,
     InclusionProof,
     InclusionProofStep,
     Mutation,
@@ -10,6 +11,7 @@ import {
 import { b64decode, b64encode } from "@lib/util";
 
 import { AttestationBaseWire, AttestationWire } from "./attestation";
+import { DirtyItemWire } from "./dirty";
 import { MutationWire } from "./mutate";
 import { InclusionProofStepWire, InclusionProofWire, ProofItemWire } from "./proof";
 import { VaultStateWire } from "./state";
@@ -81,6 +83,23 @@ export function attestationFromWire(wire: AttestationWire | AttestationBaseWire)
     }
 
     return base as AttestationBase;
+}
+
+/**
+ * Converts a wire format dirty item to a dirty item object.
+ *
+ * @param wire the wire format dirty item to convert
+ * @returns the dirty item object
+ */
+export function dirtyItemFromWire(wire: DirtyItemWire): DirtyItem {
+    return {
+        id: wire.id,
+        parentID: wire.parent_id,
+        name: wire.name,
+        isFolder: wire.is_folder,
+        version: wire.version,
+        needsContentMAC: wire.needs_content_mac,
+    };
 }
 
 /**
