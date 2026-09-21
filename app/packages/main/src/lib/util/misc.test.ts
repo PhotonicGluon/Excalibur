@@ -1,3 +1,4 @@
+import { chunk } from "cypress/types/lodash";
 import { expect, vi } from "vitest";
 
 import { sleep } from "./misc";
@@ -32,5 +33,13 @@ describe("sleep", () => {
         // Advancing 1 more millisecond should resolve
         await vi.advanceTimersByTimeAsync(1);
         expect(onResolve).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("chunk", () => {
+    it("should chunk an array into smaller arrays", () => {
+        const items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const chunks = chunk(items, 3);
+        expect(chunks).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]);
     });
 });
