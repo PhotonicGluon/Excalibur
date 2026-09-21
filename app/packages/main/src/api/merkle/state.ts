@@ -5,7 +5,7 @@ import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
-interface VaultStateWire {
+export interface VaultStateWire {
     root_id: string;
     merkle_status: MerkleStatus;
     current_generation: number;

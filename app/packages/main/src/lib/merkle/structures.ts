@@ -15,16 +15,6 @@ export interface VaultState {
     totalCount: number | null;
 }
 
-/** An item whose Merkle data needs to be (re)computed by the client, from `GET /merkle/dirty`. */
-export interface DirtyItem {
-    id: string;
-    parent_id: string | null;
-    name: string;
-    is_folder: boolean;
-    version: number;
-    needs_content_mac: boolean;
-}
-
 /**
  * An attestation of a user's vault state without the tree root that it attests (tree root is
  * determined by server).
@@ -45,6 +35,22 @@ export interface AttestationBase {
 /** A stored attestation, as returned by the server (includes the root ID). */
 export interface Attestation extends AttestationBase {
     rootID: string;
+}
+
+/** An item whose Merkle data needs to be (re)computed by the client. */
+export interface DirtyItem {
+    /** Unique identifier for the filesystem item */
+    id: string;
+    /** Parent directory ID, or null for the user's root folder */
+    parentID: string | null;
+    /** Item name */
+    name: string;
+    /** Whether the item is a folder */
+    isFolder: boolean;
+    /** Monotonic counter bumped on every mutation to this node */
+    version: number;
+    /** Whether the client must also submit a content MAC for this item */
+    needsContentMAC: boolean;
 }
 
 /** The subset of `FSItem` fields relevant to the client when requesting an inclusion proof. */
@@ -73,4 +79,31 @@ export interface InclusionProof {
     steps: InclusionProofStep[];
 }
 
-/** An attestation of a vault's Merkle tree state, without the root ID (submitted to the server). */
+/** A mutation to apply to a Merkle tree. */
+export interface Mutation {
+    /** Expected generation of the Merkle tree _before_ the mutation. */
+    expectedGeneration: number;
+    /**
+     * Mapping of every node that will be modified to its new hash value.
+     *
+     * This includes every ancestor of the modified nodes.
+     */
+    nodeHashes: Record<string, string>;
+    /**
+     * Mapping of every file that is missing a content MAC to its new content MAC.
+     *
+     * Only files may appear here, and only those that do not already have a content MAC stored on the
+     * server (i.e., newly uploaded files).
+     */
+    contentMACs: Record<string, string>;
+    /** New attestation for the Merkle tree. */
+    attestation: AttestationBase;
+}
+
+/** The Merkle data for a single item, submitted during a migration. */
+export interface MigrationEntry {
+    /** Keyed MAC of the subtree rooted at this item */
+    nodeHash: string;
+    /** "Keyed MAC binding the file's AEAD tags to its identity, or null for folders */
+    contentMAC: string | null;
+}

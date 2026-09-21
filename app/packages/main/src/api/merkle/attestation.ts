@@ -5,13 +5,16 @@ import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
-interface AttestationWire {
-    root_id: string;
+export interface AttestationBaseWire {
     generation: number;
     root_hash: Buffer;
     prev_root_hash: Buffer | null;
     timestamp: number;
     tag: Buffer;
+}
+
+export interface AttestationWire extends AttestationBaseWire {
+    root_id: string;
 }
 
 /**
