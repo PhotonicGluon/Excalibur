@@ -1,12 +1,14 @@
 import ExEF from "@lib/crypto/exef";
 import { Attestation, AttestationBase, MigrationEntry, VaultState } from "@lib/merkle/structures";
+import { b64encode } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
-import { AttestationBaseWire, AttestationWire } from "./attestation";
+import { AttestationWire } from "./attestation";
 import { VaultStateWire } from "./state";
+import { attestationFromWire, attestationToWire, vaultStateFromWire } from "./utils";
 
 /**
  * Begins migrating the current user's vault to a Merkle tree.
@@ -36,13 +38,7 @@ export async function beginMigration(
     const state = (await new ExEF(auth.authInfo!.key!).decryptResponse<VaultStateWire>(response))!;
     return {
         success: true,
-        state: {
-            rootID: state.root_id,
-            merkleStatus: state.merkle_status,
-            currentGeneration: state.current_generation,
-            migratedCount: state.migrated_count,
-            totalCount: state.total_count,
-        },
+        state: vaultStateFromWire(state),
     };
 }
 
@@ -72,7 +68,7 @@ export async function fillMigration(
             id,
             {
                 node_hash: entry.nodeHash,
-                content_mac: entry.contentMAC,
+                content_mac: entry.contentMAC ? b64encode(entry.contentMAC) : null,
             },
         ]),
     );
@@ -101,17 +97,8 @@ export async function fillMigration(
             return { success: false, error: "Unknown error" };
     }
 
-    const state = (await new ExEF(auth.authInfo!.key!).decryptResponse<VaultStateWire>(response))!;
-    return {
-        success: true,
-        state: {
-            rootID: state.root_id,
-            merkleStatus: state.merkle_status,
-            currentGeneration: state.current_generation,
-            migratedCount: state.migrated_count,
-            totalCount: state.total_count,
-        },
-    };
+    const state = vaultStateFromWire((await new ExEF(auth.authInfo!.key!).decryptResponse<VaultStateWire>(response))!);
+    return { success: true, state };
 }
 
 /**
@@ -129,14 +116,6 @@ export async function completeMigration(
     auth: AuthProvider,
     attestation: AttestationBase,
 ): Promise<{ success: boolean; error?: string; conflict?: boolean; attestation?: Attestation }> {
-    const attestationWire: AttestationBaseWire = {
-        generation: attestation.generation,
-        root_hash: attestation.rootHash,
-        prev_root_hash: attestation.prevRootHash,
-        timestamp: attestation.timestamp,
-        tag: attestation.tag,
-    };
-
     const response = await popFetch(`${auth.serverInfo!.apiURL}/merkle/migrate/complete`, auth.authInfo!.key!, {
         method: "POST",
         headers: {
@@ -147,7 +126,7 @@ export async function completeMigration(
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
         body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-            Buffer.from(JSON.stringify(attestationWire), "utf-8"),
+            Buffer.from(JSON.stringify(attestationToWire(attestation)), "utf-8"),
         ),
     });
     switch (response.status) {
@@ -161,16 +140,8 @@ export async function completeMigration(
             return { success: false, error: "Unknown error" };
     }
 
-    const result = (await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire>(response))!;
-    return {
-        success: true,
-        attestation: {
-            rootID: result.root_id,
-            generation: result.generation,
-            rootHash: result.root_hash,
-            prevRootHash: result.prev_root_hash,
-            timestamp: result.timestamp,
-            tag: result.tag,
-        },
-    };
+    const newAttestation = attestationFromWire(
+        (await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire>(response))!,
+    );
+    return { success: true, attestation: newAttestation };
 }

@@ -5,12 +5,14 @@ import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
+import { attestationFromWire } from "./utils";
+
 export interface AttestationBaseWire {
     generation: number;
-    root_hash: Buffer;
-    prev_root_hash: Buffer | null;
+    root_hash: string;
+    prev_root_hash: string | null;
     timestamp: number;
-    tag: Buffer;
+    tag: string;
 }
 
 export interface AttestationWire extends AttestationBaseWire {
@@ -40,19 +42,12 @@ export async function getLatestAttestation(
             return { success: false, error: "Unknown error" };
     }
 
-    const attestation = await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire | null>(response);
-    if (attestation === null) {
+    const attestationWire = await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire | null>(response);
+    if (attestationWire === null) {
         return { success: true, attestation: null };
     }
     return {
         success: true,
-        attestation: {
-            rootID: attestation.root_id,
-            generation: attestation.generation,
-            rootHash: attestation.root_hash,
-            prevRootHash: attestation.prev_root_hash,
-            timestamp: attestation.timestamp,
-            tag: attestation.tag,
-        },
+        attestation: attestationFromWire(attestationWire),
     };
 }

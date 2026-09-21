@@ -6,8 +6,9 @@ import { popFetch } from "@api/fetch";
 import { AuthProvider } from "@components/auth/context";
 
 import { AttestationBaseWire, AttestationWire } from "./attestation";
+import { attestationFromWire, mutationToWire } from "./utils";
 
-interface MutationWire {
+export interface MutationWire {
     expected_generation: number;
     node_hashes: Record<string, string>;
     content_macs: Record<string, string>;
@@ -30,19 +31,6 @@ export async function applyMutation(
     auth: AuthProvider,
     mutation: Mutation,
 ): Promise<{ success: boolean; error?: string; conflict?: boolean; attestation?: Attestation }> {
-    const mutationWire: MutationWire = {
-        expected_generation: mutation.expectedGeneration,
-        node_hashes: mutation.nodeHashes,
-        content_macs: mutation.contentMACs,
-        attestation: {
-            generation: mutation.attestation.generation,
-            root_hash: mutation.attestation.rootHash,
-            prev_root_hash: mutation.attestation.prevRootHash,
-            timestamp: mutation.attestation.timestamp,
-            tag: mutation.attestation.tag,
-        },
-    };
-
     const response = await popFetch(`${auth.serverInfo!.apiURL}/merkle/mutate`, auth.authInfo!.key!, {
         method: "PUT",
         headers: {
@@ -53,7 +41,7 @@ export async function applyMutation(
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
         body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-            Buffer.from(JSON.stringify(mutationWire), "utf-8"),
+            Buffer.from(JSON.stringify(mutationToWire(mutation)), "utf-8"),
         ),
     });
     switch (response.status) {
@@ -67,16 +55,8 @@ export async function applyMutation(
             return { success: false, error: "Unknown error" };
     }
 
-    const attestation = (await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire>(response))!;
-    return {
-        success: true,
-        attestation: {
-            rootID: attestation.root_id,
-            generation: attestation.generation,
-            rootHash: attestation.root_hash,
-            prevRootHash: attestation.prev_root_hash,
-            timestamp: attestation.timestamp,
-            tag: attestation.tag,
-        },
-    };
+    const attestation = attestationFromWire(
+        (await new ExEF(auth.authInfo!.key!).decryptResponse<AttestationWire>(response))!,
+    );
+    return { success: true, attestation };
 }

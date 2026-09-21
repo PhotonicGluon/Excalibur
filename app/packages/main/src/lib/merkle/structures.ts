@@ -1,4 +1,4 @@
-/** Status of a vault's Merkle tree, mirroring the server's `MerkleStatus` enum. */
+/** Status of a vault's Merkle tree. */
 export type MerkleStatus = "none" | "migrating" | "active";
 
 /** Contains the state of a user's vault. */
@@ -60,8 +60,8 @@ export interface ProofItem {
     rootID: string;
     name: string;
     isFolder: boolean;
-    contentMAC: string | null;
-    nodeHash: string | null;
+    contentMAC: Buffer | null;
+    nodeHash: Buffer | null;
     version: number;
 }
 
@@ -69,8 +69,8 @@ export interface ProofItem {
 export interface InclusionProofStep {
     /** Unique identifier for the filesystem item */
     id: string;
-    /** List of (child_id, child_node_hash) pairs */
-    children: [string, string | null][];
+    /** List of (childID, childNodeHash) pairs */
+    children: [string, Buffer | null][];
 }
 
 /** An inclusion proof for a single item. */
@@ -88,14 +88,14 @@ export interface Mutation {
      *
      * This includes every ancestor of the modified nodes.
      */
-    nodeHashes: Record<string, string>;
+    nodeHashes: Record<string, Buffer>;
     /**
      * Mapping of every file that is missing a content MAC to its new content MAC.
      *
      * Only files may appear here, and only those that do not already have a content MAC stored on the
      * server (i.e., newly uploaded files).
      */
-    contentMACs: Record<string, string>;
+    contentMACs: Record<string, Buffer>;
     /** New attestation for the Merkle tree. */
     attestation: AttestationBase;
 }
@@ -105,5 +105,5 @@ export interface MigrationEntry {
     /** Keyed MAC of the subtree rooted at this item */
     nodeHash: string;
     /** "Keyed MAC binding the file's AEAD tags to its identity, or null for folders */
-    contentMAC: string | null;
+    contentMAC: Buffer | null;
 }

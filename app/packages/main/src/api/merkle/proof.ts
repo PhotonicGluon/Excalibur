@@ -1,12 +1,14 @@
 import ExEF from "@lib/crypto/exef";
-import { InclusionProof, InclusionProofStep } from "@lib/merkle/structures";
+import { InclusionProof } from "@lib/merkle/structures";
 import { IS_DEV, b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
 
-interface ProofItemWire {
+import { inclusionProofFromWire } from "./utils";
+
+export interface ProofItemWire {
     id: string;
     parent_id: string | null;
     root_id: string;
@@ -17,9 +19,14 @@ interface ProofItemWire {
     version: number;
 }
 
-interface InclusionProofWire {
+export interface InclusionProofStepWire {
+    id: string;
+    children: [string, string | null][];
+}
+
+export interface InclusionProofWire {
     item: ProofItemWire;
-    steps: InclusionProofStep[];
+    steps: InclusionProofStepWire[];
 }
 
 /**
@@ -58,21 +65,8 @@ export async function getInclusionProof(
             return { success: false, error: "Unknown error" };
     }
 
-    const proof = (await new ExEF(auth.authInfo!.key!).decryptResponse<InclusionProofWire>(response))!;
-    return {
-        success: true,
-        proof: {
-            item: {
-                id: proof.item.id,
-                parentID: proof.item.parent_id,
-                rootID: proof.item.root_id,
-                name: proof.item.name,
-                isFolder: proof.item.is_folder,
-                contentMAC: proof.item.content_mac,
-                nodeHash: proof.item.node_hash,
-                version: proof.item.version,
-            },
-            steps: proof.steps,
-        },
-    };
+    const proof = inclusionProofFromWire(
+        (await new ExEF(auth.authInfo!.key!).decryptResponse<InclusionProofWire>(response))!,
+    );
+    return { success: true, proof };
 }
