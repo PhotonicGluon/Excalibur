@@ -67,7 +67,7 @@ export async function fillMigration(
         Object.entries(entries).map(([id, entry]) => [
             id,
             {
-                node_hash: entry.nodeHash,
+                node_hash: b64encode(entry.nodeHash),
                 content_mac: entry.contentMAC ? b64encode(entry.contentMAC) : null,
             },
         ]),

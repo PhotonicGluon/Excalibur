@@ -103,7 +103,7 @@ export interface Mutation {
 /** The Merkle data for a single item, submitted during a migration. */
 export interface MigrationEntry {
     /** Keyed MAC of the subtree rooted at this item */
-    nodeHash: string;
+    nodeHash: Buffer;
     /** "Keyed MAC binding the file's AEAD tags to its identity, or null for folders */
     contentMAC: Buffer | null;
 }
