@@ -1,14 +1,13 @@
 import { chunk } from "cypress/types/lodash";
 
 import { FileLike } from "@lib/files/structures";
-import { b64decode, getParent } from "@lib/util";
+import { getParent } from "@lib/util";
 
 import { getContentMACInputs } from "@api/merkle";
 
 import { AuthProvider } from "@components/auth/context";
 
 import { ChildNode, computeFolderNodeHash, computeLeafNodeHash } from "./hash";
-import { MerkleKeys } from "./keys";
 import { computeContentMAC } from "./mac";
 
 const CONTENT_MAC_INPUTS_CHUNK_SIZE = 200;
@@ -29,7 +28,6 @@ export interface ComputedTree {
  * purposes.
  *
  * @param auth the current authentication provider
- * @param keys the Merkle keys to use
  * @param rootID ID of the tree's root item
  * @param items every descendant of the tree root
  * @param rootName name of the tree root. For the vault root, provide an empty string
@@ -38,7 +36,6 @@ export interface ComputedTree {
  */
 export async function computeTree(
     auth: AuthProvider,
-    keys: MerkleKeys,
     rootID: string,
     items: FileLike[],
     rootName: string = "",
@@ -58,7 +55,7 @@ export async function computeTree(
         }
         for (const [id, input] of Object.entries(result.inputs!)) {
             if (input !== null) {
-                contentMACInputs.set(id, b64decode(input));
+                contentMACInputs.set(id, input);
             }
         }
     }
@@ -70,7 +67,7 @@ export async function computeTree(
         if (!input) {
             throw new Error(`Missing content MAC input for file '${file.id}' ('${file.fullpath}')`);
         }
-        contentMACs.set(file.id, computeContentMAC(keys, input));
+        contentMACs.set(file.id, computeContentMAC(auth.vaultInfo!.merkleKeys, input));
     }
 
     // Group items by their parent's fullpath
@@ -94,9 +91,9 @@ export async function computeTree(
                 id: child.id,
                 nodeHash: computeNodeHash(child.id, child.name, child.fullpath, child.type === "directory"),
             }));
-            hash = computeFolderNodeHash(keys, id, name, childNodes);
+            hash = computeFolderNodeHash(auth.vaultInfo!.merkleKeys, id, name, childNodes);
         } else {
-            hash = computeLeafNodeHash(keys, id, name, contentMACs.get(id)!);
+            hash = computeLeafNodeHash(auth.vaultInfo!.merkleKeys, id, name, contentMACs.get(id)!);
         }
 
         nodeHashes.set(id, hash);
