@@ -28,7 +28,7 @@ function useProvideMerkle(): MerkleProvider {
     const loggedIn = auth.vaultInfo?.key && auth.getToken();
 
     const [busy, setBusy] = useState(false);
-    const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+    const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null); // In ms
 
     const [rawStatus, setRawStatus] = useState<MerkleStatus | null>(null);
     const status = loggedIn ? rawStatus : null; // Collapses to `null` if user isn't logged in
@@ -97,7 +97,7 @@ function useProvideMerkle(): MerkleProvider {
     return {
         status,
         busy,
-        lastSyncedAt,
+        lastSyncedAt: lastSyncedAt ? lastSyncedAt / 1e3 : null,
         refreshStatus,
         triggerSync,
         migrate,

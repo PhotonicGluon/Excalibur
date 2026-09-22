@@ -7,7 +7,7 @@ export interface MerkleProvider {
     status: MerkleStatus | null;
     /** Whether a Merkle operation (i.e., a sync or migration) is in progress */
     busy: boolean;
-    /** When the vault was last successfully synced, or null if never (this session) */
+    /** When the vault was last successfully synced in seconds, or null if never (this session) */
     lastSyncedAt: number | null;
     /** Refreshes the vault's Merkle status from the server */
     refreshStatus: () => Promise<void>;

@@ -22,24 +22,31 @@ import { arrowBack, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/auth/bip39";
 import { toggleObfuscationForAllFiles } from "@lib/files/obfuscation";
+import { verifyVaultIntegrity } from "@lib/merkle";
 import { UserVaultInfo } from "@lib/users/structures";
+import { timestampToDateString } from "@lib/util/date";
 
 import { editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
+import { useMerkle } from "@components/merkle/context";
 import SettingsItem from "@components/settings/SettingsItem";
 
 const DataPreferences: React.FC = () => {
     // Contexts
     const router = useIonRouter();
     const auth = useAuth();
+    const merkle = useMerkle();
 
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
 
     // States
     const [toggledObfuscation, setToggledObfuscation] = useState(false);
+
+    const [checkingIntegrity, setCheckingIntegrity] = useState(false);
+    const [lastChecked, setLastChecked] = useState<number | null>(merkle.lastSyncedAt); // In seconds
 
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Processing...");
@@ -107,6 +114,39 @@ const DataPreferences: React.FC = () => {
         setIsLoading(false);
     }
 
+    /**
+     * Checks the integrity of the entire vault against its trusted, self-signed Merkle root.
+     */
+    async function checkDataIntegrity() {
+        setCheckingIntegrity(true);
+        try {
+            const result = await verifyVaultIntegrity(auth);
+            if (!result.success) {
+                presentAlert({
+                    header: "Could Not Check Integrity",
+                    message: result.error,
+                    buttons: ["OK"],
+                });
+                return;
+            }
+
+            setLastChecked(Date.now() / 1e3);
+            if (result.verified) {
+                presentToast({ message: "Vault verified; no tampering detected", duration: 2500, color: "success" });
+            } else {
+                presentAlert({
+                    header: "Integrity Check Failed",
+                    message:
+                        result.details ??
+                        "The vault's data does not match its trusted record. It may have been tampered with while stored on the server.",
+                    buttons: ["OK"],
+                });
+            }
+        } finally {
+            setCheckingIntegrity(false);
+        }
+    }
+
     // Render
     const localVaultKeyMnemonic = auth.vaultInfo ? toMnemonic(auth.vaultInfo!.key) : undefined;
     return (
@@ -171,6 +211,37 @@ const DataPreferences: React.FC = () => {
                             />
                         }
                     />
+                    <hr />
+                </IonGrid>
+
+                {/* Data integrity */}
+                <div className="ion-padding-horizontal">
+                    <h2 className="m-0">Data Integrity</h2>
+                    <IonText className="text-justify">
+                        <p className="text-sm leading-none md:text-base">
+                            Verify that your vault's data hasn't been tampered with while stored on the server.
+                        </p>
+                    </IonText>
+                    <div className="ion-margin-top flex items-center gap-3">
+                        <IonButton
+                            disabled={merkle.status !== "active" || checkingIntegrity}
+                            onClick={checkDataIntegrity}
+                        >
+                            {checkingIntegrity ? "Checking..." : "Check Now"}
+                        </IonButton>
+                        {merkle.status !== "active" && (
+                            <IonText color="medium">
+                                <p className="m-0 text-sm">Complete the vault security upgrade first.</p>
+                            </IonText>
+                        )}
+                        {merkle.status === "active" && lastChecked && (
+                            <IonText color="medium">
+                                <p className="m-0 text-sm">Last checked {timestampToDateString(lastChecked)}</p>
+                            </IonText>
+                        )}
+                    </div>
+                </div>
+                <IonGrid className="ion-padding-horizontal">
                     <hr />
                 </IonGrid>
 

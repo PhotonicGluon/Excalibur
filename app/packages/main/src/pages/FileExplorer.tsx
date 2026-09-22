@@ -56,6 +56,7 @@ import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
 import JobsModal from "@components/explorer/jobs/JobsModal";
 import { ProvideJobs } from "@components/explorer/jobs/context";
+import MerkleMigrationBanner from "@components/merkle/MerkleMigrationBanner";
 
 const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolean }> = (props) => {
     // Hooks
@@ -431,6 +432,9 @@ const FileExplorer: React.FC = () => {
                                 path={moveOrigPath}
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
+
+                            {/* Merkle tree migration prompt */}
+                            <MerkleMigrationBanner />
 
                             {/* Top bar */}
                             <div
