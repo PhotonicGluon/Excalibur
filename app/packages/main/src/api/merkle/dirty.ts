@@ -1,5 +1,5 @@
 import ExEF from "@lib/crypto/exef";
-import { DirtyItem } from "@lib/merkle/structures";
+import { DirtyItem } from "@lib/merkle";
 
 import { popFetch } from "@api/fetch";
 

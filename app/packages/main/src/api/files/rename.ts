@@ -1,4 +1,5 @@
 import ExEF from "@lib/crypto/exef";
+import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
@@ -57,5 +58,7 @@ export async function renameItem(
             return { success: false, error: "Unknown error" };
     }
 
+    // Trigger a sync and report success
+    scheduleMerkleSync(auth);
     return { success: true };
 }

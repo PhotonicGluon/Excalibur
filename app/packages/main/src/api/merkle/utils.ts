@@ -7,7 +7,7 @@ import {
     Mutation,
     ProofItem,
     VaultState,
-} from "@lib/merkle/structures";
+} from "@lib/merkle";
 import { b64decode, b64encode } from "@lib/util";
 
 import { AttestationBaseWire, AttestationWire } from "./attestation";

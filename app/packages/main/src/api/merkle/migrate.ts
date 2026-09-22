@@ -1,5 +1,5 @@
 import ExEF from "@lib/crypto/exef";
-import { Attestation, AttestationBase, MigrationEntry, VaultState } from "@lib/merkle/structures";
+import { Attestation, AttestationBase, MigrationEntry, VaultState } from "@lib/merkle";
 import { b64encode } from "@lib/util";
 
 import { popFetch } from "@api/fetch";

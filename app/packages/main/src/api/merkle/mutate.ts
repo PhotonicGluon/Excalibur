@@ -1,5 +1,5 @@
 import ExEF from "@lib/crypto/exef";
-import { Attestation, Mutation } from "@lib/merkle/structures";
+import { Attestation, Mutation } from "@lib/merkle";
 
 import { popFetch } from "@api/fetch";
 

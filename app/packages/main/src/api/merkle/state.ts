@@ -1,5 +1,5 @@
 import ExEF from "@lib/crypto/exef";
-import { MerkleStatus, VaultState } from "@lib/merkle/structures";
+import { MerkleStatus, VaultState } from "@lib/merkle";
 
 import { popFetch } from "@api/fetch";
 
