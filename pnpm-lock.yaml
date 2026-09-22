@@ -96,13 +96,13 @@ importers:
     devDependencies:
       '@electron-toolkit/preload':
         specifier: ^3.0.2
-        version: 3.0.2(electron@41.10.3(supports-color@8.1.1))
+        version: 3.0.2(electron@44.4.1(supports-color@8.1.1))
       '@electron-toolkit/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0(@types/node@26.1.2)
       '@electron-toolkit/utils':
         specifier: ^4.0.0
-        version: 4.0.0(electron@41.10.3(supports-color@8.1.1))
+        version: 4.0.0(electron@44.4.1(supports-color@8.1.1))
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
@@ -113,8 +113,8 @@ importers:
         specifier: ^26.15.3
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)(supports-color@8.1.1)
       electron:
-        specifier: ^41.10.3
-        version: 41.10.3(supports-color@8.1.1)
+        specifier: ^44.4.1
+        version: 44.4.1(supports-color@8.1.1)
       electron-builder:
         specifier: ^26.15.3
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)(supports-color@8.1.1)
@@ -2424,8 +2424,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@41.10.3:
-    resolution: {integrity: sha512-MJuSODPw8siv/I8JjhctW/cS/XNldwI4gLRyyWZx6QkoZJUDgbEvitp7IVOnGrHENTQb6Udo+zMpKhFnhlIhdg==}
+  electron@44.4.1:
+    resolution: {integrity: sha512-gXJarQ2Utfn8G6bp/IqLXvckOSCtrxPWjFqQaqm02Gf4zYn1aP+RN9PKimoLH/DMqjKLfBrNC4C4CviPv0cXnQ==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -2816,7 +2816,7 @@ packages:
   git-raw-commits@2.0.11:
     resolution: {integrity: sha512-VnctFhw+xfj8Va1xtfEqCUD2XDrbAPSJx+hSrE5K7fGdjZruW7XV+QOrN7LF/RJyvspRiD2I0asWsxFp0ya26A==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -2826,7 +2826,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -5529,17 +5529,17 @@ snapshots:
 
   '@electron-internal/extract-zip@1.0.5': {}
 
-  '@electron-toolkit/preload@3.0.2(electron@41.10.3(supports-color@8.1.1))':
+  '@electron-toolkit/preload@3.0.2(electron@44.4.1(supports-color@8.1.1))':
     dependencies:
-      electron: 41.10.3(supports-color@8.1.1)
+      electron: 44.4.1(supports-color@8.1.1)
 
   '@electron-toolkit/tsconfig@2.0.0(@types/node@26.1.2)':
     dependencies:
       '@types/node': 26.1.2
 
-  '@electron-toolkit/utils@4.0.0(electron@41.10.3(supports-color@8.1.1))':
+  '@electron-toolkit/utils@4.0.0(electron@44.4.1(supports-color@8.1.1))':
     dependencies:
-      electron: 41.10.3(supports-color@8.1.1)
+      electron: 44.4.1(supports-color@8.1.1)
 
   '@electron/asar@3.4.1':
     dependencies:
@@ -7621,7 +7621,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@41.10.3(supports-color@8.1.1):
+  electron@44.4.1(supports-color@8.1.1):
     dependencies:
       '@electron-internal/extract-zip': 1.0.5
       '@electron/get': 5.1.0(supports-color@8.1.1)
