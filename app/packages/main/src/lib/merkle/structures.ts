@@ -81,7 +81,7 @@ export interface InclusionProof {
 
 /** A mutation to apply to a Merkle tree. */
 export interface Mutation {
-    /** Expected generation of the Merkle tree _before_ the mutation. */
+    /** Expected generation of the Merkle tree *before* the mutation. */
     expectedGeneration: number;
     /**
      * Mapping of every node that will be modified to its new hash value.

@@ -13,7 +13,7 @@ class Mutation(BaseModel):
     """
 
     expected_generation: int
-    "Expected generation of the Merkle tree _before_ the mutation."
+    "Expected generation of the Merkle tree *before* the mutation."
     node_hashes: dict[UUID, Base64Bytes]
     """
     Mapping of every node that will be modified to its new hash value.
