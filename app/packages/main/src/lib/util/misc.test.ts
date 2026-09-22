@@ -1,7 +1,6 @@
-import { chunk } from "cypress/types/lodash";
 import { expect, vi } from "vitest";
 
-import { sleep } from "./misc";
+import { chunk, sleep } from "./misc";
 
 describe("sleep", () => {
     beforeEach(() => {
