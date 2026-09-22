@@ -1,7 +1,5 @@
-import { chunk } from "cypress/types/lodash";
-
 import { FileLike } from "@lib/files/structures";
-import { getParent } from "@lib/util";
+import { chunk, getParent } from "@lib/util";
 
 import { getContentMACInputs } from "@api/merkle";
 

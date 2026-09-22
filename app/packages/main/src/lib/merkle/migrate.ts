@@ -1,11 +1,11 @@
-import { buildAttestation } from "@lib/merkle/attestation";
-import { MigrationEntry, VaultState } from "@lib/merkle/structures";
-import { computeTree } from "@lib/merkle/tree";
-
 import { getAllItems } from "@api/files";
 import { beginMigration, completeMigration, fillMigration, getDirtyItems, getVaultState } from "@api/merkle";
 
 import { AuthProvider } from "@components/auth/context";
+
+import { buildAttestation } from "./attestation";
+import { MigrationEntry, VaultState } from "./structures";
+import { computeTree } from "./tree";
 
 const FILL_PAGE_SIZE = 200;
 /**
