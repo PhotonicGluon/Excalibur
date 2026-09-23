@@ -71,7 +71,7 @@ export async function computeTree(
     // Group items by their parent's fullpath
     const childrenByParentPath = new Map<string, FileLike[]>();
     for (const item of items) {
-        const parentPath = getParent(item.fullpath); // TODO: Check this
+        const parentPath = getParent(item.fullpath);
         if (!childrenByParentPath.has(parentPath)) {
             childrenByParentPath.set(parentPath, []);
         }
