@@ -46,11 +46,11 @@ describe("<MerkleMigrationBanner />", () => {
         cy.get("ion-button").contains("Start Now").should("exist");
     });
 
-    it('should show progress bar if status is "migrating"', () => {
+    it('should alert that migration was interrupted if status is "migrating"', () => {
         renderComponent("migrating");
 
         cy.get("ion-card").should("exist");
-        cy.get("ion-progress-bar").should("exist");
+        cy.get("ion-card").contains("interrupted").should("exist");
     });
 
     it('should not appear if status is "active"', () => {

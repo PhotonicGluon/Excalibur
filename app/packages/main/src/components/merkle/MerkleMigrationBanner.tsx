@@ -97,7 +97,7 @@ const MerkleMigrationBanner: React.FC = () => {
                         <IonButton size="small" color={buttonColour} fill="clear" onClick={() => setIsDismissed(true)}>
                             Later
                         </IonButton>
-                        <IonButton size="small" color={buttonColour} onClick={() => handleStart}>
+                        <IonButton size="small" color={buttonColour} onClick={handleStart}>
                             {beginButtonText}
                         </IonButton>
                     </>
