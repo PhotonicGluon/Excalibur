@@ -84,16 +84,19 @@ async function runFillPasses(
  * item that predates it.
  *
  * @param auth the current authentication provider
+ * @param onPhaseChange optional callback invoked when the migration phase changes
  * @param onProgress optional callback invoked after every fill pass with the current progress
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function migrateVaultToMerkle(
     auth: AuthProvider,
+    onPhaseChange?: (phase: string) => void,
     onProgress?: (progress: { migratedCount: number; totalCount: number }) => void,
 ): Promise<{ success: boolean; error?: string }> {
     for (let attempt = 0; attempt < MAX_MIGRATION_RETRIES; attempt++) {
         // Get current vault state
+        onPhaseChange?.("Getting current vault state...");
         const stateResult = await getVaultState(auth);
         if (!stateResult.success) {
             return { success: false, error: stateResult.error };
@@ -105,6 +108,7 @@ export async function migrateVaultToMerkle(
         }
 
         // Start the migration, if it wasn't migrating already
+        onPhaseChange?.("Starting migration...");
         if (state.merkleStatus === "none") {
             const beginResult = await beginMigration(auth);
             if (!beginResult.success) {
@@ -115,17 +119,21 @@ export async function migrateVaultToMerkle(
         onProgress?.({ migratedCount: state.migratedCount, totalCount: state.totalCount ?? 0 });
 
         // Get node hashes and content MACs for the entire tree
+        onPhaseChange?.("Getting all items...");
         const itemsResult = await getAllItems(auth);
         if (!itemsResult.success) {
             return { success: false, error: itemsResult.error };
         }
-        const { nodeHashes, contentMACs } = await computeTree(auth, state.rootID, itemsResult.items!); // TODO: Make this have a progress too
+
+        onPhaseChange?.("Computing tree...");
+        const { nodeHashes, contentMACs } = await computeTree(auth, state.rootID, itemsResult.items!);
         const rootHash = nodeHashes.get(state.rootID);
         if (!rootHash) {
             return { success: false, error: "Could not compute the vault root's hash" };
         }
 
         // Run fill passes
+        onPhaseChange?.("Running fill passes...");
         const fillResult = await runFillPasses(auth, state, nodeHashes, contentMACs, onProgress);
         if (!fillResult.success) {
             // Just try again
@@ -134,6 +142,7 @@ export async function migrateVaultToMerkle(
         state = fillResult.state!;
 
         // Build the attestation and complete the migration
+        onPhaseChange?.("Completing migration...");
         const attestation = buildAttestation(
             auth.vaultInfo!.merkleKeys,
             state.rootID,

@@ -22,11 +22,13 @@ export interface MerkleProvider {
     /**
      * Migrates the vault to a Merkle tree, reporting progress as it goes.
      *
+     * @param onPhaseChange an optional callback to report the current phase of the migration
      * @param onProgress an optional callback to report progress as the migration proceeds
      * @returns a promise that resolves to an object with a success flag and an optional error
      *      message
      */
     migrate: (
+        onPhaseChange?: (phase: string) => void,
         onProgress?: (migratedCount: number, totalCount: number) => void,
     ) => Promise<{ success: boolean; error?: string }>;
 }

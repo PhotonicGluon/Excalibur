@@ -55,13 +55,14 @@ function useProvideMerkle(): MerkleProvider {
     }
 
     async function migrate(
+        onPhaseChange?: (phase: string) => void,
         onProgress?: (migratedCount: number, totalCount: number) => void,
     ): Promise<{ success: boolean; error?: string }> {
         setBusy(true);
         setRawStatus("migrating");
 
         try {
-            const result = await migrateVaultToMerkle(auth, (progress) =>
+            const result = await migrateVaultToMerkle(auth, onPhaseChange, (progress) =>
                 onProgress?.(progress.migratedCount, progress.totalCount),
             );
             if (result.success) {

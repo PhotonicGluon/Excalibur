@@ -12,6 +12,7 @@ const MerkleMigrationBanner: React.FC = () => {
 
     // States
     const [isDismissed, setIsDismissed] = useState(false);
+    const [migrationPhase, setMigrationPhase] = useState<string | null>(null);
     const [progress, setProgress] = useState<{ migrated: number; total: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -25,9 +26,14 @@ const MerkleMigrationBanner: React.FC = () => {
         setProgress({ migrated: 0, total: 0 });
         setError(null);
 
-        const result = await merkle.migrate((migratedCount, totalCount) => {
-            setProgress({ migrated: migratedCount, total: totalCount });
-        });
+        const result = await merkle.migrate(
+            (phase) => {
+                setMigrationPhase(phase);
+            },
+            (migratedCount, totalCount) => {
+                setProgress({ migrated: migratedCount, total: totalCount });
+            },
+        );
         if (!result.success) {
             setError(result.error ?? "Migration failed");
         }
@@ -70,9 +76,7 @@ const MerkleMigrationBanner: React.FC = () => {
                     {isMigrating && isMigrationUnderway && (
                         <>
                             <IonText color="dark">
-                                <p className="m-0">
-                                    Processed {progress.migrated} of {progress.total} items.
-                                </p>
+                                <p className="m-0">{migrationPhase}</p>
                             </IonText>
                             <IonProgressBar type="determinate" value={progress.migrated / progress.total} />
                         </>
