@@ -1,6 +1,7 @@
+import { IS_DEV } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
 import { InclusionProof } from "@lib/merkle";
-import { IS_DEV, b64encodeURLSafe } from "@lib/util";
+import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
 

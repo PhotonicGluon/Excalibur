@@ -1,6 +1,6 @@
-import { IS_DEV } from "@lib/util";
-
+import { IS_DEV } from "@lib/consts";
 import { sha256 } from "@lib/crypto/hashing";
+
 import { WORDS, WORD_MAP, WORD_TRIE } from "./words";
 
 export type BIP39EntropyLength = 16 | 20 | 24 | 28 | 32;

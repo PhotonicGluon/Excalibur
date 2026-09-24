@@ -39,6 +39,7 @@ import {
     searchOutline,
 } from "ionicons/icons";
 
+import { TOAST_DURATION } from "@lib/consts";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
 
 import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@api/files";
@@ -125,7 +126,7 @@ const FileExplorer: React.FC = () => {
             await dismissToast().catch(() => {}); // Safely handle cases where no toast is active
             presentToast({
                 message: message,
-                duration: 2000,
+                duration: TOAST_DURATION,
                 position: "bottom",
                 positionAnchor: "fab-button",
                 color: colour,

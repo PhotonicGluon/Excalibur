@@ -14,10 +14,10 @@ import {
 } from "@ionic/react";
 import { settings } from "ionicons/icons";
 
+import { IS_DEV } from "@lib/consts";
 import { useEffectOnce } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 import { validateURL } from "@lib/url";
-import { IS_DEV } from "@lib/util";
 
 import { APICheckResult, checkAPIUrl } from "@api/api-checks";
 import { timedFetch } from "@api/fetch";

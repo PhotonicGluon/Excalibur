@@ -21,9 +21,9 @@ import "@ionic/react/css/text-transformation.css";
 import packageInfo from "@root/package.json";
 
 import { performUpdateCheck } from "@lib/check-update";
+import { IS_DEV } from "@lib/consts";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { IS_DEV } from "@lib/util";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";

@@ -21,6 +21,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { TOAST_DURATION } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
 import { KeyGenAlgorithm, generateAUK, generateVaultKeys } from "@lib/crypto/keygen";
 
@@ -75,7 +76,7 @@ const AccountPreferences: React.FC = () => {
             console.error("Password is likely incorrect, causing", e);
             presentToast({
                 message: "Password incorrect",
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "danger",
             });
             setIsLoading(false);
@@ -101,7 +102,7 @@ const AccountPreferences: React.FC = () => {
         if (JSON.stringify(newPref) === JSON.stringify(oldPref)) {
             presentToast({
                 message: "No changes",
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "warning",
             });
             setIsLoading(false);
@@ -140,7 +141,7 @@ const AccountPreferences: React.FC = () => {
             console.error(errorMsg);
             presentToast({
                 message: errorMsg,
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "danger",
             });
             setIsLoading(false);
@@ -160,7 +161,7 @@ const AccountPreferences: React.FC = () => {
                 console.error(errorMsg);
                 presentToast({
                     message: errorMsg,
-                    duration: 2000,
+                    duration: TOAST_DURATION,
                     color: "danger",
                 });
                 setIsLoading(false);
@@ -183,7 +184,7 @@ const AccountPreferences: React.FC = () => {
 
         presentToast({
             message: "Account updated successfully",
-            duration: 2000,
+            duration: TOAST_DURATION,
             color: "success",
         });
         setIsLoading(false);

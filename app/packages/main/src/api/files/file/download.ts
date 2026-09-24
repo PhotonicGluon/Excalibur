@@ -1,5 +1,6 @@
+import { IS_DEV } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
-import { IS_DEV, b64encodeURLSafe } from "@lib/util";
+import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
 

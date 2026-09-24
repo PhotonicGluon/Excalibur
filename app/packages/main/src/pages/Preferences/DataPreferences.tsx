@@ -21,6 +21,7 @@ import {
 import { arrowBack, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/auth/bip39";
+import { TOAST_DURATION } from "@lib/consts";
 import { toggleObfuscationForAllFiles } from "@lib/files/obfuscation";
 import { verifyVaultIntegrity } from "@lib/merkle";
 import { UserVaultInfo } from "@lib/users/structures";
@@ -68,7 +69,7 @@ const DataPreferences: React.FC = () => {
             console.error(error);
             presentToast({
                 message: `An error occurred: ${error}`,
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "danger",
             });
             setIsLoading(false);
@@ -108,7 +109,7 @@ const DataPreferences: React.FC = () => {
         console.log(`Using obfuscation: ${newObfuscation}`);
         presentToast({
             message: `Obfuscation successfully ${newObfuscation ? "enabled" : "disabled"}`,
-            duration: 2000,
+            duration: TOAST_DURATION,
             color: "success",
         });
         setIsLoading(false);

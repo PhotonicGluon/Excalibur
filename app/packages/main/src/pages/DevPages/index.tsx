@@ -1,7 +1,7 @@
 import React from "react";
 import { Redirect, Route } from "react-router";
 
-import { IS_DEV } from "@lib/util";
+import { IS_DEV } from "@lib/consts";
 
 import CryptoBenchPage from "./CryptoBenchPage";
 import ExEFPage from "./ExEFPage";
