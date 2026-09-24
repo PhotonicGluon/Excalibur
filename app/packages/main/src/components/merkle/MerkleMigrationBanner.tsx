@@ -15,13 +15,15 @@ const MerkleMigrationBanner: React.FC = () => {
     const [progress, setProgress] = useState<{ migrated: number; total: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const isMigrationUnderway = progress && progress.total > 0;
+
     // Functions
     /**
      * Starts the Merkle tree migration process.
      */
     async function handleStart() {
-        setError(null);
         setProgress({ migrated: 0, total: 0 });
+        setError(null);
 
         const result = await merkle.migrate((migratedCount, totalCount) => {
             setProgress({ migrated: migratedCount, total: totalCount });
@@ -36,33 +38,53 @@ const MerkleMigrationBanner: React.FC = () => {
         // Merkle tree already active (or cannot be determined), so hide it
         return null;
     }
-    if (isDismissed && merkle.status === "none") {
-        // User dismissed banner and tree is not migrated, so hide it
+    if (isDismissed) {
+        // User dismissed banner, so hide it
         return null;
     }
 
-    return (
-        <IonCard className="ion-margin" color={error ? "danger" : undefined}>
-            <IonCardContent className="flex items-center gap-3">
-                <IonIcon className="size-8" color="dark" icon={error ? alertCircleOutline : shieldCheckmarkOutline} />
+    let cardColour: string | undefined = undefined;
+    let iconColour = "dark";
+    let buttonColour = "primary";
+    let beginButtonText = "Start Now";
+    if (error) {
+        cardColour = "danger";
+        buttonColour = "dark";
+        beginButtonText = "Retry";
+    } else if (isMigrating && !isMigrationUnderway) {
+        cardColour = "warning";
+        iconColour = "light";
+        buttonColour = "light";
+        beginButtonText = "Resume";
+    }
 
+    return (
+        <IonCard className="ion-margin" color={cardColour}>
+            <IonCardContent className="flex items-center gap-3">
+                <IonIcon
+                    className="size-8"
+                    color={iconColour}
+                    icon={error || !isMigrationUnderway ? alertCircleOutline : shieldCheckmarkOutline}
+                />
                 <div className="flex-1">
-                    {isMigrating ? (
+                    {isMigrating && isMigrationUnderway && (
                         <>
                             <IonText color="dark">
                                 <p className="m-0">
-                                    Securing your vault
-                                    {progress && progress.total > 0
-                                        ? ` (${progress.migrated}/${progress.total})`
-                                        : "..."}
+                                    Processed {progress.migrated} of {progress.total} items.
                                 </p>
                             </IonText>
-                            <IonProgressBar
-                                type={progress && progress.total > 0 ? "determinate" : "indeterminate"}
-                                value={progress && progress.total > 0 ? progress.migrated / progress.total : undefined}
-                            />
+                            <IonProgressBar type="determinate" value={progress.migrated / progress.total} />
                         </>
-                    ) : (
+                    )}
+                    {isMigrating && !isMigrationUnderway && (
+                        <>
+                            <IonText color="light">
+                                <p className="m-0">Vault upgrade seems to have been interrupted.</p>
+                            </IonText>
+                        </>
+                    )}
+                    {!isMigrating && (
                         <IonText color="dark">
                             <p className="m-0">
                                 {error ?? "Your vault can be upgraded to support data integrity verification."}
@@ -70,13 +92,13 @@ const MerkleMigrationBanner: React.FC = () => {
                         </IonText>
                     )}
                 </div>
-                {!isMigrating && (
+                {(!isMigrating || !isMigrationUnderway) && (
                     <>
-                        <IonButton size="small" fill="clear" onClick={() => setIsDismissed(true)}>
+                        <IonButton size="small" color={buttonColour} fill="clear" onClick={() => setIsDismissed(true)}>
                             Later
                         </IonButton>
-                        <IonButton size="small" onClick={handleStart}>
-                            {error ? "Retry" : "Start Now"}
+                        <IonButton size="small" color={buttonColour} onClick={() => handleStart}>
+                            {beginButtonText}
                         </IonButton>
                     </>
                 )}
