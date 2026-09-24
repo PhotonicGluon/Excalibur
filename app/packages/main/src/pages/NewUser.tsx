@@ -20,6 +20,7 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
+import { TOAST_DURATION } from "@lib/consts";
 import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
 import { UserVaultInfo } from "@lib/users/structures";
 
@@ -179,7 +180,7 @@ const NewUser: React.FC = () => {
         setShowVaultKeyDialog(true);
         presentToast({
             message: "User created. Please save the vault key in a secure location.",
-            duration: 3000,
+            duration: TOAST_DURATION,
             color: "success",
         });
     }
