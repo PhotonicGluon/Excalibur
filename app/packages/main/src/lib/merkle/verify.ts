@@ -1,6 +1,4 @@
-import { FileLike } from "@lib/files/structures";
-
-import { getAllItems } from "@api/files";
+import { getAllItems, getSubtree } from "@api/files";
 import { getContentMACInputs, getInclusionProof, getLatestAttestation, getVaultState } from "@api/merkle";
 
 import { AuthProvider } from "@components/auth/context";
@@ -22,16 +20,16 @@ interface VerifyResult {
 }
 
 /**
- * Helper function to get the latest data needed for verification.
+ * Helper function to get the latest trusted data needed for verification.
  *
  * @param auth the current authentication provider
  * @returns a promise which resolves to an object with a success boolean and optionally an error
- *      message, or an the latest state, attestation, and vault items
+ *      message, or the latest state and attestation
  */
-async function getLatest(auth: AuthProvider): Promise<{
+async function getLatestTrusted(auth: AuthProvider): Promise<{
     success: boolean;
     error?: string;
-    latest?: { state: VaultState; attestation: Attestation; items: FileLike[] };
+    latest?: { state: VaultState; attestation: Attestation };
 }> {
     // Get the latest vault state, ensuring that it has an active Merkle tree
     const stateResult = await getVaultState(auth);
@@ -56,14 +54,7 @@ async function getLatest(auth: AuthProvider): Promise<{
         return { success: true, error: "The vault's attestation record itself appears invalid" };
     }
 
-    // Get all items from the server
-    const itemsResult = await getAllItems(auth);
-    if (!itemsResult.success) {
-        return { success: false, error: itemsResult.error! };
-    }
-    const items = itemsResult.items!;
-
-    return { success: true, latest: { state, attestation, items } };
+    return { success: true, latest: { state, attestation } };
 }
 
 /**
@@ -85,15 +76,22 @@ export async function verifyVaultIntegrity(auth: AuthProvider): Promise<VerifyRe
         return { success: false, error: syncResult.error };
     }
 
-    // Get the latest data needed for verification
-    const latestResult = await getLatest(auth);
+    // Get the latest trusted data needed for verification
+    const latestResult = await getLatestTrusted(auth);
     if (!latestResult.success) {
         return { success: false, error: latestResult.error! };
     }
     if (!latestResult.latest) {
         return { success: false, verified: false, details: latestResult.error! };
     }
-    const { state, attestation, items } = latestResult.latest!;
+    const { state, attestation } = latestResult.latest!;
+
+    // Get all items from the server
+    const itemsResult = await getAllItems(auth);
+    if (!itemsResult.success) {
+        return { success: false, error: itemsResult.error! };
+    }
+    const items = itemsResult.items!;
 
     // Recompute Merkle tree on the client
     const { nodeHashes } = await computeTree(auth, state.rootID, items);
@@ -117,8 +115,7 @@ export async function verifyVaultIntegrity(auth: AuthProvider): Promise<VerifyRe
  * Recomputes only the target item's own hash from its current content (and, for a folder, its
  * descendants), then walks the server-supplied inclusion proof up to the root -- trusting sibling
  * hashes along the way, as is standard for a Merkle inclusion proof. This is cheaper than
- * {@link verifyVaultIntegrity} since it only needs content MAC inputs for the target's own subtree,
- * not the whole vault.
+ * {@link verifyVaultIntegrity} since the whole vault's subtree is never fetched in its entirety.
  *
  * Note that this function syncs all of the client's own pending (i.e., unsynced) edits to the
  * server first so that the new edits aren't mistaken for tampering attempts.
@@ -134,25 +131,27 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
     }
 
     // Get the latest data needed for verification
-    const latestResult = await getLatest(auth);
+    const latestResult = await getLatestTrusted(auth);
     if (!latestResult.success) {
         return { success: false, error: latestResult.error! };
     }
     if (!latestResult.latest) {
         return { success: false, verified: false, details: latestResult.error! };
     }
-    const { state, attestation, items } = latestResult.latest!;
+    const { state, attestation } = latestResult.latest!;
 
-    // Check that the item that we want to verify actually exists
-    const itemsByID = new Map(items.map((item) => [item.id, item]));
-    const target = itemsByID.get(targetID);
-    if (!target) {
-        return { success: false, error: "Item not found" };
+    // Get the inclusion proof for the target, as produced by the server
+    // (This also tells us whether the target exists, what it is called, and whether it is a folder)
+    const proofResult = await getInclusionProof(auth, targetID);
+    if (!proofResult.success) {
+        return { success: false, error: proofResult.error };
     }
+    const proof = proofResult.proof!;
+    const target = proof.item;
 
     // Recompute target's own hash, scoped to just its own subtree
     let currentNodeHash: Buffer;
-    if (target.type === "file") {
+    if (!target.isFolder) {
         // Is a file, compute its content MAC to get the node hash
         const inputsResult = await getContentMACInputs(auth, [targetID]);
         if (!inputsResult.success) {
@@ -167,30 +166,24 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
         currentNodeHash = computeLeafNodeHash(auth.vaultInfo!.merkleKeys, target.id, target.name, contentMAC);
     } else {
         // Is a folder, compute its subtree hash
-        const subtreeItems = items.filter(
-            (item) =>
-                item.id !== target.id &&
-                (item.fullpath === target.fullpath || item.fullpath.startsWith(`${target.fullpath}/`)),
-        );
-        const { nodeHashes } = await computeTree(auth, target.id, subtreeItems, target.name, target.fullpath);
+        const subtreeResult = await getSubtree(auth, targetID);
+        if (!subtreeResult.success) {
+            return { success: false, error: subtreeResult.error };
+        }
+
+        // Proof steps are the target's ancestors from its parent up to the root
+        const ancestorNames = proof.steps.slice(0, -1).map((step) => step.name);
+        const targetFullpath = [...ancestorNames.reverse(), target.name].join("/");
+
+        const { nodeHashes } = await computeTree(auth, target.id, subtreeResult.items!, target.name, targetFullpath);
         currentNodeHash = nodeHashes.get(target.id)!;
     }
-
-    // Get the inclusion proof for the target, as produced by the server
-    const proofResult = await getInclusionProof(auth, targetID);
-    if (!proofResult.success) {
-        return { success: false, error: proofResult.error };
-    }
-    const proof = proofResult.proof!;
 
     // Walk the inclusion proof up to the root
     let currentID = targetID;
     for (const step of proof.steps) {
-        // Find parent of current step
-        const parentName = step.id === state.rootID ? "" : itemsByID.get(step.id)?.name;
-        if (parentName === undefined) {
-            return { success: false, error: `Could not find ancestor '${step.id}'` };
-        }
+        // Treat the vault root as an unnamed folder for hashing purposes
+        const stepName = step.id === state.rootID ? "" : step.name;
 
         // Get children (i.e., current node and its siblings)
         const children = [];
@@ -205,7 +198,7 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
             children.push({ id: childID, nodeHash: childHash });
         }
 
-        currentNodeHash = computeFolderNodeHash(auth.vaultInfo!.merkleKeys, step.id, parentName, children);
+        currentNodeHash = computeFolderNodeHash(auth.vaultInfo!.merkleKeys, step.id, stepName, children);
         currentID = step.id;
     }
 
