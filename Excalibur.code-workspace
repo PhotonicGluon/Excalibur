@@ -56,7 +56,8 @@
         "[markdown]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
-        "errorLens.enabledDiagnosticLevels": ["error", "warning"]
+        "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+        "js/ts.tsdk.path": "App (Root)/node_modules/typescript/lib"
     },
     "extensions": {
         "recommendations": [

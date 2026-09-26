@@ -6,7 +6,7 @@ from fastapi.responses import Response
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, is_dir_empty
+from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, is_dir_empty, mark_dirty
 from excalibur_server.src.files.utils import rmitem
 from excalibur_server.src.users import get_user_from_id
 
@@ -63,6 +63,9 @@ def delete_endpoint(
             )
         if not force and not is_dir_empty(item.id):
             raise HTTPException(status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Directory is not empty")
+
+    # Mark ancestor chain as dirty before the item is deleted
+    mark_dirty(item.id)
 
     rmitem(item)
     response.status_code = status.HTTP_202_ACCEPTED if item.is_folder else status.HTTP_200_OK

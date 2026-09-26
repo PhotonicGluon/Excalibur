@@ -1,22 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { IonContent, IonPage } from "@ionic/react";
 
-import { Job } from "@components/explorer/jobs";
-import JobsList from "@components/explorer/jobs/JobsList";
-import { jobsContext } from "@components/explorer/jobs/context";
+import { sleep } from "@lib/util";
+
+import MerkleMigrationBanner from "@components/merkle/MerkleMigrationBanner";
+import { merkleContext } from "@components/merkle/context";
+
+const MAX = 10;
+const SLEEP_DELAY = 500;
 
 const TestPage: React.FC = () => {
-    // Constants
-    const jobs = new Map<string, Job>([
-        ["job_fail1", { name: "fail1", direction: "upload", description: "Failed", progress: false }],
-        ["job_succ1", { name: "succ1", direction: "upload", description: "Complete", progress: true }],
-        ["job_prog1", { name: "prog1", direction: "upload", description: "Thinking", progress: 0.25 }],
-        ["job_prog2", { name: "prog2", direction: "upload", description: "Processing", progress: 0.8 }],
-        ["job_fail2", { name: "fail2", direction: "upload", description: "Failed", progress: false }],
-        ["job_succ2", { name: "succ2", direction: "upload", description: "Complete", progress: true }],
-        ["job_pend", { name: "pend", direction: "upload", description: "Loading", progress: null }],
-    ]);
+    // States
+    const [status, setStatus] = useState<"none" | "migrating" | "active">("none");
 
     // Render
     return (
@@ -25,22 +21,36 @@ const TestPage: React.FC = () => {
                 <h1>Test Page</h1>
 
                 <hr />
-                <jobsContext.Provider
+
+                <merkleContext.Provider
                     value={{
-                        jobs: jobs,
-                        addJob: (_id: string, _job: Job) => {},
-                        getJob: (_id: string) => {
-                            return { id: _id, name: "", description: "", progress: 0, direction: "upload" };
+                        status,
+                        busy: false,
+                        lastSyncedAt: null,
+                        refreshStatus: async () => {
+                            console.log("refreshStatus()");
                         },
-                        updateJob: (_id: string, _newStatus: string, _newProgress?: number | null) => {},
-                        updateProgress: (_id: string, _newProgress: number | null) => {},
-                        cancelJob: () => {},
-                        deleteJob: (_id: string) => {},
-                        clearComplete: () => {},
+                        triggerSync: async () => {
+                            console.log("triggerSync()");
+                            return { success: true };
+                        },
+                        migrate: async (onProgress?: (migratedCount: number, totalCount: number) => void) => {
+                            console.log("migrate() called");
+                            setStatus("migrating");
+                            if (onProgress) {
+                                for (let i = 1; i <= MAX; i++) {
+                                    console.log(`migrate() onProgress(${i}, ${MAX})`);
+                                    onProgress(i, MAX);
+                                    await sleep(SLEEP_DELAY);
+                                }
+                            }
+                            setStatus("active");
+                            return { success: true };
+                        },
                     }}
                 >
-                    <JobsList />
-                </jobsContext.Provider>
+                    <MerkleMigrationBanner />
+                </merkleContext.Provider>
             </IonContent>
         </IonPage>
     );

@@ -40,6 +40,6 @@ export async function getAllItems(
             return { success: false, error: "Unknown error" };
     }
 
-    const items = await new ExEF(auth.authInfo!.key).decryptResponse<FileLike[]>(response);
-    return { success: true, items: items! };
+    const items = (await new ExEF(auth.authInfo!.key).decryptResponse<FileLike[]>(response))!;
+    return { success: true, items };
 }

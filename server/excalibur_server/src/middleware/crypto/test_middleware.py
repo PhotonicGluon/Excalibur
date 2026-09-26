@@ -1,5 +1,6 @@
 import json
 from datetime import UTC, datetime
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -24,7 +25,7 @@ def seed_cache():
 @pytest.fixture(scope="module")
 def auth_header():
     token = generate_auth_token(
-        "01234567-89ab-dcef-0123-456789abcdef",
+        UUID("01234567-89ab-dcef-0123-456789abcdef"),
         TEST_COMM_UUID,
         datetime.now(tz=UTC).timestamp() + 9999,
     )

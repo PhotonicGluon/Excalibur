@@ -1,11 +1,16 @@
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
+from typing import ClassVar, Self
 
+from pydantic import Base64Bytes, field_serializer
 from sqlmodel import Column, Enum, Field, LargeBinary, SQLModel, UniqueConstraint
 
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.crypto.exef import ExEF
+from excalibur_server.src.crypto.misc import frame
+from excalibur_server.src.merkle.enums import MerkleStatus
+from excalibur_server.src.merkle.structures import AttestationBase
+from excalibur_server.src.misc import get_current_timestamp
 
 
 class User(SQLModel, table=True):
@@ -16,13 +21,9 @@ class User(SQLModel, table=True):
     # Basic information
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str = Field(unique=True)
-    fsitem_id: uuid.UUID = Field(nullable=True)  # TODO: Remove nullable in next version
+    fsitem_id: uuid.UUID = Field(nullable=False)
     """
     ID of the user's root filesystem item.
-
-    A `None` means that the user does not use a database-based filesystem. This is for legacy users
-    who were created before the database-based filesystem was implemented, and meant for migration
-    purposes.
 
     This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
     foreign keys.
@@ -92,8 +93,35 @@ class FSItem(SQLModel, table=True):
     # Metadata
     size: int | None = Field(nullable=True)
     "File size in bytes, or None for folders"
-    timestamp: int = Field(nullable=False, default_factory=lambda: int(datetime.now(tz=UTC).timestamp()))
+    timestamp: int = Field(nullable=False, default_factory=get_current_timestamp)
     "Creation timestamp of the item as *seconds* since the Unix epoch, in UTC"
+
+    # Integrity
+    ciphertext_hash: bytes | None = Field(default=None, nullable=True)
+    """
+    Unkeyed BLAKE2b hash of the on-disk file, or None for folders and for files not yet migrated.
+    
+    Server-computed, for bit-rot scrubbing only. **Not** part of the Merkle tree.
+    """
+
+    content_mac: Base64Bytes | None = Field(nullable=True)
+    """
+    Keyed MAC binding this file's AEAD tags to its identity, or None for folders and for files not
+    yet migrated.
+
+    Computed by the client; the server never verifies it.
+    """
+    node_hash: Base64Bytes | None = Field(nullable=True)
+    """
+    Keyed MAC of the subtree rooted at this item, or None if the subtree is dirty or has not been
+    migrated.
+    """
+    version: int = Field(nullable=False, default=1)
+    """
+    Monotonic counter bumped on every mutation to this node.
+
+    This allows clients to detect changes without fully comparing the Merkle tree.
+    """
 
     # Ensure no two items have the same name in the same folder
     __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
@@ -115,3 +143,113 @@ class FSItem(SQLModel, table=True):
         level_2 = file_id[2:4]
         rest = file_id[4:]
         return Path(level_1, level_2, rest + ".exef")
+
+    # Field serialization
+    @field_serializer("id", "parent_id", "root_id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)
+
+
+class VaultState(SQLModel, table=True):
+    """
+    Contains the state of a user's vault.
+    """
+
+    root_id: uuid.UUID = Field(primary_key=True)
+    """
+    ID of the user's root filesystem item.
+
+    This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
+    foreign keys.
+    """
+    merkle_status: MerkleStatus = Field(sa_column=Column(Enum(MerkleStatus), nullable=False), default=MerkleStatus.NONE)
+    "Status of the Merkle tree for the vault"
+    current_generation: int = Field(nullable=False, default=0)
+    "Current generation of the vault"
+    migrated_count: int = Field(nullable=False, default=0)
+    "Number of items that have been migrated to the new generation"
+    total_count: int | None = Field(nullable=True, default=None)
+    "Total number of items in the vault, or None if not migrated yet"
+
+    # Field serialization
+    @field_serializer("root_id")
+    def serialize_root_id(self, value: uuid.UUID) -> str:
+        return str(value)
+
+    @field_serializer("merkle_status")
+    def serialize_merkle_status(self, value: MerkleStatus) -> str:
+        return value.value
+
+
+class Attestation(AttestationBase, table=True):
+    """
+    An attestation of a user's vault state.
+    """
+
+    ATTESTATION_EPOCH: ClassVar[bytes] = b"Excalibur Merkle v1"
+
+    root_id: uuid.UUID = Field(primary_key=True)
+    """
+    ID of the tree root that this is attesting.
+
+    This is supposed to be a foreign key to the `FSItem` table, but DuckDB doesn't support creating
+    foreign keys.
+    """
+    generation: int = Field(primary_key=True)
+    "Generation of the vault"
+
+    @property
+    def attestation(self) -> bytes:
+        """
+        :returns: the bytes that an attestation's tag authenticates
+        """
+
+        return self.ATTESTATION_EPOCH + frame(
+            self.root_id.bytes,
+            self.generation.to_bytes(8, "big"),
+            self.root_hash,
+            self.prev_root_hash or b"",
+            self.timestamp.to_bytes(8, "big"),
+        )
+
+    # Class methods
+    @classmethod
+    def from_base(cls, base: AttestationBase, root_id: uuid.UUID):
+        """
+        Create an attestation from an `AttestationBase` and a root ID.
+
+        :param base: the base attestation
+        :param root_id: the root ID
+        :return: the attestation
+        """
+
+        return cls(root_id=root_id, **dict(base))
+
+    @classmethod
+    def from_prev(cls, prev_attestation: Self, tag: bytes, timestamp: int | None = None):
+        """
+        Generate an attestation from a previous attestation.
+
+        Used as a helper function for testing only.
+
+        :param prev_attestation: previous attestation
+        :param tag: new attestation's tag
+        :param timestamp: timestamp of the new attestation, defaults to the current timestamp
+        :return: the new attestation
+        """
+
+        if timestamp is None:
+            timestamp = get_current_timestamp()
+
+        return cls(
+            root_id=prev_attestation.root_id,
+            generation=prev_attestation.generation + 1,
+            prev_root_hash=prev_attestation.root_hash,
+            timestamp=timestamp,
+            tag=tag,
+        )
+
+    # Field serialization
+    @field_serializer("root_id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)

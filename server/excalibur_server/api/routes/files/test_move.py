@@ -4,7 +4,7 @@ from sqlmodel import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.operations import add_item, get_item, get_item_fullpath, remove_item
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -182,3 +182,47 @@ class TestMove:
     def test_move_root(self, auth_client: TestClient):
         response = auth_client.post("/api/files/move/.", json="new-name")
         assert response.status_code == 412  # Cannot move root
+
+
+class TestMoveMerkleEffects:
+    @pytest.fixture
+    def move_tree(self, test_user) -> dict:
+        root_id = test_user["root_id"]
+
+        source = FSItem(parent_id=root_id, root_id=root_id, name="merkle-move-src", is_folder=True)
+        destination = FSItem(parent_id=root_id, root_id=root_id, name="merkle-move-dst", is_folder=True)
+        item = FSItem(parent_id=source.id, root_id=root_id, name="merkle-move.txt.exef", is_folder=False, size=1)
+        ids = {"source": source.id, "destination": destination.id, "item": item.id}
+
+        add_item(source)
+        add_item(destination)
+        add_item(item)
+
+        yield ids
+
+        for key in ("item", "destination", "source"):
+            if get_item(ids[key]) is not None:
+                remove_item(ids[key])
+
+    def test_move_marks_both_chains_dirty(
+        self, test_user, auth_client: TestClient, move_tree: dict, mark_clean, assert_dirty
+    ):
+        root_id = test_user["root_id"]
+
+        mark_clean(move_tree["item"])
+        mark_clean(move_tree["destination"])
+
+        source_version = get_item(move_tree["source"]).version
+        destination_version = get_item(move_tree["destination"]).version
+        item_version = get_item(move_tree["item"]).version
+
+        response = auth_client.post("/api/files/move/merkle-move-src/merkle-move.txt.exef", json="merkle-move-dst")
+        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content)
+
+        assert get_item(move_tree["item"]).parent_id == move_tree["destination"]
+
+        # Both the folder the item left and the folder it arrived in are now dirty
+        assert_dirty(move_tree["source"], source_version)
+        assert_dirty(move_tree["destination"], destination_version)
+        assert_dirty(move_tree["item"], item_version)
+        assert get_item(root_id).node_hash is None

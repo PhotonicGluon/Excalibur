@@ -114,7 +114,6 @@ class ExEFv4(BaseModel):
         return self.decryptor.decrypt(data)
 
     # Other methods
-
     @classmethod
     def validate(cls, data: bytes) -> bool:
         """

@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_items_in_root
+from excalibur_server.src.db.operations import get_items_with_root
 
 
 class TestGetAll:
@@ -20,5 +20,5 @@ class TestGetAll:
         content = ExEF(b"one demo 16B key").decrypt(response.content)
         files = json.loads(content)
         assert len(files) == len(
-            get_items_in_root(test_user["root_id"])  # Should match the number of items in the root
+            get_items_with_root(test_user["root_id"])  # Should match the number of items in the root
         )

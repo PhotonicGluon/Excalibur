@@ -62,6 +62,11 @@ export abstract class BaseCryptor {
     /** Queue used for buffering decrypted/encrypted output */
     protected _queue: Buffer[] = [];
 
+    /** Raw content MAC input buffer */
+    protected _contentMACInput: Buffer = Buffer.alloc(0);
+    /** Offset into the raw content MAC input buffer */
+    protected _contentMACInputOffset: number = -1;
+
     /**
      * Creates a new cryptor.
      *
@@ -84,6 +89,16 @@ export abstract class BaseCryptor {
      * access the {@link isQueueClear} property instead.
      */
     abstract get fullyProcessed(): boolean;
+
+    /**
+     * The content MAC input buffer, or null if it has not been fully processed.
+     */
+    get contentMACInput(): Buffer | null {
+        if (this._contentMACInputOffset < this._contentMACInput.length) {
+            return null;
+        }
+        return this._contentMACInput;
+    }
 
     // Helper methods
     /**

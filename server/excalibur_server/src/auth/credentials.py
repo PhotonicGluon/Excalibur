@@ -2,6 +2,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from hmac import compare_digest
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketDisconnect, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -18,7 +19,7 @@ from .jwt import decode_token, generate_token
 API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
-def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -> str:
+def generate_auth_token(user_id: UUID, comm_uuid: str, expiry_timestamp: float) -> str:
     """
     Generates a JWT token for the given E2EE key and expiry timestamp.
 
@@ -29,7 +30,7 @@ def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -
     """
 
     return generate_token(
-        sub=user_id,
+        sub=str(user_id),
         data={"uuid": comm_uuid},
         key=CONFIG.security.jwt_key,
         expiry=round(expiry_timestamp - datetime.now(tz=UTC).timestamp()),
@@ -57,7 +58,7 @@ class Credentials(BaseModel):
     The credentials of a user.
     """
 
-    user_id: str
+    user_id: UUID
     comm_uuid: str
     encrypted: bool = False
 
@@ -85,7 +86,8 @@ async def _verify_and_extract_credentials(
     decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
-    user_id = decoded["sub"]
+
+    user_id = UUID(decoded["sub"])
     comm_uuid = decoded["uuid"]
 
     if comm_uuid not in MASTER_KEYS_CACHE:

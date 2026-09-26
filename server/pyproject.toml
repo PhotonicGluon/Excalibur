@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.9.0a1"
+version = "0.9.0a2"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.19.2",
@@ -93,6 +93,7 @@ extend-select = [
     "F405", # undefined-local-with-import-star-usage
     "F406", # undefined-local-with-nested-import-star-usage
     "C901", # too-complex
+    "I001", # unsorted-imports
     "I002", # missing-required-import
 ]
 ignore = [

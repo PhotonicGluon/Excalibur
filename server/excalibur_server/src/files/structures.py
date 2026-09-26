@@ -1,13 +1,17 @@
 from pathlib import Path
 from typing import Literal, Self, Union
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from excalibur_server.src.db.operations import get_item_fullpath
 from excalibur_server.src.db.tables import FSItem
 
 
 class Filelike(BaseModel):
+    id: UUID
+    "UUID of the item"
+
     name: str
     "Name of item"
 
@@ -33,10 +37,16 @@ class Filelike(BaseModel):
             fullpath = get_item_fullpath(fsitem.id)
 
         return {
+            "id": fsitem.id,
             "name": fsitem.name,
             "creation_time": fsitem.timestamp,
             "fullpath": fullpath.as_posix(),
         }
+
+    # Field serializers
+    @field_serializer("id")
+    def serialize_id(self, value: UUID) -> str:
+        return str(value)
 
 
 class File(Filelike):

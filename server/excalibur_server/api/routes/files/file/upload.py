@@ -12,7 +12,7 @@ from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import add_item, get_item_by_path
+from excalibur_server.src.db.operations import add_item, get_item_by_path, mark_dirty
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.utils import rmitem
 from excalibur_server.src.users import get_user_from_id
@@ -40,7 +40,10 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
     "/upload/{path:path}",
     name="Upload File",
     responses={
-        status.HTTP_201_CREATED: {"description": "File uploaded", "content": None},
+        status.HTTP_201_CREATED: {
+            "description": "File uploaded",
+            "content": {"text/plain": {"example": "01234567-89ab-dcef-0123-456789abcdef"}},
+        },
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
         status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
         status.HTTP_413_CONTENT_TOO_LARGE: {"description": "File too large"},  # Returned in LimitUploadSizeMiddleware
@@ -69,7 +72,7 @@ async def upload_file_endpoint(
     processed_path: str = Depends(process_path_param("path")),
 ):
     """
-    Uploads a file to a directory.
+    Uploads a file to a directory, returning the ID of the new file if successful.
     """
 
     path = PathlibPath(processed_path).relative_to(".")
@@ -98,6 +101,9 @@ async def upload_file_endpoint(
                 status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
             )
 
+        # Mark the tree dirty before deleting the existing file (so that if the delete fails, the tree is still marked
+        # dirty)
+        mark_dirty(existing_file.id)
         rmitem(existing_file)
 
     # Prepare a new `FSItem` instance
@@ -120,6 +126,10 @@ async def upload_file_endpoint(
             size += await out_file.write(content)
 
     # Create the file in the database
+    new_file_id = new_file.id
     new_file.size = size
     add_item(new_file)
+    mark_dirty(new_file_id)
     background_tasks.add_task(add_folder_change, credentials, dir_path)
+
+    return str(new_file_id)

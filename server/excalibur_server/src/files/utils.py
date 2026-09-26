@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder, remove_item
@@ -6,7 +6,7 @@ from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.structures import Directory, File
 
 
-def listdir(folder_id: uuid.UUID) -> Directory | None:
+def listdir(folder_id: UUID) -> Directory | None:
     """
     Lists the contents of a directory.
 
@@ -29,7 +29,9 @@ def listdir(folder_id: uuid.UUID) -> Directory | None:
         else:
             items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path))
 
-    return Directory(name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items)
+    return Directory(
+        id=folder_id, name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items
+    )
 
 
 def rmitem(item: FSItem):

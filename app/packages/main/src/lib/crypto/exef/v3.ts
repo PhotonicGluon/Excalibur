@@ -224,6 +224,8 @@ export class Encryptor extends BaseEncryptor {
         this._cryptoKey = genCryptoKey(key, nonce, this._strength / 8);
         this._macKey = genMacKey(key, nonce, this._strength / 8);
         this._cipher = new GCMCipher(this.alg, this._cryptoKey, nonce);
+
+        this._contentMACInput = Buffer.alloc(Header.headerSize + Footer.footerSize);
     }
 
     // Properties
@@ -243,6 +245,9 @@ export class Encryptor extends BaseEncryptor {
 
         const headerMAC = computeHeaderMAC(this._macKey, this._strength, this.nonce, length);
         this._header = new Header(this._strength, this.nonce, headerMAC, length);
+
+        this._contentMACInput.set(this._header.toBuffer(), 0);
+        this._contentMACInputOffset = HEADER_SIZE;
     }
 
     async update(data: Buffer): Promise<void> {
@@ -270,6 +275,8 @@ export class Encryptor extends BaseEncryptor {
         if (!this._finalized && this._ctSentLen >= this._ctLen) {
             this._finalized = true;
             const footer = new Footer(Buffer.from(this._cipher.digest()));
+            this._contentMACInput.set(footer.toBuffer(), this._contentMACInputOffset);
+            this._contentMACInputOffset += FOOTER_SIZE;
             return footer.toBuffer();
         }
 
@@ -348,7 +355,11 @@ export class Decryptor extends BaseDecryptor {
             }
 
             // We have enough data to set the header
-            this._header = Header.fromBuffer(this._buffer.subarray(0, HEADER_SIZE));
+            const headerBuffer = this._buffer.subarray(0, HEADER_SIZE);
+            this._header = Header.fromBuffer(headerBuffer);
+            this._contentMACInput = Buffer.alloc(Header.headerSize + Footer.footerSize);
+            this._contentMACInput.set(headerBuffer, 0);
+            this._contentMACInputOffset = HEADER_SIZE;
 
             // Enqueue first part
             data = this._buffer.subarray(HEADER_SIZE);
@@ -377,8 +388,12 @@ export class Decryptor extends BaseDecryptor {
             this._footerRemaining -= data.length;
 
             if (this._footerRemaining <= 0) {
-                this._footer = Footer.fromBuffer(this._buffer.subarray(0, FOOTER_SIZE));
+                const footerBuffer = this._buffer.subarray(0, FOOTER_SIZE);
+                this._footer = Footer.fromBuffer(footerBuffer);
                 this._buffer = this._buffer.subarray(FOOTER_SIZE);
+
+                this._contentMACInput.set(footerBuffer, this._contentMACInputOffset);
+                this._contentMACInputOffset += FOOTER_SIZE;
             }
         }
     }
@@ -466,6 +481,14 @@ export default class ExEFv3 {
     /** The encryption algorithm used in the ExEF format based on the key size */
     get alg() {
         return algForStrength(this.keysize);
+    }
+
+    /** The content MAC input buffer, if available */
+    get contentMACInput(): Buffer | null {
+        if (this.encryptor.contentMACInput !== null) {
+            return this.encryptor.contentMACInput;
+        }
+        return this.decryptor.contentMACInput;
     }
 
     // Convenience methods

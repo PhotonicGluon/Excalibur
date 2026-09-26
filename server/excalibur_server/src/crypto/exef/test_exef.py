@@ -15,6 +15,11 @@ class TestVersionIdentification:
         # Only the first 5 bytes are needed to identify the version
         assert identify_version(V4_SAMPLE[:5]) == 4
 
+    def test_identify_generic(self):
+        assert identify_version(b"ExEF\x00") == 0
+        assert identify_version(b"ExEF\x05") == 5
+        assert identify_version(b"ExEF\xff") == 255
+
     def test_too_short(self):
         with pytest.raises(ValueError, match="too short"):
             identify_version(b"ExE")
@@ -22,14 +27,6 @@ class TestVersionIdentification:
     def test_bad_magic(self):
         with pytest.raises(ValueError, match="must start with 'ExEF'"):
             identify_version(b"NOPE\x04")
-
-    def test_unsupported_version(self):
-        with pytest.raises(ValueError, match="unsupported ExEF version"):
-            identify_version(b"ExEF\x05")
-
-    def test_unsupported_version_zero(self):
-        with pytest.raises(ValueError, match="unsupported ExEF version"):
-            identify_version(b"ExEF\x00")
 
 
 class TestEncryptionDispatch:

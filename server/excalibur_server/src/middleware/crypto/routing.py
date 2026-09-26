@@ -88,6 +88,81 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
+        "subtree": RoutingTree(
+            segment="subtree",
+            has_path_param=True,
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+    },
+)
+MERKLE_ROUTING_TREE = RoutingTree(
+    segment="merkle",
+    subtrees={
+        "attestation": RoutingTree(
+            segment="attestation",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+        "attestations": RoutingTree(
+            segment="attestations",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+        "content-mac-inputs": RoutingTree(
+            segment="content-mac-inputs",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
+        "dirty": RoutingTree(
+            segment="dirty",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+        "migrate": RoutingTree(
+            segment="migrate",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+            subtrees={
+                "fill": RoutingTree(
+                    segment="fill",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
+                "complete": RoutingTree(
+                    segment="complete",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
+            },
+        ),
+        "mutate": RoutingTree(
+            segment="mutate",
+            encrypted_routes={
+                "PUT": EncryptedRoute(),
+            },
+        ),
+        "proof": RoutingTree(
+            segment="proof",
+            has_path_param=True,
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
+        "state": RoutingTree(
+            segment="state",
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
     },
 )
 USERS_ROUTING_TREE = RoutingTree(
@@ -109,6 +184,7 @@ ROUTING_TREE = RoutingTree(
     subtrees={
         "auth": AUTH_ROUTING_TREE,
         "files": FILES_ROUTING_TREE,
+        "merkle": MERKLE_ROUTING_TREE,
         "users": USERS_ROUTING_TREE,
     },
 )

@@ -1,4 +1,6 @@
 export interface E2EEData {
+    /** The UUID of the user */
+    userID: string;
     /** Bilaterally agreed symmetric key to encrypt communications */
     key: Buffer;
     /** Authentication token */
