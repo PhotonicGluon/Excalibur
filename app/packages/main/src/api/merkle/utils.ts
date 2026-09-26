@@ -161,6 +161,7 @@ function proofItemFromWire(wire: ProofItemWire): ProofItem {
 function inclusionProofStepFromWire(wire: InclusionProofStepWire): InclusionProofStep {
     return {
         id: wire.id,
+        name: wire.name,
         children: wire.children.map(([id, hash]) => [id, hash ? b64decode(hash) : null]),
     };
 }

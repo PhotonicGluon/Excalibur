@@ -19,6 +19,8 @@ class InclusionProofStep(BaseModel):
 
     id: UUID
     "Unique identifier for the filesystem item"
+    name: str
+    "Name of the filesystem item"
     children: list[tuple[UUID, bytes | None]]
     "List of (child_id, child_node_hash) pairs"
 
@@ -76,6 +78,7 @@ def inclusion_proof_endpoint(
         steps.append(
             InclusionProofStep(
                 id=parent.id,
+                name=parent.name,
                 children=[(sibling.id, sibling.node_hash) for sibling in siblings],
             )
         )

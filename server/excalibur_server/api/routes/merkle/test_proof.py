@@ -36,6 +36,7 @@ class TestInclusionProofEndpoint:
         assert len(inclusion_proof["steps"]) == 1
         step = inclusion_proof["steps"][0]
         assert step["id"] == str(root_id)
+        assert step["name"] == get_item(root_id).name
         assert len(step["children"]) == len(get_items_in_folder(root_id))
         top_folder_idx = [child[0] for child in step["children"]].index(str(actual_top_folder.id))
         assert step["children"][top_folder_idx] == [
@@ -58,10 +59,12 @@ class TestInclusionProofEndpoint:
 
         step_1 = inclusion_proof["steps"][0]
         assert step_1["id"] == str(top_folder_id)
+        assert step_1["name"] == "merkle-folder"
         assert len(step_1["children"]) == len(get_items_in_folder(top_folder_id))
 
         step_2 = inclusion_proof["steps"][1]
         assert step_2["id"] == str(root_id)
+        assert step_2["name"] == get_item(root_id).name
         assert len(step_2["children"]) == len(get_items_in_folder(root_id))
 
     def test_get_item_in_sub_folder(self, auth_client: TestClient, merkle_folder: dict):
@@ -74,3 +77,4 @@ class TestInclusionProofEndpoint:
         actual_sub_sub_folder = get_item(sub_sub_folder_id)
         assert inclusion_proof["item"] == actual_sub_sub_folder.model_dump(mode="json")
         assert len(inclusion_proof["steps"]) == 3
+        assert [step["name"] for step in inclusion_proof["steps"][:2]] == ["subfolder", "merkle-folder"]

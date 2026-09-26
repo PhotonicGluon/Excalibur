@@ -22,6 +22,7 @@ export interface ProofItemWire {
 
 export interface InclusionProofStepWire {
     id: string;
+    name: string;
     children: [string, string | null][];
 }
 

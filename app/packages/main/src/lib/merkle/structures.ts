@@ -69,6 +69,8 @@ export interface ProofItem {
 export interface InclusionProofStep {
     /** Unique identifier for the filesystem item */
     id: string;
+    /** Name of the filesystem item (it is bound into the item's node hash) */
+    name: string;
     /** List of (childID, childNodeHash) pairs */
     children: [string, Buffer | null][];
 }
