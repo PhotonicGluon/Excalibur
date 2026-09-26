@@ -88,6 +88,13 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
+        "subtree": RoutingTree(
+            segment="subtree",
+            has_path_param=True,
+            encrypted_routes={
+                "GET": EncryptedRoute(),
+            },
+        ),
     },
 )
 MERKLE_ROUTING_TREE = RoutingTree(
