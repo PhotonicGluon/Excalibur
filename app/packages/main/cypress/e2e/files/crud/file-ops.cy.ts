@@ -103,6 +103,7 @@ describe("Deletion Operations", () => {
         // Create folder
         const folderName = createFolder();
         cy.get(`div[data-name='${folderName}']`).click();
+        cy.wait(100); // Make sure navigation completes
         createFolder(); // Creates a folder within the original folder
         cy.get("#files-area").contains("(Go Back)").click();
 
