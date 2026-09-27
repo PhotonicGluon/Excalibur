@@ -30,31 +30,52 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
     );
 });
 
-Cypress.Commands.add("login", (serverURL: string, username: string, password: string, expectToFail?: boolean) => {
-    cy.onboard(serverURL);
-    cy.visit("/login");
+Cypress.Commands.add(
+    "login",
+    (
+        serverURL: string,
+        username: string,
+        password: string,
+        expectToFail?: boolean,
+        showMerkleMigrationBanner?: boolean,
+    ) => {
+        cy.onboard(serverURL);
+        cy.visit("/login");
 
-    // Login using form
-    cy.get("[label='Username']").type("{selectAll}" + username);
-    cy.get("[label='Password']").type("{selectAll}" + password);
-    cy.get("#login-button").click();
+        // Login using form
+        cy.get("[label='Username']").type("{selectAll}" + username);
+        cy.get("[label='Password']").type("{selectAll}" + password);
+        cy.get("#login-button").click();
 
-    if (expectToFail) {
-        cy.get(".alert-title", { timeout: 20000 }).should("contain.text", "Handshake Failed");
-        cy.get(".alert-button").click();
-        cy.url().should("not.include", "/files");
-        return;
-    }
+        if (expectToFail) {
+            cy.get(".alert-title", { timeout: 20000 }).should("contain.text", "Handshake Failed");
+            cy.get(".alert-button").click();
+            cy.url().should("not.include", "/files");
+            return;
+        }
 
-    cy.url().should("include", "/files");
-    cy.window().should((win) => {
-        expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+        cy.url().should("include", "/files");
+        cy.get("ion-skeleton-text").should("not.exist"); // Wait for things to load
 
-        // Secrets must never be persisted
-        expect(win.localStorage.getItem("authInfo"), "authInfo").to.be.null;
-        expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.be.null;
-    });
-});
+        cy.window().should((win) => {
+            expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+
+            // Secrets must never be persisted
+            expect(win.localStorage.getItem("authInfo"), "authInfo").to.be.null;
+            expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.be.null;
+        });
+
+        // Dismiss merkle migration banner
+        if (!showMerkleMigrationBanner) {
+            cy.get("body").then(($body) => {
+                if ($body.find("#merkle-migration-banner").length) {
+                    cy.get("#merkle-migration-banner ion-button").contains("Later").click({ force: true });
+                    cy.get("#merkle-migration-banner").should("not.exist");
+                }
+            });
+        }
+    },
+);
 
 Cypress.Commands.add(
     "signup",
@@ -143,7 +164,7 @@ Cypress.Commands.add("pullRefresh", () => {
             cancelable: true,
             detail: {
                 complete: () => {
-                    $refresher[0].complete();
+                    $refresher[0].complete(); // FIXME: Property 'complete' does not exist on type 'HTMLElement'
                 },
             },
         });
@@ -155,7 +176,13 @@ declare global {
     namespace Cypress {
         interface Chainable {
             onboard(serverURL: string): Chainable<void>;
-            login(serverURL: string, username: string, password: string, expectToFail?: boolean): Chainable<void>;
+            login(
+                serverURL: string,
+                username: string,
+                password: string,
+                expectToFail?: boolean,
+                showMerkleMigrationBanner?: boolean,
+            ): Chainable<void>;
             signup(
                 serverURL: string,
                 username: string,

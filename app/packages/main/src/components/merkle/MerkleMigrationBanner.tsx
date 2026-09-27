@@ -65,12 +65,12 @@ const MerkleMigrationBanner: React.FC = () => {
     }
 
     return (
-        <IonCard className="ion-margin" color={cardColour}>
+        <IonCard id="merkle-migration-banner" className="ion-margin" color={cardColour}>
             <IonCardContent className="flex items-center gap-3">
                 <IonIcon
                     className="size-8"
                     color={iconColour}
-                    icon={error || !isMigrationUnderway ? alertCircleOutline : shieldCheckmarkOutline}
+                    icon={error && !isMigrationUnderway ? alertCircleOutline : shieldCheckmarkOutline}
                 />
                 <div className="flex-1">
                     {isMigrating && isMigrationUnderway && (
