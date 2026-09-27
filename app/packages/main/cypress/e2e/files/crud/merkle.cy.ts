@@ -5,7 +5,6 @@ const FILE_SIZE = 64; // Just need a small file for testing
 
 function _createTestAccount(username: string) {
     cy.signup(SERVER_URL, username, "Password", false, false);
-    cy.login(SERVER_URL, username, "Password", false, true); // FIXME: Somehow without logging in again tests fail
 
     // Wait for listener to connect
     cy.get("#directory-list-stats").should("exist");
@@ -44,7 +43,6 @@ describe("Merkle Operations", () => {
     it("should migrate empty vault successfully", () => {
         const USERNAME = `merkle-test-user-${Date.now()}`;
         cy.signup(SERVER_URL, USERNAME, "Password", false, false);
-        cy.login(SERVER_URL, USERNAME, "Password", false, true); // FIXME: Somehow without logging in again tests fail
 
         // Migrate vault to use Merkle tree validation
         cy.get("#merkle-migration-banner").should("exist");
