@@ -4,7 +4,7 @@ const SERVER_URL = Cypress.expose("serverURL");
 const FILE_SIZE = 64; // Just need a small file for testing
 
 // Helper functions
-function _createTestAccount(username: string, reduced?: boolean) {
+function _createTestAccount(username: string, reduced?: boolean): string {
     cy.signup(SERVER_URL, username, "Password", false, false);
 
     // Wait for listener to connect
@@ -13,22 +13,24 @@ function _createTestAccount(username: string, reduced?: boolean) {
 
     // Add test files
     createFile(FILE_SIZE, true);
-    let folderName = createFolder();
+    const folderName = createFolder();
     cy.get(`div[data-name='${folderName}']`).click();
     cy.wait(100); // Make sure navigation completes
     createFile(FILE_SIZE, true); // Create file within first folder
 
     if (reduced) {
         cy.get("#files-area").contains("(Go Back)").click();
-        return;
+        return folderName;
     }
 
-    folderName = createFolder(); // Creates a folder within that folder
-    cy.get(`div[data-name='${folderName}']`).click();
+    const newFolderName = createFolder(); // Creates a folder within that folder
+    cy.get(`div[data-name='${newFolderName}']`).click();
     cy.wait(100); // Make sure navigation completes
     createFile(FILE_SIZE); // Create nested file
     cy.get("#files-area").contains("(Go Back)").click();
     cy.get("#files-area").contains("(Go Back)").click();
+
+    return folderName;
 }
 
 function _verifyVault() {
@@ -153,5 +155,100 @@ describe("Verification Operations", () => {
         cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-danger").should("exist");
     });
 
-    // TODO: Add file/folder upload/rename tests
+    describe("CRUD", () => {
+        const USERNAME = `merkle-test-user-${Date.now()}`;
+        let folderName: string;
+
+        before(() => {
+            folderName = _createTestAccount(USERNAME);
+
+            // Migrate vault to use Merkle tree validation
+            cy.get("#merkle-migration-banner").should("exist");
+            cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
+            cy.get("#merkle-migration-banner").should("not.exist");
+        });
+
+        beforeEach(() => {
+            cy.login(SERVER_URL, USERNAME, "Password", false);
+        });
+
+        it("vault should still be verified after file upload", () => {
+            // Create file in root directory
+            createFile(FILE_SIZE, true);
+
+            // Create file in subdirectory
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.wait(100); // Make sure navigation completes
+            createFile(FILE_SIZE, true);
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+
+        it("vault should still be verified after rename", () => {
+            // Create folder in subdirectory
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.wait(100); // Make sure navigation completes
+            const subfolderName = createFolder();
+
+            // Rename folder
+            cy.get(`div[data-name='${subfolderName}']`).rightclick();
+            cy.get(".item").contains("Rename").click();
+
+            const newName = `New Name ${Date.now()}`;
+            cy.get(".alert-input-wrapper").find("input").click().wait(250); // For the focus to appear
+            cy.get(".alert-input-wrapper")
+                .find("input")
+                .type("{selectAll}" + newName);
+            cy.get(".alert-button-group").contains("Rename").click();
+            cy.get(".alert-head").should("not.exist");
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+
+        it("vault should still be verified after file delete (after upload)", () => {
+            // Create file first
+            let fileName = createFile(FILE_SIZE);
+
+            // Then delete the file
+            cy.get(`div[data-name='${fileName}']`).rightclick();
+            cy.get("ion-popover ion-item").contains("Delete").click();
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+
+            // Create file in subdirectory
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.wait(100); // Make sure navigation completes
+
+            fileName = createFile(FILE_SIZE);
+
+            // Then delete the file
+            cy.get(`div[data-name='${fileName}']`).rightclick();
+            cy.get("ion-popover ion-item").contains("Delete").click();
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+
+        it("vault should still be verified after moving", () => {
+            // Create file first
+            const fileName = createFile(FILE_SIZE);
+
+            // Clicking on move button should bring up move dialog
+            cy.get(`div[data-name='${fileName}']`).rightclick();
+            cy.get(".item").contains("Move").click();
+            cy.get(`#move-modal div[data-name='${folderName}']`).click();
+            cy.get("#move-modal-confirm").click();
+            cy.get("#move-modal").should("not.be.visible");
+
+            // Check that file was moved
+            cy.get(`div[data-name='${fileName}']`).should("not.exist");
+            cy.get(`div[data-name='${folderName}']`).click();
+            cy.get(`div[data-name='${fileName}']`).should("exist");
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+    });
 });
