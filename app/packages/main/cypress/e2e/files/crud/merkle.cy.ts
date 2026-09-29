@@ -3,7 +3,8 @@ import { createFile, createFolder } from "../helpers";
 const SERVER_URL = Cypress.expose("serverURL");
 const FILE_SIZE = 64; // Just need a small file for testing
 
-function _createTestAccount(username: string) {
+// Helper functions
+function _createTestAccount(username: string, reduced?: boolean) {
     cy.signup(SERVER_URL, username, "Password", false, false);
 
     // Wait for listener to connect
@@ -16,6 +17,12 @@ function _createTestAccount(username: string) {
     cy.get(`div[data-name='${folderName}']`).click();
     cy.wait(100); // Make sure navigation completes
     createFile(FILE_SIZE, true); // Create file within first folder
+
+    if (reduced) {
+        cy.get("#files-area").contains("(Go Back)").click();
+        return;
+    }
+
     folderName = createFolder(); // Creates a folder within that folder
     cy.get(`div[data-name='${folderName}']`).click();
     cy.wait(100); // Make sure navigation completes
@@ -31,6 +38,7 @@ function _verifyVault() {
     cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-success").should("exist");
 }
 
+// Tests
 afterEach(function () {
     // Stop other tests if any test fails
     if (this.currentTest?.state === "failed") {
@@ -39,8 +47,8 @@ afterEach(function () {
     }
 });
 
-describe("Merkle Operations", () => {
-    it("should migrate empty vault successfully", () => {
+describe("Migration Operations", () => {
+    it("should work with empty vault", () => {
         const USERNAME = `merkle-test-user-${Date.now()}`;
         cy.signup(SERVER_URL, USERNAME, "Password", false, false);
 
@@ -52,7 +60,7 @@ describe("Merkle Operations", () => {
         _verifyVault();
     });
 
-    it("should migrate vault successfully", () => {
+    it("should work with filled vault", () => {
         _createTestAccount(`merkle-test-user-${Date.now()}`);
 
         // Migrate vault to use Merkle tree validation
@@ -65,7 +73,7 @@ describe("Merkle Operations", () => {
 
     it("should recover from interruptions gracefully", () => {
         const USERNAME = `merkle-test-user-${Date.now()}`;
-        _createTestAccount(USERNAME);
+        _createTestAccount(USERNAME, true);
 
         // Start migrating vault
         cy.get("#merkle-migration-banner").should("exist");
@@ -81,12 +89,69 @@ describe("Merkle Operations", () => {
 
         _verifyVault();
     });
+});
 
-    // TODO: Add file verification test
+describe("Verification Operations", () => {
+    it("should verify file/folder if fully migrated", () => {
+        const USERNAME = `merkle-test-user-${Date.now()}`;
+        _createTestAccount(USERNAME, true);
 
-    // TODO: Add non-migrated verification test
+        // Migrate vault to use Merkle tree validation
+        cy.get("#merkle-migration-banner").should("exist");
+        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#merkle-migration-banner").should("not.exist");
 
-    // TODO: Add midway-migration verification test
+        // Attempting to verify file should work
+        cy.get("ion-item").contains("test-file").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-success").should("exist");
+        cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Wait for toast to dismiss
+
+        // Attempting to verify folder should work
+        cy.get("ion-item").contains("Test Folder").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-success").should("exist");
+    });
+
+    it("should not verify file/folder if not migrated", () => {
+        const USERNAME = `merkle-test-user-${Date.now()}`;
+        _createTestAccount(USERNAME, true);
+
+        // Attempting to verify file should fail
+        cy.get("ion-item").contains("test-file").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-danger").should("exist");
+        cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Wait for toast to dismiss
+
+        // Attempting to verify folder should fail
+        cy.get("ion-item").contains("Test Folder").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-danger").should("exist");
+    });
+
+    it("should not verify file/folder if migration was interrupted", () => {
+        const USERNAME = `merkle-test-user-${Date.now()}`;
+        _createTestAccount(USERNAME, true);
+
+        // Start migrating vault
+        cy.get("#merkle-migration-banner").should("exist");
+        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
+        cy.reload(); // Immediately reload to trigger migration interruption
+
+        cy.login(SERVER_URL, USERNAME, "Password", false, true);
+        cy.get("#merkle-migration-banner").contains("interrupted").should("exist");
+
+        // Attempting to verify file should fail
+        cy.get("ion-item").contains("test-file").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-danger").should("exist");
+        cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Wait for toast to dismiss
+
+        // Attempting to verify folder should fail
+        cy.get("ion-item").contains("Test Folder").rightclick();
+        cy.get("ion-popover ion-item").contains("Verify").click();
+        cy.get("ion-toast", { timeout: 10000 }).should("have.class", "ion-color-danger").should("exist");
+    });
 
     // TODO: Add file/folder upload/rename tests
 });
