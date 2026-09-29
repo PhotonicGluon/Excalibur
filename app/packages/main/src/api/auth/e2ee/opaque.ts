@@ -1,5 +1,6 @@
 import { KE3, OPAQUE, SERVER_IDENTITY } from "@lib/auth/opaque";
 import { OPAQUEAuthError, OPAQUEServerAuthError } from "@lib/auth/opaque/client";
+import { decodeJWT } from "@lib/auth/token";
 import ExEF from "@lib/crypto/exef";
 
 import { parseResponse, sendResponse } from "@api/websocket";
@@ -173,7 +174,9 @@ export async function handshakeOPAQUE(
                     console.debug("Times for offset calculation:", { t1, t2, t3, t4, timeOffset });
 
                     // Return authentication information
+                    const { sub: userID } = decodeJWT<{ sub: string }>(authToken);
                     resolve({
+                        userID,
                         key: state.master!,
                         token: authToken,
                         maxUploadSize: parseInt(maxUploadSize),

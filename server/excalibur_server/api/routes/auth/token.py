@@ -1,5 +1,6 @@
 from datetime import UTC
 from typing import Annotated
+from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
@@ -10,9 +11,8 @@ from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
 
 
-def _gen_token(user_id: str, master_key: bytes, expiry_time: int):
+def _gen_token(user_id: UUID, master_key: bytes, expiry_time: int):
     from datetime import datetime
-    from uuid import uuid4
 
     from excalibur_server.api.cache import MASTER_KEYS_CACHE
     from excalibur_server.src.auth.credentials import generate_auth_token
@@ -78,7 +78,9 @@ if is_debug():
         Generate an authentication token for a user.
         """
 
-        return _gen_token(username, master_key.encode("utf-8"), expiry_time)
+        from excalibur_server.src.users import get_user
+
+        return _gen_token(get_user(username).id, master_key.encode("utf-8"), expiry_time)
 
     @router.get("/generate-pop", name="Generate PoP", tags=["debug"], response_class=PlainTextResponse)
     def generate_pop_endpoint(

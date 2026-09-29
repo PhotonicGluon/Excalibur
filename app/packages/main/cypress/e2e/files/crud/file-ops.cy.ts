@@ -58,7 +58,7 @@ describe("Rename Operations", () => {
 
         // Enter test folder name
         const newName = `New Name ${Date.now()}`;
-        cy.get(".alert-input-wrapper").find("input").click().wait(100); // For the focus to appear
+        cy.get(".alert-input-wrapper").find("input").click().wait(250); // For the focus to appear
         cy.get(".alert-input-wrapper")
             .find("input")
             .type("{selectAll}" + newName);
@@ -103,6 +103,7 @@ describe("Deletion Operations", () => {
         // Create folder
         const folderName = createFolder();
         cy.get(`div[data-name='${folderName}']`).click();
+        cy.wait(100); // Make sure navigation completes
         createFolder(); // Creates a folder within the original folder
         cy.get("#files-area").contains("(Go Back)").click();
 

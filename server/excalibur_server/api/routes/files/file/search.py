@@ -5,7 +5,7 @@ from rapidfuzz import fuzz, process
 
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_items_in_root
+from excalibur_server.src.db.operations import get_items_with_root
 from excalibur_server.src.files.structures import File
 from excalibur_server.src.users import get_user_from_id
 
@@ -21,6 +21,7 @@ from excalibur_server.src.users import get_user_from_id
                     "example": [
                         [
                             {
+                                "id": "00000000-0000-0000-0000-000000000000",
                                 "name": "example.txt",
                                 "creation_time": 1100000000,
                                 "fullpath": "example.txt",
@@ -53,7 +54,7 @@ def search_endpoint(
 
     # Get all files in the user's filesystem
     root_id = get_user_from_id(user_id).fsitem_id
-    files = [item for item in get_items_in_root(root_id) if not item.is_folder]
+    files = [item for item in get_items_with_root(root_id) if not item.is_folder]
     choices = [item.name for item in files]
 
     # Filter files by similarity score

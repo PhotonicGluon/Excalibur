@@ -1,4 +1,5 @@
 import ExEF from "@lib/crypto/exef";
+import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popXHR } from "@api/fetch";
@@ -83,7 +84,8 @@ export async function uploadFile(
             cleanup();
             switch (xhr.status) {
                 case 201:
-                    // Continue with normal flow
+                    // File sent successfully; trigger a sync and report success
+                    scheduleMerkleSync(auth);
                     resolve({ success: true });
                     break;
                 case 401:

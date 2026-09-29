@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_items_in_folder
+from excalibur_server.src.db.operations import get_item, get_items_in_folder
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -71,3 +71,30 @@ class TestCreateDir:
         # Then send the folder creation request
         response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
         assert response.status_code == 409
+
+
+class TestCreateDirMerkleEffects:
+    def test_mkdir_returns_new_folder_id(self, auth_client: TestClient, test_user):
+        root_id = test_user["root_id"]
+
+        uuid = uuid4().hex
+        response = auth_client.post("/api/files/mkdir/.", json=f"merkle-dir-{uuid}")
+        assert response.status_code == 201
+
+        returned_id = ExEF(b"one demo 16B key").decrypt(response.content).decode()
+        new_folder = next(item for item in get_items_in_folder(root_id) if item.name == f"merkle-dir-{uuid}")
+        assert returned_id == str(new_folder.id)
+
+    def test_mkdir_marks_ancestors_dirty(self, auth_client: TestClient, test_user, mark_clean, assert_dirty):
+        root_id = test_user["root_id"]
+
+        mark_clean(root_id)
+        root_version = get_item(root_id).version
+
+        uuid = uuid4().hex
+        response = auth_client.post("/api/files/mkdir/.", json=f"merkle-dir-{uuid}")
+        assert response.status_code == 201
+
+        new_folder = next(item for item in get_items_in_folder(root_id) if item.name == f"merkle-dir-{uuid}")
+        assert new_folder.node_hash is None
+        assert_dirty(root_id, root_version)

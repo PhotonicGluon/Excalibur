@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, get_session
+from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, get_session, mark_dirty
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.users import get_user_from_id
 
@@ -71,4 +71,5 @@ async def rename_path_endpoint(
         except IntegrityError:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item already exists")
 
+    mark_dirty(item.id)
     background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
