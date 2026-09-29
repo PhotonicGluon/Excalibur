@@ -47,7 +47,8 @@
             "showcontent",
             "towncrier",
             "trustless"
-        ]
+        ],
+        "js/ts.tsdk.path": "Website/node_modules/typescript/lib"
     },
     "extensions": {
         "recommendations": [

@@ -1,0 +1,34 @@
+---
+sidebar_position: -6
+sidebar_label: Updating to 0.8
+description: Guide explaining the upgrade process from Excalibur 0.7 to 0.8.
+---
+
+# Upgrading from Excalibur 0.7 to Excalibur 0.8
+
+Excalibur 0.8 does not contain any special steps if you are using the official releases. Simply download the new version of the app and server and follow the standard installation process.
+
+The rest of the guide only applies if you are interacting with an Excalibur 0.8 server using a custom client.
+
+---
+
+## ExEF v4
+
+Excalibur 0.8 introduces [version 4 of the Excalibur Encryption Format (ExEF)](../../reference/exef/v4.mdx). Of the changes made to the ExEF is the use of chunked encryption, which allows for way faster cryptographic operations using native implementations of AES-GCM. Additional cryptographic safeguards have also been built into the standard. It should be emphasised that ***ExEF v3 is still secure***; ExEF v4 just improves the performance of the cryptographic operations and also adds additional safeguards during said operations.
+
+Servers on Excalibur 0.8 **will no longer accept version 3 of ExEF**. Please follow the specification linked above to implement ExEF v4 on your own custom client.
+
+However, custom clients **are recommended** to maintain support for ExEF v3. This is because the vault data may have been encrypted using ExEF v3.
+
+## Subsequent WebSocket Authentication
+
+The protocol for subsequent authentication for WebSocket protocols has changed. Please read the [updated subsequent authentication guide for WebSockets](../../server-api/subsequent-authentication.mdx#ws-pop) to learn how to authenticate using the new protocol.
+
+## Removal of `/api/well-known/info` and Changed OPAQUE Login Flow
+
+The `/api/well-known/info` endpoint has been removed in order to improve security of the parameters transmitted by the server.
+
+- The maximum upload size and offset time will be sent along with login responses
+- To get the version, use the `/api/well-known/version` endpoint instead
+
+Please read the updated documentation for the [OPAQUE login flow](../../server-api/authentication/login.mdx) for how to obtain the maximum upload size and the time offset.

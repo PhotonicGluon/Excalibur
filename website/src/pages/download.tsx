@@ -17,8 +17,6 @@ const ASSET_ID_TO_FILE: Record<string, string> = {
     "app-linux-appimage": "excalibur-electron-[VERSION].AppImage",
     // Android
     "app-android-apk": "app-v[VERSION]-release.apk",
-    // PWA
-    "app-pwa": "app-v[VERSION]-pwa.zip",
     // Server
     "server-whl": "excalibur_server-[VERSION]-py3-none-any.whl",
     "server-src": "excalibur_server-[VERSION].tar.gz",
