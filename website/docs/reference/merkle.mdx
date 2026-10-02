@@ -65,7 +65,7 @@ In particular, the `in` parameter for the MAC is the **concatenation of all of t
 
 In particular, the `in` parameter for the MAC is the **concatenation of the header _and_ the footer** (which consists of only the tag). The input length will thus be 56 bytes (comprising of the header and footer).
 
-### Node
+### Node {/* #node-hash */}
 
 The Merkle subtree rooted at a specific node is verified using a node hash. It is generated using the node hash key $k_n$ using **BLAKE2b-256** in keyed mode with the following parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
 
@@ -74,11 +74,11 @@ The Merkle subtree rooted at a specific node is verified using a node hash. It i
 - `keylen`: 32 bytes
 
 The input data for the hash (i.e., the `in` parameter) depends on the type of node that we are hashing:
-- **Leaf Node** (e.g., files): the `in` parameter is `bindIdentity(id, name, contentMAC)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below)
+- **Leaf Node** (e.g., files): the `in` parameter is `bindIdentity(id, name, contentMAC)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below).
 - **Folder Node**: follow these steps in order. 
     1. Get the child node(s) of the folder.
     2. Sort the child node(s) according to their IDs, in [lexicographic order](https://en.wikipedia.org/wiki/Lexicographic_order#Numeral_systems_and_dates). Let the sorted child nodes be `sortedChildren`.
-    3. For each child in `sortedChildren`, obtain its UUID (`uuid`, expressed in bytes) and node hash (`nodeHash`). Produce that child's payload using `_prefixLength(UUID) || _prefixLength(nodeHash)`, where `||` represents concatenation (see [`_prefixLength(data)`](#identity-binding) below).
+    3. For each child in `sortedChildren`, obtain its UUID (`uuid`, expressed in bytes) and node hash (`nodeHash`). Produce that child's payload using `frame([UUID, nodeHash])` (see [`frame()`](#frame()-function) below).
     4. Concatenate all children's payloads in the order of `sortedChildren`. This is the `payload`.
     5. The `in` parameter is `bindIdentity(id, name, payload)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below).
 
@@ -87,26 +87,72 @@ The input data for the hash (i.e., the `in` parameter) depends on the type of no
 
 We usually want to bind the identity of the user to the payload that we are hashing. Typically we use the Merkle tree's root node's ID to do this (since each user has a unique Merkle tree root).
 
-The `bindIdentity()` function is defined as follows:
+The `bindIdentity()` function takes in:
+- `id`: the UUID of the root node, expressed in byte form;
+- `name`: the name of the current node, as a string; and
+- `payload`: the payload to bind to the identity, as bytes,
+
+and returns a byte string. It is defined as follows:
 ```python
 def bindIdentity(id: bytes, name: str, payload: bytes) -> bytes:
-    """
-    Parameters:
-    - id: the UUID of the root node, expressed in byte form
-    - name: name of the node, as a string
-    - payload: payload to bind to the identity, as bytes
-    """
-
-    return _prefixLength(id) 
-        + _prefixLength(bytes(name, "utf-8")) 
-        + _prefixLength(payload)
-
-
-def _prefixLength(data: bytes) -> bytes:
-    """
-    Prefixes the `data` with `PREFIX_LENGTH` bytes representing the length of the data.
-    """
-
-    PREFIX_LENGTH = 4
-    return len(id).to_bytes(PREFIX_LENGTH, "big") + data  # Big-endian
+    return frame([id, bytes(name, "utf-8"), payload])
 ```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+## Attestation
+
+An attestation is a data structure that encapsulates information verifying the integrity of the entire Merkle tree (and, hence, the user's vault). It consists of the following fields:
+- `generation`: the current vault generation, expressed as an integer.
+    - This is used to track how the vault has changed, and to ensure that an old attestation is not shown after a newer attestation.
+    - The first attestation has `generation = 1`.
+- `rootHash`: the [node hash](#node-hash) of the root node, expressed as a byte string.
+    - This secures the entire Merkle tree for the current generation.
+- `prevRootHash`: the previous generation's root hash, expressed as a byte string.
+    - This allows a client to check whether the current attestation properly chains onto the previous attestation.
+    - The first attestation does *not* specify a `prevRootHash` (i.e., it is `null`).
+- `timestamp`: the timestamp (in seconds) of the attestation.
+- `tag`: message authentication code (MAC) for the attestation.
+    - This is to ensure that only *this* user can create attestations for their own Merkle tree.
+
+An attestation is verified when the given parameters correctly produce the attestation tag supplied.
+
+### Attestation Tag
+
+The `tag` is generated using the attestation key $k_a$ using **BLAKE2b-256** in keyed mode with the following parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the attestation key $k_a$
+- `keylen`: 32 bytes
+
+The `in` parameter for the attestation tag is the output of:
+
+```python
+frame([
+    rootID,        # UUID of the root node, expressed in bytes
+    generation,    # Attestation generation, expressed as a *big-endian* integer
+    rootHash,      # Current root hash, expressed in bytes
+    prevRootHash,  # Previous root hash, expressed in bytes, or empty
+    timestamp      # Timestamp expressed as a *big-endian* integer
+])
+```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+---
+
+## Utility Functions
+### `frame()` {/* #frame()-function */}
+The `frame()` function length-prefixes each byte string in the `data` list and concatenates them together into one byte string. It is defined as follows:
+
+```python
+def frame(data: list[bytes]) -> bytes:
+    output = b""
+    for part in data:
+        length = len(part).to_bytes(PREFIX_LENGTH, "big")  # In big-endian mode
+        output += length + part  # length, then the data part
+    
+    return output
+```
+
+For content verification, we assume a `PREFIX_LENGTH` of 4 bytes is used.
