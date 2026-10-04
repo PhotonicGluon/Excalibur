@@ -34,7 +34,7 @@ function attestationBytes(rootID: string, attestation: Omit<AttestationBase, "ta
  * @param generation the new generation number
  * @param rootHash the new Merkle root hash
  * @param prevRootHash the previous attestation's root hash, or null for generation 1
- * @param timestamp timestamp for the attestation, defaults to the current time
+ * @param timestamp timestamp (in seconds) of the attestation, defaults to the current time
  * @returns the new, tagged attestation
  */
 export function buildAttestation(

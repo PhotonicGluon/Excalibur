@@ -55,6 +55,27 @@ class File(Filelike):
     size: int
     "Size of the file in bytes"
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "name": "example.txt",
+                    "creation_time": 1000000000,
+                    "fullpath": "example.txt",
+                    "size": 1024,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000002",
+                    "name": "subfile.txt",
+                    "creation_time": 1200000000,
+                    "fullpath": "some-dir/subfile.txt",
+                    "size": 2048,
+                },
+            ]
+        }
+    }
+
     @classmethod
     def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:
         """
@@ -77,6 +98,41 @@ class Directory(Filelike):
 
     items: list[Union[File, "Directory"]] | None = Field(default=None, exclude_if=lambda v: v is None)
     "List of filelike instances in the directory"
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "name": "some-dir",
+                    "creation_time": 1100000000,
+                    "fullpath": "some-dir",
+                    "items": [
+                        {
+                            "id": "00000000-0000-0000-0000-000000000002",
+                            "name": "subfile.txt",
+                            "creation_time": 1200000000,
+                            "fullpath": "some-dir/subfile.txt",
+                        },
+                        {
+                            "id": "00000000-0000-0000-0000-000000000003",
+                            "name": "some-sub-dir",
+                            "creation_time": 1300000000,
+                            "fullpath": "some-dir/some-sub-dir",
+                            "items": [],
+                        },
+                    ],
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000003",
+                    "name": "some-sub-dir",
+                    "creation_time": 1300000000,
+                    "fullpath": "some-dir/some-sub-dir",
+                    "items": [],
+                },
+            ]
+        }
+    }
 
     @classmethod
     def from_fsitem(cls, fsitem: FSItem, parent_dir_path: Path | None = None) -> Self:

@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Body, Depends, Query, status
 from rapidfuzz import fuzz, process
@@ -20,14 +21,14 @@ from excalibur_server.src.users import get_user_from_id
                 "application/json": {
                     "example": [
                         [
-                            {
-                                "id": "00000000-0000-0000-0000-000000000000",
-                                "name": "example.txt",
-                                "creation_time": 1100000000,
-                                "fullpath": "example.txt",
-                                "type": "file",
-                                "size": 1024,
-                            },
+                            File(
+                                id=UUID("00000000-0000-0000-0000-000000001234"),
+                                name="example.txt",
+                                creation_time=1100000000,
+                                fullpath="example.txt",
+                                type="file",
+                                size=1024,
+                            ),
                             0.9,
                         ],
                     ],

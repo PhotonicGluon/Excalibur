@@ -16,29 +16,6 @@ from excalibur_server.src.files.structures import Directory, File
     "/subtree/{item_id}",
     name="Get Subtree",
     responses={
-        status.HTTP_200_OK: {
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "id": "00000000-0000-0000-0000-000000000000",
-                            "name": "example.txt",
-                            "creation_time": 1100000000,
-                            "fullpath": "folder-1/example.txt",
-                            "type": "file",
-                            "size": 1024,
-                        },
-                        {
-                            "id": "00000000-0000-0000-0000-000000000001",
-                            "name": "folder-2",
-                            "creation_time": 1200000000,
-                            "fullpath": "folder-1/folder-2",
-                            "type": "directory",
-                        },
-                    ],
-                }
-            },
-        },
         status.HTTP_400_BAD_REQUEST: {"description": "Item is not a folder"},
         status.HTTP_404_NOT_FOUND: {"description": "Item not found"},
     },

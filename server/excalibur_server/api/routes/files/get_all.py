@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, status
+from fastapi import Depends
 
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
@@ -9,36 +9,7 @@ from excalibur_server.src.files.structures import Directory, File
 from excalibur_server.src.users import get_user_from_id
 
 
-@encrypted_router.get(
-    "/all",
-    name="Get All Items",
-    responses={
-        status.HTTP_200_OK: {
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "id": "00000000-0000-0000-0000-000000000000",
-                            "name": "example.txt",
-                            "creation_time": 1100000000,
-                            "fullpath": "example.txt",
-                            "type": "file",
-                            "size": 1024,
-                        },
-                        {
-                            "id": "00000000-0000-0000-0000-000000000001",
-                            "name": "folder-1",
-                            "creation_time": 1200000000,
-                            "fullpath": "folder-1",
-                            "type": "directory",
-                            "items": None,
-                        },
-                    ],
-                }
-            },
-        },
-    },
-)
+@encrypted_router.get("/all", name="Get All Items")
 def get_all_items_endpoint(credentials: Annotated[Credentials, Depends(get_credentials)]) -> list[File | Directory]:
     """
     Lists all the items owned by the authenticated user.

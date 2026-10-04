@@ -95,7 +95,18 @@ def begin_migration_endpoint(credentials: Annotated[Credentials, Depends(get_cre
 )
 def fill_migration_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    entries: Annotated[dict[UUID, MigrationEntry], Body(description="Mapping of item IDs to their Merkle data")],
+    entries: Annotated[
+        dict[UUID, MigrationEntry],
+        Body(
+            description="Mapping of item IDs to their Merkle data",
+            examples=[
+                {
+                    "node-uuid-1": {"hash": "base64-hash-1", "content_mac": "base64-content-mac-1"},
+                    "node-uuid-2": {"hash": "base64-hash-2", "content_mac": None},
+                }
+            ],
+        ),
+    ],
 ):
     """
     Submits a chunk of Merkle data for an in-progress migration.
