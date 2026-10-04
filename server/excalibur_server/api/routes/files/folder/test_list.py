@@ -1,4 +1,5 @@
 import json
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,6 +19,7 @@ class TestListdir:
 
         # Make containing folder
         folder = FSItem(
+            id=UUID("00000000-0000-0000-0000-000000000000"),
             parent_id=root_id,
             root_id=root_id,
             name="test-dir",
@@ -27,12 +29,14 @@ class TestListdir:
 
         # Make test files
         file1 = FSItem(
+            id=UUID("00000000-0000-0000-0000-000000000001"),
             parent_id=folder.id,
             root_id=root_id,
             name="test-file.txt.exef",
             size=100,
         )
         file2 = FSItem(
+            id=UUID("00000000-0000-0000-0000-000000000002"),
             parent_id=folder.id,
             root_id=root_id,
             name="test-file2.txt.exef",
@@ -63,16 +67,19 @@ class TestListdir:
 
         response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content).decode())
         directory = Directory(**response)
+        assert str(directory.id) == "00000000-0000-0000-0000-000000000000"
         assert directory.name == "test-dir"
         assert directory.fullpath == "test-dir"
         assert directory.type == "directory"
         assert len(directory.items) == 2
 
         items: list[File] = sorted(directory.items, key=lambda item: item.name)
+        assert str(items[0].id) == "00000000-0000-0000-0000-000000000001"
         assert items[0].name == "test-file.txt.exef"
         assert items[0].fullpath == "test-dir/test-file.txt.exef"
         assert items[0].type == "file"
         assert items[0].size == 100
+        assert str(items[1].id) == "00000000-0000-0000-0000-000000000002"
         assert items[1].name == "test-file2.txt.exef"
         assert items[1].fullpath == "test-dir/test-file2.txt.exef"
         assert items[1].type == "file"
@@ -81,9 +88,7 @@ class TestListdir:
     def test_listdir_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
         from base64 import b64encode
 
-        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(
-            f"{get_item_fullpath(dir_with_items.id)}".encode()
-        )
+        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"{get_item_fullpath(dir_with_items.id)}".encode())
 
         response = auth_client.get(
             f"/api/files/list/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
@@ -94,6 +99,7 @@ class TestListdir:
 
         response = json.loads(ExEF(b"one demo 16B key").decrypt(response.content).decode())
         directory = Directory(**response)
+        assert str(directory.id) == "00000000-0000-0000-0000-000000000000"
         assert directory.name == "test-dir"
         assert directory.fullpath == "test-dir"
         assert directory.type == "directory"
