@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
         "server-api/subsequent-authentication",
         "server-api/encrypted-requests-and-responses",
         "server-api/files",
+        "server-api/merkle",
         "server-api/additional-vault-info",
     ],
 };

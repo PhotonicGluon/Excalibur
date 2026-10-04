@@ -1,0 +1,38 @@
+# Content Integrity
+
+:::warning
+
+This document is a draft and is subject to change.
+
+:::
+
+File operations by a user with an active Merkle tree need to be verified using an attestation, among other things. The Merkle-related endpoints available to them can be accessed by looking at the server's API documentation at `/api/docs`, under the "merkle" category.
+
+Please also refer to the [content integrity reference document](/docs/reference/merkle.mdx) to learn more.
+
+## Migrating to Merkle Verification
+
+Users that are not on Merkle verification can be migrated to use it.
+
+First, check whether the user already uses Merkle verification by sending a `GET` request to the `/api/merkle/status` endpoint, which returns a `VaultStatus` data structure. Note that the `merkle_status` field of the `VaultStatus` will either be the string `none`, `migrating`, or `active`.
+- If `merkle_status` is `none`, send an empty `POST` request to the `/api/merkle/migrate` endpoint to start the migration process. A `VaultStatus` data structure will be returned.
+    - Usually, you would also need to send a `GET` request to `/api/files/all` to get all items' node UUIDs.
+- If `merkle_status` is `migrating`, continuously send Merkle data via a `POST` request to the `/api/merkle/migrate/fill` endpoint.
+    - The request body should be a JSON object representing a map from the node UUID to a two-key object containing the node's hash and its content message authentication code (content MAC).
+        - The node hash and content MAC should be expressed as a Base64 string. The content MAC could also be set to `null`.
+    - One example request body is as follows:
+    ```json
+    {
+        "node-uuid-1": {
+            "hash": "base64-hash-1",
+            "content_mac": "base64-content-mac-1"
+        },
+        "node-uuid-2": {
+            "hash": "base64-hash-2",
+            "content_mac": null
+        }
+    }
+    ```
+
+TODO: Continue
+
