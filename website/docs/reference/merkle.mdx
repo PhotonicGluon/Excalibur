@@ -100,7 +100,7 @@ def bindIdentity(id: bytes, name: str, payload: bytes) -> bytes:
 
 You can find the definition of [`frame()`](#frame()-function) below.
 
-## Attestation
+## Attestation {/* #attestation */}
 
 An attestation is a data structure that encapsulates information verifying the integrity of the entire Merkle tree (and, hence, the user's vault). It consists of the following fields:
 - `generation`: the current vault generation, expressed as an integer.
@@ -138,6 +138,20 @@ frame([
 ```
 
 You can find the definition of [`frame()`](#frame()-function) below.
+
+## Mutation {/* #mutation */}
+
+After a CRUD operation on the files, the Merkle tree would be left in a 'dirty' state. This is because there would be node(s) that have been affected by the operation. As such, a **mutation** needs to be performed on the Merkle tree to restore it to the verified status.
+
+A mutation data structure consists of the following fields:
+- `expectedGeneration`: the expected generation of the Merkle tree *before* the mutation, as an integer.
+    - This is used to ensure that the tree that we are mutating is of the correct generation; otherwise we might be mutating a more recent tree.
+- `nodeHashes`: a mapping of every node's UUID that will be modified to its new hash value.
+    - The node UUIDs are expressed as strings (e.g., `00000000-0000-0000-0000-000000000001`), while the new hash value is a byte string.
+- `contentMACs`: a mapping of the file UUIDs that is missing a content MAC to its new content MAC.
+    - Like for `nodeHashes`, the file UUIDs are expressed as strings while the content MACs are byte strings.
+    - Note that only files need to be present here, and only those that do not already have a content MAC stored on the server (i.e., newly uploaded files).
+- `attestation`: the new [attestation](#attestation) for the Merkle tree.
 
 ---
 
