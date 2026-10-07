@@ -1,11 +1,5 @@
 # Content Integrity
 
-:::warning
-
-This document is a draft and is subject to change.
-
-:::
-
 The integrity of data on the server is maintained using a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
 
 ## Keys
@@ -35,7 +29,7 @@ The attestation key $k_a$ is used to generate the attestation tag for the Merkle
 
 The corresponding `info` field used to generate $k_n$ is the ASCII string `Excalibur Merkle v1 - Attestation Key`.
 
-## Verification
+## Making Data Verifiable
 
 ### Content
 
@@ -152,6 +146,41 @@ A mutation data structure consists of the following fields:
     - Like for `nodeHashes`, the file UUIDs are expressed as strings while the content MACs are byte strings.
     - Note that only files need to be present here, and only those that do not already have a content MAC stored on the server (i.e., newly uploaded files).
 - `attestation`: the new [attestation](#attestation) for the Merkle tree.
+
+## Verifying Integrity
+
+### Item Integrity {/* #inclusion-proof */}
+
+To check that an item was not tampered while stored on the server, a client can request an **inclusion proof** for the item.
+
+The inclusion proof returns the base item as well as a list of **inclusion proof steps**. Each step has the following fields:
+- `id`: the UUID of the current node, as a string (e.g., `00000000-0000-0000-0000-000000001234`).
+- `name`: the name of the current node.
+    - The vault's root node is treated as an unnamed folder, i.e. its name is the empty string.
+- `children`: a list of `(childUUID, childNodeHash)` pairs.
+    - Each child UUID is also a string, and the child node hash is a byte string.
+
+The inclusion proof's steps walks up the Merkle tree, starting from the target node all the way up to the root node.
+
+To verify the integrity of the item:
+1. Check that the content MAC and node hash match for the target node.
+2. Let the `currentID` be the target node's ID and the `currentNodeHash` be the node hash for the target node.
+3. While there are still unprocessed node steps:
+    1. Get the step's `name` (which is the current node's parent's name).
+    2. Get the `children` (which is, in reality, the *siblings* of the current node), ensuring that each child has a `childNodeHash` provided.
+    3. Compute the current node's parent's node hash by using only the step's `id`, `name`, and `children`.
+    4. Update `currentID` to be the current node's parent's ID and the `currentNodeHash` to be the node hash computed in the previous step.
+4. The `currentID` should be the root node's ID; check whether the computed `currentNodeHash` matches the latest attestation's root node hash.
+
+### Vault Integrity {/* #vault-integrity */}
+
+To verify the whole vault, one would need to recompute the Merkle tree locally and compare the locally-computed root node's hash with the server's Merkle tree's root node's hash.
+
+In particular:
+1. Get all items on the server.
+2. Compute a local copy of the Merkle tree using the obtained items.
+3. Obtain the server's Merkle tree's root node's hash.
+4. Compare the locally computed hash with the server's hash.
 
 ---
 
