@@ -1,4 +1,4 @@
-✨ Added Merkle tree verification of vault data, improving security and data integrity.
+✨ Added Merkle tree verification of vault data, improving security and data integrity. ([#203](https://github.com/PhotonicGluon/Excalibur/pull/203))
 
 A whole slew of endpoints have been added to support Merkle tree verification:
 
