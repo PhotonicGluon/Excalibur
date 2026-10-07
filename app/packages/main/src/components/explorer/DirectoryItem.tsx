@@ -157,7 +157,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         }),
                     );
                 } catch (e) {
-                    if (signal.aborted) throw new Error("Cancelled");
+                    if (signal.aborted) throw new Error("Cancelled"); // eslint-disable-line preserve-caught-error
 
                     const err = e as Error;
                     if (err.message.includes("header MAC")) {

@@ -132,7 +132,7 @@ export function useUploadFile() {
                         }),
                     );
                 } catch (e) {
-                    if (signal.aborted) throw new Error("Cancelled");
+                    if (signal.aborted) throw new Error("Cancelled"); // eslint-disable-line preserve-caught-error
                     await explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
                     throw e;
                 } finally {
