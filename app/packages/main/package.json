@@ -43,7 +43,7 @@
         "jsonwebtoken": "^9.0.3",
         "mime": "^4.1.0",
         "natural-compare": "^1.4.0",
-        "pbkdf2": "^3.1.6",
+        "pbkdf2": "^3.1.7",
         "randombytes": "^2.1.0",
         "react": "19.3.0",
         "react-circular-progressbar": "^2.2.0",
