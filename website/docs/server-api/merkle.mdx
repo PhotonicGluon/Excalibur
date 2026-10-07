@@ -1,0 +1,30 @@
+# Content Integrity
+
+File operations by a user with an active Merkle tree need to be verified using an attestation, among other things. The Merkle-related endpoints available to them can be accessed by looking at the server's API documentation at `/api/docs`, under the "merkle" category.
+
+Please also refer to the [content integrity reference document](/docs/reference/merkle.mdx) to learn more.
+
+## Migrating to Merkle Verification
+
+Users that are not on Merkle verification can be migrated to use it.
+
+First, check whether the user already uses Merkle verification by sending a `GET` request to the `/api/merkle/state` endpoint, which returns a `VaultStatus` data structure. Note that the `merkle_status` field of the `VaultStatus` will either be the string `none`, `migrating`, or `active`.
+- If `merkle_status` is `none`, send an empty `POST` request to the `/api/merkle/migrate` endpoint to start the migration process. A `VaultStatus` data structure will be returned.
+    - Usually, you would also need to send a `GET` request to `/api/files/all` to get all items' node UUIDs.
+- If `merkle_status` is `migrating`, continuously send Merkle data via a `POST` request to the `/api/merkle/migrate/fill` endpoint.
+    - Identify data that needs migration using the `/api/merkle/dirty` endpoint, and get the corresponding content message authentication code (content MAC) input data using `/api/merkle/content-mac-inputs`.
+    - Once no more data is dirty, send a `POST` request to `/api/migrate/complete`, containing the generation 1 attestation for the vault.
+
+## Mutating the Merkle Tree
+
+Typically, a CRUD operation would dirty the current item's node as well as its parent node(s). As such, after every CRUD
+operation:
+1. Obtain all dirty items using `/api/merkle/dirty`.
+2. Request all content MAC inputs for those items via `/api/merkle/content-mac-inputs`.
+3. Compute the content MAC inputs of the items.
+4. Submit a [mutation](/docs/reference/merkle.mdx#mutation) to `/api/merkle/mutate`.
+
+## Verifying Integrity
+
+- To check for the integrity of an item, send a `GET` request to `/api/merkle/proof/{item_id}`. That will return an [inclusion proof](/docs/reference/merkle.mdx#inclusion-proof) for the item, which the client can use to verify the integrity of the item.
+- To check the integrity of the entire vault, follow the steps [here](/docs/reference/merkle.mdx#vault-integrity).

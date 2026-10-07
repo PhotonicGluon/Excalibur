@@ -21,6 +21,7 @@
         "HMAC",
         "katex",
         "keyshare",
+        "merkle",
         "OPRF",
         "pipx",
         "ristretto255",

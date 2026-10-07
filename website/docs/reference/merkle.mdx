@@ -1,0 +1,201 @@
+# Content Integrity
+
+The integrity of data on the server is maintained using a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
+
+## Keys
+
+The vault key $K$ is used as the master key for generating the other keys used for the Merkle tree, using **HKDF-SHA256**. In general, the keys use the following parameters (following [Wikipedia's format](https://en.wikipedia.org/wiki/HKDF#Mechanism)):
+
+- `salt`: the user's UUID, expressed as 32 bytes.
+- `IKM` (input key material): the vault key $K$.
+- `info`: depends on the key.
+- `length`: 32 bytes.
+
+### Content Message Authentication Code (MAC) Key
+
+The content MAC key $k_m$ is used to authenticate the _plaintext_ content of the file.
+
+The corresponding `info` field used to generate $k_m$ is the ASCII string `Excalibur Merkle v1 - Content MAC Key`.
+
+### Node Hash Key
+
+The node hash key $k_n$ is used to hash the Merkle tree's nodes.
+
+The corresponding `info` field used to generate $k_n$ is the ASCII string `Excalibur Merkle v1 - Node Hash Key`.
+
+### Attestation Key
+
+The attestation key $k_a$ is used to generate the attestation tag for the Merkle tree.
+
+The corresponding `info` field used to generate $k_n$ is the ASCII string `Excalibur Merkle v1 - Attestation Key`.
+
+## Making Data Verifiable
+
+### Content
+
+The plaintext content of an [ExEF file](./exef/index.mdx) is verified using the content MAC. It is generated using the content MAC key $k_m$ using **BLAKE2b-256** in keyed mode with the following common parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the content MAC key $k_m$
+- `keylen`: 32 bytes
+
+The input data for the MAC (i.e., the `in` parameter) depends on the specific version of ExEF that was used to encrypt the file.
+
+#### ExEF v4
+
+:::warning
+
+ExEF v4 specification is a draft and is subject to change.
+
+:::
+
+[ExEF v4](./exef/v4.mdx)'s plaintext is encrypted in chunks, with each chunk carrying a tag that authenticates the chunk's plaintext along with any additional authenticated data, including the header. These tags can thus be used to authenticate the plaintext content of the file as a whole.
+
+In particular, the `in` parameter for the MAC is the **concatenation of all of these tags**. Specifically, for an ExEF file with $N$ chunks, there will be $N$ tags of 16 bytes each that form the input data for the MAC. The input length will thus be $16N$ bytes.
+
+#### ExEF v3 (Legacy)
+
+[ExEF v3](./exef/v3.mdx)'s plaintext is encrypted as one singular chunk with one tag. This tag, however, does not cover the header's content, which is not encrypted. Therefore, the content MAC must authenticate both the plaintext and the header.
+
+In particular, the `in` parameter for the MAC is the **concatenation of the header _and_ the footer** (which consists of only the tag). The input length will thus be 56 bytes (comprising of the header and footer).
+
+### Node {/* #node-hash */}
+
+The Merkle subtree rooted at a specific node is verified using a node hash. It is generated using the node hash key $k_n$ using **BLAKE2b-256** in keyed mode with the following parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the node hash key $k_n$
+- `keylen`: 32 bytes
+
+The input data for the hash (i.e., the `in` parameter) depends on the type of node that we are hashing:
+- **Leaf Node** (e.g., files): the `in` parameter is `bindIdentity(id, name, contentMAC)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below).
+- **Folder Node**: follow these steps in order. 
+    1. Get the child node(s) of the folder.
+    2. Sort the child node(s) according to their IDs, in [lexicographic order](https://en.wikipedia.org/wiki/Lexicographic_order#Numeral_systems_and_dates). Let the sorted child nodes be `sortedChildren`.
+    3. For each child in `sortedChildren`, obtain its UUID (`uuid`, expressed in bytes) and node hash (`nodeHash`). Produce that child's payload using `frame([UUID, nodeHash])` (see [`frame()`](#frame()-function) below).
+    4. Concatenate all children's payloads in the order of `sortedChildren`. This is the `payload`.
+    5. The `in` parameter is `bindIdentity(id, name, payload)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below).
+
+
+#### Identity Binding {/* #identity-binding */}
+
+We usually want to bind the identity of the user to the payload that we are hashing. Typically we use the Merkle tree's root node's ID to do this (since each user has a unique Merkle tree root).
+
+The `bindIdentity()` function takes in:
+- `id`: the UUID of the root node, expressed in byte form;
+- `name`: the name of the current node, as a string; and
+- `payload`: the payload to bind to the identity, as bytes,
+
+and returns a byte string. It is defined as follows:
+```python
+def bindIdentity(id: bytes, name: str, payload: bytes) -> bytes:
+    return frame([id, bytes(name, "utf-8"), payload])
+```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+## Attestation {/* #attestation */}
+
+An attestation is a data structure that encapsulates information verifying the integrity of the entire Merkle tree (and, hence, the user's vault). It consists of the following fields:
+- `generation`: the current vault generation, expressed as an integer.
+    - This is used to track how the vault has changed, and to ensure that an old attestation is not shown after a newer attestation.
+    - The first attestation has `generation = 1`.
+- `rootHash`: the [node hash](#node-hash) of the root node, expressed as a byte string.
+    - This secures the entire Merkle tree for the current generation.
+- `prevRootHash`: the previous generation's root hash, expressed as a byte string.
+    - This allows a client to check whether the current attestation properly chains onto the previous attestation.
+    - The first attestation does *not* specify a `prevRootHash` (i.e., it is `null`).
+- `timestamp`: the timestamp (in seconds) of the attestation.
+- `tag`: message authentication code (MAC) for the attestation.
+    - This is to ensure that only *this* user can create attestations for their own Merkle tree.
+
+An attestation is verified when the given parameters correctly produce the attestation tag supplied.
+
+### Attestation Tag
+
+The `tag` is generated using the attestation key $k_a$ using **BLAKE2b-256** in keyed mode with the following parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the attestation key $k_a$
+- `keylen`: 32 bytes
+
+The `in` parameter for the attestation tag is the output of:
+
+```python
+frame([
+    rootID,        # UUID of the root node, expressed in bytes
+    generation,    # Attestation generation, expressed as a *big-endian* integer
+    rootHash,      # Current root hash, expressed in bytes
+    prevRootHash,  # Previous root hash, expressed in bytes, or empty
+    timestamp      # Timestamp expressed as a *big-endian* integer
+])
+```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+## Mutation {/* #mutation */}
+
+After a CRUD operation on the files, the Merkle tree would be left in a 'dirty' state. This is because there would be node(s) that have been affected by the operation. As such, a **mutation** needs to be performed on the Merkle tree to restore it to the verified status.
+
+A mutation data structure consists of the following fields:
+- `expectedGeneration`: the expected generation of the Merkle tree *before* the mutation, as an integer.
+    - This is used to ensure that the tree that we are mutating is of the correct generation; otherwise we might be mutating a more recent tree.
+- `nodeHashes`: a mapping of every node's UUID that will be modified to its new hash value.
+    - The node UUIDs are expressed as strings (e.g., `00000000-0000-0000-0000-000000000001`), while the new hash value is a byte string.
+- `contentMACs`: a mapping of the file UUIDs that is missing a content MAC to its new content MAC.
+    - Like for `nodeHashes`, the file UUIDs are expressed as strings while the content MACs are byte strings.
+    - Note that only files need to be present here, and only those that do not already have a content MAC stored on the server (i.e., newly uploaded files).
+- `attestation`: the new [attestation](#attestation) for the Merkle tree.
+
+## Verifying Integrity
+
+### Item Integrity {/* #inclusion-proof */}
+
+To check that an item was not tampered while stored on the server, a client can request an **inclusion proof** for the item.
+
+The inclusion proof returns the base item as well as a list of **inclusion proof steps**. Each step has the following fields:
+- `id`: the UUID of the current node, as a string (e.g., `00000000-0000-0000-0000-000000001234`).
+- `name`: the name of the current node.
+    - The vault's root node is treated as an unnamed folder, i.e. its name is the empty string.
+- `children`: a list of `(childUUID, childNodeHash)` pairs.
+    - Each child UUID is also a string, and the child node hash is a byte string.
+
+The inclusion proof's steps walks up the Merkle tree, starting from the target node all the way up to the root node.
+
+To verify the integrity of the item:
+1. Check that the content MAC and node hash match for the target node.
+2. Let the `currentID` be the target node's ID and the `currentNodeHash` be the node hash for the target node.
+3. While there are still unprocessed node steps:
+    1. Get the step's `name` (which is the current node's parent's name).
+    2. Get the `children` (which is, in reality, the *siblings* of the current node), ensuring that each child has a `childNodeHash` provided.
+    3. Compute the current node's parent's node hash by using only the step's `id`, `name`, and `children`.
+    4. Update `currentID` to be the current node's parent's ID and the `currentNodeHash` to be the node hash computed in the previous step.
+4. The `currentID` should be the root node's ID; check whether the computed `currentNodeHash` matches the latest attestation's root node hash.
+
+### Vault Integrity {/* #vault-integrity */}
+
+To verify the whole vault, one would need to recompute the Merkle tree locally and compare the locally-computed root node's hash with the server's Merkle tree's root node's hash.
+
+In particular:
+1. Get all items on the server.
+2. Compute a local copy of the Merkle tree using the obtained items.
+3. Obtain the server's Merkle tree's root node's hash.
+4. Compare the locally computed hash with the server's hash.
+
+---
+
+## Utility Functions
+### `frame()` {/* #frame()-function */}
+The `frame()` function length-prefixes each byte string in the `data` list and concatenates them together into one byte string. It is defined as follows:
+
+```python
+def frame(data: list[bytes]) -> bytes:
+    output = b""
+    for part in data:
+        length = len(part).to_bytes(PREFIX_LENGTH, "big")  # In big-endian mode
+        output += length + part  # length, then the data part
+    
+    return output
+```
+
+For content verification, we assume a `PREFIX_LENGTH` of 4 bytes is used.

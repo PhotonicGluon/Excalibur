@@ -42,6 +42,7 @@ const sidebars: SidebarsConfig = {
             },
             items: ["reference/exef/v4", "reference/exef/v3", "reference/exef/v2"],
         },
+        "reference/merkle",
     ],
     server_api: [
         "server-api/index",
@@ -62,6 +63,7 @@ const sidebars: SidebarsConfig = {
         "server-api/subsequent-authentication",
         "server-api/encrypted-requests-and-responses",
         "server-api/files",
+        "server-api/merkle",
         "server-api/additional-vault-info",
     ],
 };
