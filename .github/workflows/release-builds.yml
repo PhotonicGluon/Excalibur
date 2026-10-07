@@ -22,17 +22,9 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v6
+            - uses: pnpm/setup@v3
               with:
-                  version: 12
-
-            - name: Set up Node.js
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "22"
-                  cache: "pnpm"
-                  cache-dependency-path: pnpm-lock.yaml
+                  cache: true
 
             - name: Install Dependencies
               working-directory: ./app/packages/electron
@@ -93,17 +85,9 @@ jobs:
               run: |
                   echo "MODIFIED_BRANCH_NAME=${name/\//-}" >> $GITHUB_ENV
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v6
+            - uses: pnpm/setup@v3
               with:
-                  version: 12
-
-            - name: Set up Node.js
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "22"
-                  cache: "pnpm"
-                  cache-dependency-path: pnpm-lock.yaml
+                  cache: true
 
             - name: Set up JDK
               uses: actions/setup-java@v5

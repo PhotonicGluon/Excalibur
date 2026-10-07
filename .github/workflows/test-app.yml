@@ -26,17 +26,9 @@ jobs:
               with:
                   sparse-checkout: app
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v6
+            - uses: pnpm/setup@v3
               with:
-                  version: 12
-
-            - name: Set up Node.js
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "22"
-                  cache: "pnpm"
-                  cache-dependency-path: pnpm-lock.yaml
+                  cache: true
 
             - name: Install Dependencies
               working-directory: ./app
