@@ -47,3 +47,24 @@ export function b64decodeURLSafe(input: string): Buffer {
     const rawB64 = input.replace(/-/g, "+").replace(/_/g, "/");
     return b64decode(rawB64);
 }
+
+/**
+ * Encodes a UUID string as its raw 16-byte representation.
+ *
+ * @param uuid UUID string (with or without hyphens)
+ * @returns 16-byte buffer representing the UUID
+ */
+export function uuidToBytes(uuid: string): Buffer {
+    return Buffer.from(uuid.replace(/-/g, ""), "hex");
+}
+
+/**
+ * Decodes a 16-byte buffer into a UUID string.
+ *
+ * @param bytes 16-byte buffer representing the UUID
+ * @returns UUID string
+ */
+export function bytesToUUID(bytes: Buffer): string {
+    const hex = bytes.toString("hex");
+    return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20, 32)].join("-");
+}

@@ -4,7 +4,7 @@ from sqlmodel import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.operations import add_item, get_item, get_item_fullpath, remove_item
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -221,3 +221,43 @@ class TestRename:
 
         response = auth_client.post("/api/files/rename/rename-folder/r-file-no-exef", json="no-exef")
         assert response.status_code == 417
+
+
+class TestRenameMerkleEffects:
+    @pytest.fixture
+    def renameable_file(self, test_user) -> FSItem:
+        root_id = test_user["root_id"]
+
+        folder = FSItem(parent_id=root_id, root_id=root_id, name="merkle-rename", is_folder=True)
+        file = FSItem(parent_id=folder.id, root_id=root_id, name="merkle-rename.txt.exef", is_folder=False, size=1)
+        folder_id, file_id = folder.id, file.id
+
+        add_item(folder)
+        add_item(file)
+
+        yield get_item(file_id)
+
+        for item_id in (file_id, folder_id):
+            if get_item(item_id) is not None:
+                remove_item(item_id)
+
+    def test_rename_marks_the_chain_dirty(
+        self, test_user, auth_client: TestClient, renameable_file: FSItem, mark_clean, assert_dirty
+    ):
+        root_id = test_user["root_id"]
+        folder_id = renameable_file.parent_id
+
+        mark_clean(renameable_file.id)
+        item_version = get_item(renameable_file.id).version
+        folder_version = get_item(folder_id).version
+        root_version = get_item(root_id).version
+
+        response = auth_client.post(
+            "/api/files/rename/merkle-rename/merkle-rename.txt.exef", json="merkle-renamed.txt.exef"
+        )
+        assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content)
+
+        assert get_item(renameable_file.id).name == "merkle-renamed.txt.exef"
+        assert_dirty(renameable_file.id, item_version)
+        assert_dirty(folder_id, folder_version)
+        assert_dirty(root_id, root_version)

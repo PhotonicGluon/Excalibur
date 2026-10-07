@@ -1,7 +1,7 @@
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from Crypto.Random import get_random_bytes
@@ -25,7 +25,7 @@ KEY_1 = b"1st demo 16B key"
 KEY_2 = b"2nd demo 16B key"
 
 
-def _auth_websocket(user_id: str, key: bytes, path: str):
+def _auth_websocket(user_id: UUID, key: bytes, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = key
@@ -45,7 +45,7 @@ def _auth_websocket(user_id: str, key: bytes, path: str):
     return auth_client, auth_token, pop_header
 
 
-def _make_websocket(user_id: str, key: bytes, path: str):
+def _make_websocket(user_id: UUID, key: bytes, path: str):
     auth_client, auth_token, pop_header = _auth_websocket(user_id, key, path)
     with auth_client.websocket_connect(path) as ws:
         ws.send_text(f"{auth_token}:{pop_header}")
@@ -56,11 +56,11 @@ def _make_websocket(user_id: str, key: bytes, path: str):
 class TestDirectoryChangesListener:
     @pytest.fixture
     def ws_client(self):
-        yield from _make_websocket(USER_ID, KEY_1, LISTENER_PATH)
+        yield from _make_websocket(UUID(USER_ID), KEY_1, LISTENER_PATH)
 
     @pytest.fixture
     def ws_client_2(self):
-        yield from _make_websocket(USER_ID, KEY_2, LISTENER_PATH)
+        yield from _make_websocket(UUID(USER_ID), KEY_2, LISTENER_PATH)
 
     @pytest.fixture(scope="class")
     @classmethod
@@ -193,7 +193,7 @@ class TestDirectoryChangesListener:
 
     def test_duplicate_connection(self, auth_client: TestClient):
         auth_client, auth_token, pop_header = _auth_websocket(
-            "01234567-89ab-dcef-0123-456789abcdef", KEY_1, LISTENER_PATH
+            UUID("01234567-89ab-dcef-0123-456789abcdef"), KEY_1, LISTENER_PATH
         )
         with auth_client.websocket_connect(LISTENER_PATH) as ws1:
             ws1.send_text(f"{auth_token}:{pop_header}")

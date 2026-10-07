@@ -60,6 +60,7 @@ const DirectoryListRaw: React.FC<ContainerProps> = (props: ContainerProps) => {
         MainBody = sortItems(props.directory, props.sortValues.sortType, props.sortValues.sortAsc).map((item, idx) => (
             <DirectoryItem
                 key={idx}
+                itemUUID={item.id}
                 isGridType={isGridType}
                 oddRow={isOddRow(idx)}
                 name={item.name}

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from excalibur_server.api.app import app
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item_by_path
+from excalibur_server.src.db.operations import get_item, get_item_by_path
 
 
 class TestUpload:
@@ -93,3 +93,50 @@ class TestUpload:
             f"/api/files/upload/fake/path/test-{uuid}.txt.exef", content=b"fake path test content"
         )
         assert response.status_code == 404
+
+
+class TestUploadMerkleEffects:
+    def test_upload_returns_new_file_id(self, test_user, auth_client: TestClient):
+        root_id = test_user["root_id"]
+
+        uuid = uuid4().hex
+        response = auth_client.post(f"/api/files/upload/merkle-{uuid}.txt.exef", content=b"content")
+        assert response.status_code == 201
+
+        returned_id = ExEF(b"one demo 16B key").decrypt(response.content).decode()
+        assert returned_id == str(get_item_by_path(root_id, f"merkle-{uuid}.txt.exef").id)
+
+    def test_upload_marks_ancestors_dirty(self, test_user, auth_client: TestClient, mark_clean, assert_dirty):
+        root_id = test_user["root_id"]
+
+        mark_clean(root_id)
+        root_version = get_item(root_id).version
+
+        uuid = uuid4().hex
+        response = auth_client.post(f"/api/files/upload/merkle-{uuid}.txt.exef", content=b"content")
+        assert response.status_code == 201
+
+        # The new file starts out dirty, and its parent chain is dirtied along with it
+        new_file = get_item_by_path(root_id, f"merkle-{uuid}.txt.exef")
+        assert new_file.node_hash is None
+        assert new_file.content_mac is None
+        assert_dirty(root_id, root_version)
+
+    def test_forced_upload_returns_the_new_id(self, test_user, auth_client: TestClient, mark_clean, assert_dirty):
+        root_id = test_user["root_id"]
+
+        uuid = uuid4().hex
+        auth_client.post(f"/api/files/upload/merkle-{uuid}.txt.exef", content=b"first")
+        original_id = get_item_by_path(root_id, f"merkle-{uuid}.txt.exef").id
+
+        mark_clean(original_id)
+        root_version = get_item(root_id).version
+
+        # Overwriting deletes and recreates the row, so the ID the client gets back is a new one
+        response = auth_client.post(f"/api/files/upload/merkle-{uuid}.txt.exef?force=true", content=b"second")
+        assert response.status_code == 201
+
+        returned_id = ExEF(b"one demo 16B key").decrypt(response.content).decode()
+        assert returned_id != str(original_id)
+        assert returned_id == str(get_item_by_path(root_id, f"merkle-{uuid}.txt.exef").id)
+        assert_dirty(root_id, root_version)

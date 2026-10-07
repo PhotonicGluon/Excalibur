@@ -354,8 +354,13 @@ export class Encryptor extends BaseEncryptor {
         const index = this._chunksEmitted;
         const cipher = gcm(this._cryptoKey, nonce(index), aad(this._headerBuffer!, index, isFinal));
 
-        this._queue.push(Buffer.from(await cipher.encrypt(chunkPt)));
+        const rawCiphertext = Buffer.from(await cipher.encrypt(chunkPt));
+        const tag = rawCiphertext.subarray(-16);
+
+        this._queue.push(rawCiphertext);
         this._chunksEmitted += 1;
+        this._contentMACInput.set(tag, index * 16);
+        this._contentMACInputOffset += 16;
     }
 
     /**
@@ -397,20 +402,24 @@ export class Encryptor extends BaseEncryptor {
         }
 
         const chunkSize = 1 << this.exponent;
-        const n = computeChunkCount(paddedSize, chunkSize);
-        if (n > MAX_CHUNK_COUNT) {
+        const chunkCount = computeChunkCount(paddedSize, chunkSize);
+        if (chunkCount > MAX_CHUNK_COUNT) {
             throw new Error("too many chunks");
         }
 
         this._paddedSize = paddedSize;
-        this._chunkCount = n;
+        this._chunkCount = chunkCount;
 
-        const header = new Header(this._cipherID, this.exponent, n, paddedSize, this.salt);
+        const header = new Header(this._cipherID, this.exponent, chunkCount, paddedSize, this.salt);
         this._headerBuffer = header.toBuffer();
 
         // The pre-encryption plaintext opens with the 8-byte plaintext length prefix
         this._preBuffer = Buffer.alloc(LENGTH_PREFIX_SIZE);
         writeUInt64BE(this._preBuffer, length, 0);
+
+        // Allocate the content MAC input buffer
+        this._contentMACInput = Buffer.alloc(16 * chunkCount);
+        this._contentMACInputOffset = 0;
     }
 
     async update(data: Buffer): Promise<void> {
@@ -581,6 +590,18 @@ export class Decryptor extends BaseDecryptor {
                 return;
             }
 
+            if (this._chunkIndex === 0) {
+                // Just verified first full chunk, which means that the header is now fully authenticated and thus the
+                // chunk size and chunk count are now trustworthy. So we can define the input buffer...
+                this._contentMACInput = Buffer.alloc(16 * this._header.chunkCount);
+                this._contentMACInputOffset = 0;
+            }
+
+            // Set the chunk's tag in the input buffer
+            this._contentMACInput.set(tag, this._contentMACInputOffset);
+            this._contentMACInputOffset += 16;
+
+            // Process the chunk's plaintext
             this._processPreEncryption(chunkPt);
             this._chunkIndex += 1;
         }
@@ -663,6 +684,14 @@ export default class ExEFv4 {
     /** The encryption algorithm used in the ExEF format based on the key size */
     get alg() {
         return algForStrength(this.keysize);
+    }
+
+    /** The content MAC input buffer, if available */
+    get contentMACInput(): Buffer | null {
+        if (this.encryptor.contentMACInput !== null) {
+            return this.encryptor.contentMACInput;
+        }
+        return this.decryptor.contentMACInput;
     }
 
     // Convenience methods
