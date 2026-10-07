@@ -17,6 +17,7 @@ for (let i = 0; i < 10; i++) {
     }
 
     files.push({
+        id: i.toString(),
         name: name,
         creation_time: 1000000000 + i * 1000,
         fullpath: `/some/path/Sample File ${i}.txt.exef`,
@@ -25,6 +26,7 @@ for (let i = 0; i < 10; i++) {
     });
 }
 const directory: Directory = {
+    id: "dir",
     name: "Sample Directory",
     creation_time: 1100000000,
     fullpath: "/some/path",
@@ -41,6 +43,7 @@ describe("<DirectoryList />", () => {
         listenerConnected: boolean = true,
     ) {
         const defaultProps: Directory = {
+            id: "root",
             items,
             fullpath: ".",
             name: "A Directory",

@@ -104,8 +104,7 @@ const Login: React.FC = () => {
         try {
             const vaultInfo = await retrieveVaultInfo(
                 auth.serverInfo!.apiURL!,
-                e2eeData.token,
-                e2eeData.key,
+                e2eeData,
                 password,
                 { username },
                 (error) => {

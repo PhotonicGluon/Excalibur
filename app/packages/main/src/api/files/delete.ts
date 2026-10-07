@@ -1,6 +1,7 @@
 import { IS_DEV } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
 import { type ItemType } from "@lib/files/structures";
+import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
@@ -65,5 +66,7 @@ export async function deleteItem(
             return { success: false, error: "Unknown error" };
     }
 
+    // Trigger a sync and report success
+    scheduleMerkleSync(auth);
     return { success: true, deletedType: isDir ? "directory" : "file" };
 }

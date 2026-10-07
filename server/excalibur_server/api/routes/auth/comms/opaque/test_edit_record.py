@@ -76,7 +76,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
 
     # Create a new authenticated client
     MASTER_KEYS_CACHE[COMM_UUID] = COMM_MASTER_KEY
-    token = generate_auth_token(str(test_user.id), COMM_UUID, 9_999_999_999)
+    token = generate_auth_token(test_user.id, COMM_UUID, 9_999_999_999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
     pop_header = generate_pop_header(
         master_key=COMM_MASTER_KEY,

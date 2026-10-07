@@ -22,11 +22,12 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, moveOutline, pencilOutline, shieldCheckmarkOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
+import { verifyItemIntegrity } from "@lib/merkle";
 import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
 import { getMIMEType } from "@lib/util/mime";
@@ -48,8 +49,10 @@ const NAVIGATION_DELAY = 75;
 
 type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
-    /** The ID of the directory item */
+    /** The DOM element ID of the directory item */
     id?: string;
+    /** The server-assigned UUID of the underlying file/folder, used for Merkle integrity verification */
+    itemUUID?: string;
     /** Whether the item should be disabled */
     disabled?: boolean;
     /** Whether the item is displayed as a grid item */
@@ -283,6 +286,32 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
         dismissPopover();
     }
 
+    /**
+     * Handles the user clicking the verify integrity button on an item.
+     */
+    async function onClickVerify() {
+        dismissPopover();
+        if (!props.itemUUID) {
+            return;
+        }
+
+        await explorerContext.presentSnackbar("Verifying...");
+        const result = await verifyItemIntegrity(auth, props.itemUUID);
+        if (!result.success) {
+            await explorerContext.presentSnackbar(`Could not verify item: ${result.error}`, "danger");
+            return;
+        }
+        if (result.verified) {
+            await explorerContext.presentSnackbar("No tampering detected", "success");
+            return;
+        }
+
+        await explorerContext.presentSnackbar(
+            result.details ?? "This item does not match the vault's trusted record",
+            "danger",
+        );
+    }
+
     // Render
     const lighter = props.isGridType
         ? "[--background:var(--ion-background-color-step-50)]"
@@ -337,6 +366,14 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         <IonText className="pl-2">Delete</IonText>
                     </IonLabel>
                 </IonItem>
+                {props.itemUUID && (
+                    <IonItem button={true} onClick={() => onClickVerify()}>
+                        <IonLabel>
+                            <IonIcon icon={shieldCheckmarkOutline} size="large" />
+                            <IonText className="pl-2">Verify Integrity</IonText>
+                        </IonLabel>
+                    </IonItem>
+                )}
             </IonList>
         </IonContent>
     );

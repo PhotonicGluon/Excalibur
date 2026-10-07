@@ -15,22 +15,6 @@ from excalibur_server.src.users import get_user_from_id
     "/list/{path:path}",
     name="List Directory Contents",
     responses={
-        status.HTTP_200_OK: {
-            "description": "Search results",
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "name": "example.txt",
-                            "creation_time": 1100000000,
-                            "fullpath": "example.txt",
-                            "type": "file",
-                            "size": 1024,
-                        },
-                    ],
-                }
-            },
-        },
         status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
     },
     response_model=Directory,

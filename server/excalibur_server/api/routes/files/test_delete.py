@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from excalibur_server.api.app import app
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.operations import add_item, get_item, get_item_fullpath, remove_item
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -193,3 +193,60 @@ class TestDeletePath:
     def test_delete_root(self, auth_client: TestClient):
         response = auth_client.delete("/api/files/delete/.")
         assert response.status_code == 412
+
+
+class TestDeleteMerkleEffects:
+    @pytest.fixture
+    def nested_file(self, test_user) -> FSItem:
+        root_id = test_user["root_id"]
+
+        folder = FSItem(parent_id=root_id, root_id=root_id, name="merkle-delete", is_folder=True)
+        file = FSItem(parent_id=folder.id, root_id=root_id, name="merkle-delete.txt.exef", is_folder=False)
+        file_path = CONFIG.storage.vault_folder / file.system_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file.size = file_path.write_bytes(b"delete me")
+
+        folder_id, file_id = folder.id, file.id
+        add_item(folder)
+        add_item(file)
+
+        yield get_item(file_id)
+
+        for item_id in (file_id, folder_id):
+            if get_item(item_id) is not None:
+                remove_item(item_id)
+
+        if file_path.exists():
+            file_path.unlink()
+
+    def test_delete_marks_ancestors_dirty(
+        self, test_user, auth_client: TestClient, nested_file: FSItem, mark_clean, assert_dirty
+    ):
+        root_id = test_user["root_id"]
+        folder_id = nested_file.parent_id
+
+        mark_clean(nested_file.id)
+        root_version = get_item(root_id).version
+        folder_version = get_item(folder_id).version
+
+        response = auth_client.delete("/api/files/delete/merkle-delete/merkle-delete.txt.exef")
+        assert response.status_code == 200
+
+        assert get_item(nested_file.id) is None
+        assert_dirty(folder_id, folder_version)
+        assert_dirty(root_id, root_version)
+
+    def test_delete_folder_marks_ancestors_dirty(
+        self, test_user, auth_client: TestClient, nested_file: FSItem, mark_clean, assert_dirty
+    ):
+        root_id = test_user["root_id"]
+        folder_id = nested_file.parent_id
+
+        mark_clean(nested_file.id)
+        root_version = get_item(root_id).version
+
+        response = auth_client.delete("/api/files/delete/merkle-delete?as_dir=true&force=true")
+        assert response.status_code == 202
+
+        assert get_item(folder_id) is None
+        assert_dirty(root_id, root_version)

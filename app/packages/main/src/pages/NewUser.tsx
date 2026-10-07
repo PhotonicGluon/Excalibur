@@ -22,6 +22,7 @@ import { arrowBack } from "ionicons/icons";
 
 import { TOAST_DURATION } from "@lib/consts";
 import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
+import { MerkleKeys } from "@lib/merkle/keys";
 import { UserVaultInfo } from "@lib/users/structures";
 
 import { e2ee } from "@api/auth";
@@ -172,6 +173,7 @@ const NewUser: React.FC = () => {
             aukSalt,
             encryptedKey: encryptedVaultKey,
             key: vaultKey,
+            merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
             info: additionalInfo,
         });
 

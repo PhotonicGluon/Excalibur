@@ -52,6 +52,22 @@ export function xorBuffer(a: Buffer, b: Buffer): Buffer {
 }
 
 /**
+ * Length-prefixes each buffer and concatenates them together into one singular buffer.
+ *
+ * @param parts parts to concatenate
+ * @param prefixLen length of each length prefix, in bytes
+ * @returns length-prefixed concatenation of {@link parts}
+ */
+export function frame(parts: Buffer[], prefixLen: number = 4): Buffer {
+    const framed = parts.map((part) => {
+        const prefix = Buffer.alloc(prefixLen);
+        prefix.writeUIntBE(part.length, 0, prefixLen);
+        return Buffer.concat([prefix, part]);
+    });
+    return Buffer.concat(framed);
+}
+
+/**
  * Writes an 8-byte big-endian unsigned integer into a buffer.
  *
  * @param buffer buffer to write into
@@ -60,6 +76,18 @@ export function xorBuffer(a: Buffer, b: Buffer): Buffer {
  */
 export function writeUInt64BE(buffer: Buffer, value: number, offset: number): void {
     buffer.write(value.toString(16).padStart(16, "0"), offset, 8, "hex");
+}
+
+/**
+ * Writes an 8-byte big-endian unsigned integer into a fresh buffer.
+ *
+ * @param value value to write
+ * @returns an 8-byte buffer
+ */
+export function uint64BE(value: number): Buffer {
+    const buffer = Buffer.alloc(8);
+    writeUInt64BE(buffer, value, 0);
+    return buffer;
 }
 
 /**
@@ -76,4 +104,23 @@ export function readUInt64BE(buffer: Buffer, offset: number): number {
         throw new Error("64-bit field is too large");
     }
     return Number(value);
+}
+
+/**
+ * Compares two buffers for equality in constant time.
+ *
+ * @param a first buffer
+ * @param b second buffer
+ * @returns whether the buffers are equal
+ */
+export function bufferEqual(a: Buffer, b: Buffer): boolean {
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) {
+        diff |= a[i] ^ b[i];
+    }
+    return diff === 0;
 }

@@ -1,6 +1,8 @@
 export type ItemType = "file" | "directory" | "parent";
 
 export interface FileLike {
+    /** Unique identifier for the item, as assigned by the server */
+    id: string;
     /** Name of item */
     name: string;
     /** Creation time of the item */

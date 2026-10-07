@@ -122,12 +122,15 @@ class TestSizeHelpers:
 class TestValidExEFv4:
     @pytest.mark.parametrize("strength", KEYS.keys())
     def test_encrypt_vector(self, strength: int):
-        ct = ExEFv4(KEYS[strength], salt=SALT, strength=strength, exponent=12).encrypt(b"Hello World!")
+        exef = ExEFv4(KEYS[strength], salt=SALT, strength=strength, exponent=12)
+        ct = exef.encrypt(b"Hello World!")
         assert ct == EXEFS[strength]
 
     @pytest.mark.parametrize("strength", KEYS.keys())
     def test_decrypt_vector(self, strength: int):
-        assert ExEFv4(KEYS[strength]).decrypt(EXEFS[strength]) == b"Hello World!"
+        exef = ExEFv4(KEYS[strength])
+        pt = exef.decrypt(EXEFS[strength])
+        assert pt == b"Hello World!"
 
     @pytest.mark.parametrize("strength", KEYS.keys())
     def test_validation(self, strength: int):
