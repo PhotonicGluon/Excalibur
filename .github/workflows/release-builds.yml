@@ -24,11 +24,11 @@ jobs:
 
             - uses: pnpm/setup@v3
               with:
-                  cache: true
+                  install: false
 
             - name: Install Dependencies
               working-directory: ./app/packages/electron
-              run: pnpm install
+              run: pnpm install --force
 
             - name: Build Windows
               if: matrix.os == 'windows-latest'
@@ -87,7 +87,7 @@ jobs:
 
             - uses: pnpm/setup@v3
               with:
-                  cache: true
+                  install: false
 
             - name: Set up JDK
               uses: actions/setup-java@v5

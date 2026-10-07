@@ -21,6 +21,7 @@ jobs:
 
             - uses: pnpm/setup@v3
               with:
+                  install: false
                   cache: true
 
             - name: Set up Python
