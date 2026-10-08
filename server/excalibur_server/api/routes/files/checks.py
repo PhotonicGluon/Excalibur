@@ -50,7 +50,9 @@ async def check_path_endpoint(
     "/check/paths",
     name="Check Existence of Multiple Paths",
     responses={
-        status.HTTP_200_OK: {"content": {"text/plain": {"example": "10010111"}}},
+        status.HTTP_200_OK: {
+            "content": {"text/plain": None, "application/octet-stream": {"example": "See examples in description."}}
+        },
     },
     response_class=PlainTextResponse,
 )
@@ -61,15 +63,47 @@ async def check_paths_endpoint(
     """
     Checks the existence of multiple paths.
 
-    The return value is a string of `1`s and `0`s, where `1` means the path exists and `0` means it
-    does not. The order corresponds to the order of the paths in the request.
+    The response is a packed bit string.
+    - Bit `i` (counting from the first path) is `1` if the `i`-th path exists and `0` if it doesn't.
+    - Bits are packed **most significant bit first**: the first path maps to the highest bit
+      (`0b10000000`) of the first byte, the eighth path maps to the lowest bit of the first byte,
+      the ninth path maps to the highest bit of the second byte, and so on.
+    - If `len(paths)` is not a multiple of 8, the final byte is padded with `0`s **on the right**
+      (the least significant bits). These padding bits carry no information, so clients should
+      ignore everything past the `len(paths)`-th bit.
+
+    Examples:
+    - For 8 paths, the byte `0xCD` is `0b11001101` in binary, which means that the first, second,
+      fifth, sixth, and eighth paths exist and the rest do not.
+    - For 8 paths, the byte `0xF4` is `0b11110100` in binary, which means that the first four paths
+      as well as the sixth path exist and the rest do not.
+    - For 6 paths, the byte `0xF4` is `0b11110100` in binary; truncating to 6 bits gives `0b111101`,
+      which means that only the fifth path does not exist. (The trailing `00` is padding.)
+    - For 10 paths, the bytes `0xFF 0x40` are `0b11111111 0b01000000` in binary; truncating to 10 bits
+      gives `0b1111111101`, which means that only the ninth path does not exist. The trailing
+      `000000` is padding.
     """
 
     user_id = credentials.user_id
     root_id = get_user_from_id(user_id).fsitem_id
 
+    num_paths = len(paths)
     items = get_items_by_paths(root_id, paths)
-    return "".join("0" if item is None else "1" for item in items)
+
+    bytestring = bytearray()
+    curr_byte = 0
+    for i, item in enumerate(items):
+        curr_byte <<= 1
+        curr_byte |= 0 if item is None else 1
+        if i % 8 == 7:
+            bytestring.append(curr_byte)
+            curr_byte = 0
+
+    if num_paths % 8 != 0:
+        # Right-pad `curr_byte` with zeros to make it 8 bits, then append to the bytestring
+        bytestring.append(curr_byte << (8 - (num_paths % 8)))
+
+    return PlainTextResponse(bytes(bytestring), media_type="application/octet-stream")
 
 
 @encrypted_router.head(

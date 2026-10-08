@@ -112,14 +112,16 @@ class TestCheckPath:
 
 class TestCheckPaths:
     @staticmethod
-    def _decrypt_response(response: httpx2.Response) -> str:
+    def _decrypt_and_parse_response(response: httpx2.Response) -> str:
         assert response.status_code == 200
         if response.headers.get("X-Encrypted") == "true":
             assert ExEF.validate(response.content), "Did not return an encrypted response"
             content = ExEF(b"one demo 16B key").decrypt(response.content)
-            return content.decode("utf-8")
         else:
-            return response.text
+            content = response.content
+
+        # Convert to bits
+        return "".join(format(byte, "08b") for byte in content)
 
     def test_no_auth(self, dir_with_items):
         response = TestClient(app).post("/api/files/check/paths", json=["."])
@@ -129,12 +131,12 @@ class TestCheckPaths:
         response = auth_client.post(
             "/api/files/check/paths", json=[".", "file", "folder", "folder/subfile", "does-not-exist"]
         )
-        assert self._decrypt_response(response) == "11110"
+        assert self._decrypt_and_parse_response(response)[:5] == "11110"
 
     def test_empty(self, auth_client: TestClient, dir_with_items):
         response = auth_client.post("/api/files/check/paths", json=[])
         assert response.status_code == 200
-        assert self._decrypt_response(response) == ""
+        assert self._decrypt_and_parse_response(response) == ""
 
     def test_encrypted(self, auth_client: TestClient, dir_with_items):
         headers = {
@@ -148,7 +150,7 @@ class TestCheckPaths:
         )
         response = auth_client.post("/api/files/check/paths", headers=headers, content=body_encrypted)
         assert response.status_code == 200
-        assert self._decrypt_response(response) == "11110"
+        assert self._decrypt_and_parse_response(response)[:5] == "11110"
 
     def test_tricky(self, auth_client: TestClient, dir_with_items):
         response = auth_client.post(
@@ -163,7 +165,15 @@ class TestCheckPaths:
                 "folder",
             ],
         )
-        assert self._decrypt_response(response) == "1100011"
+        assert self._decrypt_and_parse_response(response)[:7] == "1100011"
+
+    @pytest.mark.parametrize("num_paths", [8, 16, 24, 32])
+    def test_num_paths_being_multiple_of_8(self, auth_client: TestClient, dir_with_items, num_paths):
+        response = auth_client.post(
+            "/api/files/check/paths",
+            json=["."] * num_paths,
+        )
+        assert self._decrypt_and_parse_response(response) == "1" * num_paths
 
 
 class TestCheckDir:
