@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_item_by_path, is_dir_empty
+from excalibur_server.src.db.operations import get_item_by_path, get_items_by_paths, is_dir_empty
 from excalibur_server.src.users import get_user_from_id
 
 
@@ -68,12 +68,8 @@ async def check_paths_endpoint(
     user_id = credentials.user_id
     root_id = get_user_from_id(user_id).fsitem_id
 
-    output = ""
-    for path in paths:
-        exists = get_item_by_path(root_id, path) is not None
-        output += "1" if exists else "0"
-
-    return output
+    items = get_items_by_paths(root_id, paths)
+    return "".join("0" if item is None else "1" for item in items)
 
 
 @encrypted_router.head(

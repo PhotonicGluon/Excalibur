@@ -1,12 +1,13 @@
 from pathlib import PurePosixPath
 from uuid import UUID
 
-from sqlalchemy import func, not_
+from sqlalchemy import func, not_, tuple_
 from sqlalchemy.orm import Session, aliased
 from sqlmodel import select
 
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
+from excalibur_server.src.path import split_path
 
 # Reject if node hash is not provided OR if it's a file lacking a content MAC
 UNVERIFIED_CONDITION = (FSItem.node_hash.is_(None)) | (not_(FSItem.is_folder) & FSItem.content_mac.is_(None))
@@ -50,11 +51,7 @@ def get_item_by_path(root_id: UUID, path: str) -> FSItem | None:
     :raises ValueError: if the path is empty or root
     """
 
-    path = PurePosixPath(path).as_posix()
-    if path == ".":
-        path = ""
-
-    parts = [p for p in path.split("/") if p]
+    parts = split_path(path)
     if not parts:
         return get_item(root_id)
 
@@ -74,6 +71,58 @@ def get_item_by_path(root_id: UUID, path: str) -> FSItem | None:
 
         result = session.execute(stmt).scalar()
         return result.model_copy() if result else None
+
+
+def get_items_by_paths(root_id: UUID, paths: list[str]) -> list[FSItem | None]:
+    """
+    Gets multiple filesystem items from the database by their paths.
+
+    Can specify the root directory with ".".
+
+    :param root_id: the ID of the root directory
+    :param paths: the paths of the filesystem items to get
+    :return: the filesystem items, in the same order as `paths`, with None for items that do not
+        exist
+    """
+
+    all_parts = [split_path(path) for path in paths]
+
+    # Maps each resolved prefix to its item; the empty prefix is the root itself
+    resolved: dict[tuple[str, ...], FSItem] = {}
+    with get_session() as session:
+        root = session.get(FSItem, root_id)
+        if root is not None:
+            resolved[()] = root.model_copy()
+
+        # Resolve the paths level by level
+        max_depth = max((len(parts) for parts in all_parts), default=0)
+        for depth in range(1, max_depth + 1):
+            # Find the prefixes at this depth whose parent was resolved to a folder
+            wanted: dict[tuple[UUID, str], tuple[str, ...]] = {}
+            for parts in all_parts:
+                if len(parts) < depth:
+                    # This part has already been processed in an earlier level; skip
+                    continue
+
+                parent = resolved.get(parts[: depth - 1])
+                if parent is None or not parent.is_folder:
+                    # Invalid path; skip
+                    continue
+
+                wanted[(parent.id, parts[depth - 1])] = parts[:depth]
+
+            if not wanted:
+                break
+
+            items = session.execute(
+                select(FSItem).where(
+                    tuple_(FSItem.parent_id, FSItem.name).in_(list(wanted.keys())), FSItem.root_id == root_id
+                )
+            ).scalars()
+            for item in items:
+                resolved[wanted[(item.parent_id, item.name)]] = item.model_copy()
+
+    return [resolved.get(parts) for parts in all_parts]
 
 
 def get_items_in_folder(folder_id: UUID) -> list[FSItem]:

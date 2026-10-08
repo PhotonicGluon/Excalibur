@@ -118,6 +118,26 @@ class TestCheckPaths:
         )
         assert response.text == "11110"
 
+    def test_empty(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.post("/api/files/check/paths", json=[])
+        assert response.status_code == 200
+        assert response.text == ""
+
+    def test_tricky(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.post(
+            "/api/files/check/paths",
+            json=[
+                "./folder/././subfile/.",  # Dot slashes
+                "folder/subfile",  # Duplicate of the above
+                "folder/does-not-exist",  # Existing parent, missing child
+                "does-not-exist/subfile",  # Missing parent
+                "file/subfile",  # Parent is a file
+                "empty-folder",
+                "folder",
+            ],
+        )
+        assert response.text == "1100011"
+
 
 class TestCheckDir:
     def test_no_auth(self):

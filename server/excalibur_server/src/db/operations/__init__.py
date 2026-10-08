@@ -5,6 +5,7 @@ from .fsitem import count_items_with_root as count_items_with_root
 from .fsitem import get_item as get_item
 from .fsitem import get_item_by_path as get_item_by_path
 from .fsitem import get_item_fullpath as get_item_fullpath
+from .fsitem import get_items_by_paths as get_items_by_paths
 from .fsitem import get_items_in_folder as get_items_in_folder
 from .fsitem import get_items_with_root as get_items_with_root
 from .fsitem import get_missing_content_macs as get_missing_content_macs

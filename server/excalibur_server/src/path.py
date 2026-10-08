@@ -1,14 +1,25 @@
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+
+def split_path(path: str) -> tuple[str, ...]:
+    """
+    Splits a path into its non-trivial parts.
+
+    :param path: the path to split (use "." to specify the root directory)
+    :return: the parts of the path, which is empty if the path refers to the root directory
+    """
+
+    return tuple(p for p in PurePosixPath(path).as_posix().split("/") if p and p != ".")
 
 
 def check_path_subdir(path: Path, root_directory: Path) -> tuple[Path, bool]:
     """
     Validates that the given path is a subdirectory of the root directory.
 
-    :param path: The path to validate
-    :param root_directory: The root directory to check against
-    :return: The validated path and whether it is a subdirectory of the root directory
+    :param path: the path to validate
+    :param root_directory: the root directory to check against
+    :return: the validated path and whether it is a subdirectory of the root directory
     """
 
     user_path = root_directory / path
@@ -20,8 +31,8 @@ def check_path_length(path: Path) -> bool:
     """
     Validates that the given path is not longer than the maximum path length.
 
-    :param path: The path to validate
-    :return: Whether the path is valid
+    :param path: the path to validate
+    :return: whether the path is valid
     """
 
     path_length = len(str(path))
