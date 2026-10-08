@@ -107,6 +107,18 @@ class TestCheckPath:
         assert response.status_code == 200
 
 
+class TestCheckPaths:
+    def test_no_auth(self, dir_with_items):
+        response = TestClient(app).post("/api/files/check/paths", json=["."])
+        assert response.status_code == 401
+
+    def test_endpoint(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.post(
+            "/api/files/check/paths", json=[".", "file", "folder", "folder/subfile", "does-not-exist"]
+        )
+        assert response.text == "11110"
+
+
 class TestCheckDir:
     def test_no_auth(self):
         response = TestClient(app).head("/api/files/check/dir/.")

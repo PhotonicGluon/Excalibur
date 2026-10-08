@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Path, Response, status
+from fastapi import Body, Depends, HTTPException, Path, Response, status
+from fastapi.responses import PlainTextResponse
 
 from excalibur_server.api.path_handling import process_path_param
 from excalibur_server.api.routes.files import encrypted_router
@@ -43,6 +44,36 @@ async def check_path_endpoint(
         return
 
     response.status_code = status.HTTP_200_OK
+
+
+@encrypted_router.post(
+    "/check/paths",
+    name="Check Existence of Multiple Paths",
+    responses={
+        status.HTTP_200_OK: {"content": {"text/plain": {"example": "10010111"}}},
+    },
+    response_class=PlainTextResponse,
+)
+async def check_paths_endpoint(
+    credentials: Annotated[Credentials, Depends(get_credentials)],
+    paths: Annotated[list[str], Body(description="The paths to check (use `.` to specify root directory)")],
+):
+    """
+    Checks the existence of multiple paths.
+
+    The return value is a string of `1`s and `0`s, where `1` means the path exists and `0` means it
+    does not. The order corresponds to the order of the paths in the request.
+    """
+
+    user_id = credentials.user_id
+    root_id = get_user_from_id(user_id).fsitem_id
+
+    output = ""
+    for path in paths:
+        exists = get_item_by_path(root_id, path) is not None
+        output += "1" if exists else "0"
+
+    return output
 
 
 @encrypted_router.head(
