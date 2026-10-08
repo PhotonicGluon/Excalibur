@@ -1,3 +1,6 @@
+import json
+
+import httpx2
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -108,6 +111,16 @@ class TestCheckPath:
 
 
 class TestCheckPaths:
+    @staticmethod
+    def _decrypt_response(response: httpx2.Response) -> str:
+        assert response.status_code == 200
+        if response.headers.get("X-Encrypted") == "true":
+            assert ExEF.validate(response.content), "Did not return an encrypted response"
+            content = ExEF(b"one demo 16B key").decrypt(response.content)
+            return content.decode("utf-8")
+        else:
+            return response.text
+
     def test_no_auth(self, dir_with_items):
         response = TestClient(app).post("/api/files/check/paths", json=["."])
         assert response.status_code == 401
@@ -116,12 +129,26 @@ class TestCheckPaths:
         response = auth_client.post(
             "/api/files/check/paths", json=[".", "file", "folder", "folder/subfile", "does-not-exist"]
         )
-        assert response.text == "11110"
+        assert self._decrypt_response(response) == "11110"
 
     def test_empty(self, auth_client: TestClient, dir_with_items):
         response = auth_client.post("/api/files/check/paths", json=[])
         assert response.status_code == 200
-        assert response.text == ""
+        assert self._decrypt_response(response) == ""
+
+    def test_encrypted(self, auth_client: TestClient, dir_with_items):
+        headers = {
+            "Content-Type": "application/octet-stream",
+            "X-Encrypted": "true",
+            "X-Content-Type": "application/json",
+        }
+
+        body_encrypted = ExEF(b"one demo 16B key").encrypt(
+            json.dumps([".", "file", "folder", "folder/subfile", "does-not-exist"]).encode("UTF-8")
+        )
+        response = auth_client.post("/api/files/check/paths", headers=headers, content=body_encrypted)
+        assert response.status_code == 200
+        assert self._decrypt_response(response) == "11110"
 
     def test_tricky(self, auth_client: TestClient, dir_with_items):
         response = auth_client.post(
@@ -136,7 +163,7 @@ class TestCheckPaths:
                 "folder",
             ],
         )
-        assert response.text == "1100011"
+        assert self._decrypt_response(response) == "1100011"
 
 
 class TestCheckDir:

@@ -62,6 +62,17 @@ FILES_ROUTING_TREE = RoutingTree(
             },
         ),
         # In the root
+        "check": RoutingTree(
+            segment="check",
+            subtrees={
+                "paths": RoutingTree(
+                    segment="paths",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
+            },
+        ),
         "count": RoutingTree(
             segment="count",
             encrypted_routes={
