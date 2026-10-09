@@ -94,7 +94,7 @@ export async function checkPaths(
 
     // Split bytes back into existence/non-existence
     const result: boolean[] = [];
-    let currByte = content[0]; // We're guarrenteed at least one path
+    let currByte = content[0]; // We're guaranteed at least one path
     for (let i = 0; i < numPaths; i++) {
         result.push((currByte & 1) === 1);
         currByte >>= 1;

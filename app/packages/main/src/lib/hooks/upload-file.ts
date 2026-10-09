@@ -8,7 +8,7 @@ import { getAllFileEntries } from "@lib/files/webkit";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 
-import { checkPath, mkdir, uploadFile } from "@api/files";
+import { checkPath, checkPaths, mkdir, uploadFile } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -201,11 +201,117 @@ export function useUploadFile() {
             }
         }
 
-        // Upload all files
-        await explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
-
-        let conflictAction: ConflictAction = ConflictAction.NONE;
+        // Check whether any files already exist
+        const pathsToCheck: string[] = [];
         for (const file of files) {
+            const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
+            const eventualPath = `${explorerContext.path}/${filePath}` + ".exef"; // The uploaded file has this extension
+            pathsToCheck.push(eventualPath);
+        }
+
+        const pathsCheckResult = await checkPaths(auth, pathsToCheck);
+        if (!pathsCheckResult.success) {
+            await explorerContext.presentSnackbar(`Failed to check file paths: ${pathsCheckResult.error}`, "danger");
+            return;
+        }
+        const pathsExistence = pathsCheckResult.result!;
+
+        // Handle conflict resolution
+        const filesToUpload = [];
+        let conflictAction: ConflictAction = ConflictAction.NONE;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const exists = pathsExistence[i];
+            if (!exists || conflictAction === ConflictAction.OVERRIDE_ALL_EXISTING) {
+                // Either the file doesn't exist or we want to override all existing files -- just upload
+                filesToUpload.push(file);
+                continue;
+            }
+
+            // File exists
+            console.debug(`File already exists at '${pathsToCheck[i]}'`);
+            if (conflictAction === ConflictAction.SKIP_ALL_EXISTING) {
+                // Don't need to ask whether to skip
+                continue;
+            }
+
+            // What does the user want to do?
+            conflictAction = await new Promise<ConflictAction>((resolve) => {
+                let action: ConflictAction = ConflictAction.SKIP_THIS_FILE;
+                /* async */ explorerContext.presentAlert({
+                    header: `${file.rawName} already exists`,
+                    message: "What do you want to do?",
+                    onDidDismiss: () => {
+                        console.debug(`Conflict action selected: ${action}`);
+                        resolve(action);
+                    },
+                    buttons: [
+                        {
+                            text: "Skip This File",
+                            role: "confirm",
+                            handler: () => {
+                                action = ConflictAction.SKIP_THIS_FILE;
+                            },
+                        },
+                        {
+                            text: "Skip All Existing",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("Skipping all existing files", "warning");
+                                action = ConflictAction.SKIP_ALL_EXISTING;
+                            },
+                        },
+                        {
+                            text: "Override This File",
+                            handler: () => {
+                                action = ConflictAction.OVERRIDE_THIS_FILE;
+                            },
+                        },
+                        {
+                            text: "Override All Existing",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("Overriding all existing files", "warning");
+                                action = ConflictAction.OVERRIDE_ALL_EXISTING;
+                            },
+                        },
+                        {
+                            text: "Abort Upload",
+                            role: "cancel",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("File upload cancelled", "warning");
+                                action = ConflictAction.ABORT_UPLOAD;
+                            },
+                        },
+                    ],
+                });
+            });
+
+            if (
+                conflictAction === ConflictAction.SKIP_THIS_FILE ||
+                conflictAction === ConflictAction.SKIP_ALL_EXISTING
+            ) {
+                // Skip
+            } else if (conflictAction === ConflictAction.ABORT_UPLOAD) {
+                return;
+            } else {
+                // NONE, OVERRIDE_THIS_FILE, or OVERRIDE_ALL_EXISTING
+                filesToUpload.push(file);
+            }
+
+            if (
+                conflictAction === ConflictAction.SKIP_THIS_FILE ||
+                conflictAction === ConflictAction.OVERRIDE_THIS_FILE
+            ) {
+                // Make sure that we re-prompt for the next existing file
+                conflictAction = ConflictAction.NONE;
+            }
+        }
+
+        // Upload all files
+        await explorerContext.presentSnackbar(
+            `Uploading${filesToUpload.length === 1 ? "" : ` ${filesToUpload.length} files`}...`,
+        );
+
+        for (const file of filesToUpload) {
             // Check if file size acceptable
             if (file.size > auth.authInfo!.maxUploadSize) {
                 // We use an alert to make it more visible
@@ -244,111 +350,7 @@ export function useUploadFile() {
                 }
             }
 
-            // Check if file exists
-            let fileExists = false;
-            if (conflictAction !== ConflictAction.OVERRIDE_ALL_EXISTING) {
-                const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
-                const eventualPath = `${explorerContext.path}/${filePath}` + ".exef"; // The uploaded file has this extension
-                const checkResponse = await checkPath(auth, eventualPath);
-                if (!checkResponse.success) {
-                    switch (checkResponse.error) {
-                        case "Path not found":
-                            // This is good -- the file doesn't exist, so we can just carry on
-                            break;
-                        default:
-                            await explorerContext.presentSnackbar(
-                                `Failed to check file path: ${checkResponse.error}`,
-                                "danger",
-                            );
-                            return;
-                    }
-                }
-                if (checkResponse.success && checkResponse.type === "file") {
-                    // File exists
-                    console.debug(`File already exists at '${eventualPath}'`);
-                    fileExists = true;
-                    if (conflictAction === ConflictAction.SKIP_ALL_EXISTING) {
-                        // Don't need to ask whether to skip
-                        continue;
-                    }
-
-                    // What does the user want to do?
-                    conflictAction = await new Promise<ConflictAction>((resolve) => {
-                        let action: ConflictAction = ConflictAction.SKIP_THIS_FILE;
-                        /* async */ explorerContext.presentAlert({
-                            header: `${file.rawName} already exists`,
-                            message: "What do you want to do?",
-                            onDidDismiss: () => {
-                                console.debug(`Conflict action selected: ${action}`);
-                                resolve(action);
-                            },
-                            buttons: [
-                                {
-                                    text: "Skip This File",
-                                    role: "confirm",
-                                    handler: () => {
-                                        action = ConflictAction.SKIP_THIS_FILE;
-                                    },
-                                },
-                                {
-                                    text: "Skip All Existing",
-                                    handler: () => {
-                                        /* async */ explorerContext.presentSnackbar(
-                                            "Skipping all existing files",
-                                            "warning",
-                                        );
-                                        action = ConflictAction.SKIP_ALL_EXISTING;
-                                    },
-                                },
-                                {
-                                    text: "Override This File",
-                                    handler: () => {
-                                        action = ConflictAction.OVERRIDE_THIS_FILE;
-                                    },
-                                },
-                                {
-                                    text: "Override All Existing",
-                                    handler: () => {
-                                        /* async */ explorerContext.presentSnackbar(
-                                            "Overriding all existing files",
-                                            "warning",
-                                        );
-                                        action = ConflictAction.OVERRIDE_ALL_EXISTING;
-                                    },
-                                },
-                                {
-                                    text: "Abort Upload",
-                                    role: "cancel",
-                                    handler: () => {
-                                        /* async */ explorerContext.presentSnackbar("File upload cancelled", "warning");
-                                        action = ConflictAction.ABORT_UPLOAD;
-                                    },
-                                },
-                            ],
-                        });
-                    });
-                }
-            }
-
-            if (
-                conflictAction === ConflictAction.SKIP_THIS_FILE ||
-                (conflictAction === ConflictAction.SKIP_ALL_EXISTING && fileExists)
-            ) {
-                // Skip
-            } else if (conflictAction === ConflictAction.ABORT_UPLOAD) {
-                return;
-            } else {
-                // NONE, OVERRIDE_THIS_FILE, or OVERRIDE_ALL_EXISTING
-                _handleUpload(file);
-            }
-
-            if (
-                conflictAction === ConflictAction.SKIP_THIS_FILE ||
-                conflictAction === ConflictAction.OVERRIDE_THIS_FILE
-            ) {
-                // Make sure that we re-prompt for the next existing file
-                conflictAction = ConflictAction.NONE;
-            }
+            _handleUpload(file);
         }
     }
 
