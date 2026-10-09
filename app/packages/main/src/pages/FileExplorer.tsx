@@ -188,12 +188,6 @@ const FileExplorer: React.FC = () => {
                                 case "Unauthorized":
                                     presentSnackbar("Unauthorized", "danger");
                                     return;
-                                case "Illegal or invalid path":
-                                    presentSnackbar("Illegal or invalid folder name", "danger");
-                                    return;
-                                case "Path too long":
-                                    presentSnackbar("Folder path too long", "danger");
-                                    return;
                                 default:
                                     presentSnackbar("Failed to check folder path: Unknown error", "danger");
                                     return;

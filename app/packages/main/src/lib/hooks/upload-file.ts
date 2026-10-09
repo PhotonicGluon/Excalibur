@@ -255,12 +255,6 @@ export function useUploadFile() {
                         case "Path not found":
                             // This is good -- the file doesn't exist, so we can just carry on
                             break;
-                        case "Illegal or invalid path":
-                            await explorerContext.presentSnackbar("Illegal or invalid file name", "danger");
-                            return;
-                        case "Path too long":
-                            await explorerContext.presentSnackbar("File path too long", "danger");
-                            return;
                         default:
                             await explorerContext.presentSnackbar(
                                 `Failed to check file path: ${checkResponse.error}`,
