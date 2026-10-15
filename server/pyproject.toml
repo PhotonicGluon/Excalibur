@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.8.2"
+version = "0.8.3rc1"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.19.2",
@@ -21,7 +21,7 @@ dependencies = [
     "rapidfuzz>=3.14.6",
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions >= 2.1.0
-    "sqlalchemy<=2.0.54",
+    "sqlalchemy<2.1.0",
     "sqlmodel>=0.0.42",
     "toml>=0.10.2",
     "tomlkit>=0.15.1",
@@ -46,15 +46,12 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.16.1", "ruff>=0.16.6", "watchfiles>=1.2.0"]
+dev = ["ruff>=0.16.6", "watchfiles>=1.2.0"]
 test = ["httpx2>=2.13.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []
 exclude-newer = "5 days"
-
-[tool.uv.exclude-newer-package]
-pyjwt = "2026-09-29T00:00:00.000Z"
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"
