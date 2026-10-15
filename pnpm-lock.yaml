@@ -205,8 +205,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       immer:
-        specifier: ^11.1.18
-        version: 11.1.18
+        specifier: ^11.1.21
+        version: 11.1.21
       ionicons:
         specifier: ^8.1.0
         version: 8.1.0
@@ -254,7 +254,7 @@ importers:
         version: 4.3.3
       use-immer:
         specifier: ^0.11.0
-        version: 0.11.0(immer@11.1.18)(react@19.3.0)
+        version: 0.11.0(immer@11.1.21)(react@19.3.0)
       util:
         specifier: ^0.12.5
         version: 0.12.5
@@ -2754,8 +2754,8 @@ packages:
     resolution: {integrity: sha512-brTTsvFRt5C1gGHtPst/281UjPD5t9fBqbgoMPlVWy11ZLTPfu7HxK4ZYqO9H7o/yC9rSTCI85EaQ4OoY12qYw==}
     engines: {node: '>= 4'}
 
-  immer@11.1.18:
-    resolution: {integrity: sha512-EQyQtLiYW029lyoczMl/Hh4Xu7cDecSc58JRYpHyL4tIAu3eqd1yJzQX04d2BZHDkzFFvm6qJEJWOtfDSWAXbQ==}
+  immer@11.1.21:
+    resolution: {integrity: sha512-bZSadeCPGdaY5/qRLgr6mDSH1ra21rD3rqpiWk7+QTr4ayYPTE9qZYdLh/NdPhMe0wSrTvHD/Lk8q5EwhUs0aw==}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -7482,7 +7482,7 @@ snapshots:
 
   ignore@7.0.9: {}
 
-  immer@11.1.18: {}
+  immer@11.1.21: {}
 
   import-fresh@3.3.1:
     dependencies:
@@ -9146,9 +9146,9 @@ snapshots:
       punycode: 1.4.1
       qs: 6.16.0
 
-  use-immer@0.11.0(immer@11.1.18)(react@19.3.0):
+  use-immer@0.11.0(immer@11.1.21)(react@19.3.0):
     dependencies:
-      immer: 11.1.18
+      immer: 11.1.21
       react: 19.3.0
 
   utf8-byte-length@1.0.5: {}
