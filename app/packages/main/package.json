@@ -41,13 +41,13 @@
         "immer": "^11.1.21",
         "ionicons": "^8.1.0",
         "jsonwebtoken": "^9.0.3",
-        "mime": "^4.1.0",
+        "mime": "^4.1.1",
         "natural-compare": "^1.4.0",
         "pbkdf2": "^3.1.7",
         "randombytes": "^2.1.0",
-        "react": "19.3.0",
+        "react": "19.3.1",
         "react-circular-progressbar": "^2.2.0",
-        "react-dom": "19.3.0",
+        "react-dom": "19.3.1",
         "react-router": "^5.3.4",
         "react-router-dom": "^5.3.4",
         "seedrandom": "^3.0.5",
@@ -79,9 +79,9 @@
         "cypress": "^16.1.0",
         "globals": "^17.13.0",
         "lint-staged": "^17.6.0",
-        "prettier": "^3.9.9",
+        "prettier": "^3.9.10",
         "prettier-plugin-tailwindcss": "^0.8.1",
-        "vitest": "^5.0.3"
+        "vitest": "^5.0.4"
     },
     "private": true
 }
