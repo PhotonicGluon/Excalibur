@@ -18,7 +18,7 @@
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-react": "^6.1.2",
         "dmg-builder": "^26.15.3",
-        "electron": "^41.10.7",
+        "electron": "^45.0.0",
         "electron-builder": "^26.15.3",
         "electron-builder-squirrel-windows": "^26.15.3",
         "electron-updater": "^6.8.9",
