@@ -92,12 +92,12 @@ const SidebarMenu: React.FC<ContainerProps> = ({
                 </IonList>
 
                 {/* Details */}
-                <div className="ion-padding-start ion-padding-end pt-1 *:m-0 *:block *:text-xs md:*:text-sm">
-                    <Versions />
-                    <div className="h-2"></div>
+                <div className="ion-padding-start ion-padding-end pt-1 *:block *:text-xs md:*:text-sm">
+                    <Versions className="m-0" />
                     {auth.authInfo && (
                         <>
-                            <IonText color="medium">
+                            <hr className="my-2" />
+                            <IonText className="m-0" color="medium">
                                 Time offset:{" "}
                                 <span className="font-mono">
                                     {auth.authInfo!.timeOffset > 0
@@ -106,7 +106,7 @@ const SidebarMenu: React.FC<ContainerProps> = ({
                                     ms
                                 </span>
                             </IonText>
-                            <IonText color="medium">
+                            <IonText className="m-0" color="medium">
                                 Max upload size:{" "}
                                 <span className="font-mono">
                                     {bytesToHumanReadable(auth.authInfo!.maxUploadSize, settings.fileSizeUnits)}
