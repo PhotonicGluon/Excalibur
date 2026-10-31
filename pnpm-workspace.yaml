@@ -7,7 +7,7 @@ auditConfig:
     - GHSA-848j-6mx2-7j84 # Unfixed vulnerability in elliptic
 
 minimumReleaseAge: 7200 # 5 days, expressed in minutes
-minimumReleaseAgeExclude: []
+minimumReleaseAgeExclude: [ immer@11.2.9 ]
 
 blockExoticSubdeps: true
 
