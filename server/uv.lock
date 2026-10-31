@@ -134,7 +134,7 @@ wheels = [
 
 [[package]]
 name = "excalibur-server"
-version = "0.9.0a3"
+version = "0.9.0a4"
 source = { editable = "." }
 default-groups = []
 dependencies = [

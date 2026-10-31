@@ -12,14 +12,14 @@ from excalibur_server.src.db.tables import FSItem
 class TestCreateDir:
     def test_no_auth(self):
         uuid = uuid4().hex
-        response = TestClient(app).post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+        response = TestClient(app).post(f"/api/files/mkdir/{uuid4()}", json=f"test-dir-{uuid}")
         assert response.status_code == 401
 
     def test_create_directory_no_transit_encryption(self, auth_client: TestClient, test_user):
         root_id = test_user["root_id"]
 
         uuid = uuid4().hex
-        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+        response = auth_client.post(f"/api/files/mkdir/{root_id}", json=f"test-dir-{uuid}")
         assert response.status_code == 201
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
@@ -46,12 +46,12 @@ class TestCreateDir:
         assert response.status_code == 201
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
-    def test_illegal_name(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/mkdir/.", json="illegal/dir/name")
+    def test_illegal_name(self, auth_client: TestClient, test_user):
+        response = auth_client.post(f"/api/files/mkdir/{test_user['root_id']}", json="illegal/dir/name")
         assert response.status_code == 400
 
-    def test_path_not_found(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/mkdir/fake/path", json="test-dir")
+    def test_parent_not_found(self, auth_client: TestClient):
+        response = auth_client.post(f"/api/files/mkdir/{uuid4()}", json="test-dir")
         assert response.status_code == 404
 
     def test_directory_already_exists(self, auth_client: TestClient, test_user, db_session: Session):
@@ -69,7 +69,7 @@ class TestCreateDir:
         db_session.commit()
 
         # Then send the folder creation request
-        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
+        response = auth_client.post(f"/api/files/mkdir/{root_id}", json=f"test-dir-{uuid}")
         assert response.status_code == 409
 
 
@@ -78,7 +78,7 @@ class TestCreateDirMerkleEffects:
         root_id = test_user["root_id"]
 
         uuid = uuid4().hex
-        response = auth_client.post("/api/files/mkdir/.", json=f"merkle-dir-{uuid}")
+        response = auth_client.post(f"/api/files/mkdir/{root_id}", json=f"merkle-dir-{uuid}")
         assert response.status_code == 201
 
         returned_id = ExEF(b"one demo 16B key").decrypt(response.content).decode()
@@ -92,7 +92,7 @@ class TestCreateDirMerkleEffects:
         root_version = get_item(root_id).version
 
         uuid = uuid4().hex
-        response = auth_client.post("/api/files/mkdir/.", json=f"merkle-dir-{uuid}")
+        response = auth_client.post(f"/api/files/mkdir/{root_id}", json=f"merkle-dir-{uuid}")
         assert response.status_code == 201
 
         new_folder = next(item for item in get_items_in_folder(root_id) if item.name == f"merkle-dir-{uuid}")

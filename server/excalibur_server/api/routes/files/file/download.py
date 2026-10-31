@@ -3,11 +3,10 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Path, status
 from fastapi.responses import FileResponse as FastAPIFileResponse
 
-from excalibur_server.api.path_handling import process_path_param
+from excalibur_server.api.path_handling import get_user_item, process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import get_item_by_path
 from excalibur_server.src.users import get_user_from_id
 
 
@@ -18,20 +17,20 @@ class FileResponse(FastAPIFileResponse):
 
 
 @encrypted_router.get(
-    "/download/{path:path}",
+    "/download/{file_id}",
     name="Download File",
     responses={
         status.HTTP_200_OK: {
             "content": {"application/octet-stream": {"example": "Some file content. Can be binary."}},
         },
-        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a file"},
+        status.HTTP_404_NOT_FOUND: {"description": "Item not found or is not a file"},
     },
     response_class=FileResponse,
 )
 def download_file_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    path: Annotated[str, Path(description="The file to download")],
-    processed_path: str = Depends(process_path_param("path")),
+    file_id: Annotated[str, Path(description="The ID of the file to download")],
+    processed_file_id: str = Depends(process_path_param("file_id")),
 ):
     """
     Downloads a file.
@@ -39,14 +38,14 @@ def download_file_endpoint(
     MIME type of the downloaded file should be inferred by the client.
     """
 
-    path = processed_path
+    file_id = processed_file_id
     user_id = credentials.user_id
 
     # Get item to be downloaded
     root_id = get_user_from_id(user_id).fsitem_id
-    item = get_item_by_path(root_id, path)
+    item = get_user_item(file_id, root_id)
     if not item or item.is_folder:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a file")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found or is not a file")
 
     return FileResponse(
         CONFIG.storage.vault_folder / item.system_path,

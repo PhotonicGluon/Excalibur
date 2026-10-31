@@ -4,16 +4,16 @@ from fastapi import BackgroundTasks, Body, Depends, HTTPException, Path, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.exc import IntegrityError
 
-from excalibur_server.api.path_handling import process_path_param
+from excalibur_server.api.path_handling import get_user_item, process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_item_by_path, get_item_fullpath, get_session, mark_dirty
+from excalibur_server.src.db.operations import get_item_fullpath, get_session, mark_dirty
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.users import get_user_from_id
 
 
 @encrypted_router.post(
-    "/rename/{path:path}",
+    "/rename/{item_id}",
     name="Rename Item",
     responses={
         status.HTTP_200_OK: {"description": "Item renamed", "content": None},
@@ -28,9 +28,9 @@ from excalibur_server.src.users import get_user_from_id
 async def rename_path_endpoint(
     background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    path: Annotated[str, Path(description="The item to rename")],
-    new_name: Annotated[str, Body(description="The new name for the item at the leaf of the path")],
-    processed_path: str = Depends(process_path_param("path")),
+    item_id: Annotated[str, Path(description="The ID of the item to rename")],
+    new_name: Annotated[str, Body(description="The new name for the item")],
+    processed_item_id: str = Depends(process_path_param("item_id")),
 ):
     """
     Renames a file or directory.
@@ -38,12 +38,12 @@ async def rename_path_endpoint(
     Cannot rename root directory (`.`).
     """
 
-    path = processed_path
+    item_id = processed_item_id
     user_id = credentials.user_id
 
     # Get the item to rename
     root_id = get_user_from_id(user_id).fsitem_id
-    item = get_item_by_path(root_id, path)
+    item = get_user_item(item_id, root_id)
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 

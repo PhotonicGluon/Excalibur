@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -5,7 +7,7 @@ from sqlalchemy.orm import Session
 from excalibur_server.api.app import app
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import add_item, get_item, get_item_fullpath, remove_item
+from excalibur_server.src.db.operations import add_item, get_item, remove_item
 from excalibur_server.src.db.tables import FSItem
 
 
@@ -112,7 +114,7 @@ class TestDeletePath:
             file2_path.unlink()
 
     def test_no_auth(self, deletable_file: FSItem):
-        response = TestClient(app).delete(f"/api/files/delete/{deletable_file}")
+        response = TestClient(app).delete(f"/api/files/delete/{deletable_file.id}")
         assert response.status_code == 401
 
     def test_delete_file(self, auth_client: TestClient, deletable_file: FSItem):
@@ -120,21 +122,21 @@ class TestDeletePath:
         assert get_item(deletable_file.id) is not None
         assert (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
-        response = auth_client.delete(f"/api/files/delete/{get_item_fullpath(deletable_file.id)}")
+        response = auth_client.delete(f"/api/files/delete/{deletable_file.id}")
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
         assert not (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
     def test_delete_folder(self, auth_client: TestClient, deletable_folder: FSItem):
-        path = get_item_fullpath(deletable_folder.id)
+        item_id = deletable_folder.id
 
         # Not specifying `as_dir` should fail
-        response = auth_client.delete(f"/api/files/delete/{path}")
+        response = auth_client.delete(f"/api/files/delete/{item_id}")
         assert response.status_code == 400
         assert get_item(deletable_folder.id) is not None
 
         # Specifying `as_dir` should work
-        response = auth_client.delete(f"/api/files/delete/{path}?as_dir=true")
+        response = auth_client.delete(f"/api/files/delete/{item_id}?as_dir=true")
         assert response.status_code == 202
         assert get_item(deletable_folder.id) is None
 
@@ -144,10 +146,10 @@ class TestDeletePath:
         deletable_folder_with_items: tuple[FSItem, list[FSItem]],
     ):
         folder, files = deletable_folder_with_items
-        path = get_item_fullpath(folder.id)
+        item_id = folder.id
 
         # Not specifying `as_dir` should fail
-        response = auth_client.delete(f"/api/files/delete/{path}")
+        response = auth_client.delete(f"/api/files/delete/{item_id}")
         assert response.status_code == 400
 
         assert get_item(folder.id) is not None
@@ -156,7 +158,7 @@ class TestDeletePath:
             assert (CONFIG.storage.vault_folder / file.system_path).exists()
 
         # Not specifying `force` should fail
-        response = auth_client.delete(f"/api/files/delete/{path}?as_dir=true")
+        response = auth_client.delete(f"/api/files/delete/{item_id}?as_dir=true")
         assert response.status_code == 417
 
         assert get_item(folder.id) is not None
@@ -165,7 +167,7 @@ class TestDeletePath:
             assert (CONFIG.storage.vault_folder / file.system_path).exists()
 
         # Specifying `force` should work
-        response = auth_client.delete(f"/api/files/delete/{path}?as_dir=true&force=true")
+        response = auth_client.delete(f"/api/files/delete/{item_id}?as_dir=true&force=true")
         assert response.status_code == 202
 
         assert get_item(folder.id) is None
@@ -173,25 +175,24 @@ class TestDeletePath:
             assert get_item(file.id) is None
             assert not (CONFIG.storage.vault_folder / file.system_path).exists()
 
-    def test_delete_with_encrypted_path(self, auth_client: TestClient, deletable_file: FSItem):
+    def test_delete_with_encrypted_id(self, auth_client: TestClient, deletable_file: FSItem):
         from base64 import b64encode
 
-        path_encrypted = ExEF(b"one demo 16B key").encrypt(
-            get_item_fullpath(deletable_file.id).as_posix().encode("UTF-8")
-        )
+        id_encrypted = ExEF(b"one demo 16B key").encrypt(str(deletable_file.id).encode("UTF-8"))
         response = auth_client.delete(
-            f"/api/files/delete/{b64encode(path_encrypted).decode('UTF-8')}", headers={"X-Encrypted": "true"}
+            f"/api/files/delete/{b64encode(id_encrypted, altchars=b'-_').decode('UTF-8')}",
+            headers={"X-Encrypted": "true"},
         )
         assert response.status_code == 200
         assert get_item(deletable_file.id) is None
         assert not (CONFIG.storage.vault_folder / deletable_file.system_path).exists()
 
-    def test_path_not_found(self, auth_client: TestClient):
-        response = auth_client.delete("/api/files/delete/fake/path")
+    def test_item_not_found(self, auth_client: TestClient):
+        response = auth_client.delete(f"/api/files/delete/{uuid4()}")
         assert response.status_code == 404
 
-    def test_delete_root(self, auth_client: TestClient):
-        response = auth_client.delete("/api/files/delete/.")
+    def test_delete_root(self, test_user, auth_client: TestClient):
+        response = auth_client.delete(f"/api/files/delete/{test_user['root_id']}")
         assert response.status_code == 412
 
 
@@ -229,7 +230,7 @@ class TestDeleteMerkleEffects:
         root_version = get_item(root_id).version
         folder_version = get_item(folder_id).version
 
-        response = auth_client.delete("/api/files/delete/merkle-delete/merkle-delete.txt.exef")
+        response = auth_client.delete(f"/api/files/delete/{nested_file.id}")
         assert response.status_code == 200
 
         assert get_item(nested_file.id) is None
@@ -245,7 +246,7 @@ class TestDeleteMerkleEffects:
         mark_clean(nested_file.id)
         root_version = get_item(root_id).version
 
-        response = auth_client.delete("/api/files/delete/merkle-delete?as_dir=true&force=true")
+        response = auth_client.delete(f"/api/files/delete/{folder_id}?as_dir=true&force=true")
         assert response.status_code == 202
 
         assert get_item(folder_id) is None

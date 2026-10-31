@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -32,7 +34,7 @@ class TestRename:
             db_session.commit()
 
     def test_no_auth(self):
-        response = TestClient(app).post("/api/files/rename/r-file", json="new-name")
+        response = TestClient(app).post(f"/api/files/rename/{uuid4()}", json="new-name")
         assert response.status_code == 401
 
     def test_rename(self, auth_client: TestClient, test_user, db_session: Session, rename_folder: FSItem):
@@ -49,11 +51,11 @@ class TestRename:
         db_session.commit()
 
         # Rename the item
-        response = auth_client.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="new-name.exef")
+        response = auth_client.post(f"/api/files/rename/{file.id}", json="new-name.exef")
         assert response.status_code == 200
         assert get_item(file.id).name == "new-name.exef"
 
-    def test_rename_with_encrypted_path(
+    def test_rename_with_encrypted_id(
         self, auth_client: TestClient, test_user, db_session: Session, rename_folder: FSItem
     ):
         from base64 import b64encode
@@ -76,12 +78,12 @@ class TestRename:
             "X-Encrypted": "true",
             "X-Content-Type": "text/plain",
         }
-        path_encrypted = ExEF(b"one demo 16B key").encrypt(b"rename-folder/r-file-enc")
+        id_encrypted = ExEF(b"one demo 16B key").encrypt(str(file.id).encode("utf-8"))
         destination_encrypted = ExEF(b"one demo 16B key").encrypt(b"new-name-enc.exef")
 
         # Make request
         response = auth_client.post(
-            f"/api/files/rename/{b64encode(path_encrypted, altchars=b'-_').decode('utf-8')}",
+            f"/api/files/rename/{b64encode(id_encrypted, altchars=b'-_').decode('utf-8')}",
             headers=headers,
             content=destination_encrypted,
         )
@@ -109,7 +111,7 @@ class TestRename:
         db_session.commit()
 
         # Rename the folder
-        response = auth_client.post(f"/api/files/rename/{get_item_fullpath(folder.id)}", json="changed-folder-name")
+        response = auth_client.post(f"/api/files/rename/{folder.id}", json="changed-folder-name")
         assert response.status_code == 200
         assert get_item_fullpath(folder.id).as_posix() == "rename-folder/changed-folder-name"
         assert get_item_fullpath(file.id).as_posix() == "rename-folder/changed-folder-name/file"
@@ -150,12 +152,8 @@ class TestRename:
         db_session.commit()
 
         # Rename only folders 3 and 1
-        assert (
-            auth_client.post(f"/api/files/rename/{get_item_fullpath(folder_3.id)}", json="changed-3").status_code == 200
-        )
-        assert (
-            auth_client.post(f"/api/files/rename/{get_item_fullpath(folder_1.id)}", json="changed-1").status_code == 200
-        )
+        assert auth_client.post(f"/api/files/rename/{folder_3.id}", json="changed-3").status_code == 200
+        assert auth_client.post(f"/api/files/rename/{folder_1.id}", json="changed-1").status_code == 200
 
         # Check the processing of the fullpath of the file
         assert get_item_fullpath(file.id).as_posix() == "rename-folder/changed-1/deep-folder-2/changed-3/file"
@@ -171,11 +169,11 @@ class TestRename:
         db_session.add(file)
         db_session.commit()
 
-        response = auth_client.post("/api/files/rename/rename-folder/r-file-illegal-name", json="illegal/item/name")
+        response = auth_client.post(f"/api/files/rename/{file.id}", json="illegal/item/name")
         assert response.status_code == 400
 
     def test_rename_nonexistent(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/rename/does-not-exist", json="new-name")
+        response = auth_client.post(f"/api/files/rename/{uuid4()}", json="new-name")
         assert response.status_code == 404
 
     def test_already_exists(self, auth_client: TestClient, test_user, db_session: Session, rename_folder: FSItem):
@@ -199,11 +197,11 @@ class TestRename:
         db_session.commit()
 
         # Try to rename file to existing name
-        response = auth_client.post(f"/api/files/rename/{get_item_fullpath(file.id)}", json="already-existent.exef")
+        response = auth_client.post(f"/api/files/rename/{file.id}", json="already-existent.exef")
         assert response.status_code == 409  # Item already exists
 
-    def test_rename_root(self, auth_client: TestClient):
-        response = auth_client.post("/api/files/rename/.", json="new-name")
+    def test_rename_root(self, auth_client: TestClient, test_user):
+        response = auth_client.post(f"/api/files/rename/{test_user['root_id']}", json="new-name")
         assert response.status_code == 412  # Cannot rename root
 
     def test_rename_file_without_exef_extension(
@@ -219,7 +217,7 @@ class TestRename:
         db_session.add(file)
         db_session.commit()
 
-        response = auth_client.post("/api/files/rename/rename-folder/r-file-no-exef", json="no-exef")
+        response = auth_client.post(f"/api/files/rename/{file.id}", json="no-exef")
         assert response.status_code == 417
 
 
@@ -252,9 +250,7 @@ class TestRenameMerkleEffects:
         folder_version = get_item(folder_id).version
         root_version = get_item(root_id).version
 
-        response = auth_client.post(
-            "/api/files/rename/merkle-rename/merkle-rename.txt.exef", json="merkle-renamed.txt.exef"
-        )
+        response = auth_client.post(f"/api/files/rename/{renameable_file.id}", json="merkle-renamed.txt.exef")
         assert response.status_code == 200, ExEF(b"one demo 16B key").decrypt(response.content)
 
         assert get_item(renameable_file.id).name == "merkle-renamed.txt.exef"

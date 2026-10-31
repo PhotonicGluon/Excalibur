@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -5,13 +7,13 @@ from sqlalchemy.orm import Session
 from excalibur_server.api.app import app
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
 
 
 class TestDownload:
     @pytest.fixture
-    def dir_with_items(self, test_user, db_session: Session) -> FSItem:
+    def file_in_dir(self, test_user, db_session: Session) -> FSItem:
         root_id = test_user["root_id"]
 
         # Make containing folder
@@ -37,7 +39,7 @@ class TestDownload:
 
         # Commit and yield
         db_session.commit()
-        yield folder
+        yield file
 
         # Clean up
         if get_item(folder.id) is not None:
@@ -49,24 +51,21 @@ class TestDownload:
             file_path.unlink()
 
     def test_no_auth(self):
-        response = TestClient(app).get("/api/files/download/not-authorized-oops")
+        response = TestClient(app).get(f"/api/files/download/{uuid4()}")
         assert response.status_code == 401
 
-    def test_download_file(self, auth_client: TestClient, dir_with_items: FSItem):
-        response = auth_client.get(
-            f"/api/files/download/{get_item_fullpath(dir_with_items.id).as_posix()}/test-file.txt.exef"
-        )
+    def test_download_file(self, auth_client: TestClient, file_in_dir: FSItem):
+        response = auth_client.get(f"/api/files/download/{file_in_dir.id}")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 
         response = ExEF(b"one demo 16B key").decrypt(response.content)
         assert response == b"a" * 100
 
-    def test_download_file_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
+    def test_download_file_encrypted_path(self, auth_client: TestClient, file_in_dir: FSItem):
         from base64 import b64encode
 
-        path = f"{get_item_fullpath(dir_with_items.id).as_posix()}/test-file.txt.exef"
-        path_encrypted = ExEF(b"one demo 16B key").encrypt(path.encode("utf-8"))
+        path_encrypted = ExEF(b"one demo 16B key").encrypt(str(file_in_dir.id).encode("utf-8"))
 
         response = auth_client.get(
             f"/api/files/download/{b64encode(path_encrypted, altchars=b'-_').decode()}",
@@ -79,5 +78,9 @@ class TestDownload:
         assert response == b"a" * 100
 
     def test_file_not_found(self, auth_client: TestClient):
-        response = auth_client.get("/api/files/download/fake-file.txt.exef")
+        response = auth_client.get(f"/api/files/download/{uuid4()}")
+        assert response.status_code == 404
+
+    def test_download_folder(self, auth_client: TestClient, file_in_dir: FSItem):
+        response = auth_client.get(f"/api/files/download/{file_in_dir.parent_id}")
         assert response.status_code == 404

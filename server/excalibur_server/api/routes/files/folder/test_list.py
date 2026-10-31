@@ -1,5 +1,5 @@
 import json
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
-from excalibur_server.src.db.operations import get_item, get_item_fullpath
+from excalibur_server.src.db.operations import get_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.structures import Directory, File
 
@@ -61,7 +61,7 @@ class TestListdir:
         assert response.status_code == 401
 
     def test_listdir(self, auth_client: TestClient, dir_with_items: FSItem):
-        response = auth_client.get(f"/api/files/list/{get_item_fullpath(dir_with_items.id)}")
+        response = auth_client.get(f"/api/files/list/{dir_with_items.id}")
         assert response.status_code == 200
         assert ExEF.validate(response.content), "Did not return an encrypted response"
 
@@ -88,7 +88,7 @@ class TestListdir:
     def test_listdir_encrypted_path(self, auth_client: TestClient, dir_with_items: FSItem):
         from base64 import b64encode
 
-        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(f"{get_item_fullpath(dir_with_items.id)}".encode())
+        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(str(dir_with_items.id).encode())
 
         response = auth_client.get(
             f"/api/files/list/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
@@ -105,6 +105,6 @@ class TestListdir:
         assert directory.type == "directory"
         assert len(directory.items) == 2
 
-    def test_path_not_found(self, auth_client: TestClient):
-        response = auth_client.get("/api/files/list/fake/path")
+    def test_id_not_found(self, auth_client: TestClient):
+        response = auth_client.get(f"/api/files/list/{uuid4()}")
         assert response.status_code == 404
