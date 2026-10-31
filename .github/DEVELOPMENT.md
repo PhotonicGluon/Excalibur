@@ -146,6 +146,9 @@ To preview the Electron app in production mode, run
 pnpm run preview
 ```
 
+> [!TIP]
+> If you see an `Error: Electron uninstall` error, run `node node_modules/electron/install.js` to fix it.
+
 ### Testing
 
 The app has several test suites that should be run.

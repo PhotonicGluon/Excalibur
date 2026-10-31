@@ -1,1 +1,1 @@
-⬆️ Updated `electron` from `41.10.7` to `42.11.16`
+⬆️ Updated `electron` from `41.10.7` to `44.9.3`
