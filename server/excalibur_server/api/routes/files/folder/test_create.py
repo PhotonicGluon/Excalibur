@@ -46,12 +46,33 @@ class TestCreateDir:
         assert response.status_code == 201
         assert any(item.name == f"test-dir-{uuid}" for item in get_items_in_folder(root_id))
 
+    def test_create_in_subdirectory(self, auth_client: TestClient, test_user, db_session: Session):
+        root_id = test_user["root_id"]
+        uuid = uuid4().hex
+
+        parent = FSItem(parent_id=root_id, root_id=root_id, name=f"parent-{uuid}", is_folder=True)
+        db_session.add(parent)
+        db_session.commit()
+
+        response = auth_client.post(f"/api/files/mkdir/{parent.id}", json="child")
+        assert response.status_code == 201
+        assert any(item.name == "child" for item in get_items_in_folder(parent.id))
+
     def test_illegal_name(self, auth_client: TestClient, test_user):
         response = auth_client.post(f"/api/files/mkdir/{test_user['root_id']}", json="illegal/dir/name")
         assert response.status_code == 400
 
     def test_parent_not_found(self, auth_client: TestClient):
         response = auth_client.post(f"/api/files/mkdir/{uuid4()}", json="test-dir")
+        assert response.status_code == 404
+
+    def test_parent_is_not_a_directory(self, auth_client: TestClient, test_user, db_session: Session):
+        root_id = test_user["root_id"]
+        file = FSItem(parent_id=root_id, root_id=root_id, name=f"file-{uuid4().hex}.exef", size=0)
+        db_session.add(file)
+        db_session.commit()
+
+        response = auth_client.post(f"/api/files/mkdir/{file.id}", json="test-dir")
         assert response.status_code == 404
 
     def test_directory_already_exists(self, auth_client: TestClient, test_user, db_session: Session):

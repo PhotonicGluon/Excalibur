@@ -105,6 +105,28 @@ class TestListdir:
         assert directory.type == "directory"
         assert len(directory.items) == 2
 
+    def test_listdir_root_dot(self, auth_client: TestClient, dir_with_items: FSItem):
+        from base64 import b64encode
+
+        path_encrypted_data = ExEF(b"one demo 16B key").encrypt(b".")
+        response = auth_client.get(
+            f"/api/files/list/{b64encode(path_encrypted_data, altchars=b'-_').decode('UTF-8')}",
+            headers={"X-Encrypted": "true"},
+        )
+        assert response.status_code == 200
+
+        directory = Directory(**json.loads(ExEF(b"one demo 16B key").decrypt(response.content).decode()))
+        assert directory.fullpath == "."
+        assert "test-dir" in [item.name for item in directory.items]
+
+    def test_not_a_directory(self, auth_client: TestClient, dir_with_items: FSItem):
+        response = auth_client.get("/api/files/list/00000000-0000-0000-0000-000000000001")
+        assert response.status_code == 404
+
+    def test_invalid_id(self, auth_client: TestClient):
+        response = auth_client.get("/api/files/list/not-a-uuid")
+        assert response.status_code == 404
+
     def test_id_not_found(self, auth_client: TestClient):
         response = auth_client.get(f"/api/files/list/{uuid4()}")
         assert response.status_code == 404

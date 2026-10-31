@@ -183,6 +183,18 @@ class TestMove:
         response = auth_client.post(f"/api/files/move/{file.id}", json=str(uuid4()))
         assert response.status_code == 404  # Destination not found
 
+    def test_destination_is_a_file(self, auth_client: TestClient, test_user, db_session: Session, move_folder: FSItem):
+        root_id = test_user["root_id"]
+
+        file = FSItem(parent_id=move_folder.id, root_id=root_id, name="m-file-dest-file", is_folder=False)
+        other_file = FSItem(parent_id=root_id, root_id=root_id, name="m-other-file", is_folder=False)
+        db_session.add(file)
+        db_session.add(other_file)
+        db_session.commit()
+
+        response = auth_client.post(f"/api/files/move/{file.id}", json=str(other_file.id))
+        assert response.status_code == 404  # Destination is not a folder
+
     def test_move_root(self, auth_client: TestClient, test_user, move_folder: FSItem):
         response = auth_client.post(f"/api/files/move/{test_user['root_id']}", json=str(move_folder.id))
         assert response.status_code == 412  # Cannot move root

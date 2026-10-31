@@ -77,6 +77,10 @@ class TestCheckItem:
         response = auth_client.head(f"/api/files/check/item/{uuid4()}")
         assert response.status_code == 404
 
+    def test_invalid_id(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.head("/api/files/check/item/not-a-uuid")
+        assert response.status_code == 404
+
     def test_encrypted_id(self, auth_client: TestClient, dir_with_items):
         # Existent
         response = auth_client.head(
@@ -196,6 +200,14 @@ class TestCheckDir:
 
         response = auth_client.head(f"/api/files/check/dir/{dir_with_items['folder'].id}")
         assert response.status_code == 202  # Non-empty
+
+    def test_non_existent(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.head(f"/api/files/check/dir/{uuid4()}")
+        assert response.status_code == 404
+
+    def test_not_a_directory(self, auth_client: TestClient, dir_with_items):
+        response = auth_client.head(f"/api/files/check/dir/{dir_with_items['file'].id}")
+        assert response.status_code == 404
 
     def test_encrypted_id(self, auth_client: TestClient, dir_with_items):
         from base64 import b64encode
