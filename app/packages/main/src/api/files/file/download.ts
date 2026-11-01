@@ -10,7 +10,7 @@ import { AuthProvider } from "@components/auth/context";
  * Downloads a file from the server.
  *
  * @param auth the current authentication provider
- * @param path the path to the file to download
+ * @param fileID the ID of the file to download
  * @param signal an abort signal to cancel the request
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message, or the file size, a boolean indicating whether the file is encrypted using the
@@ -20,7 +20,7 @@ import { AuthProvider } from "@components/auth/context";
  */
 export async function downloadFile(
     auth: AuthProvider,
-    path: string,
+    fileID: string,
     signal?: AbortSignal,
 ): Promise<{
     success: boolean;
@@ -31,13 +31,13 @@ export async function downloadFile(
 }> {
     let additionalHeaders = {};
     if (!IS_DEV) {
-        const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
-        path = b64encodeURLSafe(encryptedPath);
+        const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(fileID, "utf-8"));
+        fileID = b64encodeURLSafe(encryptedID);
         additionalHeaders = { "X-Encrypted": "true" };
     }
 
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/download/${path}`,
+        `${auth.serverInfo!.apiURL}/files/download/${fileID}`,
         auth.authInfo!.key!,
         {
             method: "GET",
@@ -58,9 +58,9 @@ export async function downloadFile(
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:
-            return { success: false, error: "Path not found or is not a file" };
+            return { success: false, error: "Item not found or is not a file" };
         case 406:
-            return { success: false, error: "Illegal or invalid path" };
+            return { success: false, error: "Illegal or invalid ID" };
         case 422:
             return { success: false, error: "Validation error" };
         default:

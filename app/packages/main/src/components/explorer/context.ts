@@ -10,11 +10,11 @@ export interface ExplorerContext {
     /** Current path */
     path: string;
     /** Function to call when renaming is requested */
-    onRename: (path: string, isDir: boolean) => Promise<void>;
+    onRename: (itemID: string, path: string, isDir: boolean) => Promise<void>;
     /** Function to call when moving is requested */
-    onMove: (path: string) => Promise<void>;
+    onMove: (itemID: string) => Promise<void>;
     /** Function to call when deletion is requested */
-    onDelete: (path: string, isDir: boolean) => Promise<void>;
+    onDelete: (itemID: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
     presentAlert: (options: AlertOptions & HookOverlayOptions) => Promise<void>;
     /** Dismiss a presented alert */

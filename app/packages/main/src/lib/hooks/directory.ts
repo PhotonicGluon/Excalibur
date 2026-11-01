@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
 
-import { directoryChangesListener, listdir } from "@api/files";
+import { directoryChangesListener, listdirByPath } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -58,7 +58,7 @@ export function useDirectory(): {
             latestRequestRef.current = requestNum;
 
             // Get the directory contents
-            const response = await listdir(auth, path);
+            const response = await listdirByPath(auth, path);
             if (!response.success) {
                 presentSnackbar("Failed to refresh contents", "danger");
                 return;

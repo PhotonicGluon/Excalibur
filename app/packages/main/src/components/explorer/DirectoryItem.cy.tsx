@@ -67,9 +67,9 @@ describe("<DirectoryItem />", () => {
                         <explorerContext.Provider
                             value={{
                                 path: "/",
-                                onRename: (_path, _isDir) => props.renameHook!(),
-                                onMove: (_path) => props.moveHook!(),
-                                onDelete: (_path, _isDir) => props.deleteHook!(),
+                                onRename: (_itemID, _path, _isDir) => props.renameHook!(),
+                                onMove: (_itemID) => props.moveHook!(),
+                                onDelete: (_itemID, _isDir) => props.deleteHook!(),
                                 presentAlert: () => Promise.resolve(),
                                 dismissAlert: () => Promise.resolve(),
                                 presentSnackbar: () => Promise.resolve(),

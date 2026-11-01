@@ -3,26 +3,27 @@ import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
+import { clearFolderIDCache } from "@api/files/folder/resolve";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Renames the item at the given path to the new name.
+ * Renames the item with the given ID to the new name.
  *
  * @param auth the current authentication provider
- * @param path the path to the item to rename
+ * @param itemID the ID of the item to rename
  * @param newName the new name for the item
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function renameItem(
     auth: AuthProvider,
-    path: string,
+    itemID: string,
     newName: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
+    const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(itemID, "utf-8"));
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/rename/${b64encodeURLSafe(encryptedPath)}`,
+        `${auth.serverInfo!.apiURL}/files/rename/${b64encodeURLSafe(encryptedID)}`,
         auth.authInfo!.key!,
         {
             method: "POST",
@@ -45,7 +46,7 @@ export async function renameItem(
         case 404:
             return { success: false, error: "Item not found" };
         case 406:
-            return { success: false, error: "Illegal or invalid path" };
+            return { success: false, error: "Illegal or invalid ID" };
         case 409:
             return { success: false, error: "Item with that name already exists" };
         case 412:
@@ -57,6 +58,9 @@ export async function renameItem(
         default:
             return { success: false, error: "Unknown error" };
     }
+
+    // Folder paths may have changed, so clear the folder ID cache
+    clearFolderIDCache();
 
     // Trigger a sync and report success
     scheduleMerkleSync(auth);

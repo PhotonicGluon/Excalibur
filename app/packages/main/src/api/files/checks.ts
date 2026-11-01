@@ -7,25 +7,26 @@ import { popFetch } from "@api/fetch";
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Checks if a path exists.
+ * Checks if an item exists.
  *
  * @param auth the current authentication provider
- * @param path the path to check
+ * @param itemID the ID of the item to check (use `.` to specify the root directory)
  * @returns a promise which resolves to an object with a success boolean and optionally an error
- *      message or the type of the path
+ *      message or the type of the item
  */
-export async function checkPath(
+export async function checkItem(
     auth: AuthProvider,
-    path: string,
+    itemID: string,
 ): Promise<{ success: boolean; error?: string; type?: "file" | "directory" }> {
     let additionalHeaders = {};
-    if (!IS_DEV) {
-        const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
-        path = b64encodeURLSafe(encryptedPath);
+    if (!IS_DEV || itemID === ".") {
+        // A bare `.` would get stripped from the URL, so it must always be encrypted
+        const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(itemID, "utf-8"));
+        itemID = b64encodeURLSafe(encryptedID);
         additionalHeaders = { "X-Encrypted": "true" };
     }
 
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/path/${path}`, auth.authInfo!.key!, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/item/${itemID}`, auth.authInfo!.key!, {
         method: "HEAD",
         headers: { Authorization: `Bearer ${auth.getToken()}`, ...additionalHeaders },
     });
@@ -39,7 +40,7 @@ export async function checkPath(
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:
-            return { success: false, error: "Path not found" };
+            return { success: false, error: "Item not found" };
         default:
             return { success: false, error: "Unknown error" };
     }
@@ -48,24 +49,26 @@ export async function checkPath(
 }
 
 /**
- * Checks the existence of multiple paths.
+ * Checks the existence of multiple names in a folder.
  *
  * @param auth the current authentication provider
- * @param paths the paths to check
+ * @param parentID the ID of the folder to look in (use `.` to specify the root directory)
+ * @param names the names to check
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message or the result of the check
  */
-export async function checkPaths(
+export async function checkNames(
     auth: AuthProvider,
-    paths: string[],
+    parentID: string,
+    names: string[],
 ): Promise<{ success: boolean; error?: string; result?: boolean[] }> {
-    const numPaths = paths.length;
-    if (numPaths === 0) {
-        // No paths to check, so end early
+    const numNames = names.length;
+    if (numNames === 0) {
+        // No names to check, so end early
         return { success: true, result: [] };
     }
 
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/paths`, auth.authInfo!.key!, {
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/names`, auth.authInfo!.key!, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${auth.getToken()}`,
@@ -74,7 +77,9 @@ export async function checkPaths(
             "X-Content-Type": "application/json",
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-        body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(JSON.stringify(paths), "utf-8")),
+        body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+            Buffer.from(JSON.stringify({ parent_id: parentID, names }), "utf-8"),
+        ),
     });
     switch (response.status) {
         case 200:
@@ -82,6 +87,8 @@ export async function checkPaths(
             break;
         case 401:
             return { success: false, error: "Unauthorized" };
+        case 404:
+            return { success: false, error: "Folder not found" };
         default:
             return { success: false, error: "Unknown error" };
     }
@@ -94,8 +101,8 @@ export async function checkPaths(
 
     // Split bytes back into existence/non-existence
     const result: boolean[] = [];
-    let currByte = content[0]; // We're guaranteed at least one path
-    for (let i = 0; i < numPaths; i++) {
+    let currByte = content[0]; // We're guaranteed at least one name
+    for (let i = 0; i < numNames; i++) {
         result.push((currByte & 1) === 1);
         currByte >>= 1;
         if (i % 8 === 7) {
@@ -111,17 +118,17 @@ export async function checkPaths(
  * Checks the existence of a directory, and whether it is empty.
  *
  * @param auth the current authentication provider
- * @param path the path to check
+ * @param folderID the ID of the folder to check (use `.` to specify the root directory)
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function checkDir(
     auth: AuthProvider,
-    path: string,
+    folderID: string,
 ): Promise<{ success: boolean; error?: string; isEmpty?: boolean }> {
-    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
+    const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(folderID, "utf-8"));
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/check/dir/${b64encodeURLSafe(encryptedPath)}`,
+        `${auth.serverInfo!.apiURL}/files/check/dir/${b64encodeURLSafe(encryptedID)}`,
         auth.authInfo!.key!,
         {
             method: "HEAD",
@@ -140,7 +147,7 @@ export async function checkDir(
         case 404:
             return { success: false, error: "Directory not found" };
         case 406:
-            return { success: false, error: "Illegal or invalid path" };
+            return { success: false, error: "Illegal or invalid ID" };
         default:
             return { success: false, error: "Unknown error" };
     }

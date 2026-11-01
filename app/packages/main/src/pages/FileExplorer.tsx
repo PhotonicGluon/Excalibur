@@ -42,7 +42,7 @@ import {
 import { TOAST_DURATION } from "@lib/consts";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
 
-import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@api/files";
+import { checkDir, checkNames, deleteItem, mkdir, renameItem, resolveFolderID } from "@api/files";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
@@ -105,7 +105,7 @@ const FileExplorer: React.FC = () => {
     const [showJobsModal, setShowJobsModal] = useState(false);
 
     const [showMoveDialog, setShowMoveDialog] = useState(false);
-    const [moveOrigPath, setMoveOrigPath] = useState<string>("");
+    const [moveItemID, setMoveItemID] = useState<string>("");
 
     const [showSearchDialog, setShowSearchDialog] = useState(false);
 
@@ -178,28 +178,27 @@ const FileExplorer: React.FC = () => {
                             return;
                         }
 
-                        // Check if folder exists
-                        const checkResponse = await checkPath(auth, `${requestedPath}/${folderName}`);
-                        if (!checkResponse.success) {
-                            switch (checkResponse.error) {
-                                case "Path not found":
-                                    // This is good -- the folder doesn't exist, so we can just carry on
-                                    break;
-                                case "Unauthorized":
-                                    presentSnackbar("Unauthorized", "danger");
-                                    return;
-                                default:
-                                    presentSnackbar("Failed to check folder path: Unknown error", "danger");
-                                    return;
-                            }
+                        // Find the folder that we are creating the new folder in
+                        const parentResponse = await resolveFolderID(auth, requestedPath);
+                        if (!parentResponse.success) {
+                            presentSnackbar(`Failed to find current folder: ${parentResponse.error}`, "danger");
+                            return;
                         }
-                        if (checkResponse.success && checkResponse.type === "directory") {
+                        const parentID = parentResponse.id!;
+
+                        // Check if folder exists
+                        const checkResponse = await checkNames(auth, parentID, [folderName]);
+                        if (!checkResponse.success) {
+                            presentSnackbar(`Failed to check folder name: ${checkResponse.error}`, "danger");
+                            return;
+                        }
+                        if (checkResponse.result![0]) {
                             presentSnackbar("Folder already exists", "danger");
                             return;
                         }
 
                         // Create the folder
-                        const mkdirResponse = await mkdir(auth, requestedPath, folderName);
+                        const mkdirResponse = await mkdir(auth, parentID, folderName);
                         if (!mkdirResponse.success) {
                             presentSnackbar(`Failed to create folder: ${mkdirResponse.error}`, "danger");
                             return;
@@ -215,10 +214,11 @@ const FileExplorer: React.FC = () => {
     /**
      * Handles the user clicking the rename button on a directory item.
      *
+     * @param itemID The ID of the item to rename
      * @param path The path of the item to rename
      * @param isDir If true, the item is a directory. If false, the item is a file
      */
-    async function onRenameItem(path: string, isDir: boolean) {
+    async function onRenameItem(itemID: string, path: string, isDir: boolean) {
         const rawName = path.split("/").pop();
         const baseName = !isDir ? rawName?.replace(/\.exef$/, "") : rawName;
         const displayName = auth.vaultInfo!.info.obfuscatedNames
@@ -254,7 +254,7 @@ const FileExplorer: React.FC = () => {
                             newName += ".exef";
                         }
 
-                        const renameResponse = await renameItem(auth, path, newName);
+                        const renameResponse = await renameItem(auth, itemID, newName);
                         if (!renameResponse.success) {
                             presentSnackbar(`Failed to rename item: ${renameResponse.error}`, "danger");
                             return;
@@ -270,22 +270,22 @@ const FileExplorer: React.FC = () => {
     /**
      * Handles the user clicking the move button on a directory item.
      *
-     * @param path The path of the item to move
+     * @param itemID The ID of the item to move
      */
-    async function onMoveItem(path: string) {
-        setMoveOrigPath(path);
+    async function onMoveItem(itemID: string) {
+        setMoveItemID(itemID);
         setShowMoveDialog(true);
     }
 
     /**
      * Handles the user clicking the delete button on a directory item.
      *
-     * @param path The path of the item to delete
+     * @param itemID The ID of the item to delete
      * @param isDir If true, the item is a directory. If false, the item is a file
      */
-    async function onDeleteItem(path: string, isDir: boolean, force: boolean = false) {
+    async function onDeleteItem(itemID: string, isDir: boolean, force: boolean = false) {
         if (isDir) {
-            const dirResponse = await checkDir(auth, path);
+            const dirResponse = await checkDir(auth, itemID);
             if (!dirResponse.success) {
                 presentSnackbar(`Failed to delete item: ${dirResponse.error}`, "danger");
                 return;
@@ -301,7 +301,7 @@ const FileExplorer: React.FC = () => {
                         },
                         {
                             text: "Delete",
-                            handler: async () => await onDeleteItem(path, isDir, true),
+                            handler: async () => await onDeleteItem(itemID, isDir, true),
                         },
                     ],
                 });
@@ -309,7 +309,7 @@ const FileExplorer: React.FC = () => {
             }
         }
 
-        const deleteResponse = await deleteItem(auth, path, isDir, force);
+        const deleteResponse = await deleteItem(auth, itemID, isDir, force);
         if (!deleteResponse.success) {
             presentSnackbar(`Failed to delete item: ${deleteResponse.error}`, "danger");
             return;
@@ -424,7 +424,7 @@ const FileExplorer: React.FC = () => {
                             <MoveDialog
                                 isOpen={showMoveDialog}
                                 onDidDismiss={() => setShowMoveDialog(false)}
-                                path={moveOrigPath}
+                                itemID={moveItemID}
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
 

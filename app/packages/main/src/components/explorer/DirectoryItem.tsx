@@ -51,7 +51,7 @@ type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
     /** The DOM element ID of the directory item */
     id?: string;
-    /** The server-assigned UUID of the underlying file/folder, used for Merkle integrity verification */
+    /** The server-assigned UUID of the underlying file/folder, used to refer to it in requests */
     itemUUID?: string;
     /** Whether the item should be disabled */
     disabled?: boolean;
@@ -125,7 +125,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             try {
                 // Send request for file
-                const response = await downloadFile(auth, props.fullpath!, signal);
+                const response = await downloadFile(auth, props.itemUUID!, signal);
                 if (!response.success) {
                     await explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
                     throw new Error(response.error); // Propagate error to outer try-catch
@@ -266,7 +266,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
-        await explorerContext.onRename(props.fullpath!, !isFile);
+        await explorerContext.onRename(props.itemUUID!, props.fullpath!, !isFile);
         dismissPopover();
     }
 
@@ -274,7 +274,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the move button on an item.
      */
     async function onClickMove() {
-        await explorerContext.onMove(props.fullpath!);
+        await explorerContext.onMove(props.itemUUID!);
         dismissPopover();
     }
 
@@ -282,7 +282,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the delete button on an item.
      */
     async function onClickDelete() {
-        await explorerContext.onDelete(props.fullpath!, !isFile);
+        await explorerContext.onDelete(props.itemUUID!, !isFile);
         dismissPopover();
     }
 

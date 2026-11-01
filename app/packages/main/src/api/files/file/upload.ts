@@ -7,13 +7,13 @@ import { popXHR } from "@api/fetch";
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Uploads a file to the given path.
+ * Uploads a file to the given folder.
  *
  * This function does **not** check if the file already exists. It will overwrite the file on the
  * server if it already exists.
  *
  * @param auth the current authentication provider
- * @param path the path to upload the file to
+ * @param parentID the ID of the folder to upload the file to (use `.` to specify the root directory)
  * @param file the file to upload
  * @param signal an abort signal to cancel the request
  * @param onProgress a callback function to report progress (a value from 0 to 1)
@@ -24,19 +24,20 @@ import { AuthProvider } from "@components/auth/context";
  */
 export async function uploadFile(
     auth: AuthProvider,
-    path: string,
+    parentID: string,
     file: File,
     signal: AbortSignal,
     onProgress: (progress: number) => void,
 ): Promise<{ success: boolean; error?: string }> {
-    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-        Buffer.from(`${path}/${file.name}`, "utf-8"),
+    const encryptedParentID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+        Buffer.from(parentID, "utf-8"),
     );
+    const encryptedName = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(file.name, "utf-8"));
 
     return new Promise((resolve, reject) => {
         // Set up an XHR with PoP
         const xhr = popXHR(
-            `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedPath)}?force=true`,
+            `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedParentID)}/${b64encodeURLSafe(encryptedName)}?force=true`,
             auth.getToken()!,
             auth.authInfo!.key!,
             "POST",
@@ -92,7 +93,10 @@ export async function uploadFile(
                     resolve({ success: false, error: "Unauthorized" });
                     break;
                 case 404:
-                    resolve({ success: false, error: "Path not found or is not a directory" });
+                    resolve({ success: false, error: "Parent not found or is not a directory" });
+                    break;
+                case 400:
+                    resolve({ success: false, error: "Illegal or invalid file name" });
                     break;
                 case 406:
                     resolve({ success: false, error: "Illegal or invalid path" });

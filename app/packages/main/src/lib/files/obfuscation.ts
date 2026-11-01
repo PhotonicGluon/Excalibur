@@ -143,7 +143,7 @@ export async function toggleObfuscationForAllFiles(
 
         console.debug(`Renaming item '${item.fullpath}' from '${item.name}' to '${newName}'`);
 
-        const renameItemResponse = await renameItem(auth, item.fullpath, newName);
+        const renameItemResponse = await renameItem(auth, item.id, newName);
         if (!renameItemResponse.success) {
             throw new Error(renameItemResponse.error!);
         }

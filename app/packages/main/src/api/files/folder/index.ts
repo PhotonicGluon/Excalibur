@@ -2,3 +2,4 @@ export { mkdir } from "./create";
 export { listdir } from "./list";
 export { directoryChangesListener } from "./listener";
 export { getSubtree } from "./subtree";
+export { clearFolderIDCache, listdirByPath, resolveFolderID } from "./resolve";

@@ -7,27 +7,28 @@ import { popFetch } from "@api/fetch";
 import { AuthProvider } from "@components/auth/context";
 
 /**
- * Creates a directory at the given path.
+ * Creates a directory in the given folder.
  *
  * @param auth the current authentication provider
- * @param path the path to create the new directory at
+ * @param parentID the ID of the folder to create the new directory in (use `.` to specify the root
+ *      directory)
  * @param name the name of the new directory
  * @param obfuscateName whether to obfuscate the directory name
  * @returns a promise which resolves to an object with a success boolean and optionally an error
- *      message
+ *      message or the ID of the new directory
  */
 export async function mkdir(
     auth: AuthProvider,
-    path: string,
+    parentID: string,
     name: string,
     obfuscateName: boolean = true,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; id?: string }> {
     const rawName =
         obfuscateName && auth.vaultInfo!.info.obfuscatedNames ? auth.noc!.encipher(Buffer.from(name, "utf-8")) : name;
 
-    const encryptedPath = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(path, "utf-8"));
+    const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(parentID, "utf-8"));
     const response = await popFetch(
-        `${auth.serverInfo!.apiURL}/files/mkdir/${b64encodeURLSafe(encryptedPath)}`,
+        `${auth.serverInfo!.apiURL}/files/mkdir/${b64encodeURLSafe(encryptedID)}`,
         auth.authInfo!.key!,
         {
             method: "POST",
@@ -48,9 +49,9 @@ export async function mkdir(
         case 401:
             return { success: false, error: "Unauthorized" };
         case 404:
-            return { success: false, error: "Path not found or is not a directory" };
+            return { success: false, error: "Parent not found or is not a directory" };
         case 406:
-            return { success: false, error: "Illegal or invalid path" };
+            return { success: false, error: "Illegal or invalid name" };
         case 409:
             return { success: false, error: "Directory already exists" };
         case 414:
@@ -61,7 +62,13 @@ export async function mkdir(
             return { success: false, error: "Unknown error" };
     }
 
+    // Get the ID of the new directory
+    const id = await new ExEF(auth.authInfo!.key!).decryptResponse<string>(response, false);
+    if (id === null) {
+        return { success: false, error: "Failed to decrypt response" };
+    }
+
     // Trigger a sync and report success
     scheduleMerkleSync(auth);
-    return { success: true };
+    return { success: true, id };
 }

@@ -17,7 +17,7 @@ import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
 
-import { listdir, moveItem } from "@api/files";
+import { listdirByPath, moveItem } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryListRaw from "@components/explorer/DirectoryListRaw";
@@ -28,8 +28,8 @@ interface MoveDialogProps {
     isOpen: boolean;
     /** Callback when the dialog is dismissed */
     onDidDismiss: () => void;
-    /** Original item's path **/
-    path: string;
+    /** ID of the item to move */
+    itemID: string;
 }
 
 const MoveDialog: React.FC<MoveDialogProps> = (props) => {
@@ -40,6 +40,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     // States
     const [destFolder, setDestFolder] = useState<string>(explorerContext.path);
     const [destFolderContents, setDestFolderContents] = useState<Directory | null>(null);
+    const [destFolderID, setDestFolderID] = useState<string | null>(null);
 
     // Functions
     /**
@@ -47,12 +48,13 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     function refreshDestFolderContents() {
         console.debug("Refreshing destination folder contents: " + destFolder);
-        listdir(auth, destFolder).then((response) => {
+        listdirByPath(auth, destFolder).then((response) => {
             if (!response.success) {
                 return;
             }
 
             let directory = response.directory!;
+            setDestFolderID(directory.id);
 
             // Deobfuscate the names, if necessary
             if (auth.vaultInfo!.info.obfuscatedNames && directory.items && auth.noc) {
@@ -81,6 +83,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     function onClickFolder(fullpath: string) {
         setDestFolderContents(null);
+        setDestFolderID(null);
         setDestFolder(fullpath ? fullpath : "."); // Root folder is "."
     }
 
@@ -94,7 +97,12 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
             return;
         }
 
-        const moveResponse = await moveItem(auth, props.path, destFolder);
+        if (destFolderID === null) {
+            await explorerContext.presentSnackbar("Destination folder is still loading", "warning");
+            return;
+        }
+
+        const moveResponse = await moveItem(auth, props.itemID, destFolderID);
         if (!moveResponse.success) {
             await explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
             return;

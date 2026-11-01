@@ -8,7 +8,7 @@ import { getAllFileEntries } from "@lib/files/webkit";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 
-import { checkPath, checkPaths, mkdir, uploadFile } from "@api/files";
+import { checkNames, mkdir, resolveFolderID, uploadFile } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -46,9 +46,10 @@ export function useUploadFile() {
         /**
          * Handles the file upload process.
          *
-         * @param rawFile A {@link UploadFile} object
+         * @param rawFile a {@link UploadFile} object
+         * @param parentID the ID of the folder to upload the file to
          */
-        async function _handleUpload(rawFile: UploadFile) {
+        async function _handleUpload(rawFile: UploadFile, parentID: string) {
             // Create new job
             const jobID = randID();
             const controller = new AbortController();
@@ -150,18 +151,11 @@ export function useUploadFile() {
                 console.debug(`Uploading file '${rawFile.name}' ('${name}.exef')...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
                 const file = new File([blob], name + ".exef");
-                console.log("Upload path:", explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""));
-                const uploadResponse = await uploadFile(
-                    auth,
-                    explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
-                    file,
-                    signal,
-                    (progress) => {
-                        if (!signal.aborted) {
-                            jobsManager.updateProgress(jobID, progress);
-                        }
-                    },
-                ); // Always force upload
+                const uploadResponse = await uploadFile(auth, parentID, file, signal, (progress) => {
+                    if (!signal.aborted) {
+                        jobsManager.updateProgress(jobID, progress);
+                    }
+                }); // Always force upload
                 if (!uploadResponse.success) {
                     await explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                     throw new Error(uploadResponse.error);
@@ -203,18 +197,41 @@ export function useUploadFile() {
 
         // Check whether any files already exist
         const pathsToCheck: string[] = [];
-        for (const file of files) {
-            const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
-            const eventualPath = `${explorerContext.path}/${filePath}` + ".exef"; // The uploaded file has this extension
+        const filesByDirectory = new Map<string, number[]>(); // Directory path to the indices of the files in it
+        for (const [i, file] of files.entries()) {
+            const dirPath = file.directory ? `${explorerContext.path}/${file.directory}` : explorerContext.path;
+            const eventualPath = `${dirPath}/${file.name}` + ".exef"; // The uploaded file has this extension
             pathsToCheck.push(eventualPath);
+            filesByDirectory.set(dirPath, [...(filesByDirectory.get(dirPath) ?? []), i]);
         }
 
-        const pathsCheckResult = await checkPaths(auth, pathsToCheck);
-        if (!pathsCheckResult.success) {
-            await explorerContext.presentSnackbar(`Failed to check file paths: ${pathsCheckResult.error}`, "danger");
-            return;
+        const pathsExistence: boolean[] = new Array(files.length).fill(false);
+        for (const [dirPath, indices] of filesByDirectory) {
+            const dirResult = await resolveFolderID(auth, dirPath);
+            if (!dirResult.success) {
+                if (dirResult.error === "Path not found") {
+                    continue; // The directory doesn't exist yet, so none of the files in it can exist
+                }
+                await explorerContext.presentSnackbar(`Failed to find folder: ${dirResult.error}`, "danger");
+                return;
+            }
+
+            const namesCheckResult = await checkNames(
+                auth,
+                dirResult.id!,
+                indices.map((i) => files![i].name + ".exef"),
+            );
+            if (!namesCheckResult.success) {
+                await explorerContext.presentSnackbar(
+                    `Failed to check file names: ${namesCheckResult.error}`,
+                    "danger",
+                );
+                return;
+            }
+            for (const [j, i] of indices.entries()) {
+                pathsExistence[i] = namesCheckResult.result![j];
+            }
         }
-        const pathsExistence = pathsCheckResult.result!;
 
         // Handle conflict resolution
         const filesToUpload = [];
@@ -321,18 +338,28 @@ export function useUploadFile() {
             }
 
             // Check if containing directories exist
+            const targetPath = file.directory ? explorerContext.path + "/" + file.directory : explorerContext.path;
             if (file.directory) {
-                const dirs = getParents(explorerContext.path + "/" + file.directory + "/x") // "/x" to add target dir
+                const dirs = getParents(targetPath + "/x") // "/x" to add target dir
                     .toReversed() // To get from root to target
                     .slice(1); // Remove the last element (the "/x")
 
                 for (const dir of dirs) {
-                    const checkDirResponse = await checkPath(auth, dir);
+                    const checkDirResponse = await resolveFolderID(auth, dir);
                     if (checkDirResponse.success) {
                         // Directory exists, continue
                     } else if (checkDirResponse.error === "Path not found") {
-                        // Make directory
-                        const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir), false);
+                        // Make directory in its parent
+                        const parentResponse = await resolveFolderID(auth, getParent(dir));
+                        if (!parentResponse.success) {
+                            await explorerContext.presentSnackbar(
+                                `Failed to check containing directory: ${parentResponse.error}`,
+                                "danger",
+                            );
+                            return;
+                        }
+
+                        const createDirResponse = await mkdir(auth, parentResponse.id!, getBaseName(dir), false);
                         if (!createDirResponse.success) {
                             await explorerContext.presentSnackbar(
                                 `Failed to create containing directory: ${createDirResponse.error}`,
@@ -350,7 +377,14 @@ export function useUploadFile() {
                 }
             }
 
-            _handleUpload(file);
+            // Find the folder to upload the file to
+            const targetResponse = await resolveFolderID(auth, targetPath);
+            if (!targetResponse.success) {
+                await explorerContext.presentSnackbar(`Failed to find folder: ${targetResponse.error}`, "danger");
+                return;
+            }
+
+            _handleUpload(file, targetResponse.id!);
         }
     }
 
