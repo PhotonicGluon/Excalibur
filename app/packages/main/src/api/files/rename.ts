@@ -66,3 +66,66 @@ export async function renameItem(
     scheduleMerkleSync(auth);
     return { success: true };
 }
+
+/**
+ * Renames multiple items at once.
+ *
+ * The operation is all-or-nothing on the server. If any rename is rejected, none of the items in
+ * the request are renamed.
+ *
+ * @param auth the current authentication provider
+ * @param renames mapping of the IDs of the items to rename to their new names
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
+ *      message
+ */
+export async function renameItems(
+    auth: AuthProvider,
+    renames: Record<string, string>,
+): Promise<{ success: boolean; error?: string }> {
+    if (Object.keys(renames).length === 0) {
+        // No items to rename, so end early
+        return { success: true };
+    }
+
+    const response = await popFetch(`${auth.serverInfo!.apiURL}/files/rename-multiple`, auth.authInfo!.key!, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${auth.getToken()}`,
+            "Content-Type": "application/octet-stream",
+            "X-Encrypted": "true",
+            "X-Content-Type": "application/json",
+        },
+        // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
+        body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+            Buffer.from(JSON.stringify(renames), "utf-8"),
+        ),
+    });
+    switch (response.status) {
+        case 200:
+            // Continue with normal flow
+            break;
+        case 400:
+            return { success: false, error: "Illegal or invalid name" };
+        case 401:
+            return { success: false, error: "Unauthorized" };
+        case 404:
+            return { success: false, error: "Item not found" };
+        case 409:
+            return { success: false, error: "Item with that name already exists" };
+        case 412:
+            return { success: false, error: "Cannot rename root directory" };
+        case 417:
+            return { success: false, error: "Renamed file needs to end with `.exef`" };
+        case 422:
+            return { success: false, error: "Validation error" };
+        default:
+            return { success: false, error: "Unknown error" };
+    }
+
+    // Folder paths may have changed, so clear the folder ID cache
+    clearFolderIDCache();
+
+    // Trigger a sync and report success
+    scheduleMerkleSync(auth);
+    return { success: true };
+}

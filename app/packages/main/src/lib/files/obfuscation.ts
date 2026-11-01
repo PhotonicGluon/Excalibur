@@ -2,9 +2,11 @@ import seedrandom from "seedrandom";
 
 import { Directory } from "@lib/files/structures";
 
-import { getAllItems, getCount, renameItem } from "@api/files";
+import { getAllItems, getCount, renameItems } from "@api/files";
 
 import { AuthProvider } from "@components/auth/context";
+
+const RENAME_PAGE_SIZE = 100;
 
 /**
  * Substitution cipher for obfuscation.
@@ -129,23 +131,27 @@ export async function toggleObfuscationForAllFiles(
     const items = rawItems.sort((a, b) => b.fullpath.split("/").length - a.fullpath.split("/").length);
 
     // Rename items
-    for (let i = 0; i < items.length; i++) {
-        setLoadingState(`Processed ${i} of ${numItems} Items`);
-        const item = items[i];
-        const nameNoExEF = item.name.replace(/\.exef$/g, "");
+    for (let start = 0; start < items.length; start += RENAME_PAGE_SIZE) {
+        setLoadingState(`Processed ${start} of ${numItems} Items`);
 
-        let newName;
-        if (obfuscated) {
-            newName = auth.noc!.encipher(Buffer.from(nameNoExEF, "utf-8")) + (item.type === "file" ? ".exef" : "");
-        } else {
-            newName = auth.noc!.decipher(nameNoExEF).toString("utf-8") + (item.type === "file" ? ".exef" : "");
+        const renames: Record<string, string> = {};
+        for (const item of items.slice(start, start + RENAME_PAGE_SIZE)) {
+            const nameNoExEF = item.name.replace(/\.exef$/g, "");
+
+            let newName;
+            if (obfuscated) {
+                newName = auth.noc!.encipher(Buffer.from(nameNoExEF, "utf-8")) + (item.type === "file" ? ".exef" : "");
+            } else {
+                newName = auth.noc!.decipher(nameNoExEF).toString("utf-8") + (item.type === "file" ? ".exef" : "");
+            }
+
+            console.debug(`Renaming item '${item.fullpath}' from '${item.name}' to '${newName}'`);
+            renames[item.id] = newName;
         }
 
-        console.debug(`Renaming item '${item.fullpath}' from '${item.name}' to '${newName}'`);
-
-        const renameItemResponse = await renameItem(auth, item.id, newName);
-        if (!renameItemResponse.success) {
-            throw new Error(renameItemResponse.error!);
+        const renameItemsResponse = await renameItems(auth, renames);
+        if (!renameItemsResponse.success) {
+            throw new Error(renameItemsResponse.error!);
         }
     }
 
