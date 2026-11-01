@@ -1,7 +1,7 @@
 import { createFile, createFolder } from "../helpers";
+import { TINY_SIZE } from "./constants";
 
 const SERVER_URL = Cypress.expose("serverURL");
-const FILE_SIZE = 64; // Just need a small file for testing
 
 // Helper functions
 function _createTestAccount(username: string, reduced?: boolean): string {
@@ -12,11 +12,11 @@ function _createTestAccount(username: string, reduced?: boolean): string {
     cy.get("#directory-list-stats ion-icon").should("have.attr", "aria-label", "Listener connected");
 
     // Add test files
-    createFile(FILE_SIZE, true);
+    createFile(TINY_SIZE, true);
     const folderName = createFolder();
     cy.get(`div[data-name='${folderName}']`).click();
     cy.wait(100); // Make sure navigation completes
-    createFile(FILE_SIZE, true); // Create file within first folder
+    createFile(TINY_SIZE, true); // Create file within first folder
 
     if (reduced) {
         cy.get("#files-area").contains("(Go Back)").click();
@@ -26,7 +26,7 @@ function _createTestAccount(username: string, reduced?: boolean): string {
     const newFolderName = createFolder(); // Creates a folder within that folder
     cy.get(`div[data-name='${newFolderName}']`).click();
     cy.wait(100); // Make sure navigation completes
-    createFile(FILE_SIZE); // Create nested file
+    createFile(TINY_SIZE); // Create nested file
     cy.get("#files-area").contains("(Go Back)").click();
     cy.get("#files-area").contains("(Go Back)").click();
 
@@ -174,12 +174,12 @@ describe("Verification Operations", () => {
 
         it("vault should still be verified after file upload", () => {
             // Create file in root directory
-            createFile(FILE_SIZE, true);
+            createFile(TINY_SIZE, true);
 
             // Create file in subdirectory
             cy.get(`div[data-name='${folderName}']`).click();
             cy.wait(100); // Make sure navigation completes
-            createFile(FILE_SIZE, true);
+            createFile(TINY_SIZE, true);
 
             // Vault should still be verified
             _verifyVault();
@@ -209,7 +209,7 @@ describe("Verification Operations", () => {
 
         it("vault should still be verified after file delete (after upload)", () => {
             // Create file first
-            let fileName = createFile(FILE_SIZE);
+            let fileName = createFile(TINY_SIZE);
 
             // Then delete the file
             cy.get(`div[data-name='${fileName}']`).rightclick();
@@ -220,7 +220,7 @@ describe("Verification Operations", () => {
             cy.get(`div[data-name='${folderName}']`).click();
             cy.wait(100); // Make sure navigation completes
 
-            fileName = createFile(FILE_SIZE);
+            fileName = createFile(TINY_SIZE);
 
             // Then delete the file
             cy.get(`div[data-name='${fileName}']`).rightclick();
@@ -233,7 +233,7 @@ describe("Verification Operations", () => {
 
         it("vault should still be verified after moving", () => {
             // Create file first
-            const fileName = createFile(FILE_SIZE);
+            const fileName = createFile(TINY_SIZE);
 
             // Clicking on move button should bring up move dialog
             cy.get(`div[data-name='${fileName}']`).rightclick();

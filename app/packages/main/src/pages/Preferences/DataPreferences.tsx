@@ -157,6 +157,7 @@ const DataPreferences: React.FC = () => {
                 <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
                         <IonButton
+                            id="data-preferences-back"
                             onClick={() => {
                                 if (!toggledObfuscation) {
                                     router.goBack();
