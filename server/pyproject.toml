@@ -7,7 +7,7 @@ name = "excalibur-server"
 version = "0.9.0a5"
 dependencies = [
     "aiofiles>=25.1.0",
-    "alembic>=1.19.2",
+    "alembic>=1.20.1",
     "duckdb~=1.5.6",
     "duckdb-sqlalchemy>=1.5.6.5",
     "fastapi>=0.162.0",
@@ -20,9 +20,7 @@ dependencies = [
     "pyjwt>=2.15.1",
     "rapidfuzz>=3.14.6",
     "semver>=3.0.4",
-    # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions >= 2.1.0
-    # TODO: Verify if it is still broken after switching to `duckdb-sqlalchemy`
-    "sqlalchemy<2.1.0",
+    "sqlalchemy>=2.1.6",
     "sqlmodel>=0.0.42",
     "toml>=0.10.2",
     "tomlkit>=0.15.1",
