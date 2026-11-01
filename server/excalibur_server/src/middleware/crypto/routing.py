@@ -99,6 +99,12 @@ FILES_ROUTING_TREE = RoutingTree(
                 "POST": EncryptedRoute(),
             },
         ),
+        "rename-multiple": RoutingTree(
+            segment="rename-multiple",
+            encrypted_routes={
+                "POST": EncryptedRoute(),
+            },
+        ),
         "subtree": RoutingTree(
             segment="subtree",
             has_path_param=True,

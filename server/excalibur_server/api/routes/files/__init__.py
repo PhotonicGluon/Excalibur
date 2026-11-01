@@ -38,6 +38,7 @@ from .folder import listdir_endpoint as listdir_endpoint
 from .folder import subtree_endpoint as subtree_endpoint
 from .get_all import get_all_items_endpoint as get_all_items_endpoint
 from .move import move_path_endpoint as move_path_endpoint
+from .rename import rename_multiple_endpoint as rename_multiple_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
 
 # Add encrypted routes to overall router
