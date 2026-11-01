@@ -8,8 +8,8 @@ version = "0.9.0a5"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.19.2",
-    "duckdb~=1.5.5",
-    "duckdb-engine>=0.17.0",
+    "duckdb~=1.5.6",
+    "duckdb-sqlalchemy>=1.5.6.5",
     "fastapi>=0.162.0",
     "gitpython>=3.1.62",
     "httptools>=0.8.0",
@@ -21,6 +21,7 @@ dependencies = [
     "rapidfuzz>=3.14.6",
     "semver>=3.0.4",
     # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions >= 2.1.0
+    # TODO: Verify if it is still broken after switching to `duckdb-sqlalchemy`
     "sqlalchemy<2.1.0",
     "sqlmodel>=0.0.42",
     "toml>=0.10.2",

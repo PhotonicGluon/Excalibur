@@ -3,8 +3,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import duckdb
-from duckdb_engine import ConnectionWrapper
-from sqlalchemy import Engine, create_engine
+from duckdb_sqlalchemy import ConnectionWrapper
+from sqlalchemy import Engine, QueuePool, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from excalibur_server.consts import ROOT_FOLDER
@@ -29,7 +29,12 @@ def get_engine(db_path: str) -> Engine:
         if engine is None:
             connection = duckdb.connect(db_path)
             _connections[db_path] = connection
-            engine = create_engine("duckdb:///", creator=lambda: ConnectionWrapper(connection.cursor()))
+            engine = create_engine(
+                "duckdb:///",
+                creator=lambda: ConnectionWrapper(connection.cursor()),
+                # An explicit `QueuePool` is needed since `duckdb-sqlalchemy` defaults to `SingletonThreadPool`
+                poolclass=QueuePool,
+            )
             _engines[db_path] = engine
 
         return engine
