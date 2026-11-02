@@ -3,11 +3,15 @@ import { useState } from "react";
 import { IonButton, IonCard, IonCardContent, IonIcon, IonProgressBar, IonText } from "@ionic/react";
 import { alertCircleOutline, shieldCheckmarkOutline } from "ionicons/icons";
 
+import { useAuth } from "@components/auth/context";
 import { useMerkle } from "@components/merkle/context";
 
 const MerkleMigrationBanner: React.FC = () => {
     // Contexts
+    const auth = useAuth();
     const merkle = useMerkle();
+
+    const hasObfuscatedNames = auth.vaultInfo!.info.obfuscatedNames;
     const isMigrating = merkle.status === "migrating" || merkle.busy;
 
     // States
@@ -70,33 +74,38 @@ const MerkleMigrationBanner: React.FC = () => {
                 <IonIcon
                     className="size-8"
                     color={iconColour}
-                    icon={error && !isMigrationUnderway ? alertCircleOutline : shieldCheckmarkOutline}
+                    icon={
+                        (error && !isMigrationUnderway) || hasObfuscatedNames
+                            ? alertCircleOutline
+                            : shieldCheckmarkOutline
+                    }
                 />
                 <div className="flex-1">
-                    {isMigrating && isMigrationUnderway && (
-                        <>
-                            <IonText color="dark">
-                                <p className="m-0">{migrationPhase}</p>
-                            </IonText>
-                            <IonProgressBar type="determinate" value={progress.migrated / progress.total} />
-                        </>
-                    )}
-                    {isMigrating && !isMigrationUnderway && (
-                        <>
+                    {isMigrating ? (
+                        isMigrationUnderway ? (
+                            <>
+                                <IonText color="dark">
+                                    <p className="m-0">{migrationPhase}</p>
+                                </IonText>
+                                <IonProgressBar type="determinate" value={progress.migrated / progress.total} />
+                            </>
+                        ) : (
                             <IonText color="light">
                                 <p className="m-0">Vault upgrade seems to have been interrupted.</p>
                             </IonText>
-                        </>
-                    )}
-                    {!isMigrating && (
+                        )
+                    ) : (
                         <IonText color="dark">
                             <p className="m-0">
-                                {error ?? "Your vault can be upgraded to support data integrity verification."}
+                                {error ??
+                                    "Your vault can be upgraded to support data integrity verification" +
+                                        (hasObfuscatedNames ? ", but only after disabling obfuscated names" : "") +
+                                        "."}
                             </p>
                         </IonText>
                     )}
                 </div>
-                {(!isMigrating || !isMigrationUnderway) && (
+                {(!isMigrating || !isMigrationUnderway) && !hasObfuscatedNames && (
                     <>
                         <IonButton size="small" color={buttonColour} fill="clear" onClick={() => setIsDismissed(true)}>
                             Later

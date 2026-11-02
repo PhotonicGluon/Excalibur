@@ -2,38 +2,66 @@ import { IonApp } from "@ionic/react";
 
 import { MerkleStatus } from "@lib/merkle";
 
-import MerkleMigrationBanner from "./MerkleMigrationBanner";
+import { authContext } from "@components/auth/context";
+import { KeyGenAlgorithm } from "@lib/crypto/keygen";
+import { MerkleKeys } from "@lib/merkle/keys";
 import { merkleContext } from "./context";
+import MerkleMigrationBanner from "./MerkleMigrationBanner";
 
 describe("<MerkleMigrationBanner />", () => {
     function renderComponent(
         status: MerkleStatus,
         migrateSpy?: ((migratedCount: number, totalCount: number) => void) | null,
         migrateShouldFail?: boolean,
+        obfuscatedNames?: boolean,
     ) {
         return cy.mount(
             <IonApp>
-                <merkleContext.Provider
+                <authContext.Provider
                     value={{
-                        status,
-                        busy: false,
-                        lastSyncedAt: null,
-                        refreshStatus: async () => {},
-                        triggerSync: async () => ({ success: true }),
-                        migrate: async () => {
-                            migrateSpy?.(1, 2);
-
-                            if (migrateShouldFail) {
-                                return { success: false };
-                            }
-
-                            migrateSpy?.(3, 4);
-                            return { success: true };
+                        authInfo: null,
+                        serverInfo: {
+                            apiURL: "",
+                            version: "x.y.z", // Just need this for the test
                         },
+                        vaultInfo: {
+                            aukSalt: Buffer.alloc(0),
+                            encryptedKey: Buffer.alloc(0),
+                            key: Buffer.alloc(0),
+                            keygenAlgorithm: KeyGenAlgorithm.PBKDF2,
+                            merkleKeys: new MerkleKeys(Buffer.alloc(0), Buffer.alloc(0)),
+                            info: { obfuscatedNames: obfuscatedNames ?? false },
+                        },
+                        noc: null,
+                        getToken: () => null,
+                        setAuthInfo: () => {},
+                        setServerInfo: () => {},
+                        setVaultInfo: () => {},
+                        logout: () => Promise.resolve(),
                     }}
                 >
-                    <MerkleMigrationBanner />
-                </merkleContext.Provider>
+                    <merkleContext.Provider
+                        value={{
+                            status,
+                            busy: false,
+                            lastSyncedAt: null,
+                            refreshStatus: async () => {},
+                            triggerSync: async () => ({ success: true }),
+                            migrate: async () => {
+                                migrateSpy?.(1, 2);
+
+                                if (migrateShouldFail) {
+                                    return { success: false };
+                                }
+
+                                migrateSpy?.(3, 4);
+                                return { success: true };
+                            },
+                        }}
+                    >
+                        <MerkleMigrationBanner />
+                    </merkleContext.Provider>
+                </authContext.Provider>
             </IonApp>,
         );
     }
@@ -86,5 +114,13 @@ describe("<MerkleMigrationBanner />", () => {
         cy.wrap(migrateSpy).should("have.been.calledWith", 1, 2);
         cy.wrap(migrateSpy).should("not.have.been.calledWith", 3, 4);
         cy.get("ion-card").should("contain", "Migration failed");
+    });
+
+    it("should prevent migration if has obfuscated names", () => {
+        const migrateSpy = cy.stub().resolves();
+        renderComponent("none", migrateSpy, false, true);
+
+        cy.get("ion-card").should("exist");
+        cy.get("ion-button").should("not.exist");
     });
 });

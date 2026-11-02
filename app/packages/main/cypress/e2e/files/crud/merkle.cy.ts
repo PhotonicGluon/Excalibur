@@ -50,6 +50,14 @@ afterEach(function () {
 });
 
 describe("Migration Operations", () => {
+    it("should not work with obfuscated names", () => {
+        const USERNAME = `merkle-test-user-${Date.now()}`;
+        cy.signup(SERVER_URL, USERNAME, "Password", true, false);
+
+        cy.get("#merkle-migration-banner").should("exist");
+        cy.get("#merkle-migration-banner ion-button").should("not.exist");
+    });
+
     it("should work with empty vault", () => {
         const USERNAME = `merkle-test-user-${Date.now()}`;
         cy.signup(SERVER_URL, USERNAME, "Password", false, false);
