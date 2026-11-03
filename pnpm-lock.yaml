@@ -140,31 +140,31 @@ importers:
     dependencies:
       '@capacitor/android':
         specifier: 8.5.3
-        version: 8.5.3(@capacitor/core@8.5.3)
+        version: 8.5.3(@capacitor/core@8.6.0)
       '@capacitor/app':
         specifier: ^8.1.2
-        version: 8.1.2(@capacitor/core@8.5.3)
+        version: 8.1.2(@capacitor/core@8.6.0)
       '@capacitor/core':
-        specifier: 8.5.3
-        version: 8.5.3
+        specifier: 8.6.0
+        version: 8.6.0
       '@capacitor/filesystem':
         specifier: ^8.1.5
-        version: 8.1.5(@capacitor/core@8.5.3)
+        version: 8.1.5(@capacitor/core@8.6.0)
       '@capacitor/keyboard':
         specifier: ^8.0.6
-        version: 8.0.6(@capacitor/core@8.5.3)
+        version: 8.0.6(@capacitor/core@8.6.0)
       '@capacitor/preferences':
         specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.5.3)
+        version: 8.0.1(@capacitor/core@8.6.0)
       '@capacitor/privacy-screen':
         specifier: ^2.0.1
-        version: 2.0.1(@capacitor/core@8.5.3)
+        version: 2.0.1(@capacitor/core@8.6.0)
       '@capacitor/screen-orientation':
         specifier: ^8.0.2
-        version: 8.0.2(@capacitor/core@8.5.3)
+        version: 8.0.2(@capacitor/core@8.6.0)
       '@capawesome/capacitor-file-picker':
         specifier: ^8.1.1
-        version: 8.1.1(@capacitor/core@8.5.3)
+        version: 8.1.1(@capacitor/core@8.6.0)
       '@ionic/core':
         specifier: ^8.8.19
         version: 8.8.19
@@ -191,7 +191,7 @@ importers:
         version: 6.0.3
       capacitor-blob-writer:
         specifier: ^1.1.21
-        version: 1.1.21(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3))
+        version: 1.1.21(@capacitor/core@8.6.0)(@capacitor/filesystem@8.1.5(@capacitor/core@8.6.0))
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -435,8 +435,8 @@ packages:
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.5.3':
-    resolution: {integrity: sha512-oBE1oGuYE4ZzYYrulC75OuHdSsD6zLUy7d5o1tFwDLG4govGoubY15cxpiI5l0+q87Lm5p0bhbehMdzJg4aFag==}
+  '@capacitor/core@8.6.0':
+    resolution: {integrity: sha512-9F2zzuGYTJu+wqmQSEmqnFBfGrhC/njjMCfmxbvg9mq8xJT4wNh5pxbMFZxvW/yDhYJWPEBFQxeqzfo1gKrvxg==}
 
   '@capacitor/filesystem@8.1.5':
     resolution: {integrity: sha512-m1RkI8L83NJeppEKyRWioK3MDp2vjlA+QfUQcF8/xRlcXNC2HYxqoyYJ+K4M0EcVovy+g+4F24S05+bhK4Vgdg==}
@@ -4744,13 +4744,13 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@capacitor/android@8.5.3(@capacitor/core@8.5.3)':
+  '@capacitor/android@8.5.3(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
-  '@capacitor/app@8.1.2(@capacitor/core@8.5.3)':
+  '@capacitor/app@8.1.2(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
   '@capacitor/assets@3.0.5(@types/node@26.6.5)(supports-color@8.1.1)':
     dependencies:
@@ -4794,36 +4794,36 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.5.3':
+  '@capacitor/core@8.6.0':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)':
+  '@capacitor/filesystem@8.1.5(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
       '@capacitor/synapse': 1.0.4
 
-  '@capacitor/keyboard@8.0.6(@capacitor/core@8.5.3)':
+  '@capacitor/keyboard@8.0.6(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
-  '@capacitor/preferences@8.0.1(@capacitor/core@8.5.3)':
+  '@capacitor/preferences@8.0.1(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
-  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.5.3)':
+  '@capacitor/privacy-screen@2.0.1(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
-  '@capacitor/screen-orientation@8.0.2(@capacitor/core@8.5.3)':
+  '@capacitor/screen-orientation@8.0.2(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
   '@capacitor/synapse@1.0.4': {}
 
-  '@capawesome/capacitor-file-picker@8.1.1(@capacitor/core@8.5.3)':
+  '@capawesome/capacitor-file-picker@8.1.1(@capacitor/core@8.6.0)':
     dependencies:
-      '@capacitor/core': 8.5.3
+      '@capacitor/core': 8.6.0
 
   '@cypress/request@4.0.1':
     dependencies:
@@ -6304,10 +6304,10 @@ snapshots:
 
   caniuse-lite@1.0.30001819: {}
 
-  capacitor-blob-writer@1.1.21(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)):
+  capacitor-blob-writer@1.1.21(@capacitor/core@8.6.0)(@capacitor/filesystem@8.1.5(@capacitor/core@8.6.0)):
     dependencies:
-      '@capacitor/core': 8.5.3
-      '@capacitor/filesystem': 8.1.5(@capacitor/core@8.5.3)
+      '@capacitor/core': 8.6.0
+      '@capacitor/filesystem': 8.1.5(@capacitor/core@8.6.0)
 
   caseless@0.12.0: {}
 
