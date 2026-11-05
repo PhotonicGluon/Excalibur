@@ -174,7 +174,7 @@ class TestRename:
         assert auth_client.post(f"/api/files/rename/{file.id}", json={**valid, "name_tag": "AAAA"}).status_code == 422
         assert auth_client.post(f"/api/files/rename/{file.id}", json={**valid, "name_enc": ""}).status_code == 422
 
-        too_big = b64encode(b"x" * (CONFIG.storage.max_encrypted_name_size + 1)).decode()
+        too_big = b64encode(b"x" * (CONFIG.storage.database.max_encrypted_name_size + 1)).decode()
         assert auth_client.post(f"/api/files/rename/{file.id}", json={**valid, "name_enc": too_big}).status_code == 422
 
 

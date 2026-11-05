@@ -136,6 +136,39 @@ class TestMove:
         response = auth_client.post(f"/api/files/move/{uuid4()}", json=move_body(uuid4(), "x"))
         assert response.status_code == 404
 
+    def test_move_item_of_another_user(self, auth_client: TestClient, test_user, db_session: Session, move_body):
+        other_root = FSItem(parent_id=None, root_id=uuid4(), is_folder=True)
+        other_item = FSItem(parent_id=other_root.id, root_id=other_root.id, name_enc=b"orig", name_tag=b"\x0c" * 32)
+        db_session.add_all([other_root, other_item])
+        db_session.commit()
+
+        try:
+            response = auth_client.post(f"/api/files/move/{other_item.id}", json=move_body(test_user["root_id"], "x"))
+            assert response.status_code == 404
+            assert get_item(other_item.id).parent_id == other_root.id
+        finally:
+            db_session.delete(other_item)
+            db_session.delete(other_root)
+            db_session.commit()
+
+    def test_move_into_folder_of_another_user(
+        self, auth_client: TestClient, test_user, db_session: Session, move_folder, name_fields, move_body
+    ):
+        file = self._make_file(db_session, test_user["root_id"], move_folder[0], "m-file-foreign-dest", name_fields)
+        other_root = FSItem(parent_id=None, root_id=uuid4(), is_folder=True)
+        db_session.add(other_root)
+        db_session.commit()
+
+        try:
+            response = auth_client.post(
+                f"/api/files/move/{file.id}", json=move_body(other_root.id, "m-file-foreign-dest")
+            )
+            assert response.status_code == 404
+            assert get_item(file.id).parent_id == move_folder[0].id
+        finally:
+            db_session.delete(other_root)
+            db_session.commit()
+
     def test_dest_same_as_current(
         self, auth_client: TestClient, test_user, db_session: Session, move_folder, name_fields, move_body
     ):

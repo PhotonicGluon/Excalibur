@@ -1,5 +1,5 @@
 import json
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from uuid import uuid4
 
 import httpx2
@@ -194,6 +194,52 @@ class TestCheckNames:
             "/api/files/check/names", json={"parent_id": str(file_id), "name_tags": [tag(file_id, "file")]}
         )
         assert response.status_code == 404
+
+    def test_parent_of_another_user(self, auth_client: TestClient, db_session: Session, tag):
+        other_root = FSItem(parent_id=None, root_id=uuid4(), is_folder=True)
+        other_item = FSItem(
+            parent_id=other_root.id,
+            root_id=other_root.id,
+            name_enc=b"x",
+            name_tag=b64decode(tag(other_root.id, "foreign")),
+        )
+        db_session.add_all([other_root, other_item])
+        db_session.commit()
+
+        try:
+            response = auth_client.post(
+                "/api/files/check/names",
+                json={"parent_id": str(other_root.id), "name_tags": [tag(other_root.id, "foreign")]},
+            )
+            assert response.status_code == 404
+        finally:
+            db_session.delete(other_item)
+            db_session.delete(other_root)
+            db_session.commit()
+
+    def test_invalid_tags_never_match(self, auth_client: TestClient, dir_with_items, tag):
+        root_id = dir_with_items["root"]
+        response = auth_client.post(
+            "/api/files/check/names",
+            json={"parent_id": str(root_id), "name_tags": [b64encode(b"short").decode(), tag(root_id, "file")]},
+        )
+        assert self._decrypt_and_parse_response(response)[:2] == "01"
+
+    def test_legacy_items_have_no_tag(self, auth_client: TestClient, test_user, db_session: Session, tag):
+        root_id = test_user["root_id"]
+        legacy = FSItem(parent_id=root_id, root_id=root_id, name="legacy-check")
+        db_session.add(legacy)
+        db_session.commit()
+
+        try:
+            # Legacy items cannot be found by tag; the client checks its decrypted listing for those
+            response = auth_client.post(
+                "/api/files/check/names", json={"parent_id": ".", "name_tags": [tag(root_id, "legacy-check")]}
+            )
+            assert self._decrypt_and_parse_response(response)[:1] == "0"
+        finally:
+            db_session.delete(legacy)
+            db_session.commit()
 
     def test_tricky(self, auth_client: TestClient, dir_with_items, tag):
         root_id = dir_with_items["root"]
