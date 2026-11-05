@@ -18,7 +18,6 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "pyjwt>=2.15.1",
-    "rapidfuzz>=3.14.6",
     "semver>=3.0.4",
     "sqlalchemy>=2.1.6",
     "sqlmodel>=0.0.42",
