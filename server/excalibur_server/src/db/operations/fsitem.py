@@ -1,13 +1,11 @@
-from pathlib import PurePosixPath
 from uuid import UUID
 
-from sqlalchemy import func, not_, tuple_
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy import func, not_
+from sqlalchemy.orm import Session
 from sqlmodel import select
 
 from excalibur_server.src.db.operations.helpers import get_session
 from excalibur_server.src.db.tables import FSItem
-from excalibur_server.src.path import split_path
 
 # Reject if node hash is not provided OR if it's a file lacking a content MAC
 UNVERIFIED_CONDITION = (FSItem.node_hash.is_(None)) | (not_(FSItem.is_folder) & FSItem.content_mac.is_(None))
@@ -40,89 +38,35 @@ def get_item(item_id: UUID) -> FSItem | None:
         return item
 
 
-def get_item_by_path(root_id: UUID, path: str) -> FSItem | None:
+def get_items_by_name_tags(parent_id: UUID, name_tags: list[bytes]) -> dict[bytes, FSItem]:
     """
-    Gets a filesystem item from the database by its path.
+    Gets the children of a folder that have any of the given name tags.
 
-    Can specify the root directory with ".".
-
-    :param path: the path of the filesystem item to get
-    :return: the filesystem item, or None if the item does not exist
-    :raises ValueError: if the path is empty or root
+    :param parent_id: the ID of the folder
+    :param name_tags: the name tags to look for
+    :return: mapping from each name tag that was found to its item
     """
 
-    parts = split_path(path)
-    if not parts:
-        return get_item(root_id)
+    if not name_tags:
+        return {}
 
-    num_parts = len(parts)
     with get_session() as session:
-        aliases = [aliased(FSItem, name=f"part_{i}") for i in range(num_parts)]
-
-        stmt = (
-            select(aliases[-1])
-            .select_from(aliases[0])
-            .where(aliases[0].parent_id == root_id, aliases[0].name == parts[0])  # First item must be child of the root
-        )
-        for i in range(1, num_parts):
-            stmt = stmt.join(aliases[i], aliases[i].parent_id == aliases[i - 1].id).where(aliases[i].name == parts[i])
-
-        stmt = stmt.where(aliases[-1].root_id == root_id)  # Remove results where the target is not in the correct root
-
-        result = session.execute(stmt).scalar()
-        return result.model_copy() if result else None
+        items = session.execute(
+            select(FSItem).where(FSItem.parent_id == parent_id, FSItem.name_tag.in_(name_tags))
+        ).scalars()
+        return {bytes(item.name_tag): item.model_copy() for item in items}
 
 
-def get_items_by_paths(root_id: UUID, paths: list[str]) -> list[FSItem | None]:
+def get_item_by_name_tag(parent_id: UUID, name_tag: bytes) -> FSItem | None:
     """
-    Gets multiple filesystem items from the database by their paths.
+    Gets the child of a folder that has a given name tag.
 
-    Can specify the root directory with ".".
-
-    :param root_id: the ID of the root directory
-    :param paths: the paths of the filesystem items to get
-    :return: the filesystem items, in the same order as `paths`, with None for items that do not
-        exist
+    :param parent_id: the ID of the folder
+    :param name_tag: the name tag to look for
+    :return: the item, or None if the folder has no child with that name tag
     """
 
-    all_parts = [split_path(path) for path in paths]
-
-    # Maps each resolved prefix to its item; the empty prefix is the root itself
-    resolved: dict[tuple[str, ...], FSItem] = {}
-    with get_session() as session:
-        root = session.get(FSItem, root_id)
-        if root is not None:
-            resolved[()] = root.model_copy()
-
-        # Resolve the paths level by level
-        max_depth = max((len(parts) for parts in all_parts), default=0)
-        for depth in range(1, max_depth + 1):
-            # Find the prefixes at this depth whose parent was resolved to a folder
-            wanted: dict[tuple[UUID, str], tuple[str, ...]] = {}
-            for parts in all_parts:
-                if len(parts) < depth:
-                    # This part has already been processed in an earlier level; skip
-                    continue
-
-                parent = resolved.get(parts[: depth - 1])
-                if parent is None or not parent.is_folder:
-                    # Invalid path; skip
-                    continue
-
-                wanted[(parent.id, parts[depth - 1])] = parts[:depth]
-
-            if not wanted:
-                break
-
-            items = session.execute(
-                select(FSItem).where(
-                    tuple_(FSItem.parent_id, FSItem.name).in_(list(wanted.keys())), FSItem.root_id == root_id
-                )
-            ).scalars()
-            for item in items:
-                resolved[wanted[(item.parent_id, item.name)]] = item.model_copy()
-
-    return [resolved.get(parts) for parts in all_parts]
+    return get_items_by_name_tags(parent_id, [name_tag]).get(name_tag)
 
 
 def get_items_in_folder(folder_id: UUID) -> list[FSItem]:
@@ -151,40 +95,48 @@ def get_items_with_root(root_id: UUID) -> list[FSItem]:
         return [item.model_copy() for item in items if item.id != root_id]  # Exclude the root directory itself
 
 
-def get_item_fullpath(item_id: UUID) -> PurePosixPath:
+def get_pending_name_items(root_id: UUID, *, limit: int | None = None, offset: int = 0) -> list[FSItem]:
     """
-    Gets the full path of a filesystem item, relative to the user's root directory.
+    Gets the items that still have a plaintext name.
 
-    :param item_id: the ID of the filesystem item
-    :return: a PurePosixPath object representing the full path of the filesystem item
+    The results are ordered by ID so that paging is stable.
+
+    :param root_id: the ID of the root
+    :param limit: the maximum number of items to return, or None for no limit
+    :param offset: the number of items to skip
+    :return: the list of pending items
     """
 
-    # Base case: Select the target item
-    base_query = (
-        select(FSItem.id, FSItem.parent_id, FSItem.name)
-        .where(FSItem.id == item_id)
-        .where(FSItem.parent_id.is_not(None))  # Root folder should not be included in path
-        .cte(name="fullpath_cte", recursive=True)
+    statement = (
+        select(FSItem)
+        .where(FSItem.root_id == root_id, FSItem.parent_id.is_not(None), FSItem.name.is_not(None))
+        .order_by(FSItem.id)
+        .offset(offset)
     )
+    if limit is not None:
+        statement = statement.limit(limit)
 
-    # Recursive case: Join parents to the current item
-    parent_alias = aliased(FSItem)
-    recursive_query = (
-        select(parent_alias.id, parent_alias.parent_id, parent_alias.name)
-        .join(base_query, base_query.c.parent_id == parent_alias.id)
-        .where(parent_alias.parent_id.is_not(None))  # Stop when we reach the root folder
-    )
-
-    # Execute combined CTE query to get all parts of the path
-    fullpath_cte = base_query.union_all(recursive_query)
     with get_session() as session:
-        parts = session.execute(select(fullpath_cte.c.name)).scalars().all()
+        return [item.model_copy() for item in session.execute(statement).scalars().all()]
 
-    # Reverse and join them (since results are child -> root)
-    fullpath = PurePosixPath("")
-    for part in reversed(parts):
-        fullpath /= part
-    return fullpath
+
+def has_pending_names(root_id: UUID) -> bool:
+    """
+    Checks if a root has items that still have a plaintext name.
+
+    :param root_id: the ID of the root
+    :return: True if the root has pending items, False otherwise
+    """
+
+    with get_session() as session:
+        return (
+            session.execute(
+                select(FSItem.id)
+                .where(FSItem.root_id == root_id, FSItem.parent_id.is_not(None), FSItem.name.is_not(None))
+                .limit(1)
+            ).first()
+            is not None
+        )
 
 
 def get_item_ancestors(item_id: UUID) -> list[FSItem]:
