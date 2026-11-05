@@ -171,8 +171,8 @@ class EncryptedName(BaseModel):
     def validate_name_enc(cls, value: bytes) -> bytes:
         if not value:
             raise ValueError("must not be empty")
-        if len(value) > CONFIG.server.max_encrypted_name_size:
-            raise ValueError(f"must be at most {CONFIG.server.max_encrypted_name_size} bytes")
+        if len(value) > CONFIG.storage.database.max_encrypted_name_size:
+            raise ValueError(f"must be at most {CONFIG.storage.database.max_encrypted_name_size} bytes")
         return value
 
     @field_validator("name_tag")

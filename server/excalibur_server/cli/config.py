@@ -235,13 +235,21 @@ def update_config():
 
         return new_config
 
-    SETTINGS_VERSION = 6
+    def v6_to_v7(config: TOMLDocument) -> TOMLDocument:
+        new_config = template_config.copy()
+        new_config = _migrate_config(config, new_config)
+        new_config["version"] = 7
+
+        return new_config
+
+    SETTINGS_VERSION = 7
     UPDATERS = {
         1: v1_to_v2,
         2: v2_to_v3,
         3: v3_to_v4,
         4: v4_to_v5,
         5: v5_to_v6,
+        6: v6_to_v7,
     }
 
     # Determine what updaters to run
