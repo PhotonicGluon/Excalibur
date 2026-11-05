@@ -69,27 +69,29 @@ class TestSubtree:
         # Top folder itself should not be included
         assert str(tree["top"].id) not in [item["id"] for item in items]
 
-        assert {item["fullpath"]: item["type"] for item in items} == {
-            "subtree-dir/a.txt.exef": "file",
-            "subtree-dir/empty-dir": "directory",
-            "subtree-dir/sub-dir": "directory",
-            "subtree-dir/sub-dir/b.txt.exef": "file",
-            "subtree-dir/sub-dir/subsub-dir": "directory",
-            "subtree-dir/sub-dir/subsub-dir/c.txt.exef": "file",
+        assert {item["name"]: item["type"] for item in items} == {
+            "a.txt.exef": "file",
+            "empty-dir": "directory",
+            "sub-dir": "directory",
+            "b.txt.exef": "file",
+            "subsub-dir": "directory",
+            "c.txt.exef": "file",
         }
-        assert all(item["fullpath"].endswith(item["name"]) for item in items)
+
+        # Each item points to its parent, which lets clients rebuild paths
+        parents = {item["name"]: item["parent_id"] for item in items}
+        assert parents["a.txt.exef"] == str(tree["top"].id)
+        assert parents["b.txt.exef"] == str(tree["sub"].id)
+        assert parents["c.txt.exef"] == str(tree["subsub"].id)
+        assert all("fullpath" not in item for item in items)
 
     def test_sub_folder(self, auth_client: TestClient, tree: dict[str, FSItem]):
         items = self._get_subtree(auth_client, tree["sub"].id)
-        assert {item["fullpath"] for item in items} == {
-            "subtree-dir/sub-dir/b.txt.exef",
-            "subtree-dir/sub-dir/subsub-dir",
-            "subtree-dir/sub-dir/subsub-dir/c.txt.exef",
-        }
+        assert {item["name"] for item in items} == {"b.txt.exef", "subsub-dir", "c.txt.exef"}
 
     def test_sub_sub_folder(self, auth_client: TestClient, tree: dict[str, FSItem]):
         items = self._get_subtree(auth_client, tree["subsub"].id)
-        assert [item["fullpath"] for item in items] == ["subtree-dir/sub-dir/subsub-dir/c.txt.exef"]
+        assert [item["name"] for item in items] == ["c.txt.exef"]
 
     def test_empty_folder(self, auth_client: TestClient, tree: dict[str, FSItem]):
         assert self._get_subtree(auth_client, tree["empty"].id) == []
@@ -100,7 +102,6 @@ class TestSubtree:
         # Should be exactly the items that "Get All Items" returns
         all_items = _decrypt(auth_client.get("/api/files/all"))
         assert {item["id"] for item in items} == {item["id"] for item in all_items}
-        assert {item["fullpath"] for item in items} == {item["fullpath"] for item in all_items}
 
     def test_entries_match_get_all(self, auth_client: TestClient, tree: dict[str, FSItem]):
         items = {item["id"]: item for item in self._get_subtree(auth_client, tree["top"].id)}

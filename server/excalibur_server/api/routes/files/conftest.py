@@ -1,10 +1,41 @@
+from base64 import b64encode
 from collections.abc import Callable
+from hashlib import sha256
 from uuid import UUID
 
 import pytest
 
 from excalibur_server.src.db.operations import get_item, get_session
 from excalibur_server.src.db.tables import FSItem
+
+
+def _fake_name_fields(parent_id: UUID, name: str) -> dict[str, bytes]:
+    return {
+        "name_enc": b"enc-" + name.encode(),
+        "name_tag": sha256(parent_id.bytes + name.encode()).digest(),
+    }
+
+
+@pytest.fixture
+def name_fields() -> Callable[[UUID, str], dict[str, bytes]]:
+    """
+    :returns: helper that makes stand-in encrypted name fields for the constructor of `FSItem`
+    """
+
+    return _fake_name_fields
+
+
+@pytest.fixture
+def encrypted_name() -> Callable[[UUID, str], dict[str, str]]:
+    """
+    :returns: helper that makes the JSON form (i.e., Base64) of the stand-in encrypted name fields,
+        for use in request bodies. Agrees with `name_fields`
+    """
+
+    def _encrypted_name(parent_id: UUID, name: str) -> dict[str, str]:
+        return {key: b64encode(value).decode() for key, value in _fake_name_fields(parent_id, name).items()}
+
+    return _encrypted_name
 
 
 @pytest.fixture
@@ -21,9 +52,9 @@ def mark_clean() -> Callable[[UUID], None]:
                 if item is None:
                     break
 
-                item.node_hash = b"clean-" + item.name.encode()
+                item.node_hash = b"clean-" + item.id.bytes
                 if not item.is_folder:
-                    item.content_mac = b"mac-" + item.name.encode()
+                    item.content_mac = b"mac-" + item.id.bytes
                 session.add(item)
 
                 curr_id = item.parent_id

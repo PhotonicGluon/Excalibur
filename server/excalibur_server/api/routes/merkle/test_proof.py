@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item, get_items_in_folder
+from excalibur_server.src.db.tables import FSItem
 
 
 class TestInclusionProofEndpoint:
@@ -66,6 +67,30 @@ class TestInclusionProofEndpoint:
         assert step_2["id"] == str(root_id)
         assert step_2["name"] == get_item(root_id).name
         assert len(step_2["children"]) == len(get_items_in_folder(root_id))
+
+    def test_step_has_encrypted_name(self, test_user, auth_client: TestClient, db_session):
+        root_id = test_user["root_id"]
+        parent = FSItem(
+            parent_id=root_id, root_id=root_id, is_folder=True, name_enc=b"encrypted-name", name_tag=b"\x08" * 32
+        )
+        child = FSItem(parent_id=parent.id, root_id=root_id, name_enc=b"child", name_tag=b"\x09" * 32)
+        db_session.add_all([parent, child])
+        db_session.commit()
+
+        try:
+            response = auth_client.get(f"/api/merkle/proof/{child.id}")
+            assert response.status_code == 200
+
+            inclusion_proof = json.loads(ExEF(b"one demo 16B key").decrypt(response.content))
+            assert inclusion_proof["item"]["name_enc"] == b64encode(b"child").decode()
+            step = inclusion_proof["steps"][0]
+            assert step["id"] == str(parent.id)
+            assert step["name"] is None
+            assert step["name_enc"] == b64encode(b"encrypted-name").decode()
+        finally:
+            db_session.delete(child)
+            db_session.delete(parent)
+            db_session.commit()
 
     def test_get_item_in_sub_folder(self, auth_client: TestClient, merkle_folder: dict):
         sub_sub_folder_id = merkle_folder["sub_sub_folder"]

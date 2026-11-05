@@ -2,11 +2,12 @@ from typing import Annotated
 
 from fastapi import Body, Depends, HTTPException, Path, Response, status
 from fastapi.responses import PlainTextResponse
+from pydantic import Base64Bytes
 
 from excalibur_server.api.path_handling import get_user_item, process_path_param
 from excalibur_server.api.routes.files import encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_items_in_folder, is_dir_empty
+from excalibur_server.src.db.operations import get_items_by_name_tags, is_dir_empty
 from excalibur_server.src.users import get_user_from_id
 
 
@@ -59,29 +60,30 @@ async def check_item_endpoint(
 async def check_names_endpoint(
     credentials: Annotated[Credentials, Depends(get_credentials)],
     parent_id: Annotated[str, Body(description="The ID of the folder to look in (use `.` to specify root directory)")],
-    names: Annotated[list[str], Body(description="The names of the items to look for in the folder")],
+    name_tags: Annotated[list[Base64Bytes], Body(description="The name tags of the items to look for in the folder")],
 ):
     """
-    Checks the existence of multiple names in a folder.
+    Checks the existence of multiple names in a folder via their name tags.
 
     The response is a packed bit string.
-    - Bit `i` (counting from the first name) is `1` if the `i`-th name exists and `0` if it doesn't.
-    - Bits are packed **most significant bit first**: the first name maps to the highest bit
-      (`0b10000000`) of the first byte, the eighth name maps to the lowest bit of the first byte,
-      the ninth name maps to the highest bit of the second byte, and so on.
-    - If `len(names)` is not a multiple of 8, the final byte is padded with `0`s **on the right**
-      (the least significant bits). These padding bits carry no information, so clients should
-      ignore everything past the `len(names)`-th bit.
+    - Bit `i` (counting from the first tag) is `1` if an item with the `i`-th tag exists in the
+      folder and `0` if it doesn't.
+    - Bits are packed **most significant bit first**: the first tag maps to the highest bit
+      (`0b10000000`) of the first byte, the eighth tag maps to the lowest bit of the first byte, the
+      ninth tag maps to the highest bit of the second byte, and so on.
+    - If `len(name_tags)` is not a multiple of 8, the final byte is padded with `0`s **on the
+      right** (i.e., the least significant bits). These padding bits carry no information, so
+      clients should ignore everything past the `len(name_tags)`-th bit.
 
     Examples:
-    - For 8 names, the byte `0xCD` is `0b11001101` in binary, which means that the first, second,
-      fifth, sixth, and eighth names exist and the rest do not.
-    - For 8 names, the byte `0xF4` is `0b11110100` in binary, which means that the first four names
-      as well as the sixth name exist and the rest do not.
-    - For 6 names, the byte `0xF4` is `0b11110100` in binary; truncating to 6 bits gives `0b111101`,
-      which means that only the fifth name does not exist. (The trailing `00` is padding.)
-    - For 10 names, the bytes `0xFF 0x40` are `0b11111111 0b01000000` in binary; truncating to 10 bits
-      gives `0b1111111101`, which means that only the ninth name does not exist. The trailing
+    - For 8 tags, the byte `0xCD` is `0b11001101` in binary, which means that the first, second,
+      fifth, sixth, and eighth tags exist and the rest do not.
+    - For 8 tags, the byte `0xF4` is `0b11110100` in binary, which means that the first four tags as
+      well as the sixth tag exist and the rest do not.
+    - For 6 tags, the byte `0xF4` is `0b11110100` in binary; truncating to 6 bits gives `0b111101`,
+      which means that only the fifth tag does not exist. (The trailing `00` is padding.)
+    - For 10 tags, the bytes `0xFF 0x40` are `0b11111111 0b01000000` in binary; truncating to 10
+      bits gives `0b1111111101`, which means that only the ninth tag does not exist. The trailing
       `000000` is padding.
     """
 
@@ -93,9 +95,9 @@ async def check_names_endpoint(
     if not parent or not parent.is_folder:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
 
-    num_names = len(names)
-    existing_names = {item.name for item in get_items_in_folder(parent.id)}
-    items = [name if name in existing_names else None for name in names]
+    num_tags = len(name_tags)
+    existing_tags = get_items_by_name_tags(parent.id, name_tags)
+    items = [tag if tag in existing_tags else None for tag in name_tags]
 
     bytestring = bytearray()
     curr_byte = 0
@@ -106,9 +108,9 @@ async def check_names_endpoint(
             bytestring.append(curr_byte)
             curr_byte = 0
 
-    if num_names % 8 != 0:
+    if num_tags % 8 != 0:
         # Right-pad `curr_byte` with zeros to make it 8 bits, then append to the bytestring
-        bytestring.append(curr_byte << (8 - (num_names % 8)))
+        bytestring.append(curr_byte << (8 - (num_tags % 8)))
 
     return PlainTextResponse(bytes(bytestring), media_type="application/octet-stream")
 

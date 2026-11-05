@@ -1,4 +1,5 @@
 import json
+from base64 import b64encode
 from uuid import uuid4
 
 import httpx2
@@ -13,23 +14,23 @@ from excalibur_server.src.db.tables import FSItem
 
 
 @pytest.fixture()
-def dir_with_items(test_user, db_session: Session) -> dict:
+def dir_with_items(test_user, db_session: Session, name_fields) -> dict:
     root_id = test_user["root_id"]
 
     # Create folder
-    folder = FSItem(parent_id=root_id, root_id=root_id, name="folder", is_folder=True)
+    folder = FSItem(parent_id=root_id, root_id=root_id, is_folder=True, **name_fields(root_id, "folder"))
     db_session.add(folder)
 
     # Create an empty folder
-    empty_folder = FSItem(parent_id=root_id, root_id=root_id, name="empty-folder", is_folder=True)
+    empty_folder = FSItem(parent_id=root_id, root_id=root_id, is_folder=True, **name_fields(root_id, "empty-folder"))
     db_session.add(empty_folder)
 
     # Create file
-    file = FSItem(parent_id=root_id, root_id=root_id, name="file", is_folder=False, size=0)
+    file = FSItem(parent_id=root_id, root_id=root_id, is_folder=False, size=0, **name_fields(root_id, "file"))
     db_session.add(file)
 
     # Create subfile in folder
-    subfile = FSItem(parent_id=folder.id, root_id=root_id, name="subfile", is_folder=False, size=0)
+    subfile = FSItem(parent_id=folder.id, root_id=root_id, is_folder=False, size=0, **name_fields(folder.id, "subfile"))
     db_session.add(subfile)
 
     # Commit all items
@@ -112,81 +113,116 @@ class TestCheckNames:
         # Convert to bits
         return "".join(format(byte, "08b") for byte in content)
 
-    def test_no_auth(self, dir_with_items):
+    @pytest.fixture
+    def tag(self, encrypted_name):
+        """
+        :returns: helper that gives the Base64 name tag of a name in a folder
+        """
+
+        return lambda parent_id, name: encrypted_name(parent_id, name)["name_tag"]
+
+    def test_no_auth(self, dir_with_items, tag):
+        root_id = dir_with_items["root"]
         response = TestClient(app).post(
-            "/api/files/check/names", json={"parent_id": str(dir_with_items["root"]), "names": ["file"]}
+            "/api/files/check/names", json={"parent_id": str(root_id), "name_tags": [tag(root_id, "file")]}
         )
         assert response.status_code == 401
 
-    def test_endpoint(self, auth_client: TestClient, dir_with_items):
+    def test_endpoint(self, auth_client: TestClient, dir_with_items, tag):
+        root_id = dir_with_items["root"]
         response = auth_client.post(
             "/api/files/check/names",
-            json={"parent_id": str(dir_with_items["root"]), "names": ["file", "folder", "does-not-exist"]},
+            json={
+                "parent_id": str(root_id),
+                "name_tags": [tag(root_id, "file"), tag(root_id, "folder"), tag(root_id, "does-not-exist")],
+            },
         )
         assert self._decrypt_and_parse_response(response)[:3] == "110"
 
-    def test_in_subfolder(self, auth_client: TestClient, dir_with_items):
+    def test_in_subfolder(self, auth_client: TestClient, dir_with_items, tag):
+        folder_id = dir_with_items["folder"].id
         response = auth_client.post(
             "/api/files/check/names",
-            json={"parent_id": str(dir_with_items["folder"].id), "names": ["subfile", "file", "folder"]},
+            json={
+                "parent_id": str(folder_id),
+                "name_tags": [tag(folder_id, "subfile"), tag(folder_id, "file"), tag(folder_id, "folder")],
+            },
         )
         assert self._decrypt_and_parse_response(response)[:3] == "100"
 
     def test_empty(self, auth_client: TestClient, dir_with_items):
         response = auth_client.post(
-            "/api/files/check/names", json={"parent_id": str(dir_with_items["root"]), "names": []}
+            "/api/files/check/names", json={"parent_id": str(dir_with_items["root"]), "name_tags": []}
         )
         assert response.status_code == 200
         assert self._decrypt_and_parse_response(response) == ""
 
-    def test_encrypted(self, auth_client: TestClient, dir_with_items):
+    def test_root_dot(self, auth_client: TestClient, dir_with_items, tag):
+        root_id = dir_with_items["root"]
+        response = auth_client.post(
+            "/api/files/check/names", json={"parent_id": ".", "name_tags": [tag(root_id, "file"), tag(root_id, "nope")]}
+        )
+        assert self._decrypt_and_parse_response(response)[:2] == "10"
+
+    def test_encrypted(self, auth_client: TestClient, dir_with_items, tag):
+        root_id = dir_with_items["root"]
         headers = {
             "Content-Type": "application/octet-stream",
             "X-Encrypted": "true",
             "X-Content-Type": "application/json",
         }
 
-        body_encrypted = ExEF(b"one demo 16B key").encrypt(
-            json.dumps({"parent_id": ".", "names": ["file", "folder", "does-not-exist"]}).encode("UTF-8")
-        )
+        body = {
+            "parent_id": ".",
+            "name_tags": [tag(root_id, "file"), tag(root_id, "folder"), tag(root_id, "does-not-exist")],
+        }
+        body_encrypted = ExEF(b"one demo 16B key").encrypt(json.dumps(body).encode("UTF-8"))
         response = auth_client.post("/api/files/check/names", headers=headers, content=body_encrypted)
         assert response.status_code == 200
         assert self._decrypt_and_parse_response(response)[:3] == "110"
 
-    def test_parent_not_found(self, auth_client: TestClient, dir_with_items):
-        response = auth_client.post("/api/files/check/names", json={"parent_id": str(uuid4()), "names": ["file"]})
-        assert response.status_code == 404
-
-    def test_parent_is_not_a_folder(self, auth_client: TestClient, dir_with_items):
+    def test_parent_not_found(self, auth_client: TestClient, dir_with_items, tag):
+        parent_id = uuid4()
         response = auth_client.post(
-            "/api/files/check/names", json={"parent_id": str(dir_with_items["file"].id), "names": ["file"]}
+            "/api/files/check/names", json={"parent_id": str(parent_id), "name_tags": [tag(parent_id, "file")]}
         )
         assert response.status_code == 404
 
-    def test_tricky(self, auth_client: TestClient, dir_with_items):
+    def test_parent_is_not_a_folder(self, auth_client: TestClient, dir_with_items, tag):
+        file_id = dir_with_items["file"].id
+        response = auth_client.post(
+            "/api/files/check/names", json={"parent_id": str(file_id), "name_tags": [tag(file_id, "file")]}
+        )
+        assert response.status_code == 404
+
+    def test_tricky(self, auth_client: TestClient, dir_with_items, tag):
+        root_id = dir_with_items["root"]
+        folder_id = dir_with_items["folder"].id
         response = auth_client.post(
             "/api/files/check/names",
             json={
-                "parent_id": str(dir_with_items["root"]),
-                "names": [
-                    "file",
-                    "file",  # Duplicate of the above
-                    "does-not-exist",
-                    "folder/subfile",  # Not a direct child
-                    "subfile",  # Exists, but in a different folder
-                    "empty-folder",
-                    "folder",
+                "parent_id": str(root_id),
+                "name_tags": [
+                    tag(root_id, "file"),
+                    tag(root_id, "file"),  # Duplicate of the above
+                    tag(root_id, "does-not-exist"),
+                    tag(root_id, "folder/subfile"),  # Not a direct child
+                    tag(folder_id, "subfile"),  # Exists, but in a different folder
+                    tag(root_id, "empty-folder"),
+                    tag(root_id, "folder"),
                 ],
             },
         )
         assert self._decrypt_and_parse_response(response)[:7] == "1100011"
 
-    @pytest.mark.parametrize("num_names", [8, 16, 24, 32])
-    def test_num_names_being_multiple_of_8(self, auth_client: TestClient, dir_with_items, num_names):
+    @pytest.mark.parametrize("num_tags", [8, 16, 24, 32])
+    def test_num_tags_being_multiple_of_8(self, auth_client: TestClient, dir_with_items, tag, num_tags):
+        root_id = dir_with_items["root"]
         response = auth_client.post(
-            "/api/files/check/names", json={"parent_id": str(dir_with_items["root"]), "names": ["file"] * num_names}
+            "/api/files/check/names",
+            json={"parent_id": str(root_id), "name_tags": [tag(root_id, "file")] * num_tags},
         )
-        assert self._decrypt_and_parse_response(response) == "1" * num_names
+        assert self._decrypt_and_parse_response(response) == "1" * num_tags
 
 
 class TestCheckDir:
@@ -210,8 +246,6 @@ class TestCheckDir:
         assert response.status_code == 404
 
     def test_encrypted_id(self, auth_client: TestClient, dir_with_items):
-        from base64 import b64encode
-
         id_encrypted = ExEF(b"one demo 16B key").encrypt(str(dir_with_items["folder"].id).encode())
         response = auth_client.head(
             f"/api/files/check/dir/{b64encode(id_encrypted, altchars=b'-_').decode('UTF-8')}",

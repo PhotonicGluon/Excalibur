@@ -1,3 +1,4 @@
+from base64 import b64encode
 from typing import Annotated, Self
 from uuid import UUID
 
@@ -27,8 +28,10 @@ class DirtyItem(BaseModel):
     "Unique identifier for the filesystem item"
     parent_id: UUID | None
     "Parent directory ID, or None for the user's root folder"
-    name: str
-    "Item name"
+    name_enc: bytes | None
+    "Encrypted item name, or None if the item has not been migrated to encrypted names yet"
+    name: str | None  # TODO: Remove in 0.10.0
+    "Legacy plaintext item name, or None if the item has been migrated to encrypted names"
     is_folder: bool
     "Whether the item is a folder"
     version: int
@@ -48,6 +51,7 @@ class DirtyItem(BaseModel):
         return cls(
             id=item.id,
             parent_id=item.parent_id,
+            name_enc=item.name_enc,
             name=item.name,
             is_folder=item.is_folder,
             version=item.version,
@@ -58,6 +62,10 @@ class DirtyItem(BaseModel):
     @field_serializer("id", "parent_id")
     def serialize_uuid(self, value: UUID | None) -> str | None:
         return str(value) if value is not None else None
+
+    @field_serializer("name_enc")
+    def serialize_name_enc(self, value: bytes | None) -> str | None:
+        return b64encode(value).decode("utf-8") if value is not None else None
 
 
 @router.head(

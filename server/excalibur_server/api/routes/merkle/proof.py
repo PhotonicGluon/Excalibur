@@ -19,12 +19,18 @@ class InclusionProofStep(BaseModel):
 
     id: UUID
     "Unique identifier for the filesystem item"
-    name: str
-    "Name of the filesystem item"
+    name_enc: bytes | None
+    "Encrypted name of the filesystem item, or None if it has not been migrated to encrypted names yet"
+    name: str | None  # TODO: Remove in 0.10.0
+    "Legacy plaintext item name, or None if the item has been migrated to encrypted names"
     children: list[tuple[UUID, bytes | None]]
     "List of (child_id, child_node_hash) pairs"
 
     # Field serialization
+    @field_serializer("name_enc")
+    def serialize_name_enc(self, value: bytes | None) -> str | None:
+        return b64encode(value).decode("utf-8") if value is not None else None
+
     @field_serializer("children")
     def serialize_children(self, value: list[tuple[UUID, bytes | None]]) -> list[tuple[str, str | None]]:
         return [
@@ -78,6 +84,7 @@ def inclusion_proof_endpoint(
         steps.append(
             InclusionProofStep(
                 id=parent.id,
+                name_enc=parent.name_enc,
                 name=parent.name,
                 children=[(sibling.id, sibling.node_hash) for sibling in siblings],
             )
