@@ -190,8 +190,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       capacitor-blob-writer:
-        specifier: ^1.1.21
-        version: 1.1.21(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3))
+        specifier: ^1.1.22
+        version: 1.1.22(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3))
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -1868,8 +1868,8 @@ packages:
   caniuse-lite@1.0.30001819:
     resolution: {integrity: sha512-LFUqIIAwpzsIuevnKnsR9qnStBcgzPShTX61lBwN9uFkkf8o8zLiebEjbW8AYtZiF+1YKDWfdt/pWDtMuG8Xwg==}
 
-  capacitor-blob-writer@1.1.21:
-    resolution: {integrity: sha512-+k0lKMzX/ponBnJVNGh+KnZehfZ6q/0FUrpEWhKeWjLm4FltbC4peucx1NCyst79qLTtLGcwLCcKR41RdEbRkg==}
+  capacitor-blob-writer@1.1.22:
+    resolution: {integrity: sha512-pV2enhAllOmEor//jYtoI6HYoH7U601GdA8q38CW+/vWeIW4YDEvhAR22aUsEHjl5EkvdC/xZRlrLs82creyZw==}
     peerDependencies:
       '@capacitor/core': '>=3.0.0'
       '@capacitor/filesystem': '>=1.0.0'
@@ -6232,7 +6232,7 @@ snapshots:
 
   caniuse-lite@1.0.30001819: {}
 
-  capacitor-blob-writer@1.1.21(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)):
+  capacitor-blob-writer@1.1.22(@capacitor/core@8.5.3)(@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)):
     dependencies:
       '@capacitor/core': 8.5.3
       '@capacitor/filesystem': 8.1.5(@capacitor/core@8.5.3)
