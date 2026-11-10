@@ -30,7 +30,7 @@
         "@ionic/react-router": "^8.8.19",
         "@noble/ciphers": "^2.4.0",
         "@noble/hashes": "^2.4.0",
-        "@tailwindcss/vite": "^4.3.3",
+        "@tailwindcss/vite": "^4.3.4",
         "@vitejs/plugin-react": "^6.1.2",
         "buffer": "^6.0.3",
         "capacitor-blob-writer": "^1.1.21",
