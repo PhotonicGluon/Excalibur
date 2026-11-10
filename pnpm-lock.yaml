@@ -269,8 +269,8 @@ importers:
         version: 1.1.2
     devDependencies:
       '@capacitor/assets':
-        specifier: ^3.0.5
-        version: 3.0.5(@types/node@26.6.6)(supports-color@8.1.1)
+        specifier: ^4.0.0
+        version: 4.0.0(@types/node@26.6.6)(supports-color@8.1.1)
       '@capacitor/cli':
         specifier: 8.5.3
         version: 8.5.3(supports-color@8.1.1)
@@ -425,9 +425,9 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/assets@3.0.5':
-    resolution: {integrity: sha512-ohz/OUq61Y1Fc6aVSt0uDrUdeOA7oTH4pkWDbv/8I3UrPjH7oPkzYhShuDRUjekNp9RBi198VSFdt0CetpEOzw==}
-    engines: {node: '>=10.3.0'}
+  '@capacitor/assets@4.0.0':
+    resolution: {integrity: sha512-6fi6bYunaawAZ9kkbJheB1Kon7AbqS3AYblQ2ocAnHGyO7YQX3gsgcH7hptklrpbcLT8B6KMyuBZqfDgChCyrw==}
+    engines: {node: '>=20.9.0'}
     hasBin: true
 
   '@capacitor/cli@8.5.3':
@@ -4752,9 +4752,9 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.5.3
 
-  '@capacitor/assets@3.0.5(@types/node@26.6.6)(supports-color@8.1.1)':
+  '@capacitor/assets@4.0.0(@types/node@26.6.6)(supports-color@8.1.1)':
     dependencies:
-      '@capacitor/cli': 8.5.3(supports-color@8.1.1)
+      '@ionic/cli-framework-output': 2.2.8(supports-color@8.1.1)
       '@ionic/utils-array': 2.1.6(supports-color@8.1.1)
       '@ionic/utils-fs': 3.1.7(supports-color@8.1.1)
       '@trapezedev/project': 7.1.11(supports-color@8.1.1)
@@ -5230,8 +5230,8 @@ snapshots:
   '@ionic/cli-framework-output@2.2.8(supports-color@8.1.1)':
     dependencies:
       '@ionic/utils-terminal': 2.3.5(supports-color@8.1.1)
-      debug: 4.4.3(supports-color@8.1.1)
-      tslib: 2.8.1
+      debug: 4.3.4(supports-color@8.1.1)
+      tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
 
