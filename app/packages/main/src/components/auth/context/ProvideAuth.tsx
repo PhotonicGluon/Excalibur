@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
 import HKDF from "@lib/crypto/hkdf";
-import { SubstitutionCipher } from "@lib/files/obfuscation";
+import { SubstitutionCipher } from "@lib/files/names";
 import { useEffectOnce } from "@lib/hooks";
 import { VaultInfo } from "@lib/users/structures";
 
