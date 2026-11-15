@@ -5,7 +5,6 @@ import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
-import { clearFolderIDCache } from "@api/files/folder/resolve";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -55,8 +54,6 @@ export async function deleteItem(
             return { success: false, error: "Unauthorized" };
         case 404:
             return { success: false, error: "Item not found" };
-        case 406:
-            return { success: false, error: "Illegal or invalid ID" };
         case 412:
             return { success: false, error: "Cannot delete root directory" };
         case 417:
@@ -66,9 +63,6 @@ export async function deleteItem(
         default:
             return { success: false, error: "Unknown error" };
     }
-
-    // Folder paths may have changed, so clear the folder ID cache
-    clearFolderIDCache();
 
     // Trigger a sync and report success
     scheduleMerkleSync(auth);

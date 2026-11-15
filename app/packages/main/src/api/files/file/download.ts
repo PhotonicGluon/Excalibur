@@ -59,8 +59,6 @@ export async function downloadFile(
             return { success: false, error: "Unauthorized" };
         case 404:
             return { success: false, error: "Item not found or is not a file" };
-        case 406:
-            return { success: false, error: "Illegal or invalid ID" };
         case 422:
             return { success: false, error: "Validation error" };
         default:

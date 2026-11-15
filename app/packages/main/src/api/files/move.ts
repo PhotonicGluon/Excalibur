@@ -1,9 +1,9 @@
 import ExEF from "@lib/crypto/exef";
+import { computeNameTag } from "@lib/files/names/crypto";
 import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
-import { clearFolderIDCache } from "@api/files/folder/resolve";
 
 import { AuthProvider } from "@components/auth/context";
 
@@ -12,14 +12,16 @@ import { AuthProvider } from "@components/auth/context";
  *
  * @param auth the current authentication provider
  * @param itemID the ID of the item to move
- * @param destFolderID the ID of the new destination folder for the item (use `.` to specify the
- *      root directory)
+ * @param itemName the (decrypted) name of the item to move
+ * @param destFolderID the real ID of the new destination folder for the item (not `.`), since names
+ *      are tagged together with their parent's ID
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message
  */
 export async function moveItem(
     auth: AuthProvider,
     itemID: string,
+    itemName: string,
     destFolderID: string,
 ): Promise<{ success: boolean; error?: string }> {
     const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(itemID, "utf-8"));
@@ -32,10 +34,18 @@ export async function moveItem(
                 Authorization: `Bearer ${auth.getToken()}`,
                 "Content-Type": "application/octet-stream",
                 "X-Encrypted": "true",
-                "X-Content-Type": "text/plain",
+                "X-Content-Type": "application/json",
             },
             // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(destFolderID, "utf-8")),
+            body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+                Buffer.from(
+                    JSON.stringify({
+                        dest_id: destFolderID,
+                        name_tag: computeNameTag(auth.vaultInfo!.nameKeys, destFolderID, itemName).toString("base64"),
+                    }),
+                    "utf-8",
+                ),
+            ),
         },
     );
     switch (response.status) {
@@ -46,22 +56,18 @@ export async function moveItem(
             return { success: false, error: "Unauthorized" };
         case 404:
             return { success: false, error: "Item/destination not found" };
-        case 406:
-            return { success: false, error: "Illegal or invalid ID" };
         case 409:
             return { success: false, error: "Item with name already exists at destination" };
         case 412:
-            return { success: false, error: "Cannot move root directory" };
-        case 414:
-            return { success: false, error: "Path too long" };
+            return {
+                success: false,
+                error: "Cannot move root directory, or move a directory into itself or one of its subdirectories",
+            };
         case 422:
             return { success: false, error: "Validation error" };
         default:
             return { success: false, error: "Unknown error" };
     }
-
-    // Folder paths may have changed, so clear the folder ID cache
-    clearFolderIDCache();
 
     // Trigger a sync and report success
     scheduleMerkleSync(auth);

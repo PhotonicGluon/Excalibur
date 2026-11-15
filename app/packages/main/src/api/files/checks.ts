@@ -1,5 +1,6 @@
 import { IS_DEV } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
+import { computeNameTag } from "@lib/files/names";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
@@ -52,7 +53,8 @@ export async function checkItem(
  * Checks the existence of multiple names in a folder.
  *
  * @param auth the current authentication provider
- * @param parentID the ID of the folder to look in (use `.` to specify the root directory)
+ * @param parentID the ID of the folder to look in. This must be the folder's real ID (so not `.`),
+ *      since names are tagged together with their parent's ID
  * @param names the names to check
  * @returns a promise which resolves to an object with a success boolean and optionally an error
  *      message or the result of the check
@@ -68,6 +70,8 @@ export async function checkNames(
         return { success: true, result: [] };
     }
 
+    const nameTags = names.map((name) => computeNameTag(auth.vaultInfo!.nameKeys, parentID, name).toString("base64"));
+
     const response = await popFetch(`${auth.serverInfo!.apiURL}/files/check/names`, auth.authInfo!.key!, {
         method: "POST",
         headers: {
@@ -78,7 +82,7 @@ export async function checkNames(
         },
         // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
         body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-            Buffer.from(JSON.stringify({ parent_id: parentID, names }), "utf-8"),
+            Buffer.from(JSON.stringify({ parent_id: parentID, name_tags: nameTags }), "utf-8"),
         ),
     });
     switch (response.status) {
@@ -146,8 +150,6 @@ export async function checkDir(
             return { success: false, error: "Unauthorized" };
         case 404:
             return { success: false, error: "Directory not found" };
-        case 406:
-            return { success: false, error: "Illegal or invalid ID" };
         default:
             return { success: false, error: "Unknown error" };
     }

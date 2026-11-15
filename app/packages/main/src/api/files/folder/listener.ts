@@ -25,8 +25,8 @@ enum ListenerStage {
  * @param auth the current authentication provider
  * @param onConnect callback function to be called when the WebSocket connection is established
  * @param onDisconnect callback function to be called when the WebSocket connection is closed
- * @param onPathUpdateRef reference to a callback function to be called when a directory change is
- *      detected
+ * @param onFolderUpdateRef reference to a callback function to be called when a directory change is
+ *      detected, receiving the ID of the folder whose contents changed (`.` for the root directory)
  * @param isCleaningUp function to check if the WebSocket connection is being cleaned up
  * @returns the WebSocket object
  */
@@ -34,7 +34,7 @@ function connectToListener(
     auth: AuthProvider,
     onConnect: () => void,
     onDisconnect: () => void,
-    onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
+    onFolderUpdateRef: RefObject<(folderID: string) => Promise<void>>,
     isCleaningUp: () => boolean,
 ): WebSocket {
     const wsURL = new URL(`${auth.serverInfo!.apiURL!.replace("http", "ws")}${LISTENER_PATH}`);
@@ -75,10 +75,10 @@ function connectToListener(
 
         // Listening stage
         const data = event.data as Blob;
-        const pathEncrypted = Buffer.from(await data.arrayBuffer());
-        const path = (await new ExEF(auth.authInfo!.key).decrypt(pathEncrypted)).toString("utf-8");
-        console.debug(`Noticed '${path}' folder content change`);
-        await onPathUpdateRef.current(path);
+        const folderIDEncrypted = Buffer.from(await data.arrayBuffer());
+        const folderID = (await new ExEF(auth.authInfo!.key).decrypt(folderIDEncrypted)).toString("utf-8");
+        console.debug(`Noticed '${folderID}' folder content change`);
+        await onFolderUpdateRef.current(folderID);
     });
 
     ws.addEventListener("close", (event) => {
@@ -110,15 +110,15 @@ function connectToListener(
  * @param auth the current authentication provider
  * @param onConnect callback function to be called when the listener connection is established
  * @param onDisconnect callback function to be called when the listener connection is closed
- * @param onPathUpdateRef reference to a callback function to be called when a directory change is
- *      detected
+ * @param onFolderUpdateRef reference to a callback function to be called when a directory change is
+ *      detected, receiving the ID of the folder whose contents changed (`.` for the root directory)
  * @returns a cleanup function to close the WebSocket connection
  */
 export function directoryChangesListener(
     auth: AuthProvider,
     onConnect: () => void,
     onDisconnect: () => void,
-    onPathUpdateRef: RefObject<(path: string) => Promise<void>>,
+    onFolderUpdateRef: RefObject<(folderID: string) => Promise<void>>,
 ) {
     let retryCount = 0;
     let isCleaningUp = false;
@@ -143,7 +143,7 @@ export function directoryChangesListener(
                         auth,
                         onConnectInternal,
                         onDisconnectInternal,
-                        onPathUpdateRef,
+                        onFolderUpdateRef,
                         () => isCleaningUp,
                     );
                 }
@@ -159,7 +159,7 @@ export function directoryChangesListener(
         auth,
         onConnectInternal,
         onDisconnectInternal,
-        onPathUpdateRef,
+        onFolderUpdateRef,
         () => isCleaningUp,
     );
     return () => {
