@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-import { SubstitutionCipher } from "@lib/files/obfuscation";
+import { SubstitutionCipher } from "@lib/files/names";
 import { VaultInfo } from "@lib/users/structures";
 
 import { E2EEData } from "@api/auth/e2ee";

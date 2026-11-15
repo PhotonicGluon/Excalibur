@@ -68,6 +68,32 @@ export function frame(parts: Buffer[], prefixLen: number = 4): Buffer {
 }
 
 /**
+ * Splits a buffer that was produced by {@link frame} back into its parts.
+ *
+ * @param data the framed buffer
+ * @param prefixLen length of each length prefix, in bytes
+ * @returns the parts of the buffer
+ * @throws {Error} if the buffer is malformed
+ */
+export function unframe(data: Buffer, prefixLen: number = 4): Buffer[] {
+    const parts: Buffer[] = [];
+    let offset = 0;
+    while (offset < data.length) {
+        if (offset + prefixLen > data.length) {
+            throw new Error("Malformed name record");
+        }
+        const length = data.readUIntBE(offset, prefixLen);
+        offset += prefixLen;
+        if (offset + length > data.length) {
+            throw new Error("Malformed name record");
+        }
+        parts.push(data.subarray(offset, offset + length));
+        offset += length;
+    }
+    return parts;
+}
+
+/**
  * Writes an 8-byte big-endian unsigned integer into a buffer.
  *
  * @param buffer buffer to write into

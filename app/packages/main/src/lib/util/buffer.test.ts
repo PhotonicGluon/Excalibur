@@ -8,6 +8,7 @@ import {
     padBuffer,
     readUInt64BE,
     uint64BE,
+    unframe,
     writeUInt64BE,
     xorBuffer,
 } from "./buffer";
@@ -74,26 +75,30 @@ test("xorBuffer", () => {
     );
 });
 
-describe("frame", () => {
+describe("frame and unframe", () => {
     it("should length-prefix and concatenate parts", () => {
         const result = frame([Buffer.from("ab", "hex"), Buffer.from("cdef", "hex")]);
         expect(result.toString("hex")).toEqual("00000001ab00000002cdef");
+        expect(unframe(result)).toEqual([Buffer.from("ab", "hex"), Buffer.from("cdef", "hex")]);
     });
 
     it("should handle different prefix lengths", () => {
         const result = frame([Buffer.from("ab", "hex"), Buffer.from("cdef", "hex")], 2);
         expect(result.toString("hex")).toEqual("0001ab0002cdef");
+        expect(unframe(result, 2)).toEqual([Buffer.from("ab", "hex"), Buffer.from("cdef", "hex")]);
     });
 
     it("should handle empty parts", () => {
         const result = frame([Buffer.alloc(0), Buffer.from("ab", "hex")]);
         expect(result.toString("hex")).toEqual("0000000000000001ab");
+        expect(unframe(result)).toEqual([Buffer.alloc(0), Buffer.from("ab", "hex")]);
     });
 
     it("should produce different output for different splits of the same bytes", () => {
         const a = frame([Buffer.from("abcd", "hex"), Buffer.from("ef", "hex")]);
         const b = frame([Buffer.from("ab", "hex"), Buffer.from("cdef", "hex")]);
         expect(a.equals(b)).toBe(false);
+        expect(unframe(a)).not.toEqual(unframe(b));
     });
 });
 
