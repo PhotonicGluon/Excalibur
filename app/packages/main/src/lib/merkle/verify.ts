@@ -1,3 +1,5 @@
+import { getMerkleName } from "@lib/files/names";
+
 import { getAllItems, getSubtree } from "@api/files";
 import { getContentMACInputs, getInclusionProof, getLatestAttestation, getVaultState } from "@api/merkle";
 
@@ -150,6 +152,8 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
     const target = proof.item;
 
     // Recompute target's own hash, scoped to just its own subtree
+    const nameKeys = auth.vaultInfo!.nameKeys;
+    const targetName = await getMerkleName(nameKeys, { id: target.id, name_enc: target.nameEnc, name: target.name });
     let currentNodeHash: Buffer;
     if (!target.isFolder) {
         // Is a file, compute its content MAC to get the node hash
@@ -163,7 +167,7 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
         }
 
         const contentMAC = computeContentMAC(auth.vaultInfo!.merkleKeys, input);
-        currentNodeHash = computeLeafNodeHash(auth.vaultInfo!.merkleKeys, target.id, target.name, contentMAC);
+        currentNodeHash = computeLeafNodeHash(auth.vaultInfo!.merkleKeys, target.id, targetName, contentMAC);
     } else {
         // Is a folder, compute its subtree hash
         const subtreeResult = await getSubtree(auth, targetID);
@@ -171,11 +175,7 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
             return { success: false, error: subtreeResult.error };
         }
 
-        // Proof steps are the target's ancestors from its parent up to the root
-        const ancestorNames = proof.steps.slice(0, -1).map((step) => step.name);
-        const targetFullpath = [...ancestorNames.reverse(), target.name].join("/");
-
-        const { nodeHashes } = await computeTree(auth, target.id, subtreeResult.items!, target.name, targetFullpath);
+        const { nodeHashes } = await computeTree(auth, target.id, subtreeResult.items!, targetName);
         currentNodeHash = nodeHashes.get(target.id)!;
     }
 
@@ -183,7 +183,10 @@ export async function verifyItemIntegrity(auth: AuthProvider, targetID: string):
     let currentID = targetID;
     for (const step of proof.steps) {
         // Treat the vault root as an unnamed folder for hashing purposes
-        const stepName = step.id === state.rootID ? "" : step.name;
+        const stepName =
+            step.id === state.rootID
+                ? ""
+                : await getMerkleName(nameKeys, { id: step.id, name_enc: step.nameEnc, name: step.name });
 
         // Get children (i.e., current node and its siblings)
         const children = [];

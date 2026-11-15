@@ -10,7 +10,8 @@ import { dirtyItemFromWire } from "./utils";
 export interface DirtyItemWire {
     id: string;
     parent_id: string | null;
-    name: string;
+    name_enc: string | null;
+    name: string | null;
     is_folder: boolean;
     version: number;
     needs_content_mac: boolean;

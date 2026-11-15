@@ -95,6 +95,7 @@ export function dirtyItemFromWire(wire: DirtyItemWire): DirtyItem {
     return {
         id: wire.id,
         parentID: wire.parent_id,
+        nameEnc: wire.name_enc,
         name: wire.name,
         isFolder: wire.is_folder,
         version: wire.version,
@@ -144,6 +145,7 @@ function proofItemFromWire(wire: ProofItemWire): ProofItem {
         id: wire.id,
         parentID: wire.parent_id,
         rootID: wire.root_id,
+        nameEnc: wire.name_enc,
         name: wire.name,
         isFolder: wire.is_folder,
         contentMAC: wire.content_mac ? b64decode(wire.content_mac) : null,
@@ -161,6 +163,7 @@ function proofItemFromWire(wire: ProofItemWire): ProofItem {
 function inclusionProofStepFromWire(wire: InclusionProofStepWire): InclusionProofStep {
     return {
         id: wire.id,
+        nameEnc: wire.name_enc,
         name: wire.name,
         children: wire.children.map(([id, hash]) => [id, hash ? b64decode(hash) : null]),
     };

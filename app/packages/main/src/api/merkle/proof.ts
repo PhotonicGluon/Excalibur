@@ -13,7 +13,8 @@ export interface ProofItemWire {
     id: string;
     parent_id: string | null;
     root_id: string;
-    name: string;
+    name_enc: string | null;
+    name: string | null;
     is_folder: boolean;
     content_mac: string | null;
     node_hash: string | null;
@@ -22,7 +23,8 @@ export interface ProofItemWire {
 
 export interface InclusionProofStepWire {
     id: string;
-    name: string;
+    name_enc: string | null;
+    name: string | null;
     children: [string, string | null][];
 }
 
