@@ -59,8 +59,6 @@ export interface ContainerProps extends FileLikePartial {
     isGridType: boolean;
     /** Whether the item is on an odd row */
     oddRow: boolean;
-    /** Whether to keep the `.exef` extension when displaying the name */
-    keepExEF?: boolean;
     /** Whether to show the ellipsis menu */
     ellipsisMenuEnabled?: boolean;
     /** Optional override for the click handler */
@@ -70,7 +68,6 @@ export interface ContainerProps extends FileLikePartial {
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isLoading = props.type === undefined;
     const isFile = props.type === "file";
-    const nameNoExEF = props.name?.replace(/\.exef$/, "");
     const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
     const mimetype = props.name ? getMIMEType(props.name) : null;
 
@@ -99,7 +96,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        const fileName = nameNoExEF!;
+        const fileName = props.name!;
 
         /**
          * Handles the file download process.
@@ -112,7 +109,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             jobsManager.addJob(jobID, {
                 direction: "download",
-                name: fileName, // This is the deobfuscated name
+                name: fileName,
                 description: "Downloading...",
                 progress: null,
                 controller: controller,
@@ -266,7 +263,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
-        await explorerContext.onRename(props.itemUUID!, props.fullpath!, !isFile);
+        await explorerContext.onRename(props.itemUUID!, props.fullpath!);
         dismissPopover();
     }
 
@@ -386,7 +383,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             button={!props.disabled && !isLoading}
         >
             {/* Main item content */}
-            <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
+            <div className="flex h-16 w-full items-center" data-name={props.name}>
                 <IonGrid
                     className="w-full"
                     onClick={!props.disabled && !isLoading ? onClickItem : undefined}
@@ -404,8 +401,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             </IonThumbnail>
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4 *:block">
                                 <IonLabel className="max-w-100 truncate" color={props.disabled ? "light" : undefined}>
-                                    {!isLoading &&
-                                        (props.type === "directory" || props.keepExEF ? props.name : nameNoExEF)}
+                                    {!isLoading && props.name}
                                     {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                                 </IonLabel>
                                 {!isLoading && props.size !== undefined && (
@@ -437,7 +433,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     );
     const GridElement = (
         <IonItem id={props.id} className={"rounded-2xl " + rowColourClass} button={!props.disabled && !isLoading}>
-            <div className="flex h-20 w-full items-center" data-name={nameNoExEF}>
+            <div className="flex h-20 w-full items-center" data-name={props.name}>
                 {/* Main item content */}
                 <IonGrid
                     onClick={!props.disabled && !isLoading ? onClickItem : undefined}
@@ -456,7 +452,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                             <IonIcon icon={icon} color={props.disabled ? "light" : undefined} />
                                         </IonThumbnail>
                                         <IonLabel className="truncate" color={props.disabled ? "light" : undefined}>
-                                            {props.type === "directory" || props.keepExEF ? props.name : nameNoExEF}
+                                            {props.name}
                                         </IonLabel>
                                     </>
                                 )}

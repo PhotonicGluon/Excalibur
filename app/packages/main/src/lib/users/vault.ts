@@ -1,5 +1,6 @@
 import ExEF from "@lib/crypto/exef";
 import { KeygenAdditionalInfo, generateAUK } from "@lib/crypto/keygen";
+import { NameKeys } from "@lib/files/names/keys";
 import { MerkleKeys } from "@lib/merkle/keys";
 
 import { E2EEData } from "@api/auth";
@@ -54,6 +55,7 @@ export async function retrieveVaultInfo(
             aukSalt,
             encryptedKey: encryptedVaultKey,
             key: vaultKey,
+            nameKeys: new NameKeys(vaultKey, e2eeData.userID),
             merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
             info: vaultInfo,
         };

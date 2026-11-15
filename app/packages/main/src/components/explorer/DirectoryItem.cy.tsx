@@ -25,7 +25,7 @@ describe("<DirectoryItem />", () => {
         const defaultProps: ContainerProps = {
             isGridType: false,
             oddRow: true,
-            name: "Sample File.txt.exef",
+            name: "Sample File.txt",
             creation_time: 1577934245, // 2020-01-02 03:04:05
             fullpath: "/some/path",
             size: 123456,
@@ -67,7 +67,7 @@ describe("<DirectoryItem />", () => {
                         <explorerContext.Provider
                             value={{
                                 path: "/",
-                                onRename: (_itemID, _path, _isDir) => props.renameHook!(),
+                                onRename: (_itemID, _path) => props.renameHook!(),
                                 onMove: (_itemID) => props.moveHook!(),
                                 onDelete: (_itemID, _isDir) => props.deleteHook!(),
                                 presentAlert: () => Promise.resolve(),
@@ -115,19 +115,13 @@ describe("<DirectoryItem />", () => {
         cy.get("#directory-item ion-label").should("have.attr", "color", "light");
     });
 
-    it("keeps the .exef extension if specified", () => {
-        renderComponent({ keepExEF: true });
-        cy.get("#directory-item ion-label").should("exist");
-        cy.get("#directory-item ion-label").should("have.text", "Sample File.txt.exef");
-    });
-
     it("has correct icon for defined MIME type", () => {
-        renderComponent({ name: "Sample File.mp3.exef" });
+        renderComponent({ name: "Sample File.mp3" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", musicalNotesOutline);
     });
 
     it("has correct default icon for undefined MIME type", () => {
-        renderComponent({ name: "Sample File.fake-extension.exef" });
+        renderComponent({ name: "Sample File.fake-extension" });
         cy.get("#directory-item ion-icon").should("have.attr", "icon", documentOutline);
     });
 

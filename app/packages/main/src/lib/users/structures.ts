@@ -1,4 +1,5 @@
 import { KeyGenAlgorithm } from "@lib/crypto/keygen";
+import { NameKeys } from "@lib/files/names/keys";
 import { MerkleKeys } from "@lib/merkle/keys";
 
 interface RawUserVaultInfo {
@@ -17,6 +18,8 @@ export interface VaultInfo {
     encryptedKey: Buffer;
     /** Vault key */
     key: Buffer;
+    /** Keys that are used to encrypt item names */
+    nameKeys: NameKeys;
     /** Keys that are used within the Merkle tree verification process */
     merkleKeys: MerkleKeys;
     /** Additional user vault information */

@@ -17,10 +17,8 @@ import { close } from "ionicons/icons";
 
 import { File } from "@lib/files/structures";
 
-import { searchFiles } from "@api/files";
-
-import { useAuth } from "@components/auth/context";
 import DirectoryItem from "@components/explorer/DirectoryItem";
+import { useVaultIndex } from "@components/files/context";
 
 export const DEBOUNCE_TIME = 300; // In ms
 export const SEARCH_LIMIT = 5; // Number of results to return
@@ -35,7 +33,7 @@ interface SearchDialogProps {
 
 const SearchDialog: React.FC<SearchDialogProps> = (props) => {
     // Contexts
-    const auth = useAuth();
+    const vaultIndex = useVaultIndex();
 
     // States
     const [searchText, setSearchText] = useState("");
@@ -53,21 +51,15 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
         setSearchText(newSearchText);
 
         // Get query
-        const rawQuery = newSearchText.trim();
-        if (rawQuery === "") {
+        const query = newSearchText.trim();
+        if (query === "") {
             setSearchResults([]);
             return;
         }
 
-        // Obfuscate the query, if necessary
-        const query = auth.vaultInfo!.info.obfuscatedNames
-            ? auth.noc!.encipher(Buffer.from(rawQuery, "utf-8"))
-            : rawQuery;
-        console.debug(`Searching for '${rawQuery}'${auth.vaultInfo!.info.obfuscatedNames ? ` ('${query}')` : ""}`);
-
         // Search for files
         setSearchResults(null);
-        const searchResponse = await searchFiles(auth, query, SEARCH_LIMIT, SIMILARITY_THRESHOLD);
+        const searchResponse = await vaultIndex.search(query, SEARCH_LIMIT, SIMILARITY_THRESHOLD);
         if (!searchResponse.success) {
             console.error(searchResponse.error);
             return;
@@ -117,12 +109,6 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                     {searchResults &&
                         searchResults.length > 0 &&
                         searchResults.map(({ file, similarity: _similarity }, idx) => {
-                            // Deobfuscate name if needed
-                            const rawName = file.name;
-                            const name = auth.vaultInfo!.info.obfuscatedNames
-                                ? auth.noc!.decipher(rawName).toString("utf-8")
-                                : rawName;
-
                             // Create the directory item
                             return (
                                 <DirectoryItem
@@ -130,7 +116,7 @@ const SearchDialog: React.FC<SearchDialogProps> = (props) => {
                                     ellipsisMenuEnabled={false}
                                     isGridType={false}
                                     oddRow={idx % 2 === 0} // Treat row 0 as the first odd row
-                                    name={name}
+                                    name={file.name}
                                     fullpath={file.fullpath}
                                     type={file.type}
                                     size={file.type === "file" ? file.size : undefined}

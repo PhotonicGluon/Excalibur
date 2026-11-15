@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
-    IonCheckbox,
     IonContent,
     IonHeader,
     IonIcon,
@@ -22,6 +21,7 @@ import { arrowBack } from "ionicons/icons";
 
 import { TOAST_DURATION } from "@lib/consts";
 import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
+import { NameKeys } from "@lib/files/names/keys";
 import { MerkleKeys } from "@lib/merkle/keys";
 import { UserVaultInfo } from "@lib/users/structures";
 
@@ -39,7 +39,6 @@ const NewUser: React.FC = () => {
     // States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [obfuscatedNames, setObfuscatedNames] = useState(true);
     const [ackState, setACKState] = useState<boolean | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +81,7 @@ const NewUser: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received values: ${JSON.stringify({ username, password, obfuscatedNames })}`);
+        console.debug(`Received values: ${JSON.stringify({ username, password })}`);
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key
@@ -146,7 +145,7 @@ const NewUser: React.FC = () => {
         console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update user additional info
-        const additionalInfo: UserVaultInfo = { obfuscatedNames };
+        const additionalInfo: UserVaultInfo = { obfuscatedNames: false }; // Names are encrypted instead
 
         const setAdditionalInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
@@ -173,6 +172,7 @@ const NewUser: React.FC = () => {
             aukSalt,
             encryptedKey: encryptedVaultKey,
             key: vaultKey,
+            nameKeys: new NameKeys(vaultKey, e2eeData.userID),
             merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
             info: additionalInfo,
         });
@@ -234,22 +234,6 @@ const NewUser: React.FC = () => {
                                 <PasswordInput confirmation value={password} onPasswordChange={setPassword} />
                             </div>
                             <hr />
-
-                            {/* Server Preferences */}
-                            <IonCheckbox
-                                labelPlacement="end"
-                                checked={obfuscatedNames}
-                                onIonChange={(e) => setObfuscatedNames(e.detail.checked)}
-                            >
-                                <div className="w-full *:block *:leading-none">
-                                    <IonLabel className="text-base">Use Obfuscated Names</IonLabel>
-                                    <IonLabel color="medium" className="text-xs text-wrap">
-                                        Names will appear to be obfuscated from the perspective of the server, further
-                                        improving privacy.
-                                    </IonLabel>
-                                </div>
-                            </IonCheckbox>
-                            <hr className="mt-2" />
 
                             {/* Account creation key & signup button */}
                             <div id="ack-input">
