@@ -1,4 +1,5 @@
 import { defineConfig } from "cypress";
+
 import packageInfo from "../../package.json";
 
 const BASE_URL = "http://localhost:5173";

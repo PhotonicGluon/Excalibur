@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 
-import PasswordInput from "@components/inputs/PasswordInput";
 import { IonButton, IonButtons, IonFooter, IonHeader, IonIcon, IonModal, IonTitle, IonToolbar } from "@ionic/react";
 import { close } from "ionicons/icons";
+
+import PasswordInput from "@components/inputs/PasswordInput";
 
 interface PasswordDialogProps {
     /** Whether the dialog is open */

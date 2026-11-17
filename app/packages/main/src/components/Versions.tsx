@@ -1,7 +1,8 @@
+import React, { HTMLAttributes } from "react";
+
 import { isPlatform } from "@ionic/core";
 import { IonText } from "@ionic/react";
 import packageInfo from "@root/package.json";
-import React, { HTMLAttributes } from "react";
 
 import { useAuth } from "@components/auth/context";
 
