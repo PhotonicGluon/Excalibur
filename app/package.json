@@ -19,7 +19,8 @@
     },
     "scripts": {
         "lint": "eslint --max-warnings 0 --fix --no-warn-ignored",
-        "update": "cd .. && pnpm run update"
+        "update": "cd .. && pnpm run update",
+        "prettify": "pnpm exec prettier packages/main packages/electron --write"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",

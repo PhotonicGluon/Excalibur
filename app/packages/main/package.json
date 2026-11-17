@@ -13,7 +13,7 @@
         "test:component": "cypress run --component",
         "typecheck": "tsc --noEmit",
         "lint": "cd ../.. && pnpm run lint",
-        "prettify": "pnpm exec prettier . --write"
+        "prettify": "cd ../.. && pnpm run prettify"
     },
     "type": "module",
     "dependencies": {
