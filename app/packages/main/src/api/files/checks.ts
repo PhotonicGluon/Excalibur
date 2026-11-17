@@ -105,14 +105,10 @@ export async function checkNames(
 
     // Split bytes back into existence/non-existence
     const result: boolean[] = [];
-    let currByte = content[0]; // We're guaranteed at least one name
     for (let i = 0; i < numNames; i++) {
-        result.push((currByte & 1) === 1);
-        currByte >>= 1;
-        if (i % 8 === 7) {
-            // We've processed all 8 bits of the current byte, so move on
-            currByte = content[(i + 1) / 8];
-        }
+        const currByte = content[Math.floor(i / 8)];
+        const currBitIndex = 7 - (i % 8); // Bit 7 = MSB, Bit 0 = LSB
+        result.push(((currByte >> currBitIndex) & 1) === 1);
     }
 
     return { success: true, result };

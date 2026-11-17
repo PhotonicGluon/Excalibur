@@ -94,7 +94,7 @@ export class VaultIndex {
      */
     constructor(rootID: string, items: IndexedItem[] = []) {
         this._rootID = rootID;
-        this._searcher = new Fuse(items, { keys: ["name"], includeScore: true });
+        this._searcher = new Fuse<IndexedItem>([], { keys: ["name"], includeScore: true });
 
         for (const item of items) {
             this.set(item);
@@ -239,7 +239,7 @@ export class VaultIndex {
         return this._searcher
             .search(query, { limit })
             .filter((result) => result.score !== undefined && 1 - result.score >= threshold)
-            .map((result) => ({ item: result.item, similarity: result.score! }));
+            .map((result) => ({ item: result.item, similarity: 1 - result.score! }));
     }
 
     /**

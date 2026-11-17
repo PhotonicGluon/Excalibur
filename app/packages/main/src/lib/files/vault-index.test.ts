@@ -90,6 +90,13 @@ describe("VaultIndex", () => {
             expect(searchIndex.search("fruit-file", undefined, 0.6)).toHaveLength(6);
         });
 
+        it("should give closer matches a higher similarity", () => {
+            const results = searchIndex.search("apple-fruit-file.txt", undefined, 0.0);
+            expect(results[0].item.name).toBe("apple-fruit-file.txt");
+            expect(results[0].similarity).toBeCloseTo(1);
+            expect(results.at(-1)!.similarity).toBeLessThan(results[0].similarity);
+        });
+
         it("should obey the score threshold", () => {
             expect(searchIndex.search("file", undefined, 1.0).map((result) => result.item.name)).toHaveLength(0);
             expect(
