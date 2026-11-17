@@ -1,1 +1,4 @@
 ⬆️ Updated `baseline-browser-mapping` development dependency from `2.11.24` to `2.11.35` ([#250](https://github.com/PhotonicGluon/Excalibur/pull/250), [#272](https://github.com/PhotonicGluon/Excalibur/pull/272), [#300](https://github.com/PhotonicGluon/Excalibur/pull/300), [#315](https://github.com/PhotonicGluon/Excalibur/pull/315))
+
+==========
+⬆️ Updated `baseline-browser-mapping` from `2.11.35` to `2.11.36`
