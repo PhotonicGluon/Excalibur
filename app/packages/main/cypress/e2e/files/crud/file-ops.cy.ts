@@ -4,7 +4,7 @@ import { LARGE_SIZE, SMALL_SIZE } from "./constants";
 const SERVER_URL = Cypress.expose("serverURL");
 
 beforeEach(() => {
-    cy.signup(SERVER_URL, "test-user", "Password", false, false);
+    cy.signup(SERVER_URL, "test-user", "Password", false);
     cy.login(SERVER_URL, "test-user", "Password");
 
     // Wait for listener to connect

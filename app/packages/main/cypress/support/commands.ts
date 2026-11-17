@@ -32,13 +32,7 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
 
 Cypress.Commands.add(
     "login",
-    (
-        serverURL: string,
-        username: string,
-        password: string,
-        expectToFail?: boolean,
-        showMerkleMigrationBanner?: boolean,
-    ) => {
+    (serverURL: string, username: string, password: string, expectToFail?: boolean, showMigrationBanner?: boolean) => {
         cy.onboard(serverURL);
         cy.visit("/login");
 
@@ -66,11 +60,11 @@ Cypress.Commands.add(
         });
 
         // Dismiss merkle migration banner
-        if (!showMerkleMigrationBanner) {
+        if (!showMigrationBanner) {
             cy.get("body").then(($body) => {
-                if ($body.find("#merkle-migration-banner").length) {
-                    cy.get("#merkle-migration-banner ion-button").contains("Later").click({ force: true });
-                    cy.get("#merkle-migration-banner").should("not.exist");
+                if ($body.find("#vault-migration-banner").length) {
+                    cy.get("#vault-migration-banner ion-button").contains("Later").click({ force: true });
+                    cy.get("#vault-migration-banner").should("not.exist");
                 }
             });
         }
@@ -79,13 +73,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
     "signup",
-    (
-        serverURL: string,
-        username: string,
-        password: string,
-        obfuscatedNames: boolean = true,
-        failIfExists: boolean = true,
-    ) => {
+    (serverURL: string, username: string, password: string, failIfExists: boolean = true) => {
         // Check if user already exists
         cy.request({
             url: `${serverURL}/api/users/check/${username}`,
@@ -122,10 +110,6 @@ Cypress.Commands.add(
             cy.get("[label='Username']").find("input").type(username);
             cy.get("[label='Password']").find("input").type(password);
             cy.get("[label='Confirm Password']").find("input").type(password);
-
-            if (!obfuscatedNames) {
-                cy.get("ion-checkbox").click();
-            }
 
             // Fill in Account Creation Key (ACK) by pasting into the first input box
             cy.get("#ack-input")
@@ -164,7 +148,7 @@ Cypress.Commands.add("pullRefresh", () => {
             cancelable: true,
             detail: {
                 complete: () => {
-                    $refresher[0].complete(); // FIXME: Property 'complete' does not exist on type 'HTMLElement'
+                    ($refresher[0] as HTMLElement & { complete: () => void }).complete();
                 },
             },
         });
@@ -181,15 +165,9 @@ declare global {
                 username: string,
                 password: string,
                 expectToFail?: boolean,
-                showMerkleMigrationBanner?: boolean,
+                showMigrationBanner?: boolean,
             ): Chainable<void>;
-            signup(
-                serverURL: string,
-                username: string,
-                password: string,
-                obfuscatedNames?: boolean,
-                failIfExists?: boolean,
-            ): Chainable<void>;
+            signup(serverURL: string, username: string, password: string, failIfExists?: boolean): Chainable<void>;
             gotoPreferences(): Chainable<void>;
             pullRefresh(): Chainable<void>;
         }

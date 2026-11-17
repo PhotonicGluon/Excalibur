@@ -13,14 +13,14 @@ describe("Check Page Contents", () => {
     });
 
     it("should redirect to login on reload", () => {
-        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
         cy.reload();
         cy.url().should("include", "/login");
     });
 
     it("should stay on files page if logged in", () => {
-        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
 
         cy.get(".fab-horizontal-end").should("exist"); // The "add" fab should exist
