@@ -6,6 +6,7 @@ import { getAllItems, listdir } from "@api/files";
 
 import { AuthProvider, useAuth } from "@components/auth/context";
 
+import { sortByName } from "@lib/files/sorting";
 import { joinPath, splitPath } from "@lib/util";
 import { VaultIndexProvider, vaultIndexContext } from "./context";
 
@@ -180,10 +181,17 @@ function useProvideVaultIndex(): VaultIndexProvider {
 
         return {
             success: true,
-            results: searchResults.map(({ item, similarity }) => ({
-                file: VaultIndex.toFileLike(item, index.pathOf(item.id) ?? item.name) as File,
-                similarity,
-            })),
+            results: searchResults
+                .map(({ item, similarity }) => ({
+                    file: VaultIndex.toFileLike(item, index.pathOf(item.id) ?? item.name) as File,
+                    similarity,
+                }))
+                .sort((a, b) => {
+                    if (a.similarity === b.similarity) {
+                        return sortByName(a.file, b.file);
+                    }
+                    return b.similarity - a.similarity;
+                }),
         };
     }
 
