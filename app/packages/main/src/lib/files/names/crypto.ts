@@ -1,6 +1,7 @@
 import ExEF from "@lib/crypto/exef";
 import { blake2b } from "@lib/crypto/hashing";
 import { bytesToUUID, frame, unframe, uuidToBytes } from "@lib/util";
+
 import { NameKeys } from "./keys";
 
 /** Version byte of the plaintext record that is encrypted into a name */

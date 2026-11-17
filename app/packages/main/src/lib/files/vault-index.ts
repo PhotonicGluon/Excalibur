@@ -1,7 +1,8 @@
+import Fuse from "fuse.js";
+
 import { resolveName } from "@lib/files/names";
 import { Directory, File, FileLike, ItemType } from "@lib/files/structures";
 import { chunk, splitPath } from "@lib/util";
-import Fuse from "fuse.js";
 
 import { ItemWire } from "@api/files";
 

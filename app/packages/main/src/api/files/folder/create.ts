@@ -1,3 +1,4 @@
+import { randID } from "@lib/auth/util";
 import ExEF from "@lib/crypto/exef";
 import { computeNameTag, encryptName } from "@lib/files/names/crypto";
 import { scheduleMerkleSync } from "@lib/merkle";
@@ -6,7 +7,6 @@ import { b64encodeURLSafe } from "@lib/util";
 import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
-import { randID } from "@lib/auth/util";
 
 /**
  * Creates a directory in the given folder.

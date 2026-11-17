@@ -1,13 +1,14 @@
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+
+import { sortByName } from "@lib/files/sorting";
 import { Directory, File } from "@lib/files/structures";
 import { NameCache, VaultIndex, decryptItems } from "@lib/files/vault-index";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { joinPath, splitPath } from "@lib/util";
 
 import { getAllItems, listdir } from "@api/files";
 
 import { AuthProvider, useAuth } from "@components/auth/context";
 
-import { sortByName } from "@lib/files/sorting";
-import { joinPath, splitPath } from "@lib/util";
 import { VaultIndexProvider, vaultIndexContext } from "./context";
 
 export const ProvideVaultIndex: React.FC<{ children: React.ReactNode }> = ({ children }) => {

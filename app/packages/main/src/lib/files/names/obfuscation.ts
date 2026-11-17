@@ -1,5 +1,4 @@
 // TODO: Delete this in 0.10.0
-
 import seedrandom from "seedrandom";
 
 /**
