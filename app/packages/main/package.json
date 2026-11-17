@@ -12,7 +12,8 @@
         "test:unit-run": "vitest run",
         "test:component": "cypress run --component",
         "typecheck": "tsc --noEmit",
-        "lint": "cd ../.. && pnpm run lint"
+        "lint": "cd ../.. && pnpm run lint",
+        "prettify": "pnpm exec prettier . --write"
     },
     "type": "module",
     "dependencies": {
