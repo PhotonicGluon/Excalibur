@@ -1,6 +1,7 @@
 import { resolveName } from "@lib/files/names";
 import { Directory, File, FileLike, ItemType } from "@lib/files/structures";
 import { chunk, splitPath } from "@lib/util";
+import Fuse from "fuse.js";
 
 import { ItemWire } from "@api/files";
 
@@ -81,6 +82,7 @@ export async function decryptItems(auth: AuthProvider, items: ItemWire[], cache?
 export class VaultIndex {
     private readonly _rootID: string;
     private readonly _items = new Map<string, IndexedItem>();
+    private readonly _searcher: Fuse<IndexedItem>; // TODO: Should we use `FuseWorker`?
     private readonly _children = new Map<string, Map<string, string>>(); // Folder ID -> (name -> child ID)
 
     /**
@@ -91,6 +93,8 @@ export class VaultIndex {
      */
     constructor(rootID: string, items: IndexedItem[] = []) {
         this._rootID = rootID;
+        this._searcher = new Fuse(items, { keys: ["name"], includeScore: true });
+
         for (const item of items) {
             this.set(item);
         }
@@ -132,7 +136,10 @@ export class VaultIndex {
      */
     set(item: IndexedItem) {
         this.remove(item.id);
+
         this._items.set(item.id, item);
+        this._searcher.add(item);
+
         if (item.parent_id !== null) {
             if (!this._children.has(item.parent_id)) {
                 this._children.set(item.parent_id, new Map());
@@ -154,6 +161,8 @@ export class VaultIndex {
             return;
         }
         this._items.delete(id);
+        this._searcher.remove((doc) => doc.id === id);
+
         if (item.parent_id !== null) {
             const siblings = this._children.get(item.parent_id);
             if (siblings?.get(item.name) === id) {
@@ -221,19 +230,15 @@ export class VaultIndex {
      * Searches the names of the files in the vault.
      *
      * @param query the text to search for
-     * @param limit the maximum number of results to return
-     * @param threshold the minimum similarity (from 0 to 1) for a file to be returned
-     * @returns the matching files
+     * @param limit the maximum number of results to return, with `undefined` meaning no limit
+     * @param threshold minimum similarity (from 0 to 1) for an item to be returned, defaults to 0.6
+     * @returns the matching items and their similarity scores
      */
-    search(_query: string, limit: number, _threshold: number): { file: File; similarity: number }[] {
-        // TODO: Properly implement using Fuse.js
-        return this.items()
-            .filter((item) => item.type === "file")
-            .slice(0, limit)
-            .map((item) => ({
-                file: VaultIndex.toFileLike(item, this.pathOf(item.id) ?? item.name) as File,
-                similarity: 1,
-            }));
+    search(query: string, limit?: number, threshold: number = 0.6): { item: IndexedItem; similarity: number }[] {
+        return this._searcher
+            .search(query, { limit })
+            .filter((result) => result.score !== undefined && 1 - result.score >= threshold)
+            .map((result) => ({ item: result.item, similarity: result.score! }));
     }
 
     /**

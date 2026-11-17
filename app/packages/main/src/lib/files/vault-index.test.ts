@@ -73,24 +73,31 @@ describe("VaultIndex", () => {
         const searchIndex = new VaultIndex("root", [
             { id: "root", parent_id: null, name: "", type: "directory", creation_time: 0 },
             { id: "dir", parent_id: "root", name: "dir", type: "directory", creation_time: 0 },
-            { id: "a", parent_id: "root", name: "a.txt", type: "file", creation_time: 0, size: 1 },
-            { id: "b", parent_id: "dir", name: "b.txt", type: "file", creation_time: 0, size: 2 },
-            { id: "c", parent_id: "dir", name: "c.txt", type: "file", creation_time: 0, size: 3 },
+            { id: "subdir", parent_id: "dir", name: "subdir", type: "directory", creation_time: 0 },
+            { id: "a", parent_id: "dir", name: "apple-fruit-file.txt", type: "file", creation_time: 0, size: 1 },
+            { id: "b", parent_id: "dir", name: "banana-fruit-file.txt", type: "file", creation_time: 0, size: 2 },
+            { id: "c", parent_id: "dir", name: "snapple-fruit-file.txt", type: "file", creation_time: 0, size: 3 },
+            { id: "d", parent_id: "subdir", name: "cherry-fruit-file.txt", type: "file", creation_time: 0, size: 4 },
+            { id: "e", parent_id: "subdir", name: "dragon-fruit-file.txt", type: "file", creation_time: 0, size: 5 },
+            { id: "f", parent_id: "dir", name: "elderberry-fruit-file.txt", type: "file", creation_time: 0, size: 6 },
+            { id: "random", parent_id: "root", name: "some-random-file.txt", type: "file", creation_time: 0, size: 7 },
         ]);
 
-        it("should only return files", () => {
-            const results = searchIndex.search("txt", 10, 0.6);
-            expect(results.every((result) => result.file.type === "file")).toBe(true);
-            expect(results).toHaveLength(3);
-        });
-
         it("should return at most `limit` results", () => {
-            expect(searchIndex.search("txt", 2, 0.6)).toHaveLength(2);
+            expect(searchIndex.search("fruit-file", 3, 0.6)).toHaveLength(3);
+            console.log(searchIndex.search("fruit-file", 10, 0.6));
+            expect(searchIndex.search("fruit-file", 10, 0.6)).toHaveLength(6);
+            expect(searchIndex.search("fruit-file", undefined, 0.6)).toHaveLength(6);
         });
 
-        it("should give files their paths", () => {
-            const paths = searchIndex.search("txt", 10, 0.6).map((result) => result.file.fullpath);
-            expect(paths).toContain("dir/b.txt");
+        it("should obey the score threshold", () => {
+            expect(searchIndex.search("file", undefined, 1.0).map((result) => result.item.name)).toHaveLength(0);
+            expect(
+                searchIndex
+                    .search("file", undefined, 0.0)
+                    .map((result) => result.item.name)
+                    .includes("some-random-file.txt"),
+            ).toBe(true);
         });
     });
 

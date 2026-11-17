@@ -1,7 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-
-import { Directory } from "@lib/files/structures";
+import { Directory, File } from "@lib/files/structures";
 import { NameCache, VaultIndex, decryptItems } from "@lib/files/vault-index";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { getAllItems, listdir } from "@api/files";
 
@@ -175,7 +174,17 @@ function useProvideVaultIndex(): VaultIndexProvider {
         if (!result.success) {
             return { success: false, error: result.error };
         }
-        return { success: true, results: result.index!.search(query, limit, threshold) };
+
+        const index = result.index!;
+        const searchResults = index.search(query, limit, threshold);
+
+        return {
+            success: true,
+            results: searchResults.map(({ item, similarity }) => ({
+                file: VaultIndex.toFileLike(item, index.pathOf(item.id) ?? item.name) as File,
+                similarity,
+            })),
+        };
     }
 
     // Effects
