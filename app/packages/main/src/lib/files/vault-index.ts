@@ -218,6 +218,25 @@ export class VaultIndex {
     }
 
     /**
+     * Searches the names of the files in the vault.
+     *
+     * @param query the text to search for
+     * @param limit the maximum number of results to return
+     * @param threshold the minimum similarity (from 0 to 1) for a file to be returned
+     * @returns the matching files
+     */
+    search(_query: string, limit: number, _threshold: number): { file: File; similarity: number }[] {
+        // TODO: Properly implement using Fuse.js
+        return this.items()
+            .filter((item) => item.type === "file")
+            .slice(0, limit)
+            .map((item) => ({
+                file: VaultIndex.toFileLike(item, this.pathOf(item.id) ?? item.name) as File,
+                similarity: 1,
+            }));
+    }
+
+    /**
      * Converts an indexed item to the type that the UI works with.
      *
      * @param item the item to convert

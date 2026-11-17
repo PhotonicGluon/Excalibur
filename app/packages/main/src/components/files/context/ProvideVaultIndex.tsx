@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
-import { searchIndex } from "@lib/files/search";
 import { Directory } from "@lib/files/structures";
 import { NameCache, VaultIndex, decryptItems } from "@lib/files/vault-index";
 
@@ -176,7 +175,7 @@ function useProvideVaultIndex(): VaultIndexProvider {
         if (!result.success) {
             return { success: false, error: result.error };
         }
-        return { success: true, results: searchIndex(result.index!, query, limit, threshold) };
+        return { success: true, results: result.index!.search(query, limit, threshold) };
     }
 
     // Effects
