@@ -1,5 +1,5 @@
-import { createFile, createFolder } from "../helpers";
-import { TINY_SIZE } from "./constants";
+import { TINY_SIZE } from "../constants";
+import { createFile, createFolder, expectToast } from "../helpers";
 
 const SERVER_URL = Cypress.expose("serverURL");
 
@@ -246,6 +246,16 @@ describe("Verification Operations", () => {
             cy.get(`div[data-name='${fileName}']`).should("not.exist");
             cy.get(`div[data-name='${folderName}']`).click();
             cy.get(`div[data-name='${fileName}']`).should("exist");
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+
+        it("vault should still be verified after a rejected name collision", () => {
+            // Try to create a folder which already exists
+            cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Clear leftover toasts
+            createFolder(folderName, false);
+            expectToast("Folder already exists", "danger");
 
             // Vault should still be verified
             _verifyVault();

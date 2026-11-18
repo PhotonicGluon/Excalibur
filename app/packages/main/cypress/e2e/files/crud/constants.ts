@@ -1,3 +1,0 @@
-export const TINY_SIZE = 64;
-export const SMALL_SIZE = 1024;
-export const LARGE_SIZE = 1000000; // Enough for several chunking to occur

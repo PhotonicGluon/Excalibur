@@ -13,26 +13,56 @@ function randstr(n: number) {
     return chars.join("");
 }
 
-export function createFolder() {
+export function expectToast(message: string, colour: "success" | "danger" | "warning" = "success") {
+    // Checked together so that the assertion is retried as a whole if the toast is replaced
+    cy.get("ion-toast", { timeout: 10000 }).should(($toast) => {
+        expect($toast).to.have.class(`ion-color-${colour}`);
+        expect($toast.prop("message")).to.equal(message);
+    });
+}
+
+export function renameItem(oldName: string, newName: string) {
+    cy.get(`div[data-name='${oldName}']`).scrollIntoView(); // Make sure its visible
+    cy.wait(100); // Make sure scroll completes
+    cy.get(`div[data-name='${oldName}']`).rightclick();
+    cy.get(".item").contains("Rename").click();
+    cy.get(".alert-head").should("have.text", "Enter New Name");
+
+    cy.get(".alert-input-wrapper").find("input").click().wait(250); // For the focus to appear
+    cy.get(".alert-input-wrapper")
+        .find("input")
+        .type("{selectAll}" + (newName.length > 0 ? newName : "{backspace}"));
+    cy.get(".alert-button-group").contains("Rename").click();
+    cy.get(".alert-head").should("not.exist");
+}
+
+export function createFolder(name?: string, validate: boolean = true) {
+    const folderName = name ?? `Test Folder ${Date.now()}`;
+
     // Clicking on create folder should have popup
     cy.get("ion-fab").eq(0).click(); // In case Cypress bugs out and detects multiple
     cy.get("#fab-create-folder").click();
     cy.get(".alert-head").should("have.text", "Enter Folder Name");
 
-    // Enter test folder name
-    const folderName = `Test Folder ${Date.now()}`;
+    // Enter folder name
     cy.get(".alert-input-wrapper").find("input").click().wait(100); // For the focus to appear
-    cy.get(".alert-input-wrapper").find("input").type(folderName);
+    if (folderName.length > 0) {
+        cy.get(".alert-input-wrapper").find("input").type(folderName);
+    }
 
     // Click create
     cy.get(".alert-button-group").contains("Create").click();
     cy.get(".alert-head").should("not.exist");
 
+    if (!validate) {
+        return folderName;
+    }
+
     cy.pullRefresh();
 
     // Folder should have been created
     cy.get(".h-16 > ion-grid.md").should("exist");
-    cy.get(".h-16 > ion-grid.md").should("contain.text", folderName);
+    cy.get(`div[data-name='${folderName}']`).should("contain.text", folderName);
 
     // Wait for the "Folder created" toast to clear so later toast assertions cannot match it
     cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
