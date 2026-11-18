@@ -1,5 +1,7 @@
 import * as path from "path";
 
+import { TINY_SIZE } from "./constants";
+
 export const DOWNLOADS_FOLDER = Cypress.config("downloadsFolder");
 
 function randstr(n: number) {
@@ -13,6 +15,23 @@ function randstr(n: number) {
     return chars.join("");
 }
 
+export function itemSelector(name: string) {
+    return `div[data-name="${name.replace(/"/g, '\\"')}"]`;
+}
+
+export function uploadFileNamed(fileName: string, dropOnly?: boolean, size: number = TINY_SIZE) {
+    cy.get("#files-area")
+        .selectFile({ contents: Cypress.Buffer.from(randstr(size)), fileName: fileName }, { action: "drag-drop" })
+        .wait(100);
+
+    if (dropOnly) {
+        return;
+    }
+
+    cy.pullRefresh();
+    cy.get(itemSelector(fileName)).should("exist");
+}
+
 export function expectToast(message: string, colour: "success" | "danger" | "warning" = "success") {
     // Checked together so that the assertion is retried as a whole if the toast is replaced
     cy.get("ion-toast", { timeout: 10000 }).should(($toast) => {
@@ -22,9 +41,9 @@ export function expectToast(message: string, colour: "success" | "danger" | "war
 }
 
 export function renameItem(oldName: string, newName: string) {
-    cy.get(`div[data-name='${oldName}']`).scrollIntoView(); // Make sure its visible
+    cy.get(itemSelector(oldName)).scrollIntoView(); // Make sure its visible
     cy.wait(100); // Make sure scroll completes
-    cy.get(`div[data-name='${oldName}']`).rightclick();
+    cy.get(itemSelector(oldName)).rightclick();
     cy.get(".item").contains("Rename").click();
     cy.get(".alert-head").should("have.text", "Enter New Name");
 
@@ -62,7 +81,7 @@ export function createFolder(name?: string, validate: boolean = true) {
 
     // Folder should have been created
     cy.get(".h-16 > ion-grid.md").should("exist");
-    cy.get(`div[data-name='${folderName}']`).should("contain.text", folderName);
+    cy.get(itemSelector(folderName)).should("contain.text", folderName);
 
     // Wait for the "Folder created" toast to clear so later toast assertions cannot match it
     cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
@@ -99,7 +118,7 @@ export function createFile(n: number | number[], dropOnly?: boolean): string[] {
     // File(s) should have been uploaded
     const fileElements = [];
     for (let i = 0; i < n.length; i++) {
-        const fileElement = cy.get(`div[data-name='${fileNames[i]}']`);
+        const fileElement = cy.get(itemSelector(fileNames[i]));
         fileElements.push(fileElement);
 
         fileElement.should("exist");
@@ -108,7 +127,7 @@ export function createFile(n: number | number[], dropOnly?: boolean): string[] {
 
     // Try downloading the files
     for (let i = 0; i < n.length; i++) {
-        cy.get(`div[data-name='${fileNames[i]}']`).click();
+        cy.get(itemSelector(fileNames[i])).click();
     }
     for (let i = 0; i < n.length; i++) {
         cy.readFile(path.join(DOWNLOADS_FOLDER, fileNames[i])).should("exist"); // Then check file existence
