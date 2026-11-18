@@ -85,7 +85,6 @@ describe("VaultIndex", () => {
 
         it("should return at most `limit` results", () => {
             expect(searchIndex.search("fruit-file", 3, 0.6)).toHaveLength(3);
-            console.log(searchIndex.search("fruit-file", 10, 0.6));
             expect(searchIndex.search("fruit-file", 10, 0.6)).toHaveLength(6);
             expect(searchIndex.search("fruit-file", undefined, 0.6)).toHaveLength(6);
         });
