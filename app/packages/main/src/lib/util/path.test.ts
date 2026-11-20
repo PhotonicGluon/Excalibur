@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 
-import { getBaseName, getParent, getParents } from "./path";
+import { getBaseName, getParent, getParents, joinPath, splitPath } from "./path";
 
 describe("getParent", () => {
     const TEST_CASES = [
@@ -90,4 +90,19 @@ describe("getBaseName", () => {
             expect(getBaseName(path)).toBe(expected);
         });
     }
+});
+
+describe("splitPath", () => {
+    it("should ignore empty parts and the root marker", () => {
+        expect(splitPath(".")).toEqual([]);
+        expect(splitPath("")).toEqual([]);
+        expect(splitPath("./a//b/")).toEqual(["a", "b"]);
+    });
+});
+
+describe("joinPath", () => {
+    it("should not add a prefix for the root directory", () => {
+        expect(joinPath(".", "a")).toBe("a");
+        expect(joinPath("a/b", "c")).toBe("a/b/c");
+    });
 });

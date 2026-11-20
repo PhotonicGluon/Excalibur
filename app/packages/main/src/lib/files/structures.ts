@@ -3,11 +3,17 @@ export type ItemType = "file" | "directory" | "parent";
 export interface FileLike {
     /** Unique identifier for the item, as assigned by the server */
     id: string;
-    /** Name of item */
+    /** ID of the folder that contains the item, or `null` for the root folder */
+    parent_id: string | null;
+    /** Name of item (decrypted) */
     name: string;
     /** Creation time of the item */
     creation_time: number;
-    /** Path to the item from the root directory */
+    /**
+     * Path to the item from the root directory.
+     *
+     * This is computed on the client and is not stored on the server.
+     */
     fullpath: string;
     /** Type of the item */
     type: ItemType;

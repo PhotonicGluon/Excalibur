@@ -1,4 +1,6 @@
+import { randID } from "@lib/auth/util";
 import ExEF from "@lib/crypto/exef";
+import { computeNameTag, encryptName } from "@lib/files/names";
 import { scheduleMerkleSync } from "@lib/merkle";
 import { b64encodeURLSafe } from "@lib/util";
 
@@ -13,31 +15,49 @@ import { AuthProvider } from "@components/auth/context";
  * server if it already exists.
  *
  * @param auth the current authentication provider
- * @param parentID the ID of the folder to upload the file to (use `.` to specify the root directory)
- * @param file the file to upload
+ * @param parentID the ID of the folder to upload the file to
+ * @param name the name of the file
+ * @param file the (already encrypted) contents of the file to upload
  * @param signal an abort signal to cancel the request
  * @param onProgress a callback function to report progress (a value from 0 to 1)
  * @throws {Error} if there is a network error during upload
  * @throws {Error} if the upload is cancelled
  * @returns a promise which resolves to an object with a success boolean and optionally an error
- *      message
+ *      message, and the ID of the uploaded file
  */
 export async function uploadFile(
     auth: AuthProvider,
     parentID: string,
-    file: File,
+    name: string,
+    file: Blob,
     signal: AbortSignal,
     onProgress: (progress: number) => void,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; id?: string }> {
+    const keys = auth.vaultInfo!.nameKeys;
+
+    // Compute item details
+    const id = randID();
+    let itemDetails: string;
+    try {
+        const nameEnc = await encryptName(keys, id, name);
+        const nameTag = computeNameTag(keys, parentID, name);
+        itemDetails = `${id}:${b64encodeURLSafe(nameEnc)}:${b64encodeURLSafe(nameTag)}`;
+    } catch (error: unknown) {
+        return { success: false, error: (error as Error).message };
+    }
+
+    // Encrypt data
     const encryptedParentID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
         Buffer.from(parentID, "utf-8"),
     );
-    const encryptedName = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(file.name, "utf-8"));
+    const encryptedItemDetails = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+        Buffer.from(itemDetails, "utf-8"),
+    );
 
     return new Promise((resolve, reject) => {
         // Set up an XHR with PoP
         const xhr = popXHR(
-            `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedParentID)}/${b64encodeURLSafe(encryptedName)}?force=true`,
+            `${auth.serverInfo!.apiURL}/files/upload/${b64encodeURLSafe(encryptedParentID)}/${b64encodeURLSafe(encryptedItemDetails)}?force=true`,
             auth.getToken()!,
             auth.authInfo!.key!,
             "POST",
@@ -87,7 +107,7 @@ export async function uploadFile(
                 case 201:
                     // File sent successfully; trigger a sync and report success
                     scheduleMerkleSync(auth);
-                    resolve({ success: true });
+                    resolve({ success: true, id });
                     break;
                 case 401:
                     resolve({ success: false, error: "Unauthorized" });
@@ -96,22 +116,13 @@ export async function uploadFile(
                     resolve({ success: false, error: "Parent not found or is not a directory" });
                     break;
                 case 400:
-                    resolve({ success: false, error: "Illegal or invalid file name" });
-                    break;
-                case 406:
-                    resolve({ success: false, error: "Illegal or invalid path" });
+                    resolve({ success: false, error: "Malformed item details" });
                     break;
                 case 409:
                     resolve({ success: false, error: "File already exists (and `force` is not set)" });
                     break;
                 case 413:
                     resolve({ success: false, error: "File too large" });
-                    break;
-                case 414:
-                    resolve({ success: false, error: "File path too long" });
-                    break;
-                case 417:
-                    resolve({ success: false, error: "Uploaded file needs to end with `.exef`" });
                     break;
                 case 422:
                     resolve({ success: false, error: "Validation error" });

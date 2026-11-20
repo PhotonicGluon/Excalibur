@@ -22,7 +22,7 @@ describe("Handle Auth Process", () => {
     const SERVER_URL = Cypress.expose("serverURL");
 
     it("should handle login gracefully", () => {
-        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
         cy.url().should("include", "/files");
     });

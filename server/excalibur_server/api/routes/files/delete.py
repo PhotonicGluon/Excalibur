@@ -6,7 +6,7 @@ from fastapi.responses import Response
 from excalibur_server.api.path_handling import get_user_item, process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
-from excalibur_server.src.db.operations import get_item_fullpath, is_dir_empty, mark_dirty
+from excalibur_server.src.db.operations import is_dir_empty, mark_dirty
 from excalibur_server.src.files.utils import rmitem
 from excalibur_server.src.users import get_user_from_id
 
@@ -55,7 +55,7 @@ def delete_endpoint(
         raise HTTPException(status_code=status.HTTP_412_PRECONDITION_FAILED, detail="Cannot delete root directory")
 
     # Handle deletion
-    background_tasks.add_task(add_folder_change, credentials, get_item_fullpath(item.id).parent)
+    background_tasks.add_task(add_folder_change, credentials, item.parent_id)
     if item.is_folder:
         if not as_dir:
             raise HTTPException(

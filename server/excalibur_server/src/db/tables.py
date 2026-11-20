@@ -85,8 +85,26 @@ class FSItem(SQLModel, table=True):
     """
 
     # Basic information
-    name: str = Field(nullable=False)
-    "Item name"
+    name: str | None = Field(default=None, nullable=True)  # TODO: Remove in version 0.10.0
+    """
+    Legacy plaintext item name.
+
+    Always `None` for the root folder and for items whose name has been migrated to `name_enc`. Will
+    be removed in a future version.
+    """
+    name_enc: Base64Bytes | None = Field(default=None, nullable=True)
+    """
+    Encrypted item name, or `None` for the root folder and for items not yet migrated.
+
+    Computed by the client; the server treats it as opaque bytes.
+    """
+    name_tag: Base64Bytes | None = Field(default=None, nullable=True)
+    """
+    Keyed tag of the item's parent ID and name, or `None` for the root folder and for items not yet
+    migrated.
+
+    Computed by the client. The server can compare tags to enforce uniqueness within a folder.
+    """
     is_folder: bool = Field(default=False, nullable=False)
     "Whether the item is a folder"
 
@@ -123,8 +141,13 @@ class FSItem(SQLModel, table=True):
     This allows clients to detect changes without fully comparing the Merkle tree.
     """
 
-    # Ensure no two items have the same name in the same folder
-    __table_args__ = (UniqueConstraint("parent_id", "name", name="unique_parent_name"),)
+    # Ensure no two items have the same name in the same folder.
+    # (Note: since NULLs do not collide under the unique constraint, legacy items (i.e., no tag) and migrated items
+    # (i.e., no plaintext name) can coexist)
+    __table_args__ = (
+        UniqueConstraint("parent_id", "name", name="unique_parent_name"),  # TODO: Remove in 0.10.0
+        UniqueConstraint("parent_id", "name_tag", name="unique_parent_name_tag"),
+    )
 
     @property
     def system_path(self) -> Path:

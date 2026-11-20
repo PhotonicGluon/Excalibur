@@ -1,10 +1,11 @@
 # ruff: noqa: E402
 import asyncio
-from pathlib import Path
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
+from excalibur_server.src.db.operations import get_user_from_id
 from excalibur_server.src.files.update_manager import file_update_manager
 
 router = APIRouter(tags=["files"])
@@ -16,11 +17,10 @@ encrypted_router = APIRouter(
 
 
 # Handle folder changes
-def add_folder_change(credentials: Credentials, path: Path):
-    if path == "":
-        path = "."
-
-    asyncio.run(file_update_manager.add_update(credentials, path))
+def add_folder_change(credentials: Credentials, folder_id: UUID):
+    root_id = get_user_from_id(credentials.user_id).fsitem_id
+    event_id = "." if folder_id == root_id else str(folder_id)
+    asyncio.run(file_update_manager.add_update(credentials, event_id))
 
 
 # Add endpoints
@@ -30,7 +30,6 @@ from .checks import check_names_endpoint as check_names_endpoint
 from .count import count_all_items_endpoint as count_all_items_endpoint
 from .delete import delete_endpoint as delete_endpoint
 from .file import download_file_endpoint as download_file_endpoint
-from .file import search_endpoint as search_endpoint
 from .file import upload_file_endpoint as upload_file_endpoint
 from .folder import create_directory_endpoint as create_directory_endpoint
 from .folder import directory_changes_listener_endpoint as directory_changes_listener_endpoint
@@ -38,6 +37,9 @@ from .folder import listdir_endpoint as listdir_endpoint
 from .folder import subtree_endpoint as subtree_endpoint
 from .get_all import get_all_items_endpoint as get_all_items_endpoint
 from .move import move_path_endpoint as move_path_endpoint
+from .names import fill_names_endpoint as fill_names_endpoint
+from .names import get_pending_names_endpoint as get_pending_names_endpoint
+from .names import has_pending_names_endpoint as has_pending_names_endpoint
 from .rename import rename_multiple_endpoint as rename_multiple_endpoint
 from .rename import rename_path_endpoint as rename_path_endpoint
 

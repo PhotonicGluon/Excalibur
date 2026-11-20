@@ -5,5 +5,5 @@ export * from "./file";
 export * from "./folder";
 export * from "./get-all";
 export * from "./move";
+export * from "./names";
 export * from "./rename";
-export * from "./search";

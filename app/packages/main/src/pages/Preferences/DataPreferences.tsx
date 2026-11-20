@@ -7,12 +7,9 @@ import {
     IonGrid,
     IonHeader,
     IonIcon,
-    IonLabel,
-    IonLoading,
     IonPage,
     IonText,
     IonTitle,
-    IonToggle,
     IonToolbar,
     useIonAlert,
     useIonRouter,
@@ -21,18 +18,12 @@ import {
 import { arrowBack, copyOutline } from "ionicons/icons";
 
 import { toMnemonic } from "@lib/auth/bip39";
-import { TOAST_DURATION } from "@lib/consts";
-import { toggleObfuscationForAllFiles } from "@lib/files/obfuscation";
 import { verifyVaultIntegrity } from "@lib/merkle";
-import { UserVaultInfo } from "@lib/users/structures";
 import { timestampToDateString } from "@lib/util/date";
-
-import { editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
 import BIP39MnemonicInput from "@components/inputs/BIP39MnemonicInput";
 import { useMerkle } from "@components/merkle/context";
-import SettingsItem from "@components/settings/SettingsItem";
 
 const DataPreferences: React.FC = () => {
     // Contexts
@@ -44,77 +35,10 @@ const DataPreferences: React.FC = () => {
     const [presentToast] = useIonToast();
 
     // States
-    const [toggledObfuscation, setToggledObfuscation] = useState(false);
-
     const [checkingIntegrity, setCheckingIntegrity] = useState(false);
     const [lastChecked, setLastChecked] = useState<number | null>(merkle.lastSyncedAt); // In seconds
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadingState, setLoadingState] = useState("Processing...");
-
     // Functions
-    /**
-     * Toggles the use of obfuscation for all files.
-     */
-    async function toggleUseObfuscation() {
-        const newObfuscation = !auth.vaultInfo!.info.obfuscatedNames;
-
-        setToggledObfuscation(true);
-        setIsLoading(true);
-        setLoadingState("Processing...");
-
-        try {
-            await toggleObfuscationForAllFiles(auth, newObfuscation, setLoadingState);
-        } catch (error) {
-            console.error(error);
-            presentToast({
-                message: `An error occurred: ${error}`,
-                duration: TOAST_DURATION,
-                color: "danger",
-            });
-            setIsLoading(false);
-            return;
-        }
-
-        // Toggle obfuscation state
-        const userVaultInfo: UserVaultInfo = {
-            obfuscatedNames: newObfuscation,
-        };
-
-        const editVaultInfoResponse = await editVaultInfo(
-            auth.serverInfo!.apiURL!,
-            auth.getToken()!,
-            auth.authInfo!.key,
-            auth.vaultInfo!.keygenAlgorithm,
-            userVaultInfo,
-        );
-        if (!editVaultInfoResponse.success) {
-            console.error(`Could not update user vault info: ${editVaultInfoResponse.error}`);
-            setIsLoading(false);
-            presentAlert({
-                header: "Update Failure",
-                message: `Could not update user vault info: ${editVaultInfoResponse.error}`,
-                buttons: ["OK"],
-            });
-            return;
-        }
-        console.debug(`Set user vault info: ${JSON.stringify(userVaultInfo)}`);
-
-        auth.setVaultInfo({
-            ...auth.vaultInfo!,
-            info: userVaultInfo,
-        });
-
-        // Report success
-        console.log(`Using obfuscation: ${newObfuscation}`);
-        presentToast({
-            message: `Obfuscation successfully ${newObfuscation ? "enabled" : "disabled"}`,
-            duration: TOAST_DURATION,
-            color: "success",
-        });
-        setIsLoading(false);
-    }
-
     /**
      * Checks the integrity of the entire vault against its trusted, self-signed Merkle root.
      */
@@ -156,19 +80,7 @@ const DataPreferences: React.FC = () => {
             <IonHeader>
                 <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
-                        <IonButton
-                            id="data-preferences-back"
-                            onClick={() => {
-                                if (!toggledObfuscation) {
-                                    router.goBack();
-                                    return;
-                                }
-
-                                // Go back to the root file page
-                                // (This is to avoid issues when a subfolder was selected before toggling obfuscation)
-                                router.push("/files/", "back", "replace"); // Try to make it as seamless as possible
-                            }}
-                        >
+                        <IonButton id="data-preferences-back" onClick={() => router.goBack()}>
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
@@ -178,46 +90,8 @@ const DataPreferences: React.FC = () => {
 
             {/* Body content */}
             <IonContent fullscreen>
-                {/* Settings list */}
-                <IonGrid className="ion-padding-horizontal mt-2">
-                    <SettingsItem
-                        label={<IonLabel className="text-base">Obfuscated Names</IonLabel>}
-                        input={
-                            <IonToggle
-                                id="use-obfuscated-names"
-                                checked={auth.vaultInfo!.info.obfuscatedNames}
-                                onIonChange={() => {
-                                    presentAlert({
-                                        header: "Warning",
-                                        message:
-                                            "This will affect all files on the server. Are you sure you want to continue?",
-                                        buttons: [
-                                            {
-                                                text: "Cancel",
-                                                role: "cancel",
-                                                handler: () => {
-                                                    document.getElementById("use-obfuscated-names")!.setAttribute(
-                                                        "checked",
-                                                        auth.vaultInfo!.info.obfuscatedNames!.toString(), // Set back to what it is currently
-                                                    );
-                                                },
-                                            },
-                                            {
-                                                text: "Continue",
-                                                role: "confirm",
-                                                handler: toggleUseObfuscation,
-                                            },
-                                        ],
-                                    });
-                                }}
-                            />
-                        }
-                    />
-                    <hr />
-                </IonGrid>
-
                 {/* Data integrity */}
-                <div className="ion-padding-horizontal">
+                <div className="ion-padding-horizontal mt-2">
                     <h2 className="m-0">Data Integrity</h2>
                     <IonText className="text-justify">
                         <p className="text-sm leading-none md:text-base">
@@ -291,13 +165,6 @@ const DataPreferences: React.FC = () => {
                         />
                     </details>
                 </div>
-
-                {/* Loading indicator */}
-                <IonLoading
-                    className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
-                    isOpen={isLoading}
-                    message={loadingState}
-                ></IonLoading>
             </IonContent>
         </IonPage>
     );

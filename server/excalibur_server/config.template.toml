@@ -11,7 +11,7 @@
 ################################################################################
 
 # Config file version. DO NOT EDIT THIS FIELD!
-version = 6
+version = 7
 
 
 # -----------------------------------------------------------------------------
@@ -64,6 +64,9 @@ send_chunk_size = 131072 # 128 KiB
 [storage.database]
 # The database file path, relative to the application root
 file = "excalibur.duckdb"
+
+# The maximum size of an item's encrypted name, in bytes
+max_encrypted_name_size = 2048
 
 
 # -----------------------------------------------------------------------------

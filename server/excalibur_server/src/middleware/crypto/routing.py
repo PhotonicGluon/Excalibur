@@ -33,12 +33,6 @@ FILES_ROUTING_TREE = RoutingTree(
                 "GET": EncryptedRoute(),
             },
         ),
-        "search": RoutingTree(
-            segment="search",
-            encrypted_routes={
-                "POST": EncryptedRoute(),
-            },
-        ),
         "upload": RoutingTree(
             segment="upload",
             has_path_param=True,
@@ -90,6 +84,23 @@ FILES_ROUTING_TREE = RoutingTree(
             has_path_param=True,
             encrypted_routes={
                 "POST": EncryptedRoute(),
+            },
+        ),
+        "names": RoutingTree(
+            segment="names",
+            subtrees={
+                "pending": RoutingTree(
+                    segment="pending",
+                    encrypted_routes={
+                        "GET": EncryptedRoute(),
+                    },
+                ),
+                "fill": RoutingTree(
+                    segment="fill",
+                    encrypted_routes={
+                        "POST": EncryptedRoute(),
+                    },
+                ),
             },
         ),
         "rename": RoutingTree(

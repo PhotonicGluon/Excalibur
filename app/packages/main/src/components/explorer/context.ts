@@ -10,7 +10,7 @@ export interface ExplorerContext {
     /** Current path */
     path: string;
     /** Function to call when renaming is requested */
-    onRename: (itemID: string, path: string, isDir: boolean) => Promise<void>;
+    onRename: (itemID: string, path: string) => Promise<void>;
     /** Function to call when moving is requested */
     onMove: (itemID: string) => Promise<void>;
     /** Function to call when deletion is requested */

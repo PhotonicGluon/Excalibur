@@ -43,8 +43,10 @@ export interface DirtyItem {
     id: string;
     /** Parent directory ID, or null for the user's root folder */
     parentID: string | null;
-    /** Item name */
-    name: string;
+    /** Encrypted item name (Base64), or `null` if the item has a legacy plaintext name */
+    nameEnc: string | null;
+    /** Legacy plaintext item name, or `null` if the item has an encrypted name */
+    name: string | null;
     /** Whether the item is a folder */
     isFolder: boolean;
     /** Monotonic counter bumped on every mutation to this node */
@@ -58,7 +60,8 @@ export interface ProofItem {
     id: string;
     parentID: string | null;
     rootID: string;
-    name: string;
+    nameEnc: string | null;
+    name: string | null;
     isFolder: boolean;
     contentMAC: Buffer | null;
     nodeHash: Buffer | null;
@@ -69,8 +72,10 @@ export interface ProofItem {
 export interface InclusionProofStep {
     /** Unique identifier for the filesystem item */
     id: string;
-    /** Name of the filesystem item (it is bound into the item's node hash) */
-    name: string;
+    /** Encrypted name (Base64) of the filesystem item, or `null` if it has a legacy plaintext name */
+    nameEnc: string | null;
+    /** Legacy plaintext name of the filesystem item, or `null` if it has an encrypted name */
+    name: string | null;
     /** List of (childID, childNodeHash) pairs */
     children: [string, Buffer | null][];
 }

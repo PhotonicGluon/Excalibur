@@ -1,9 +1,48 @@
 import ExEF from "@lib/crypto/exef";
-import { FileLike } from "@lib/files/structures";
 
 import { popFetch } from "@api/fetch";
 
 import { AuthProvider } from "@components/auth/context";
+
+/**
+ * An item as sent by the server.
+ *
+ * Its name is still encrypted (or legacy plaintext).
+ */
+export interface ItemWire {
+    /** Unique identifier for the item */
+    id: string;
+    /** ID of the folder that contains the item, or `null` for the root folder */
+    parent_id: string | null;
+    /** Type of the item */
+    type: "file" | "directory";
+    /** Creation time of the item */
+    creation_time: number;
+    /** Encrypted name (Base64), or `null` if the item still has a legacy plaintext name */
+    name_enc: string | null;
+    /** Legacy plaintext name, or `null` if the item has an encrypted name */
+    name: string | null;
+    /** Size of the file in bytes (files only) */
+    size?: number;
+    /** Items in the directory (directories only, and only if they were requested) */
+    items?: ItemWire[];
+}
+
+/**
+ * An item as sent by the server.
+ *
+ * Its name is still encrypted (or legacy plaintext).
+ */
+export interface ItemWire {
+    id: string;
+    parent_id: string | null;
+    type: "file" | "directory";
+    creation_time: number;
+    name_enc: string | null;
+    name: string | null;
+    size?: number;
+    items?: ItemWire[];
+}
 
 /**
  * Gets all items owned by the current user.
@@ -16,7 +55,7 @@ import { AuthProvider } from "@components/auth/context";
 export async function getAllItems(
     auth: AuthProvider,
     timeout?: number,
-): Promise<{ success: boolean; error?: string; items?: FileLike[] }> {
+): Promise<{ success: boolean; error?: string; items?: ItemWire[] }> {
     const response = await popFetch(
         `${auth.serverInfo!.apiURL}/files/all`,
         auth.authInfo!.key!,
@@ -40,6 +79,6 @@ export async function getAllItems(
             return { success: false, error: "Unknown error" };
     }
 
-    const items = (await new ExEF(auth.authInfo!.key).decryptResponse<FileLike[]>(response))!;
+    const items = (await new ExEF(auth.authInfo!.key).decryptResponse<ItemWire[]>(response))!;
     return { success: true, items };
 }

@@ -1,11 +1,11 @@
-import { createFile, createFolder } from "../helpers";
-import { TINY_SIZE } from "./constants";
+import { TINY_SIZE } from "../constants";
+import { createFile, createFolder, expectToast } from "../helpers";
 
 const SERVER_URL = Cypress.expose("serverURL");
 
 // Helper functions
 function _createTestAccount(username: string, reduced?: boolean): string {
-    cy.signup(SERVER_URL, username, "Password", false, false);
+    cy.signup(SERVER_URL, username, "Password", false);
 
     // Wait for listener to connect
     cy.get("#directory-list-stats").should("exist");
@@ -52,12 +52,12 @@ afterEach(function () {
 describe("Migration Operations", () => {
     it("should work with empty vault", () => {
         const USERNAME = `merkle-test-user-${Date.now()}`;
-        cy.signup(SERVER_URL, USERNAME, "Password", false, false);
+        cy.signup(SERVER_URL, USERNAME, "Password", false);
 
         // Migrate vault to use Merkle tree validation
-        cy.get("#merkle-migration-banner").should("exist");
-        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
-        cy.get("#merkle-migration-banner").should("not.exist");
+        cy.get("#vault-migration-banner").should("exist");
+        cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#vault-migration-banner").should("not.exist");
 
         _verifyVault();
     });
@@ -66,9 +66,9 @@ describe("Migration Operations", () => {
         _createTestAccount(`merkle-test-user-${Date.now()}`);
 
         // Migrate vault to use Merkle tree validation
-        cy.get("#merkle-migration-banner").should("exist");
-        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
-        cy.get("#merkle-migration-banner").should("not.exist");
+        cy.get("#vault-migration-banner").should("exist");
+        cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#vault-migration-banner").should("not.exist");
 
         _verifyVault();
     });
@@ -78,16 +78,16 @@ describe("Migration Operations", () => {
         _createTestAccount(USERNAME, true);
 
         // Start migrating vault
-        cy.get("#merkle-migration-banner").should("exist");
-        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#vault-migration-banner").should("exist");
+        cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
         cy.reload(); // Immediately reload to trigger migration interruption
 
         cy.login(SERVER_URL, USERNAME, "Password", false, true);
-        cy.get("#merkle-migration-banner").contains("interrupted").should("exist");
+        cy.get("#vault-migration-banner").contains("interrupted").should("exist");
 
         // Resume migration
-        cy.get("#merkle-migration-banner ion-button").contains("Resume").click();
-        cy.get("#merkle-migration-banner").should("not.exist");
+        cy.get("#vault-migration-banner ion-button").contains("Resume").click();
+        cy.get("#vault-migration-banner").should("not.exist");
 
         _verifyVault();
     });
@@ -99,9 +99,9 @@ describe("Verification Operations", () => {
         _createTestAccount(USERNAME, true);
 
         // Migrate vault to use Merkle tree validation
-        cy.get("#merkle-migration-banner").should("exist");
-        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
-        cy.get("#merkle-migration-banner").should("not.exist");
+        cy.get("#vault-migration-banner").should("exist");
+        cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#vault-migration-banner").should("not.exist");
 
         // Attempting to verify file should work
         cy.get("ion-item").contains("test-file").rightclick();
@@ -136,12 +136,12 @@ describe("Verification Operations", () => {
         _createTestAccount(USERNAME, true);
 
         // Start migrating vault
-        cy.get("#merkle-migration-banner").should("exist");
-        cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
+        cy.get("#vault-migration-banner").should("exist");
+        cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
         cy.reload(); // Immediately reload to trigger migration interruption
 
         cy.login(SERVER_URL, USERNAME, "Password", false, true);
-        cy.get("#merkle-migration-banner").contains("interrupted").should("exist");
+        cy.get("#vault-migration-banner").contains("interrupted").should("exist");
 
         // Attempting to verify file should fail
         cy.get("ion-item").contains("test-file").rightclick();
@@ -163,9 +163,9 @@ describe("Verification Operations", () => {
             folderName = _createTestAccount(USERNAME);
 
             // Migrate vault to use Merkle tree validation
-            cy.get("#merkle-migration-banner").should("exist");
-            cy.get("#merkle-migration-banner ion-button").contains("Start Now").click();
-            cy.get("#merkle-migration-banner").should("not.exist");
+            cy.get("#vault-migration-banner").should("exist");
+            cy.get("#vault-migration-banner ion-button").contains("Start Now").click();
+            cy.get("#vault-migration-banner").should("not.exist");
         });
 
         beforeEach(() => {
@@ -246,6 +246,16 @@ describe("Verification Operations", () => {
             cy.get(`div[data-name='${fileName}']`).should("not.exist");
             cy.get(`div[data-name='${folderName}']`).click();
             cy.get(`div[data-name='${fileName}']`).should("exist");
+
+            // Vault should still be verified
+            _verifyVault();
+        });
+
+        it("vault should still be verified after a rejected name collision", () => {
+            // Try to create a folder which already exists
+            cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Clear leftover toasts
+            createFolder(folderName, false);
+            expectToast("Folder already exists", "danger");
 
             // Vault should still be verified
             _verifyVault();

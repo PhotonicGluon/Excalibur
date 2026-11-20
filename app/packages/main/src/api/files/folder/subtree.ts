@@ -1,17 +1,16 @@
 import { IS_DEV } from "@lib/consts";
 import ExEF from "@lib/crypto/exef";
-import { FileLike } from "@lib/files/structures";
 import { b64encodeURLSafe } from "@lib/util";
 
 import { popFetch } from "@api/fetch";
+import { ItemWire } from "@api/files/get-all";
 
 import { AuthProvider } from "@components/auth/context";
 
 /**
  * Gets every descendant of a folder (i.e., its children, their children, and so on).
  *
- * The folder itself is not included in the result. Each item's `fullpath` is relative to the vault
- * root.
+ * The folder itself is not included in the result.
  *
  * @param auth the current authentication provider
  * @param folderID the ID of the folder to get the descendants of
@@ -21,7 +20,7 @@ import { AuthProvider } from "@components/auth/context";
 export async function getSubtree(
     auth: AuthProvider,
     folderID: string,
-): Promise<{ success: boolean; error?: string; items?: FileLike[] }> {
+): Promise<{ success: boolean; error?: string; items?: ItemWire[] }> {
     let additionalHeaders = {};
     if (!IS_DEV) {
         const encryptedFolderID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
@@ -48,6 +47,6 @@ export async function getSubtree(
             return { success: false, error: "Unknown error" };
     }
 
-    const items = (await new ExEF(auth.authInfo!.key!).decryptResponse<FileLike[]>(response))!;
+    const items = (await new ExEF(auth.authInfo!.key!).decryptResponse<ItemWire[]>(response))!;
     return { success: true, items };
 }

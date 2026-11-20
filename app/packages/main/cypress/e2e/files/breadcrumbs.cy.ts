@@ -1,10 +1,11 @@
-import { createFolder } from "./helpers";
+import { UNICODE_NAME } from "./constants";
+import { createFolder, renameItem } from "./helpers";
 
 describe("Check Breadcrumbs", () => {
     const SERVER_URL = Cypress.expose("serverURL");
 
     beforeEach(() => {
-        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
     });
 
@@ -75,5 +76,44 @@ describe("Check Breadcrumbs", () => {
                 .children()
                 .should("have.length", i + 1);
         }
+    });
+
+    it("should update after renaming a parent folder", () => {
+        // Create nested folders
+        const superFolderName = createFolder();
+        cy.get(`div[data-name='${superFolderName}']`).click();
+        cy.url().should("include", `/files/${encodeURIComponent(superFolderName)}`);
+        const subFolderName = createFolder();
+        cy.get("ion-breadcrumb").eq(0).click(); // Click on home
+
+        // Rename the parent
+        const newName = `New Name ${Date.now()}`;
+        renameItem(superFolderName, newName);
+        cy.get(`div[data-name='${newName}']`).should("exist");
+
+        // Going in should show the new name in the URL and breadcrumbs
+        cy.get(`div[data-name='${newName}']`).click();
+        cy.url().should("include", `/files/${encodeURIComponent(newName)}`);
+        cy.get("ion-breadcrumb").eq(1).should("contain.text", newName);
+
+        // Child should still be there, and its path should be built from the new parent name
+        cy.get(`div[data-name='${subFolderName}']`).click();
+        cy.url().should("include", `/files/${encodeURIComponent(newName)}/${encodeURIComponent(subFolderName)}`);
+        cy.get("ion-breadcrumb").eq(1).should("contain.text", newName);
+        cy.get("ion-breadcrumb").eq(2).should("contain.text", subFolderName);
+    });
+
+    it("should handle folder with unicode name", () => {
+        const folderName = createFolder(`${UNICODE_NAME} ${Date.now()}`);
+        cy.get(`div[data-name='${folderName}']`).click();
+        cy.url().should("include", `/files/${encodeURIComponent(folderName)}`);
+
+        // Breadcrumb should show the decrypted name
+        cy.get("ion-breadcrumb").eq(1).should("contain.text", folderName);
+
+        // Name should survive logging in again (the keys do not survive a reload)
+        cy.login(SERVER_URL, "test-user", "Password");
+        cy.get(`div[data-name='${folderName}']`).click();
+        cy.get("ion-breadcrumb").eq(1).should("contain.text", folderName);
     });
 });

@@ -1,0 +1,1 @@
+➕ Added `fuse.js` dependency

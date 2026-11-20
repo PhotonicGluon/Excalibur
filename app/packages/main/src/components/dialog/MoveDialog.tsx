@@ -13,15 +13,15 @@ import {
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 
-import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { SortType } from "@lib/files/sorting";
 import { Directory } from "@lib/files/structures";
 
-import { listdirByPath, moveItem } from "@api/files";
+import { moveItem } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import DirectoryListRaw from "@components/explorer/DirectoryListRaw";
 import { useExplorerContext } from "@components/explorer/context";
+import { useVaultIndex } from "@components/files/context";
 
 interface MoveDialogProps {
     /** Whether the dialog is open */
@@ -36,6 +36,7 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
     // Contexts
     const auth = useAuth();
     const explorerContext = useExplorerContext();
+    const vaultIndex = useVaultIndex();
 
     // States
     const [destFolder, setDestFolder] = useState<string>(explorerContext.path);
@@ -48,20 +49,13 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
      */
     function refreshDestFolderContents() {
         console.debug("Refreshing destination folder contents: " + destFolder);
-        listdirByPath(auth, destFolder).then((response) => {
+        vaultIndex.listdirByPath(destFolder).then((response) => {
             if (!response.success) {
                 return;
             }
 
-            let directory = response.directory!;
+            const directory = response.directory!;
             setDestFolderID(directory.id);
-
-            // Deobfuscate the names, if necessary
-            if (auth.vaultInfo!.info.obfuscatedNames && directory.items && auth.noc) {
-                directory = deobfuscateDirectoryItems(directory, auth.noc);
-            }
-
-            // Set the deobfuscated directory contents
             setDestFolderContents(directory);
         });
     }
@@ -102,18 +96,30 @@ const MoveDialog: React.FC<MoveDialogProps> = (props) => {
             return;
         }
 
-        const moveResponse = await moveItem(auth, props.itemID, destFolderID);
+        // Get the item name
+        // (Needed to tag the item with its new parent)
+        const itemResponse = await vaultIndex.getItem(props.itemID);
+        if (!itemResponse.success || !itemResponse.item) {
+            await explorerContext.presentSnackbar("Failed to find the item to move", "danger");
+            return;
+        }
+        const itemName = itemResponse.item.name;
+
+        // Move the item
+        const moveResponse = await moveItem(auth, props.itemID, itemName, destFolderID);
         if (!moveResponse.success) {
             await explorerContext.presentSnackbar(`Failed to move item: ${moveResponse.error}`, "danger");
             return;
         }
 
+        // Invalidate the vault index to refresh the UI
+        vaultIndex.invalidate();
         await explorerContext.presentSnackbar("Item moved", "success");
         props.onDidDismiss();
     }
 
     // Effects
-    useEffect(refreshDestFolderContents, [auth, destFolder]);
+    useEffect(refreshDestFolderContents, [vaultIndex, destFolder]);
 
     // Render
     return (

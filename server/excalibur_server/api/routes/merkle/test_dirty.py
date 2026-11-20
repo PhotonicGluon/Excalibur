@@ -1,10 +1,12 @@
 import json
+from base64 import b64encode
 
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.operations import get_item, get_unverified, has_unverified
+from excalibur_server.src.db.tables import FSItem
 
 
 def _decrypt(response) -> bytes:
@@ -47,10 +49,28 @@ class TestGetDirty:
         for entry in gotten_dirty:
             item = get_item(entry["id"])
             assert entry["name"] == item.name
+            assert entry["name_enc"] == (b64encode(item.name_enc).decode() if item.name_enc else None)
             assert entry["is_folder"] == item.is_folder
             assert entry["version"] == item.version
             assert entry["parent_id"] == (str(item.parent_id) if item.parent_id else None)
             assert entry["needs_content_mac"] == (not item.is_folder and item.content_mac is None)
+
+    def test_get_includes_encrypted_name(self, test_user, auth_client: TestClient, db_session):
+        root_id = test_user["root_id"]
+        migrated = FSItem(parent_id=root_id, root_id=root_id, name_enc=b"encrypted-name", name_tag=b"\x07" * 32)
+        db_session.add(migrated)
+        db_session.commit()
+
+        try:
+            response = auth_client.get("/api/merkle/dirty")
+            assert response.status_code == 200
+
+            entry = next(entry for entry in json.loads(_decrypt(response)) if entry["id"] == str(migrated.id))
+            assert entry["name"] is None
+            assert entry["name_enc"] == b64encode(b"encrypted-name").decode()
+        finally:
+            db_session.delete(migrated)
+            db_session.commit()
 
     def test_get_is_sorted_by_id(self, auth_client: TestClient, merkle_folder):
         response = auth_client.get("/api/merkle/dirty")

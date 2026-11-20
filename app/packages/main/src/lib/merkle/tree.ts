@@ -1,6 +1,7 @@
-import { FileLike } from "@lib/files/structures";
-import { chunk, getParent } from "@lib/util";
+import { getMerkleName } from "@lib/files/names";
+import { chunk } from "@lib/util";
 
+import { ItemWire } from "@api/files";
 import { getContentMACInputs } from "@api/merkle";
 
 import { AuthProvider } from "@components/auth/context";
@@ -9,6 +10,7 @@ import { ChildNode, computeFolderNodeHash, computeLeafNodeHash } from "./hash";
 import { computeContentMAC } from "./mac";
 
 const CONTENT_MAC_INPUTS_CHUNK_SIZE = 200;
+const NAME_DECRYPT_CHUNK_SIZE = 500;
 
 /** The result of recomputing every node hash in a vault's Merkle tree from scratch. */
 export interface ComputedTree {
@@ -28,16 +30,15 @@ export interface ComputedTree {
  * @param auth the current authentication provider
  * @param rootID ID of the tree's root item
  * @param items every descendant of the tree root
- * @param rootName name of the tree root. For the vault root, provide an empty string
- * @param rootFullpath fullpath to the tree root. For the vault root, provide an empty string
+ * @param rootName name of the tree root (as it is bound into its node hash). For the vault root,
+ *      provide an empty string
  * @returns the computed node hashes and content MACs for every item, including the tree root
  */
 export async function computeTree(
     auth: AuthProvider,
     rootID: string,
-    items: FileLike[],
+    items: ItemWire[],
     rootName: string = "",
-    rootFullpath: string = "",
 ): Promise<ComputedTree> {
     const files = items.filter((item) => item.type === "file");
 
@@ -63,31 +64,41 @@ export async function computeTree(
     for (const file of files) {
         const input = contentMACInputs.get(file.id);
         if (!input) {
-            throw new Error(`Missing content MAC input for file '${file.id}' ('${file.fullpath}')`);
+            throw new Error(`Missing content MAC input for file '${file.id}' ('${file.id}')`);
         }
         contentMACs.set(file.id, computeContentMAC(auth.vaultInfo!.merkleKeys, input));
     }
 
-    // Group items by their parent's fullpath
-    const childrenByParentPath = new Map<string, FileLike[]>();
+    // Get the name that each item is hashed with
+    const names = new Map<string, string>();
+    const nameKeys = auth.vaultInfo!.nameKeys;
+    for (const itemChunk of chunk(items, NAME_DECRYPT_CHUNK_SIZE)) {
+        const chunkNames = await Promise.all(itemChunk.map((item) => getMerkleName(nameKeys, item)));
+        itemChunk.forEach((item, i) => names.set(item.id, chunkNames[i]));
+    }
+
+    // Group items by their parent's ID
+    const childrenByParentID = new Map<string, ItemWire[]>();
     for (const item of items) {
-        const parentPath = getParent(item.fullpath);
-        if (!childrenByParentPath.has(parentPath)) {
-            childrenByParentPath.set(parentPath, []);
+        if (item.parent_id === null) {
+            continue;
         }
-        childrenByParentPath.get(parentPath)!.push(item);
+        if (!childrenByParentID.has(item.parent_id)) {
+            childrenByParentID.set(item.parent_id, []);
+        }
+        childrenByParentID.get(item.parent_id)!.push(item);
     }
 
     // Recompute node hashes starting from the root
     const nodeHashes = new Map<string, Buffer>();
 
-    function computeNodeHash(id: string, name: string, fullpath: string, isFolder: boolean): Buffer {
+    function computeNodeHash(id: string, name: string, isFolder: boolean): Buffer {
         let hash: Buffer;
         if (isFolder) {
-            const children = childrenByParentPath.get(fullpath) ?? [];
+            const children = childrenByParentID.get(id) ?? [];
             const childNodes: ChildNode[] = children.map((child) => ({
                 id: child.id,
-                nodeHash: computeNodeHash(child.id, child.name, child.fullpath, child.type === "directory"),
+                nodeHash: computeNodeHash(child.id, names.get(child.id)!, child.type === "directory"),
             }));
             hash = computeFolderNodeHash(auth.vaultInfo!.merkleKeys, id, name, childNodes);
         } else {
@@ -98,6 +109,6 @@ export async function computeTree(
         return hash;
     }
 
-    computeNodeHash(rootID, rootName, rootFullpath, true);
+    computeNodeHash(rootID, rootName, true);
     return { nodeHashes, contentMACs: contentMACs };
 }

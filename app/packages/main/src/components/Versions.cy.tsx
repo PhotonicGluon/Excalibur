@@ -2,6 +2,8 @@ import { IonApp } from "@ionic/react";
 import packageInfo from "@root/package.json";
 
 import { KeyGenAlgorithm } from "@lib/crypto/keygen";
+import { NameKeys } from "@lib/files/names/keys";
+import { MerkleKeys } from "@lib/merkle/keys";
 
 import { authContext } from "@components/auth/context";
 
@@ -23,6 +25,8 @@ describe("<Versions />", () => {
                             encryptedKey: Buffer.alloc(0),
                             key: Buffer.alloc(0),
                             keygenAlgorithm: KeyGenAlgorithm.PBKDF2,
+                            nameKeys: new NameKeys(Buffer.alloc(0), Buffer.alloc(0)),
+                            merkleKeys: new MerkleKeys(Buffer.alloc(0), Buffer.alloc(0)),
                             info: {},
                         },
                         noc: null,

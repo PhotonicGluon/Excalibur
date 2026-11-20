@@ -1,10 +1,10 @@
-import { createFolder } from "../helpers";
+import { createFolder, expectToast } from "../helpers";
 
 const SERVER_URL = Cypress.expose("serverURL");
 
 describe("Miscellaneous Operations", () => {
     beforeEach(() => {
-        cy.signup(SERVER_URL, "test-user", "Password", false, false);
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
     });
 
@@ -17,6 +17,9 @@ describe("Miscellaneous Operations", () => {
     });
 
     it("should handle folder creation", () => {
-        createFolder();
+        cy.get("ion-toast", { timeout: 10000 }).should("not.exist"); // Clear leftover toasts from login
+        const folderName = `Test Folder ${Date.now()}`;
+        createFolder(folderName, false);
+        expectToast("Folder created");
     });
 });
