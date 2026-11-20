@@ -104,17 +104,14 @@ export async function migrateNamesToEncrypted(
                 return { success: false, error: `Cannot encrypt the name of item '${item.id}': ${nameError}` };
             }
 
-            try {
-                names[item.id] = {
-                    name_enc: (await encryptName(keys, item.id, name)).toString("base64"),
-                    name_tag: computeNameTag(keys, item.parentID, name).toString("base64"),
-                };
-            } catch (error: unknown) {
-                return {
-                    success: false,
-                    error: `Cannot encrypt the name of item '${item.id}': ${(error as Error).message}`,
-                };
+            const nameData = {
+                name_enc: (await encryptName(keys, item.id, name)).toString("base64"),
+                name_tag: computeNameTag(keys, item.parentID, name).toString("base64"),
+            };
+            if (nameData.name_enc.length > auth.authInfo!.maxEncryptedNameSize) {
+                return { success: false, error: `Cannot encrypt the name of item '${item.id}': Name is too long` };
             }
+            names[item.id] = nameData;
         }
 
         const fillResult = await fillNames(auth, names);

@@ -37,14 +37,12 @@ export async function uploadFile(
 
     // Compute item details
     const id = randID();
-    let itemDetails: string;
-    try {
-        const nameEnc = await encryptName(keys, id, name);
-        const nameTag = computeNameTag(keys, parentID, name);
-        itemDetails = `${id}:${b64encodeURLSafe(nameEnc)}:${b64encodeURLSafe(nameTag)}`;
-    } catch (error: unknown) {
-        return { success: false, error: (error as Error).message };
+    const nameEnc = await encryptName(keys, id, name);
+    if (nameEnc.length > auth.authInfo!.maxEncryptedNameSize) {
+        return { success: false, error: "Name is too long" };
     }
+    const nameTag = computeNameTag(keys, parentID, name);
+    const itemDetails = `${id}:${b64encodeURLSafe(nameEnc)}:${b64encodeURLSafe(nameTag)}`;
 
     // Encrypt data
     const encryptedParentID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(

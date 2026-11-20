@@ -40,10 +40,6 @@ describe("encryptName and decryptName", () => {
         await expect(decryptName(other, ID_A, nameEnc)).rejects.toThrow();
     });
 
-    it("should reject a name that is too long to store", async () => {
-        await expect(encryptName(KEYS, ID_A, "a".repeat(10000))).rejects.toThrow("too long");
-    });
-
     it("should normalise names to NFC", async () => {
         const decomposed = "é.txt";
         const nameEnc = await encryptName(KEYS, ID_A, decomposed);

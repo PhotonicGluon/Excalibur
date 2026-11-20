@@ -27,15 +27,13 @@ export async function mkdir(
 
     // Compute item details
     const id = randID();
-    let newItem: { id: string; name_enc: string; name_tag: string };
-    try {
-        newItem = {
-            id,
-            name_enc: (await encryptName(keys, id, name)).toString("base64"),
-            name_tag: computeNameTag(keys, parentID, name).toString("base64"),
-        };
-    } catch (error: unknown) {
-        return { success: false, error: (error as Error).message };
+    const newItem = {
+        id,
+        name_enc: (await encryptName(keys, id, name)).toString("base64"),
+        name_tag: computeNameTag(keys, parentID, name).toString("base64"),
+    };
+    if (newItem.name_enc.length > auth.authInfo!.maxEncryptedNameSize) {
+        return { success: false, error: "Name is too long" };
     }
     const itemDetails = JSON.stringify(newItem);
 

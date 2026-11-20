@@ -8,13 +8,6 @@ import { NameKeys } from "./keys";
 const NAME_RECORD_VERSION = 0x01;
 
 /**
- * Maximum size of an encrypted name (in bytes).
- *
- * This must match the server's `max_encrypted_name_size` setting.
- */
-export const MAX_NAME_ENC_SIZE = 2048; // TODO: Get this alongside "max file size" in the authentication response
-
-/**
  * Normalizes a name so that equivalent Unicode sequences produce the same bytes.
  *
  * @param name the name to normalize
@@ -34,14 +27,10 @@ function nameToBytes(name: string): Buffer {
  * @param itemID the ID of the item that the name belongs to
  * @param name the name to encrypt
  * @returns the encrypted name
- * @throws {Error} if the encrypted name would be larger than {@link MAX_NAME_ENC_SIZE}
  */
 export async function encryptName(keys: NameKeys, itemID: string, name: string): Promise<Buffer> {
     const plaintext = frame([Buffer.from([NAME_RECORD_VERSION]), uuidToBytes(itemID), nameToBytes(name)]);
     const nameEnc = await new ExEF(keys.enc, { version: 4 }).encrypt(plaintext);
-    if (nameEnc.length > MAX_NAME_ENC_SIZE) {
-        throw new Error("Name is too long");
-    }
     return nameEnc;
 }
 

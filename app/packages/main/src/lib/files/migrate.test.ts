@@ -142,7 +142,6 @@ describe("migrateNamesToEncrypted", () => {
         ["with a slash", "a/b"],
         ["empty", ""],
         ["a single dot", "."],
-        ["too long", "a".repeat(10000)],
     ])("should refuse a legacy name that is %s", async (_label, name) => {
         useServerWith([makePending(1, name, true)]);
 

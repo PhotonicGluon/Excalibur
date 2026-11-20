@@ -24,8 +24,14 @@ async function encryptNewName(
     name: string,
 ): Promise<{ name_enc: string; name_tag: string }> {
     const keys = auth.vaultInfo!.nameKeys;
+
+    const nameEnc = await encryptName(keys, itemID, name);
+    if (nameEnc.length > auth.authInfo!.maxEncryptedNameSize) {
+        throw new Error("Name is too long");
+    }
+
     return {
-        name_enc: (await encryptName(keys, itemID, name)).toString("base64"),
+        name_enc: nameEnc.toString("base64"),
         name_tag: computeNameTag(keys, parentID, name).toString("base64"),
     };
 }
