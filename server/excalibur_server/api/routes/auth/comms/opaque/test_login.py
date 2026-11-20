@@ -95,4 +95,4 @@ def test_login(test_idx: int, monkeypatch: pytest.MonkeyPatch):
         assert response.get("data"), "Auth response message should have data"
         encrypted_response_data = b64decode(response["data"])
         auth_response = ExEF(expected_master_key).decrypt(encrypted_response_data).decode("utf-8")
-        assert len(auth_response.split(" ")) == 4
+        assert len(auth_response.split(" ")) == 5

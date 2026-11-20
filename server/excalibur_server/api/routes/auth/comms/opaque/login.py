@@ -99,7 +99,7 @@ async def comms_endpoint(websocket: WebSocket):
 async def _send_auth_response(ws_manager: WebSocketManager, user_id: UUID, comm_uuid: str, recv_time: datetime) -> None:
     """
     Send the authentication response to the client, which includes the time-sync timestamps, maximum
-    file size, and auth token for the client to use.
+    encrypted name size, maximum file size, and auth token for the client to use.
 
     The values are all encrypted using the master key and then sent to the client.
 
@@ -114,7 +114,8 @@ async def _send_auth_response(ws_manager: WebSocketManager, user_id: UUID, comm_
     )
     tx_time = datetime.now().astimezone()
 
-    response = f"{recv_time.isoformat()} {tx_time.isoformat()} {CONFIG.storage.max_upload_size} {auth_token}"
+    response = f"{recv_time.isoformat()} {tx_time.isoformat()} {CONFIG.storage.database.max_encrypted_name_size} "
+    response += f"{CONFIG.storage.max_upload_size} {auth_token}"
     encrypted_response = ExEF(MASTER_KEYS_CACHE[comm_uuid]).encrypt(response.encode("UTF-8"))
     await ws_manager.send(WebSocketMsg(encrypted_response))
 
