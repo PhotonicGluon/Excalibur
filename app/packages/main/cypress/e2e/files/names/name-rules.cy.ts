@@ -1,10 +1,9 @@
-import { LONG_NAME_LENGTH, NFC_E_ACUTE, NFD_E_ACUTE, UNICODE_NAME } from "../constants";
+import { NFC_E_ACUTE, NFD_E_ACUTE, UNICODE_NAME } from "../constants";
 import { createFolder, expectToast, itemSelector, renameItem, uploadFileNamed } from "../helpers";
 
 const SERVER_URL = Cypress.expose("serverURL");
-
-// Just under the limit on the size of an encrypted name (2048 bytes), for plain ASCII names
-const NEAR_LIMIT_LENGTH = 1800;
+const NEAR_LIMIT_LENGTH = 2048 - 250; // 2048 is "standard" limit; 250 is arbitrary
+const TOO_LONG_LENGTH = NEAR_LIMIT_LENGTH + 500;
 
 beforeEach(() => {
     cy.signup(SERVER_URL, "test-user", "Password", false);
@@ -123,7 +122,7 @@ describe("Name Length Limit", () => {
     });
 
     it("should reject folder name over the limit", () => {
-        const folderName = `${Date.now()}-`.padEnd(LONG_NAME_LENGTH, "a");
+        const folderName = `${Date.now()}-`.padEnd(TOO_LONG_LENGTH, "a");
         createFolder(folderName, false);
         expectToast("Failed to create folder: Name is too long", "danger");
 
@@ -134,7 +133,7 @@ describe("Name Length Limit", () => {
     it("should reject renaming over the limit", () => {
         const folderName = createFolder();
 
-        renameItem(folderName, `${Date.now()}-`.padEnd(LONG_NAME_LENGTH, "a"));
+        renameItem(folderName, `${Date.now()}-`.padEnd(TOO_LONG_LENGTH, "a"));
         expectToast("Failed to rename item: Name is too long", "danger");
 
         // Original item should be untouched
@@ -143,7 +142,7 @@ describe("Name Length Limit", () => {
     });
 
     it("should fail uploading a file name over the limit", () => {
-        const fileName = `${Date.now()}-`.padEnd(LONG_NAME_LENGTH, "a") + ".txt";
+        const fileName = `${Date.now()}-`.padEnd(TOO_LONG_LENGTH, "a") + ".txt";
         uploadFileNamed(fileName, true);
 
         // The job should have failed
@@ -155,7 +154,7 @@ describe("Name Length Limit", () => {
 
     it("should count the size of the encrypted name, not the characters", () => {
         // Far fewer characters than the ASCII case which works (600 vs. 1800), but many more bytes
-        const folderName = `${"🙂".repeat(600)} - ${Date.now()}`;
+        const folderName = `${Date.now()} - ${"🙂".repeat(600)}`;
         createFolder(folderName, false);
         expectToast("Failed to create folder: Name is too long", "danger");
     });

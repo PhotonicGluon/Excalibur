@@ -29,13 +29,17 @@ export async function mkdir(
     const id = randID();
     const newItem = {
         id,
-        name_enc: (await encryptName(keys, id, name)).toString("base64"),
-        name_tag: computeNameTag(keys, parentID, name).toString("base64"),
+        name_enc: await encryptName(keys, id, name),
+        name_tag: computeNameTag(keys, parentID, name),
     };
     if (newItem.name_enc.length > auth.authInfo!.maxEncryptedNameSize) {
         return { success: false, error: "Name is too long" };
     }
-    const itemDetails = JSON.stringify(newItem);
+    const itemDetails = JSON.stringify({
+        id: id,
+        name_enc: newItem.name_enc.toString("base64"),
+        name_tag: newItem.name_tag.toString("base64"),
+    });
 
     const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(parentID, "utf-8"));
     const response = await popFetch(
