@@ -107,6 +107,10 @@ const SidebarMenu: React.FC<ContainerProps> = ({
                                 </span>
                             </IonText>
                             <IonText className="m-0" color="medium">
+                                Max encrypted name size:{" "}
+                                <span className="font-mono">{auth.authInfo!.maxEncryptedNameSize} B</span>
+                            </IonText>
+                            <IonText className="m-0" color="medium">
                                 Max upload size:{" "}
                                 <span className="font-mono">
                                     {bytesToHumanReadable(auth.authInfo!.maxUploadSize, settings.fileSizeUnits)}
