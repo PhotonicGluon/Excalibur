@@ -1,3 +1,227 @@
 # Encrypted Names
 
-TODO: Add
+The names of files and folders are encrypted by the client, so the server never sees them.
+
+## Security Properties {/* #security */}
+
+For every item (other than the vault's root folder, which has no name), the server stores two opaque byte strings, both produced by the client:
+- `name_enc`: the [encrypted name](#name-enc), which only the client can decrypt; and
+- `name_tag`: the [name tag](#name-tag), a keyed hash of the item's parent and name, which the server uses to keep names unique within a folder.
+
+The server still sees the structure of the vault (i.e., which item is inside which folder), as well as each item's type, size and timestamps. The server learns:
+- how many items a user has, and how they are arranged into folders;
+- each item's type (file or folder), size and timestamps; and
+- the approximate length of each name (to the nearest padding size, due to ExEF v4's padding).
+
+However, the server cannot:
+- read any name;
+- swap the encrypted names of two items without a client noticing (see [ID binding](#id-binding)); or
+- tell whether two items in different folders (or belonging to different users) have the same name, since the tag depends on the parent's ID and on a per-user key.
+
+
+## Keys
+
+The vault key $K$ is used as the master key for generating the keys used for names, using **HKDF-SHA256**. In general, the keys use the following parameters (following [Wikipedia's format](https://en.wikipedia.org/wiki/HKDF#Mechanism)):
+
+- `salt`: the user's UUID, expressed as 16 bytes.
+- `IKM` (input key material): the vault key $K$.
+- `info`: depends on the key.
+- `length`: 32 bytes.
+
+### Name Encryption Key
+
+The name encryption key $k_e$ is used to encrypt item names.
+
+The corresponding `info` field used to generate $k_e$ is the ASCII string `Excalibur Names v1 - Name Encryption Key`.
+
+### Name Tag Key
+
+The name tag key $k_t$ is used to compute name tags.
+
+The corresponding `info` field used to generate $k_t$ is the ASCII string `Excalibur Names v1 - Name Tag Key`.
+
+## Item IDs {/* #item-ids */}
+
+The client chooses the ID of every new item, using 128 random bits. This is because the item's encrypted name must contain the item's ID (see [ID binding](#id-binding)), so the ID has to be known before the item exists.
+
+The server only checks that the ID is not already in use.
+
+## Encrypted Name {/* #name-enc */}
+
+### Normalisation
+
+Before a name is encrypted or tagged, it is normalised to [Unicode NFC](https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms) and then encoded as UTF-8. This ensures that names that look the same always produce the same bytes. Let `nameBytes(name)` denote this operation.
+
+### Name Record
+
+The plaintext that is encrypted is the following **name record**:
+
+```python
+frame([
+    b"\x01",            # Record format version
+    itemID,             # The item's UUID, expressed as 16 bytes
+    nameBytes(name),    # The item's name (see above)
+])
+```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+### Encryption
+
+The name record is encrypted with [ExEF v4](./exef/v4.mdx) using the name encryption key $k_e$. The output of the encryption is `name_enc`. If the encrypted name exceeds the maximum size, an error is raised.
+
+Note that since ExEF v4 pads its plaintext using PADME, the exact length of the name is hidden.
+
+The size of `name_enc` is capped at `MAX_NAME_ENC_SIZE`, which is **2048 bytes**. This is not a limit on the length of the name itself: with the padding, names well beyond 255 bytes still fit. A client should reject a name whose encrypted form exceeds the cap *before* sending it to the server.
+
+:::note
+
+The server's cap is configurable by the server's administrator (`max_encrypted_name_size`, defaulting to 2048 bytes). A name that is accepted by the client is therefore not guaranteed to be accepted by a server that has a lower cap.
+
+:::
+
+### Decryption
+
+Decryption of the name is performed in three steps:
+
+1. Decrypt the name record using [ExEF v4](./exef/v4.mdx).
+2. Unframe the decrypted record using [`unframe()`](#unframe()-function).
+3. Verify the record version and item ID.
+
+A client must treat a record that has the wrong number of parts or an unknown version as an error.
+
+#### ID Binding {/* #id-binding */}
+
+ExEF does not support additional authenticated data that is supplied from outside the file. Therefore, the item's ID is placed *inside* the name record, and the client **must** check on decryption that the ID in the record is the ID of the item that the name was fetched for.
+
+Without this check, a malicious server could swap the `name_enc` of two items, and the client would display each item with the other's name.
+
+### Name Rules
+
+The server cannot see names, so it cannot validate them. A client is responsible for rejecting names that:
+- are empty;
+- are exactly `.` or `..`; or
+- contain a `/`.
+
+Note that a name is stored as typed. In particular, there is *no* `.exef` suffix on the names of files.
+
+## Name Tag {/* #name-tag */}
+
+The name tag lets the server enforce that no two items in the same folder have the same name without it learning the names.
+
+The tag is generated using the name tag key $k_t$ using **BLAKE2b-256** in keyed mode with the following parameters (following the `blake2b()` function defined in [RFC7693, Appendix C.1](https://www.rfc-editor.org/info/rfc7693/#appendix-C.1)):
+
+- `outlen`: 32 bytes
+- `key`: the name tag key $k_t$
+- `keylen`: 32 bytes
+
+The `in` parameter for the name tag is the output of:
+
+```python
+frame([
+    parentID,           # UUID of the parent folder, expressed as 16 bytes
+    nameBytes(name),    # The item's name (see above)
+])
+```
+
+You can find the definition of [`frame()`](#frame()-function) below.
+
+The parent's ID must be its real UUID. In particular, *it is never the shorthand `.` that is used to refer to the root folder in API calls*.
+
+The server requires that a tag is exactly 32 bytes long, and that the pair `(parentID, name_tag)` is unique among all items.
+
+### CRUD Operations
+
+Do note that: 
+- **Renaming** an item changes both `name_enc` and `name_tag`.
+- **Moving** an item changes only `name_tag`. This is because the encrypted name binds the item's ID and not its parent, whereas the tag binds the parent.
+
+### Duplicate Names
+
+It is **not possible** for two items in the same folder to have the same name. The server rejects the later item (with a `409 Conflict` status), and a client should also check for an existing name before creating an item.
+
+A tag is deterministic, so the same name under the same parent always gives the same tag. The only time that a tag is seen again is when a name is reused under the same parent (e.g., after the original item was deleted). The same name under *different* parents gives different tags.
+
+## Upload Item Details {/* #item-details */}
+
+When uploading a file, the new item's ID, encrypted name and name tag are sent together in one segment of the upload URL (the `item_details` segment). The client builds it as
+
+```text
+<id>:<name_enc>:<name_tag>
+```
+
+where
+- `<id>` is the item's UUID as a string;
+- `<name_enc>` is `name_enc` encoded in URL-safe Base64 (using `-` and `_`, keeping the `=` padding); and
+- `<name_tag>` is `name_tag` encoded in the same manner as `<name_enc>`.
+
+The segment is then end-to-end encrypted like the other path parameters.
+
+As a concrete example, suppose that the item has the following values (the `name_enc` here is just some made-up bytes; real ones are the randomised output of ExEF):
+- ID: `00000000-0000-0000-0000-000000000001`
+- `name_enc`: the 48 bytes `10 11 12 ... 3f` (i.e., from `0x10` up to `0x3f`)
+- `name_tag`: the 32 bytes `4e 85 77 b1 81 4c 82 17 7b 00 dd 53 14 a7 56 93 fc 34 d0 78 d4 7a 95 65 a8 a2 fb f5 c9 07 1b fb`
+
+The URL-safe Base64 forms of the last two are
+
+```text
+name_enc: EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4_
+name_tag: ToV3sYFMghd7AN1TFKdWk_w00HjUepVlqKL79ckHG_s=
+```
+
+so the `item_details` string is the following:
+
+```text
+00000000-0000-0000-0000-000000000001:EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4_:ToV3sYFMghd7AN1TFKdWk_w00HjUepVlqKL79ckHG_s=
+```
+
+Splitting that string on `:` gives back the three parts: the ID, `name_enc` and `name_tag`.
+
+## Names in the Client {/* #vault-index */}
+
+Because names are encrypted, the server cannot list items by path, nor search for items by name. A client therefore builds these itself:
+
+- The client keeps an **index** of the items in the vault, mapping each item's ID to its parent, (decrypted) name and type, as well as each `(parentID, name)` pair to the item's ID.
+- The idea of **paths** exist only on the client. The path of an item is built by walking up the index from the item to the root folder (which has the empty name, and is written as `.`).
+- File searching is also done locally, by fuzzily matching a query against the decrypted names in the index.
+- Decrypted names can be cached by item ID, as long as the cached entry is dropped whenever the item's `name_enc` changes.
+
+If the name of an item cannot be decrypted (e.g., a malformed record, or a failed [ID binding](#id-binding) check), the client should still show the item but with a placeholder name (e.g., `(Unknown)` followed by the start of its ID), rather than fail the whole listing.
+
+---
+
+## Utility Functions
+### `frame()` {/* #frame()-function */}
+The `frame()` function length-prefixes each byte string in the `data` list and concatenates them together into one byte string. It is defined as follows:
+
+```python
+def frame(data: list[bytes]) -> bytes:
+    output = b""
+    for part in data:
+        length = len(part).to_bytes(PREFIX_LENGTH, "big")  # In big-endian mode
+        output += length + part                            # length, then the data part
+    
+    return output
+```
+
+For all uses in Excalibur's documentation, we assume a `PREFIX_LENGTH` of 4 bytes is used.
+
+### `unframe()` {/* #unframe()-function */}
+The `unframe()` function reverses [`frame()`](#frame()-function), splitting a framed byte string back into the list of byte strings that it was made from. It is defined as follows:
+
+```python
+def unframe(data: bytes) -> list[bytes]:
+    parts = []
+    offset = 0
+    while offset < len(data):
+        if offset + PREFIX_LENGTH > len(data):
+            raise Error("Malformed data")
+        length = int.from_bytes(data[offset : offset + PREFIX_LENGTH], "big")  # In big-endian mode
+        offset += PREFIX_LENGTH
+        if offset + length > len(data):
+            raise Error("Malformed data")
+        parts.append(data[offset : offset + length])
+        offset += length
+
+    return parts
+```
