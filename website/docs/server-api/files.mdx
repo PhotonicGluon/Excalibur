@@ -1,6 +1,31 @@
 # Working With Files
 
-Once a user is authenticated with the server, they can access their own files. The file operations available to them can be accessed by looking at the server's API documentation at `/api/docs`, under the "Files" category.
+Once a user is authenticated with the server, they can access their own files. The file operations available to them can be accessed by looking at the server's API documentation at `/api/docs`, under the "Files" category. This document describes the specifics of how to use some of these endpoints.
+
+Note that the file endpoints identify items by their IDs and not by paths. The root folder is specified with `.`. As with the other path parameters, the IDs are end-to-end encrypted.
+
+The server only ever stores the encrypted form of an item's name (`name_enc`) along with its name tag (`name_tag`). Please refer to the [encrypted names reference document](/docs/reference/encrypted-names.mdx) to learn how to compute these fields.
+
+## Creating Items
+
+The client chooses the [ID](/docs/reference/encrypted-names.mdx#item-ids) of every new item. The server rejects an ID that already exists with a `409` status.
+
+- To create a folder, send a `POST` request to `/api/files/mkdir/{parent_id}` with `id`, `name_enc` and `name_tag` in the body.
+- To upload a file, send a `POST` request to `/api/files/upload/{parent_id}/{item_details}`. The `item_details` segment is built as described [here](/docs/reference/encrypted-names.mdx#item-details), and a malformed value results in a `400` status. Uploading with the `force` parameter replaces an existing file of the same name.
+
+For both, the [name tag](/docs/reference/encrypted-names.mdx#name-tag) must be computed using the parent's real ID (not `.`).
+
+If an item with the same name already exists in the folder, the server responds with `409`.
+
+## Reading Items
+
+The `/api/files/list/{folder_id}`, `/api/files/all`, and `/api/files/subtree/{item_id}` endpoints return items with the following fields (among others):
+- `id`: the item's UUID.
+- `parent_id`: the UUID of the item's parent folder.
+- `name_enc`: the item's [encrypted name](/docs/reference/encrypted-names.mdx#name-enc), or `null`.
+- `name`: the item's legacy plaintext name, or `null`.
+
+Exactly one of `name_enc` and `name` is set. Only items that have not yet been [migrated](#migrating-to-encrypted-names) have a legacy `name`, so always use `name_enc` when it is present.
 
 ## Listening for Folder Updates
 
@@ -27,3 +52,24 @@ Any messages sent from the client will be ignored.
 :::
 
 Remember to close the WebSocket connection when the user logs out or disconnects.
+
+## Migrating to Encrypted Names
+
+Excalibur 0.9.0 introduced encrypted names for files and folders. Users that still have plaintext names can be migrated to encrypted names.
+
+First, check whether any plaintext names remain by sending a `HEAD` request to the `/api/files/names/pending` endpoint. A `200` status means that some items still have a plaintext name, while `204` means that none do.
+
+If there are, continue as follows:
+1. Send `GET` requests to `/api/files/names/pending` (using the `limit` and `offset` parameters to page through them) to list the items that still have a plaintext name. Each has an `id`, `parent_id`, `is_folder`, and the plaintext `name`. The root folder is never included, and the items are ordered by ID.
+2. For each item, work out its actual name:
+    1. If the item is a file, remove the `.exef` suffix.
+    2. If the user's vault info has obfuscated names, decipher the name.
+3. Validate the name, then compute the item's `name_enc` and `name_tag` (see the [reference document](/docs/reference/encrypted-names.mdx)). Use the item's existing ID for the encryption.
+4. Send the results in chunks via a `POST` request to `/api/files/names/fill`, with a mapping of each item's UUID to its `name_enc` and `name_tag`.
+    - A chunk is applied as a whole: if any item is invalid or any name clashes, the server responds with `409` and none of the items in the chunk change.
+    - Applying a chunk erases the items' plaintext names and marks them as dirty for the Merkle tree.
+    - This is resumable: chunks can be sent in any order, and re-sending a chunk simply overwrites the names previously stored.
+5. Names may have been added while migrating. Send another `HEAD` request to `/api/files/names/pending`, and repeat from step 1 until it returns `204`.
+6. Update the user's vault info so that it no longer has obfuscated names.
+
+Since the migrated items are marked as dirty, users with an active Merkle tree then need to [mutate](./merkle.mdx#mutating-the-merkle-tree) it. If the user is also being migrated to Merkle verification, do the names first so that the Merkle tree is built from the final names.

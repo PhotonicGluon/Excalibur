@@ -32,7 +32,6 @@ const sidebars: SidebarsConfig = {
         "reference/architecture",
         "reference/security-model",
         "reference/keygen",
-        "reference/name-obfuscation",
         {
             type: "category",
             label: "Excalibur Encryption Format (ExEF)",
@@ -42,6 +41,7 @@ const sidebars: SidebarsConfig = {
             },
             items: ["reference/exef/v4", "reference/exef/v3", "reference/exef/v2"],
         },
+        "reference/encrypted-names",
         "reference/merkle",
     ],
     server_api: [

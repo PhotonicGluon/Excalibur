@@ -6,7 +6,7 @@ The integrity of data on the server is maintained using a [Merkle tree](https://
 
 The vault key $K$ is used as the master key for generating the other keys used for the Merkle tree, using **HKDF-SHA256**. In general, the keys use the following parameters (following [Wikipedia's format](https://en.wikipedia.org/wiki/HKDF#Mechanism)):
 
-- `salt`: the user's UUID, expressed as 32 bytes.
+- `salt`: the user's UUID, expressed as 16 bytes.
 - `IKM` (input key material): the vault key $K$.
 - `info`: depends on the key.
 - `length`: 32 bytes.
@@ -43,12 +43,6 @@ The input data for the MAC (i.e., the `in` parameter) depends on the specific ve
 
 #### ExEF v4
 
-:::warning
-
-ExEF v4 specification is a draft and is subject to change.
-
-:::
-
 [ExEF v4](./exef/v4.mdx)'s plaintext is encrypted in chunks, with each chunk carrying a tag that authenticates the chunk's plaintext along with any additional authenticated data, including the header. These tags can thus be used to authenticate the plaintext content of the file as a whole.
 
 In particular, the `in` parameter for the MAC is the **concatenation of all of these tags**. Specifically, for an ExEF file with $N$ chunks, there will be $N$ tags of 16 bytes each that form the input data for the MAC. The input length will thus be $16N$ bytes.
@@ -72,10 +66,9 @@ The input data for the hash (i.e., the `in` parameter) depends on the type of no
 - **Folder Node**: follow these steps in order. 
     1. Get the child node(s) of the folder.
     2. Sort the child node(s) according to their IDs, in [lexicographic order](https://en.wikipedia.org/wiki/Lexicographic_order#Numeral_systems_and_dates). Let the sorted child nodes be `sortedChildren`.
-    3. For each child in `sortedChildren`, obtain its UUID (`uuid`, expressed in bytes) and node hash (`nodeHash`). Produce that child's payload using `frame([UUID, nodeHash])` (see [`frame()`](#frame()-function) below).
+    3. For each child in `sortedChildren`, obtain its UUID (`uuid`, expressed in bytes) and node hash (`nodeHash`). Produce that child's payload using `frame([UUID, nodeHash])` (see [`frame()`](./encrypted-names.mdx#frame()-function)).
     4. Concatenate all children's payloads in the order of `sortedChildren`. This is the `payload`.
     5. The `in` parameter is `bindIdentity(id, name, payload)`, where `id` is the current node's UUID expressed in bytes (see [identity binding](#identity-binding) below).
-
 
 #### Identity Binding {/* #identity-binding */}
 
@@ -92,7 +85,7 @@ def bindIdentity(id: bytes, name: str, payload: bytes) -> bytes:
     return frame([id, bytes(name, "utf-8"), payload])
 ```
 
-You can find the definition of [`frame()`](#frame()-function) below.
+You can find the definition of [`frame()`](./encrypted-names.mdx#frame()-function) in the [encrypted names](./encrypted-names.mdx) document.
 
 ## Attestation {/* #attestation */}
 
@@ -131,7 +124,7 @@ frame([
 ])
 ```
 
-You can find the definition of [`frame()`](#frame()-function) below.
+You can find the definition of [`frame()`](./encrypted-names.mdx#frame()-function) in the [encrypted names](./encrypted-names.mdx) document.
 
 ## Mutation {/* #mutation */}
 
@@ -181,21 +174,3 @@ In particular:
 2. Compute a local copy of the Merkle tree using the obtained items.
 3. Obtain the server's Merkle tree's root node's hash.
 4. Compare the locally computed hash with the server's hash.
-
----
-
-## Utility Functions
-### `frame()` {/* #frame()-function */}
-The `frame()` function length-prefixes each byte string in the `data` list and concatenates them together into one byte string. It is defined as follows:
-
-```python
-def frame(data: list[bytes]) -> bytes:
-    output = b""
-    for part in data:
-        length = len(part).to_bytes(PREFIX_LENGTH, "big")  # In big-endian mode
-        output += length + part  # length, then the data part
-    
-    return output
-```
-
-For content verification, we assume a `PREFIX_LENGTH` of 4 bytes is used.

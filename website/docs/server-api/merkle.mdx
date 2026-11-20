@@ -24,6 +24,16 @@ operation:
 3. Compute the content MAC inputs of the items.
 4. Submit a [mutation](/docs/reference/merkle.mdx#mutation) to `/api/merkle/mutate`.
 
+## Item Names
+
+Items returned by `/api/merkle/dirty`, as well as the items and steps of an inclusion proof from `/api/merkle/proof/{item_id}`, carry both a `name_enc` and a legacy `name`. Exactly one of them is set, except for the vault's root folder, which has neither and is hashed as an unnamed folder (i.e., with the empty string as its name).
+
+The `name` that is bound into a node hash is:
+- the [decrypted name](/docs/reference/encrypted-names.mdx#name-enc), if `name_enc` is set; or
+- otherwise, the legacy `name` **exactly as stored** (so including any `.exef` suffix and any obfuscation). This keeps the hashes made before encrypted names valid.
+
+Migrating a user's names to [encrypted names](./files.mdx#migrating-to-encrypted-names) marks the affected items as dirty, so a mutation is needed afterwards.
+
 ## Verifying Integrity
 
 - To check for the integrity of an item, send a `GET` request to `/api/merkle/proof/{item_id}`. That will return an [inclusion proof](/docs/reference/merkle.mdx#inclusion-proof) for the item, which the client can use to verify the integrity of the item.
