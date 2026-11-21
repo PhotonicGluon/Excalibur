@@ -178,6 +178,7 @@ async def get_credentials(
         hmac_validation=hmac_validation,
     )
     credentials.encrypted = encrypted
+    request.state.user_id = credentials.user_id  # To be used during rate limiting
     return credentials
 
 
