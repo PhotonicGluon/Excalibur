@@ -66,6 +66,7 @@ where the `HKDF-Expand` function is as described in [RFC5869, Section 2.3](https
 With a shared master key established, the server issues the client an authentication response. The response includes four values:
 - the time at which the server received the `KE3` message (which will henceforth be called `serverRecvTime`) in ISO format;
 - the time at which the server transmitted the authentication response (which will henceforth be called `serverTxTime`) in ISO format;
+- the maximum encrypted name size, in bytes;
 - the maximum file size that can be uploaded, in bytes; and
 - the authentication token to use for subsequent requests,
 
@@ -74,7 +75,7 @@ each separated by a space (` `).
 Here's an example of what the authentication response looks like:
 
 ```text
-2020-01-02T00:00:00.083515+01:00 2020-01-02T00:00:00.093022+01:00 262144000 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+2020-01-02T00:00:00.083515+01:00 2020-01-02T00:00:00.093022+01:00 2048 262144000 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMTAwMCwidXVpZCI6IjAwMDAwMDAwMTExMTIyMjIzMzMzNDQ0NDQ0NDQ0NDQ0In0.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
 Do note that this response **is encrypted** in the [Excalibur Encryption Format](/docs/reference/exef) using the master key so that only the client and server can read it.
