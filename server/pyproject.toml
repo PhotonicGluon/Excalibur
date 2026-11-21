@@ -8,8 +8,8 @@ version = "0.9.0a7"
 dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.20.1",
-    "duckdb~=1.5.6",
-    "duckdb-sqlalchemy>=1.5.6.5",
+    "duckdb~=2.0.1",
+    "duckdb-sqlalchemy>=2.0.0",
     "fastapi>=0.162.0",
     "gitpython>=3.1.62",
     "httptools>=0.8.0",
@@ -50,6 +50,7 @@ test = ["httpx2>=2.13.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 [tool.uv]
 default-groups = []
 exclude-newer = "5 days"
+exclude-newer-package = { "duckdb" = "2026-11-21T00:00:00Z", "duckdb-sqlalchemy" = "2026-11-20T00:00:00Z" }
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"
