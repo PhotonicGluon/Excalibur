@@ -1,0 +1,1 @@
+🔧 Replaced old `capacity` and `refill_rate` fields under the `server.rate_limit` table in `config.toml` with `unauthenticated_capacity` and `unauthenticated_refill_rate` for unauthenticated users, and `authenticated_capacity` and `authenticated_refill_rate` for authenticated users

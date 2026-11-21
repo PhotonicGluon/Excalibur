@@ -32,11 +32,17 @@ allow_origins = [
 consecutive_transmission_delay = 100
 
 [server.rate_limit]
-# The capacity of the rate limiter (e.g., number of allowed bursts)
-capacity = 250
+# The capacity of the rate limiter for unauthenticated users (i.e., number of allowed bursts)
+unauthenticated_capacity = 50
 
-# The refill rate of the rate limiter, in tokens per second
-refill_rate = 25
+# The refill rate of the rate limiter for unauthenticated users, in tokens per second
+unauthenticated_refill_rate = 5
+
+# The capacity of the rate limiter for authenticated users (i.e., number of allowed bursts)
+authenticated_capacity = 250
+
+# The refill rate of the rate limiter for authenticated users, in tokens per second
+authenticated_refill_rate = 25
 
 
 # -----------------------------------------------------------------------------

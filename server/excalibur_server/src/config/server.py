@@ -3,10 +3,17 @@ from pydantic import BaseModel, field_validator
 
 class Server(BaseModel):
     class RateLimit(BaseModel):
-        capacity: int
-        refill_rate: int
+        unauthenticated_capacity: int
+        unauthenticated_refill_rate: int
+        authenticated_capacity: int
+        authenticated_refill_rate: int
 
-        @field_validator("capacity", "refill_rate")
+        @field_validator(
+            "unauthenticated_capacity",
+            "unauthenticated_refill_rate",
+            "authenticated_capacity",
+            "authenticated_refill_rate",
+        )
         def validate_positive(cls, value: int) -> int:
             if value <= 0:
                 raise ValueError("must be greater than 0")
