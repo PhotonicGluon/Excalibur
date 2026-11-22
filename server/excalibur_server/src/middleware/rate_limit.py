@@ -43,7 +43,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         consumed = self._unauthenticated_bucket.consume(client_id)
         if consumed:
             response = await call_next(request)
-            if user_id := request.state.user_id:
+            if "user_id" in request.state and (user_id := request.state.user_id) is not None:
                 # Use authenticated bucket for rate limiting instead
                 self._unauthenticated_bucket.refund(client_id, count=1)
                 consumed = self._authenticated_bucket.consume(user_id)
