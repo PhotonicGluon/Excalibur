@@ -4,17 +4,29 @@ import * as Comlink from "comlink";
 import { DragEvent } from "react";
 
 import { randID } from "@lib/auth/util";
-import { checkPath, mkdir, uploadFile } from "@lib/files/api";
+import { validateName } from "@lib/files/names";
 import { getAllFileEntries } from "@lib/files/webkit";
 import { b64decode, getBaseName, getParent, getParents } from "@lib/util";
 import { EncryptionProcessor } from "@lib/workers/encrypt-stream";
 
+import { checkNames, mkdir, uploadFile } from "@api/files";
+
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
 import { useJobsManager } from "@components/explorer/jobs/context";
+import { useVaultIndex } from "@components/files/context";
 import { useSettings } from "@components/settings/context";
 
-type UploadFile = PickedFile & { rawName: string; directory?: string };
+type UploadFile = PickedFile & { directory?: string };
+
+enum ConflictAction {
+    NONE,
+    SKIP_THIS_FILE,
+    SKIP_ALL_EXISTING,
+    OVERRIDE_THIS_FILE,
+    OVERRIDE_ALL_EXISTING,
+    ABORT_UPLOAD,
+}
 
 export function useUploadFile() {
     // Contexts
@@ -22,6 +34,7 @@ export function useUploadFile() {
     const settings = useSettings();
     const jobsManager = useJobsManager();
     const explorerContext = useExplorerContext();
+    const vaultIndex = useVaultIndex();
 
     // Functions
     /**
@@ -36,9 +49,10 @@ export function useUploadFile() {
         /**
          * Handles the file upload process.
          *
-         * @param rawFile A {@link UploadFile} object
+         * @param rawFile a {@link UploadFile} object
+         * @param parentID the ID of the folder to upload the file to
          */
-        async function _handleUpload(rawFile: UploadFile) {
+        async function _handleUpload(rawFile: UploadFile, parentID: string) {
             // Create new job
             const jobID = randID();
             const controller = new AbortController();
@@ -46,12 +60,12 @@ export function useUploadFile() {
 
             jobsManager.addJob(jobID, {
                 direction: "upload",
-                name: rawFile.rawName,
+                name: rawFile.name,
                 description: "Setting up data stream...",
                 progress: null,
                 controller: controller,
             });
-            console.debug(`Created new job for '${rawFile.rawName}' with id '${jobID}'`);
+            console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
 
             try {
                 // Set up file data stream
@@ -69,11 +83,11 @@ export function useUploadFile() {
                             Filesystem.readFileInChunks(
                                 {
                                     path: rawFile.path!,
-                                    chunkSize: settings.cryptoChunkSize, // TODO: Should this be its own value?
+                                    chunkSize: settings.fileReadChunkSize,
                                 },
-                                (chunk, err) => {
+                                async (chunk, err) => {
                                     if (err) {
-                                        explorerContext.presentSnackbar("Failed to read file chunk", "danger");
+                                        await explorerContext.presentSnackbar("Failed to read file chunk", "danger");
                                         jobsManager.deleteJob(jobID);
                                         controller.error(err);
                                         return;
@@ -113,7 +127,7 @@ export function useUploadFile() {
                         auth.authInfo!.key!,
                         rawFileSize,
                         settings.cryptoKeyStrength,
-                        settings.cryptoChunkSize,
+                        settings.cryptoChunkSizeExponent,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {
@@ -122,8 +136,8 @@ export function useUploadFile() {
                         }),
                     );
                 } catch (e) {
-                    if (signal.aborted) throw new Error("Cancelled");
-                    explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
+                    if (signal.aborted) throw new Error("Cancelled"); // eslint-disable-line preserve-caught-error
+                    await explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
                     throw e;
                 } finally {
                     // Free up resources
@@ -133,27 +147,16 @@ export function useUploadFile() {
 
                 if (signal.aborted) throw new Error("Cancelled");
 
-                // Obfuscate the file name if necessary
-                const name = rawFile.name;
-
                 // Upload the file
-                console.debug(`Uploading file '${rawFile.name}' ('${name}.exef')...`);
+                console.debug(`Uploading file '${rawFile.name}'...`);
                 jobsManager.updateJob(jobID, "Uploading...", null); // Must specify null to reset progress
-                const file = new File([blob], name + ".exef");
-                console.log("Upload path:", explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""));
-                const uploadResponse = await uploadFile(
-                    auth,
-                    explorerContext.path + (rawFile.directory ? "/" + rawFile.directory : ""),
-                    file,
-                    signal,
-                    (progress) => {
-                        if (!signal.aborted) {
-                            jobsManager.updateProgress(jobID, progress);
-                        }
-                    },
-                ); // Always force upload
+                const uploadResponse = await uploadFile(auth, parentID, rawFile.name, blob, signal, (progress) => {
+                    if (!signal.aborted) {
+                        jobsManager.updateProgress(jobID, progress);
+                    }
+                }); // Always force upload
                 if (!uploadResponse.success) {
-                    explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to upload file: ${uploadResponse.error}`, "danger");
                     throw new Error(uploadResponse.error);
                 }
             } catch (e) {
@@ -174,56 +177,207 @@ export function useUploadFile() {
             // Get file picker to let user choose the files
             try {
                 const pickedFiles = (await FilePicker.pickFiles()).files;
-                files = pickedFiles.map((item) => {
-                    const name = auth.vaultInfo!.info.obfuscatedNames
-                        ? auth.noc!.encipher(Buffer.from(item.name, "utf-8"))
-                        : item.name;
-                    return { ...item, name, rawName: item.name };
-                });
+                files = pickedFiles;
             } catch (e: unknown) {
                 const message = (e as Error).message;
                 if (message.includes("pickFiles canceled")) {
                     console.debug("Cancelled upload of file");
                     return;
                 }
-                explorerContext.presentSnackbar(`Failed to pick file: ${message}`, "danger");
+                await explorerContext.presentSnackbar(`Failed to pick file: ${message}`, "danger");
                 return;
             }
         }
 
-        // Upload all files
-        explorerContext.presentSnackbar(`Uploading${files.length === 1 ? "" : ` ${files.length} files`}...`);
+        // Skip the files that cannot be given a valid name
+        const validFiles: UploadFile[] = [];
         for (const file of files) {
+            const nameError = validateName(file.name);
+            if (nameError !== null) {
+                await explorerContext.presentSnackbar(`Skipping '${file.name}': ${nameError}`, "warning");
+                continue;
+            }
+            validFiles.push(file);
+        }
+        files = validFiles;
+        if (files.length === 0) {
+            return;
+        }
+
+        // Check whether any files already exist
+        const pathsToCheck: string[] = [];
+        const filesByDirectory = new Map<string, number[]>(); // Directory path to the indices of the files in it
+        for (const [i, file] of files.entries()) {
+            const dirPath = file.directory ? `${explorerContext.path}/${file.directory}` : explorerContext.path;
+            pathsToCheck.push(`${dirPath}/${file.name}`);
+            filesByDirectory.set(dirPath, [...(filesByDirectory.get(dirPath) ?? []), i]);
+        }
+
+        const pathsExistence: boolean[] = new Array(files.length).fill(false);
+        for (const [dirPath, indices] of filesByDirectory) {
+            const dirResult = await vaultIndex.resolveFolderID(dirPath);
+            if (!dirResult.success) {
+                if (dirResult.error === "Path not found") {
+                    continue; // The directory doesn't exist yet, so none of the files in it can exist
+                }
+                await explorerContext.presentSnackbar(`Failed to find folder: ${dirResult.error}`, "danger");
+                return;
+            }
+
+            const namesCheckResult = await checkNames(
+                auth,
+                dirResult.id!,
+                indices.map((i) => files![i].name),
+            );
+            if (!namesCheckResult.success) {
+                await explorerContext.presentSnackbar(
+                    `Failed to check file names: ${namesCheckResult.error}`,
+                    "danger",
+                );
+                return;
+            }
+            for (const [j, i] of indices.entries()) {
+                pathsExistence[i] = namesCheckResult.result![j];
+            }
+        }
+
+        // Handle conflict resolution
+        const filesToUpload = [];
+        let conflictAction: ConflictAction = ConflictAction.NONE;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const exists = pathsExistence[i];
+            if (!exists || conflictAction === ConflictAction.OVERRIDE_ALL_EXISTING) {
+                // Either the file doesn't exist or we want to override all existing files -- just upload
+                filesToUpload.push(file);
+                continue;
+            }
+
+            // File exists
+            console.debug(`File already exists at '${pathsToCheck[i]}'`);
+            if (conflictAction === ConflictAction.SKIP_ALL_EXISTING) {
+                // Don't need to ask whether to skip
+                continue;
+            }
+
+            // What does the user want to do?
+            conflictAction = await new Promise<ConflictAction>((resolve) => {
+                let action: ConflictAction = ConflictAction.SKIP_THIS_FILE;
+                /* async */ explorerContext.presentAlert({
+                    header: `${file.name} already exists`,
+                    message: "What do you want to do?",
+                    onDidDismiss: () => {
+                        console.debug(`Conflict action selected: ${action}`);
+                        resolve(action);
+                    },
+                    buttons: [
+                        {
+                            text: "Skip This File",
+                            role: "confirm",
+                            handler: () => {
+                                action = ConflictAction.SKIP_THIS_FILE;
+                            },
+                        },
+                        {
+                            text: "Skip All Existing",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("Skipping all existing files", "warning");
+                                action = ConflictAction.SKIP_ALL_EXISTING;
+                            },
+                        },
+                        {
+                            text: "Override This File",
+                            handler: () => {
+                                action = ConflictAction.OVERRIDE_THIS_FILE;
+                            },
+                        },
+                        {
+                            text: "Override All Existing",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("Overriding all existing files", "warning");
+                                action = ConflictAction.OVERRIDE_ALL_EXISTING;
+                            },
+                        },
+                        {
+                            text: "Abort Upload",
+                            role: "cancel",
+                            handler: () => {
+                                /* async */ explorerContext.presentSnackbar("File upload cancelled", "warning");
+                                action = ConflictAction.ABORT_UPLOAD;
+                            },
+                        },
+                    ],
+                });
+            });
+
+            if (
+                conflictAction === ConflictAction.SKIP_THIS_FILE ||
+                conflictAction === ConflictAction.SKIP_ALL_EXISTING
+            ) {
+                // Skip
+            } else if (conflictAction === ConflictAction.ABORT_UPLOAD) {
+                return;
+            } else {
+                // NONE, OVERRIDE_THIS_FILE, or OVERRIDE_ALL_EXISTING
+                filesToUpload.push(file);
+            }
+
+            if (
+                conflictAction === ConflictAction.SKIP_THIS_FILE ||
+                conflictAction === ConflictAction.OVERRIDE_THIS_FILE
+            ) {
+                // Make sure that we re-prompt for the next existing file
+                conflictAction = ConflictAction.NONE;
+            }
+        }
+
+        // Upload all files
+        await explorerContext.presentSnackbar(
+            `Uploading${filesToUpload.length === 1 ? "" : ` ${filesToUpload.length} files`}...`,
+        );
+
+        for (const file of filesToUpload) {
             // Check if file size acceptable
-            if (file.size > auth.serverInfo!.maxUploadSize) {
+            if (file.size > auth.authInfo!.maxUploadSize) {
                 // We use an alert to make it more visible
-                console.warn(`File '${file.name}' is too large (${file.size} > ${auth.serverInfo!.maxUploadSize})`);
-                alert(`File '${file.name}' is too large (max ${auth.serverInfo!.maxUploadSize} bytes)`);
+                console.warn(`File '${file.name}' is too large (${file.size} > ${auth.authInfo!.maxUploadSize})`);
+                alert(`File '${file.name}' is too large (max ${auth.authInfo!.maxUploadSize} bytes)`);
                 continue;
             }
 
             // Check if containing directories exist
+            const targetPath = file.directory ? explorerContext.path + "/" + file.directory : explorerContext.path;
             if (file.directory) {
-                const dirs = getParents(explorerContext.path + "/" + file.directory + "/x") // "/x" to add target dir
+                const dirs = getParents(targetPath + "/x") // "/x" to add target dir
                     .toReversed() // To get from root to target
                     .slice(1); // Remove the last element (the "/x")
 
                 for (const dir of dirs) {
-                    const checkDirResponse = await checkPath(auth, dir);
+                    const checkDirResponse = await vaultIndex.resolveFolderID(dir);
                     if (checkDirResponse.success) {
                         // Directory exists, continue
                     } else if (checkDirResponse.error === "Path not found") {
-                        // Make directory
-                        const createDirResponse = await mkdir(auth, getParent(dir), getBaseName(dir), false);
+                        // Make directory in its parent
+                        const parentResponse = await vaultIndex.resolveFolderID(getParent(dir));
+                        if (!parentResponse.success) {
+                            await explorerContext.presentSnackbar(
+                                `Failed to check containing directory: ${parentResponse.error}`,
+                                "danger",
+                            );
+                            return;
+                        }
+
+                        const createDirResponse = await mkdir(auth, parentResponse.id!, getBaseName(dir));
                         if (!createDirResponse.success) {
-                            explorerContext.presentSnackbar(
+                            await explorerContext.presentSnackbar(
                                 `Failed to create containing directory: ${createDirResponse.error}`,
                                 "danger",
                             );
                             return;
                         }
+                        vaultIndex.invalidate(); // So that the new folder can be found
                     } else {
-                        explorerContext.presentSnackbar(
+                        await explorerContext.presentSnackbar(
                             `Failed to check containing directory: ${checkDirResponse.error}`,
                             "danger",
                         );
@@ -232,60 +386,14 @@ export function useUploadFile() {
                 }
             }
 
-            // Check if file exists
-            const filePath = file.directory ? `${file.directory}/${file.name}` : file.name;
-            const eventualPath = `${explorerContext.path}/${filePath}` + ".exef"; // The uploaded file has this extension
-            const checkResponse = await checkPath(auth, eventualPath);
-            if (!checkResponse.success) {
-                switch (checkResponse.error) {
-                    case "Path not found":
-                        // This is good -- the file doesn't exist, so we can just carry on
-                        break;
-                    case "Illegal or invalid path":
-                        explorerContext.presentSnackbar("Illegal or invalid file name", "danger");
-                        return;
-                    case "Path too long":
-                        explorerContext.presentSnackbar("File path too long", "danger");
-                        return;
-                    default:
-                        explorerContext.presentSnackbar(`Failed to check file path: ${checkResponse.error}`, "danger");
-                        return;
-                }
-            }
-            if (checkResponse.success && checkResponse.type === "file") {
-                // File exists, ask if want to override
-                console.debug(`File already exists at '${eventualPath}'; asking if want to override`);
-
-                let haltUploads = false;
-                await new Promise<void>((resolve) => {
-                    explorerContext.presentAlert({
-                        header: `${file.rawName} already exists`,
-                        message: "Do you want to override the existing file?",
-                        onDidDismiss: () => {
-                            resolve();
-                        },
-                        buttons: [
-                            {
-                                text: "No",
-                                role: "cancel",
-                                handler: () => {
-                                    explorerContext.presentSnackbar("File upload cancelled", "warning");
-                                    haltUploads = true;
-                                },
-                            },
-                            {
-                                text: "Yes",
-                                role: "confirm",
-                            },
-                        ],
-                    });
-                });
-                if (haltUploads) {
-                    return;
-                }
+            // Find the folder to upload the file to
+            const targetResponse = await vaultIndex.resolveFolderID(targetPath);
+            if (!targetResponse.success) {
+                await explorerContext.presentSnackbar(`Failed to find folder: ${targetResponse.error}`, "danger");
+                return;
             }
 
-            _handleUpload(file);
+            _handleUpload(file, targetResponse.id!);
         }
     }
 
@@ -297,7 +405,7 @@ export function useUploadFile() {
     async function onDropFileItem(e: DragEvent) {
         // Gather items
         const items = [...e.dataTransfer.items]
-            .filter((item) => item.kind === "file") // Drag data item is a file _or_ directory
+            .filter((item) => item.kind === "file") // Drag data item is a file *or* a directory
             .map((item) => {
                 const entry = item.webkitGetAsEntry();
                 const file = item.getAsFile();
@@ -330,23 +438,9 @@ export function useUploadFile() {
         // Call upload file method
         onUploadFile(
             files.map((item) => {
-                // Handle name obfuscation as necessary
-                let fileName = item.file.name;
-                let fileDirectory = item.path ? getParent(item.path.replace(/^\//, "")) : undefined;
-                if (auth.vaultInfo!.info.obfuscatedNames) {
-                    fileName = auth.noc!.encipher(Buffer.from(fileName, "utf-8"));
-                    if (fileDirectory) {
-                        const slashObfuscated = auth.noc!.encipher(Buffer.from("/", "utf-8"));
-                        fileDirectory = auth
-                            .noc!.encipher(Buffer.from(fileDirectory, "utf-8"))
-                            .replaceAll(slashObfuscated, "/"); // Do not obfuscate slashes
-                    }
-                }
-
-                // Create instance
+                const fileDirectory = item.path ? getParent(item.path.replace(/^\//, "")) : undefined;
                 return {
-                    name: fileName,
-                    rawName: item.file.name,
+                    name: item.file.name,
                     size: item.file.size,
                     mimeType: item.file.type,
                     blob: item.file,

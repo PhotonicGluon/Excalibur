@@ -33,8 +33,10 @@ def add_middleware(app: FastAPI, logger: logging.Logger):
     if not is_debug():
         app.add_middleware(
             RateLimitMiddleware,
-            capacity=CONFIG.server.rate_limit.capacity,
-            refill_rate=CONFIG.server.rate_limit.refill_rate,
+            unauthenticated_capacity=CONFIG.server.rate_limit.unauthenticated_capacity,
+            unauthenticated_refill_rate=CONFIG.server.rate_limit.unauthenticated_refill_rate,
+            authenticated_capacity=CONFIG.server.rate_limit.authenticated_capacity,
+            authenticated_refill_rate=CONFIG.server.rate_limit.authenticated_refill_rate,
         )
 
     # Add artificial delay when specified

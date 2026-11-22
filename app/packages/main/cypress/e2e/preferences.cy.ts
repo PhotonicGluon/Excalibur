@@ -2,9 +2,9 @@ describe("Check Preferences Page Contents", () => {
     const SERVER_URL = Cypress.expose("serverURL");
 
     beforeEach(() => {
+        cy.signup(SERVER_URL, "test-user", "Password", false);
         cy.login(SERVER_URL, "test-user", "Password");
-        cy.visit("/preferences");
-        cy.url().should("include", "/preferences");
+        cy.gotoPreferences();
     });
 
     it("should have basic navigation", () => {
@@ -27,7 +27,8 @@ describe("Check Account Preferences", () => {
         oldUsername = `new-test-user-${Date.now()}`;
         oldPassword = "Password";
         cy.signup(SERVER_URL, oldUsername, oldPassword);
-        cy.visit("/preferences/account");
+        cy.gotoPreferences();
+        cy.get("#preferences-account").click();
         cy.url().should("include", "/preferences/account");
     });
 
@@ -36,17 +37,19 @@ describe("Check Account Preferences", () => {
 
         // Fill in new username
         cy.get(".mt-2 > :nth-child(1) > :nth-child(2)").type(`{selectAll}{backspace}${renamedUsername}{enter}`);
+
         cy.get("#save-changes-button").click();
-        cy.get("ion-toast").should("exist");
+        cy.get("ion-modal").should("exist");
+        cy.get("ion-modal [label='Password']").type(oldPassword);
+        cy.get("ion-modal ion-footer ion-button").click();
+        cy.get("ion-toast[color='success']", { timeout: 30000 }).should("exist");
 
         // Trying to log in with old username should fail
         cy.login(SERVER_URL, oldUsername, oldPassword, true);
-        cy.visit("/files/");
         cy.url().should("include", "/login");
 
         // Check if we can login with the new username
         cy.login(SERVER_URL, renamedUsername, oldPassword);
-        cy.visit("/files/");
         cy.url().should("include", "/files");
     });
 
@@ -54,20 +57,22 @@ describe("Check Account Preferences", () => {
         const changedPassword = `password-${Date.now()}`;
 
         // Fill in new password
-        cy.get("input").eq(1).type(`{selectAll}{backspace}${changedPassword}{enter}`);
-        cy.get("input").eq(2).type(`{selectAll}{backspace}${changedPassword}{enter}`);
+        cy.get("ion-grid [label='Password']").type(`{selectAll}{backspace}${changedPassword}{enter}`);
+        cy.get("ion-grid [label='Confirm Password']").type(`{selectAll}{backspace}${changedPassword}{enter}`);
 
         cy.get("#save-changes-button").click();
-        cy.get("ion-toast").should("exist");
+        cy.get("ion-modal").should("exist");
+        cy.get("ion-modal [label='Password']").type(oldPassword);
+        cy.get("ion-modal ion-footer ion-button").click();
+
+        cy.get("ion-toast[color='success']", { timeout: 30000 }).should("exist");
 
         // Trying to log in with old password should fail
         cy.login(SERVER_URL, oldUsername, oldPassword, true);
-        cy.visit("/files/");
         cy.url().should("include", "/login");
 
         // Check if we can login with the new password
         cy.login(SERVER_URL, oldUsername, changedPassword);
-        cy.visit("/files/");
         cy.url().should("include", "/files");
     });
 });

@@ -101,6 +101,11 @@ def start_server(
     # Create fake user if it doesn't exist
     _create_fake_user()
 
+    # Release the database file lock held by the connection opened above
+    from excalibur_server.src.db.operations.helpers import close_all_engines
+
+    close_all_engines()
+
     # Clean up logs
     if cleanup_logs:
         from excalibur_server.cli.logging import _cleanup_logs
@@ -123,7 +128,7 @@ def start_server(
         reload_dirs=[Path(__file__).parent.parent],
         reload_excludes=["test_*.py"],
         workers=1,  # We do not support more than one worker
-        ws="websockets",
+        ws="websockets-sansio",
         ws_ping_interval=30.0,
     )
 

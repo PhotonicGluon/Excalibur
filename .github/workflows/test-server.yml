@@ -35,14 +35,13 @@ jobs:
               uses: astral-sh/setup-uv@v7
               with:
                   enable-cache: true
-                  version: "0.11.26"
+                  version: "0.12.13"
                   cache-dependency-glob: "server/uv.lock"
 
             - name: Set Up Testing Environment
               working-directory: server
               run: |
                   uv run excalibur init -r
-                  uv run excalibur user add --username test-user --password Password --vault-key g7uMn17DkmWI3PBtxmiCLnQf34nXuEfpgexHUNBMOW0\\=
 
             - name: Run Tests
               working-directory: server

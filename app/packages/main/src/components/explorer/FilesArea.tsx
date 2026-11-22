@@ -6,12 +6,19 @@ import { cloudUploadOutline } from "ionicons/icons";
 
 import { useDirectory, useUploadFile } from "@lib/hooks";
 
-import DirectoryList from "@components/explorer/DirectoryList";
+import DirectoryList, { ViewLayout } from "@components/explorer/DirectoryList";
 import { useExplorerContext } from "@components/explorer/context";
 
 export type UploadFile = PickedFile & { directory?: string };
 
-const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => {
+interface ContainerProps {
+    /** The view layout to use */
+    viewLayout: ViewLayout;
+    /** A trigger to refresh the directory contents */
+    refreshTrigger: number;
+}
+
+const FilesArea: React.FC<ContainerProps> = ({ refreshTrigger, viewLayout }) => {
     // States
     const [displayedPath, setDisplayedPath] = useState(""); // Empty string because first path will be '.'
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
@@ -63,7 +70,11 @@ const FilesArea: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => 
             )}
 
             {/* Files list */}
-            <DirectoryList directory={directoryContents} listenerConnected={listenerConnected} />
+            <DirectoryList
+                directory={directoryContents}
+                viewLayout={viewLayout}
+                listenerConnected={listenerConnected}
+            />
         </div>
     );
 };

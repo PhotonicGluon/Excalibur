@@ -6,7 +6,7 @@ Revises:
 Create Date: 2025-09-05 14:24:15.613667
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlmodel

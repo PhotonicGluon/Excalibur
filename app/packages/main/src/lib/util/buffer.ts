@@ -50,3 +50,103 @@ export function padBuffer(buffer: Buffer, n: number): Buffer {
 export function xorBuffer(a: Buffer, b: Buffer): Buffer {
     return Buffer.from(a.map((value, index) => value ^ b[index]));
 }
+
+/**
+ * Length-prefixes each buffer and concatenates them together into one singular buffer.
+ *
+ * @param parts parts to concatenate
+ * @param prefixLen length of each length prefix, in bytes
+ * @returns length-prefixed concatenation of {@link parts}
+ */
+export function frame(parts: Buffer[], prefixLen: number = 4): Buffer {
+    const framed = parts.map((part) => {
+        const prefix = Buffer.alloc(prefixLen);
+        prefix.writeUIntBE(part.length, 0, prefixLen);
+        return Buffer.concat([prefix, part]);
+    });
+    return Buffer.concat(framed);
+}
+
+/**
+ * Splits a buffer that was produced by {@link frame} back into its parts.
+ *
+ * @param data the framed buffer
+ * @param prefixLen length of each length prefix, in bytes
+ * @returns the parts of the buffer
+ * @throws {Error} if the buffer is malformed
+ */
+export function unframe(data: Buffer, prefixLen: number = 4): Buffer[] {
+    const parts: Buffer[] = [];
+    let offset = 0;
+    while (offset < data.length) {
+        if (offset + prefixLen > data.length) {
+            throw new Error("Malformed name record");
+        }
+        const length = data.readUIntBE(offset, prefixLen);
+        offset += prefixLen;
+        if (offset + length > data.length) {
+            throw new Error("Malformed name record");
+        }
+        parts.push(data.subarray(offset, offset + length));
+        offset += length;
+    }
+    return parts;
+}
+
+/**
+ * Writes an 8-byte big-endian unsigned integer into a buffer.
+ *
+ * @param buffer buffer to write into
+ * @param value value to write
+ * @param offset offset at which to write
+ */
+export function writeUInt64BE(buffer: Buffer, value: number, offset: number): void {
+    buffer.write(value.toString(16).padStart(16, "0"), offset, 8, "hex");
+}
+
+/**
+ * Writes an 8-byte big-endian unsigned integer into a fresh buffer.
+ *
+ * @param value value to write
+ * @returns an 8-byte buffer
+ */
+export function uint64BE(value: number): Buffer {
+    const buffer = Buffer.alloc(8);
+    writeUInt64BE(buffer, value, 0);
+    return buffer;
+}
+
+/**
+ * Reads an 8-byte big-endian unsigned integer from a buffer.
+ *
+ * @param buffer buffer to read from
+ * @param offset offset at which to read
+ * @returns the value read
+ * @throws {Error} if the value is not exactly representable as a number
+ */
+export function readUInt64BE(buffer: Buffer, offset: number): number {
+    const value = BigInt(`0x${buffer.toString("hex", offset, offset + 8)}`);
+    if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("64-bit field is too large");
+    }
+    return Number(value);
+}
+
+/**
+ * Compares two buffers for equality in constant time.
+ *
+ * @param a first buffer
+ * @param b second buffer
+ * @returns whether the buffers are equal
+ */
+export function bufferEqual(a: Buffer, b: Buffer): boolean {
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) {
+        diff |= a[i] ^ b[i];
+    }
+    return diff === 0;
+}

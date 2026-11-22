@@ -1,1 +1,0 @@
-➕ Added `crypto-browserify` dependency

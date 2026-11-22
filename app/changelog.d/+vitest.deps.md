@@ -1,1 +1,1 @@
-⬆️ Updated `vitest` development dependency from `4.1.5` to `4.1.9` ([#81](https://github.com/PhotonicGluon/Excalibur/pull/81))
+⬆️ Updated `vitest` from `5.0.4` to `5.1.0` ([#280](https://github.com/PhotonicGluon/Excalibur/pull/280), [#318](https://github.com/PhotonicGluon/Excalibur/pull/318))

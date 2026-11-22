@@ -1,35 +1,32 @@
 [build-system]
-requires = ["uv_build>=0.11.26,<0.12.0"]
+requires = ["uv_build>=0.12.13,<0.14.0"]
 build-backend = "uv_build"
 
 [project]
 name = "excalibur-server"
-version = "0.7.0rc1"
+version = "0.9.0b1"
 dependencies = [
     "aiofiles>=25.1.0",
-    "alembic>=1.18.4",
-    "colorama>=0.4.6 ; sys_platform == 'win32'",
-    "duckdb~=1.5.3",
-    "duckdb-engine>=0.17.0",
-    "fastapi>=0.138.0",
-    "gitpython>=3.1.50",
+    "alembic>=1.20.1",
+    "duckdb~=2.0.1",
+    "duckdb-sqlalchemy>=2.0.0",
+    "fastapi>=0.162.0",
+    "gitpython>=3.1.62",
     "httptools>=0.8.0",
-    "packaging>=26.2",
-    "pycryptodome>=3.23.0",
-    "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
-    "pyjwt>=2.13.0",
-    "rapidfuzz>=3.14.5",
+    "packaging>=26.3",
+    "pycryptodome>=4.0.0",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.15.1",
     "semver>=3.0.4",
-    # Seems to be an issue with `alembic`, `duckdb`, and `sqlalchemy` versions > 2.0.44
-    "sqlalchemy<=2.0.44",
-    "sqlmodel>=0.0.37",
+    "sqlalchemy>=2.1.6",
+    "sqlmodel>=0.0.42",
     "toml>=0.10.2",
-    "tomlkit>=0.15.0",
-    "typer>=0.26.7",
-    "uvicorn>=0.49.0",
+    "tomlkit>=0.15.1",
+    "typer>=0.27.1",
+    "uvicorn>=0.53.0",
     "uvloop>=0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'",
-    "websockets>=16.0",
+    "websockets>=17.1",
 ]
 requires-python = ">=3.11"
 authors = [
@@ -47,15 +44,13 @@ Issues = "https://github.com/PhotonicGluon/Excalibur/issues"
 excalibur = "excalibur_server.cli:app"
 
 [dependency-groups]
-dev = ["ipython~=9.14.1", "ruff>=0.15.19", "watchfiles>=1.2.0"]
-test = ["httpx2>=2.4.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
+dev = ["ruff>=0.16.6", "watchfiles>=1.2.0"]
+test = ["httpx2>=2.13.0", "pytest>=9.1.1", "pytest-timeout>=2.4.0"]
 
 [tool.uv]
 default-groups = []
 exclude-newer = "5 days"
-
-[tool.uv.exclude-newer-package]
-starlette = "2026-06-17T00:00:00.000Z"
+exclude-newer-package = { "duckdb" = "2026-11-21T00:00:00Z", "duckdb-sqlalchemy" = "2026-11-20T00:00:00Z" }
 
 [tool.uv.build-backend]
 module-name = "excalibur_server"
@@ -75,8 +70,28 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = [
+    "E401", # multiple-imports-on-one-line 
+    "E402", # module-import-not-at-top-of-file
     "E501", # line-too-long
+    "E701", # multiple-statements-on-one-line-colon
+    "E702", # multiple-statements-on-one-line-semicolon
+    "E703", # useless-semicolon
+    "E711", # none-comparison
+    "E712", # true-false-comparison
+    "E713", # not-in-test
+    "E714", # not-is-test
+    "E721", # type-comparison
+    "E731", # lambda-assignment
+    "E741", # ambiguous-variable-name
+    "E742", # ambiguous-class-name
+    "E743", # ambiguous-function-name
+    "F403", # undefined-local-with-import-star
+    "F405", # undefined-local-with-import-star-usage
+    "F406", # undefined-local-with-nested-import-star-usage
     "C901", # too-complex
     "I001", # unsorted-imports
     "I002", # missing-required-import
+]
+ignore = [
+    "B008", # function-call-in-default-argument
 ]

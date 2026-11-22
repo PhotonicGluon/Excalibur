@@ -17,6 +17,7 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
+            "@api/*": ["./src/api/*"],
             "@components/*": ["./src/components/*"],
             "@lib/*": ["./src/lib/*"],
             "@native/*": ["src/native/*"],

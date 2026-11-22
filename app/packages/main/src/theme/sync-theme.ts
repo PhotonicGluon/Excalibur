@@ -1,6 +1,9 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path, { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PluginOption } from "vite";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const COLOURS_CSS = "colours.css";
 const COLOURS_GEN_CSS = "colours.gen.css";
@@ -47,13 +50,13 @@ function oklchToRGB(l: number, c: number, h: number): { r: number; g: number; b:
  */
 function generateTheme() {
     // Load files
-    const coloursCss = fs.readFileSync(path.resolve(__dirname, COLOURS_CSS), "utf-8");
-    const themeReferenceCss = fs.readFileSync(path.resolve(__dirname, THEME_REFERENCE_CSS), "utf-8");
+    const coloursCSS = fs.readFileSync(path.resolve(__dirname, COLOURS_CSS), "utf-8");
+    const themeReferenceCSS = fs.readFileSync(path.resolve(__dirname, THEME_REFERENCE_CSS), "utf-8");
 
     // Get the Tailwind color values (e.g., "oklch(62.3% 0.214 259.815)")
     const themeReferenceMap: Record<string, { l: number; c: number; h: number }> = {};
     const themeReferenceRegex = /(?<var>--.+):\s?oklch\((?<l>\d*\.?\d+)%\s+(?<c>\d*\.?\d+)\s+(?<h>\d*\.?\d+)\);?\n/gm;
-    const themeReferenceMatches = themeReferenceCss.matchAll(themeReferenceRegex);
+    const themeReferenceMatches = themeReferenceCSS.matchAll(themeReferenceRegex);
     for (const match of themeReferenceMatches) {
         themeReferenceMap[match.groups!.var] = {
             l: parseFloat(match.groups!.l) / 100, // Original element is a percentage, convert to 0-1
@@ -65,7 +68,7 @@ function generateTheme() {
     // Generate lines for the CSS file
     const colourMapRegex = /(?<ion_var>--.+):\s?var\((?<tailwind_var>--.+)\);?/m;
 
-    const origLines = coloursCss.split("\n");
+    const origLines = coloursCSS.split("\n");
     const newLines: string[] = [];
 
     for (const line of origLines) {

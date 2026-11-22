@@ -9,7 +9,7 @@ logging_app = typer.Typer(no_args_is_help=True, help="Commands relating to logs.
 @logging_app.command(name="cleanup")
 def cleanup_logs(
     log_dir: Annotated[
-        Path,
+        Path | None,
         typer.Argument(
             help="The directory containing the logs to clean up.", exists=True, file_okay=False, dir_okay=True
         ),

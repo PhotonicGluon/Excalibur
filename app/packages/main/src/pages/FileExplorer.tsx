@@ -32,25 +32,34 @@ import {
     documentOutline,
     ellipsisVertical,
     folderOutline,
+    grid,
+    list,
     listOutline,
     personOutline,
     searchOutline,
 } from "ionicons/icons";
 
-import { checkDir, checkPath, deleteItem, mkdir, renameItem } from "@lib/files/api";
+import { TOAST_DURATION } from "@lib/consts";
+import { validateName } from "@lib/files/names";
 import { useTokenManager, useUploadFile } from "@lib/hooks";
+
+import { checkDir, checkNames, deleteItem, mkdir, renameItem } from "@api/files";
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
+import SegmentedToggle from "@components/SegmentedToggle";
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
 import MoveDialog from "@components/dialog/MoveDialog";
 import SearchDialog from "@components/dialog/SearchDialog";
 import DirectoryBreadcrumbs from "@components/explorer/DirectoryBreadcrumbs";
+import { ViewLayout } from "@components/explorer/DirectoryList";
 import FilesArea from "@components/explorer/FilesArea";
 import { explorerContext } from "@components/explorer/context";
 import JobsModal from "@components/explorer/jobs/JobsModal";
 import { ProvideJobs } from "@components/explorer/jobs/context";
+import { useVaultIndex } from "@components/files/context";
+import VaultMigrationBanner from "@components/migration/VaultMigrationBanner";
 
 const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolean }> = (props) => {
     // Hooks
@@ -69,10 +78,10 @@ const FabButton: React.FC<{ onCreateFolder: () => void; isJobsDialogOpen: boolea
                 <IonIcon icon={add} />
             </IonFabButton>
             <IonFabList side="top">
-                <IonFabButton aria-label="Create Folder" onClick={() => props.onCreateFolder()}>
+                <IonFabButton id="fab-create-folder" aria-label="Create Folder" onClick={() => props.onCreateFolder()}>
                     <IonIcon icon={folderOutline} />
                 </IonFabButton>
-                <IonFabButton aria-label="Upload File" onClick={() => onUploadFile()}>
+                <IonFabButton id="fab-upload-file" aria-label="Upload File" onClick={() => onUploadFile()}>
                     <IonIcon icon={documentOutline} />
                 </IonFabButton>
             </IonFabList>
@@ -88,15 +97,18 @@ const FileExplorer: React.FC = () => {
     // Contexts
     const auth = useAuth();
     const router = useIonRouter();
+    const vaultIndex = useVaultIndex();
 
     // States
     const [presentAlert, dismissAlert] = useIonAlert();
     const [presentToast, dismissToast] = useIonToast();
 
+    const [viewLayout, setViewLayout] = useState<ViewLayout>("list"); // TODO: Make this a setting?
+
     const [showJobsModal, setShowJobsModal] = useState(false);
 
     const [showMoveDialog, setShowMoveDialog] = useState(false);
-    const [moveOrigPath, setMoveOrigPath] = useState<string>("");
+    const [moveItemID, setMoveItemID] = useState<string>("");
 
     const [showSearchDialog, setShowSearchDialog] = useState(false);
 
@@ -117,7 +129,7 @@ const FileExplorer: React.FC = () => {
             await dismissToast().catch(() => {}); // Safely handle cases where no toast is active
             presentToast({
                 message: message,
-                duration: 2000,
+                duration: TOAST_DURATION,
                 position: "bottom",
                 positionAnchor: "fab-button",
                 color: colour,
@@ -164,44 +176,39 @@ const FileExplorer: React.FC = () => {
                     text: "Create",
                     handler: async (data: { folderName: string }) => {
                         const folderName = data.folderName;
-                        if (folderName === "") {
-                            presentSnackbar("Folder name cannot be empty", "danger");
+                        const nameError = validateName(folderName);
+                        if (nameError !== null) {
+                            presentSnackbar(nameError, "danger");
                             return;
                         }
 
-                        // Check if folder exists
-                        const checkResponse = await checkPath(auth, `${requestedPath}/${folderName}`);
-                        if (!checkResponse.success) {
-                            switch (checkResponse.error) {
-                                case "Path not found":
-                                    // This is good -- the folder doesn't exist, so we can just carry on
-                                    break;
-                                case "Unauthorized":
-                                    presentSnackbar("Unauthorized", "danger");
-                                    return;
-                                case "Illegal or invalid path":
-                                    presentSnackbar("Illegal or invalid folder name", "danger");
-                                    return;
-                                case "Path too long":
-                                    presentSnackbar("Folder path too long", "danger");
-                                    return;
-                                default:
-                                    presentSnackbar("Failed to check folder path: Unknown error", "danger");
-                                    return;
-                            }
+                        // Find the folder that we are creating the new folder in
+                        const parentResponse = await vaultIndex.resolveFolderID(requestedPath);
+                        if (!parentResponse.success) {
+                            presentSnackbar(`Failed to find current folder: ${parentResponse.error}`, "danger");
+                            return;
                         }
-                        if (checkResponse.success && checkResponse.type === "directory") {
+                        const parentID = parentResponse.id!;
+
+                        // Check if folder exists
+                        const checkResponse = await checkNames(auth, parentID, [folderName]);
+                        if (!checkResponse.success) {
+                            presentSnackbar(`Failed to check folder name: ${checkResponse.error}`, "danger");
+                            return;
+                        }
+                        if (checkResponse.result![0]) {
                             presentSnackbar("Folder already exists", "danger");
                             return;
                         }
 
                         // Create the folder
-                        const mkdirResponse = await mkdir(auth, requestedPath, folderName);
+                        const mkdirResponse = await mkdir(auth, parentID, folderName);
                         if (!mkdirResponse.success) {
                             presentSnackbar(`Failed to create folder: ${mkdirResponse.error}`, "danger");
                             return;
                         }
 
+                        vaultIndex.invalidate(); // So that the new folder can be found
                         presentSnackbar("Folder created", "success");
                     },
                 },
@@ -212,15 +219,19 @@ const FileExplorer: React.FC = () => {
     /**
      * Handles the user clicking the rename button on a directory item.
      *
-     * @param path The path of the item to rename
-     * @param isDir If true, the item is a directory. If false, the item is a file
+     * @param itemID the ID of the item to rename
+     * @param path the path of the item to rename
      */
-    async function onRenameItem(path: string, isDir: boolean) {
-        const rawName = path.split("/").pop();
-        const baseName = !isDir ? rawName?.replace(/\.exef$/, "") : rawName;
-        const displayName = auth.vaultInfo!.info.obfuscatedNames
-            ? auth.noc!.decipher(baseName!).toString("utf-8")
-            : baseName;
+    async function onRenameItem(itemID: string, path: string) {
+        const displayName = path.split("/").pop();
+
+        // The item's parent is needed to tag its new name
+        const itemResponse = await vaultIndex.getItem(itemID);
+        if (!itemResponse.success || !itemResponse.item || itemResponse.item.parent_id === null) {
+            presentSnackbar("Failed to find the item to rename", "danger");
+            return;
+        }
+        const parentID = itemResponse.item.parent_id;
 
         // Ask for user input
         presentAlert({
@@ -239,24 +250,19 @@ const FileExplorer: React.FC = () => {
                     text: "Rename",
                     handler: async (data: { newDisplayName: string }) => {
                         const newDisplayName = data.newDisplayName;
-                        if (newDisplayName === "") {
-                            presentSnackbar("New name cannot be empty", "danger");
+                        const nameError = validateName(newDisplayName);
+                        if (nameError !== null) {
+                            presentSnackbar(nameError, "danger");
                             return;
                         }
 
-                        let newName = auth.vaultInfo!.info.obfuscatedNames
-                            ? (auth.noc!.encipher(Buffer.from(newDisplayName, "utf-8")) as string)
-                            : newDisplayName;
-                        if (!isDir) {
-                            newName += ".exef";
-                        }
-
-                        const renameResponse = await renameItem(auth, path, newName);
+                        const renameResponse = await renameItem(auth, itemID, parentID, newDisplayName);
                         if (!renameResponse.success) {
                             presentSnackbar(`Failed to rename item: ${renameResponse.error}`, "danger");
                             return;
                         }
 
+                        vaultIndex.invalidate(); // Paths may have changed
                         presentSnackbar("Item renamed", "success");
                     },
                 },
@@ -267,22 +273,23 @@ const FileExplorer: React.FC = () => {
     /**
      * Handles the user clicking the move button on a directory item.
      *
-     * @param path The path of the item to move
+     * @param itemID the ID of the item to move
      */
-    async function onMoveItem(path: string) {
-        setMoveOrigPath(path);
+    async function onMoveItem(itemID: string) {
+        setMoveItemID(itemID);
         setShowMoveDialog(true);
     }
 
     /**
      * Handles the user clicking the delete button on a directory item.
      *
-     * @param path The path of the item to delete
-     * @param isDir If true, the item is a directory. If false, the item is a file
+     * @param itemID the ID of the item to delete
+     * @param isDir `true` means the item is a directory, `false` means it's a file
+     * @param force skips the confirmation dialog if `true`
      */
-    async function onDeleteItem(path: string, isDir: boolean, force: boolean = false) {
+    async function onDeleteItem(itemID: string, isDir: boolean, force: boolean = false) {
         if (isDir) {
-            const dirResponse = await checkDir(auth, path);
+            const dirResponse = await checkDir(auth, itemID);
             if (!dirResponse.success) {
                 presentSnackbar(`Failed to delete item: ${dirResponse.error}`, "danger");
                 return;
@@ -298,7 +305,7 @@ const FileExplorer: React.FC = () => {
                         },
                         {
                             text: "Delete",
-                            handler: async () => await onDeleteItem(path, isDir, true),
+                            handler: async () => await onDeleteItem(itemID, isDir, true),
                         },
                     ],
                 });
@@ -306,12 +313,13 @@ const FileExplorer: React.FC = () => {
             }
         }
 
-        const deleteResponse = await deleteItem(auth, path, isDir, force);
+        const deleteResponse = await deleteItem(auth, itemID, isDir, force);
         if (!deleteResponse.success) {
             presentSnackbar(`Failed to delete item: ${deleteResponse.error}`, "danger");
             return;
         }
 
+        vaultIndex.invalidate(); // Paths may have changed
         presentSnackbar(`Deleted ${isDir ? "directory" : "file"}`, "success");
     }
 
@@ -410,6 +418,7 @@ const FileExplorer: React.FC = () => {
                             <IonRefresher
                                 slot="fixed"
                                 onIonRefresh={(event) => {
+                                    vaultIndex.invalidate();
                                     setRefreshTrigger((prev) => prev + 1);
                                     event.detail.complete();
                                 }}
@@ -421,27 +430,35 @@ const FileExplorer: React.FC = () => {
                             <MoveDialog
                                 isOpen={showMoveDialog}
                                 onDidDismiss={() => setShowMoveDialog(false)}
-                                path={moveOrigPath}
+                                itemID={moveItemID}
                             />
                             <SearchDialog isOpen={showSearchDialog} onDidDismiss={() => setShowSearchDialog(false)} />
 
-                            {/* Breadcrumbs */}
+                            {/* Vault migration prompt */}
+                            <VaultMigrationBanner />
+
+                            {/* Top bar */}
                             <div
                                 ref={topBarRef}
-                                className="ml-1 w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-1 hover:scrollbar-thumb-blue-500/50"
+                                className="ml-1 flex w-full scrollbar-thumb-blue-500/50 scrollbar-track-transparent overflow-x-scroll pt-2 hover:scrollbar-thumb-blue-500/50"
                             >
-                                <DirectoryBreadcrumbs
-                                    className="flex-nowrap"
-                                    path={requestedPath}
-                                    noc={auth.vaultInfo!.info.obfuscatedNames ? auth.noc! : undefined}
-                                />
+                                <DirectoryBreadcrumbs className="grow flex-nowrap" path={requestedPath} />
+                                <div className="hidden xl:block">
+                                    {" "}
+                                    <SegmentedToggle<ViewLayout>
+                                        className="h-8 pr-4"
+                                        values={["list", "grid"]}
+                                        displayNodes={[<IonIcon icon={list} />, <IonIcon icon={grid} />]}
+                                        onChange={(value) => setViewLayout(value)}
+                                    />
+                                </div>
                             </div>
 
                             {/* Fab button */}
                             <FabButton isJobsDialogOpen={showJobsModal} onCreateFolder={onCreateFolder} />
 
                             {/* Files */}
-                            <FilesArea refreshTrigger={refreshTrigger} />
+                            <FilesArea viewLayout={viewLayout} refreshTrigger={refreshTrigger} />
 
                             {/* Jobs modal */}
                             <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />

@@ -8,6 +8,13 @@ from excalibur_server.consts import ROOT_FOLDER
 class Storage(BaseModel):
     class Database(BaseModel):
         file: Path
+        max_encrypted_name_size: int
+
+        @field_validator("max_encrypted_name_size")
+        def validate_positive(cls, value: int) -> int:
+            if value <= 0:
+                raise ValueError("must be greater than 0")
+            return value
 
     vault_folder: Path
     max_upload_size: int

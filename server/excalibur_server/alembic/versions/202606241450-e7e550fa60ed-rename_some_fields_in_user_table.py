@@ -6,7 +6,7 @@ Revises: 4d8b5384df3c
 Create Date: 2026-06-24 14:50:28.355214
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from alembic import op
 

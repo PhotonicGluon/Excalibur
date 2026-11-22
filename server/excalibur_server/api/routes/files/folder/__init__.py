@@ -1,3 +1,4 @@
 from .create import create_directory_endpoint as create_directory_endpoint
 from .list import listdir_endpoint as listdir_endpoint
 from .listener import directory_changes_listener_endpoint as directory_changes_listener_endpoint
+from .subtree import subtree_endpoint as subtree_endpoint

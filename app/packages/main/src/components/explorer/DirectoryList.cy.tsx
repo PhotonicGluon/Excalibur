@@ -11,20 +11,24 @@ import { explorerContext } from "./context";
 
 const files: File[] = [];
 for (let i = 0; i < 10; i++) {
-    let name = `Sample File ${i}.txt.exef`;
+    let name = `Sample File ${i}.txt`;
     if (i % 2 === 1) {
         name = name.toLowerCase(); // To make sure that sorting is case insensitive
     }
 
     files.push({
+        id: i.toString(),
+        parent_id: "dir",
         name: name,
         creation_time: 1000000000 + i * 1000,
-        fullpath: `/some/path/Sample File ${i}.txt.exef`,
+        fullpath: `/some/path/Sample File ${i}.txt`,
         size: 100000 * (i + 1) + 23456,
         type: "file",
     });
 }
 const directory: Directory = {
+    id: "dir",
+    parent_id: "root",
     name: "Sample Directory",
     creation_time: 1100000000,
     fullpath: "/some/path",
@@ -41,6 +45,8 @@ describe("<DirectoryList />", () => {
         listenerConnected: boolean = true,
     ) {
         const defaultProps: Directory = {
+            id: "root",
+            parent_id: null,
             items,
             fullpath: ".",
             name: "A Directory",
@@ -68,8 +74,9 @@ describe("<DirectoryList />", () => {
                             iconStyle: "default",
                             rowAlternatingColours,
                             fileSizeUnits: "si",
+                            fileReadChunkSize: 262144,
                             cryptoKeyStrength: 128,
-                            cryptoChunkSize: 262144,
+                            cryptoChunkSizeExponent: 16,
                             change: () => {},
                             save: () => Promise.resolve(),
                             checkUpdate: false,
@@ -80,6 +87,7 @@ describe("<DirectoryList />", () => {
                             id="directory-list"
                             directory={pretendPending ? null : defaultProps}
                             listenerConnected={listenerConnected}
+                            viewLayout="list"
                         />
                     </settingsContext.Provider>
                 </explorerContext.Provider>

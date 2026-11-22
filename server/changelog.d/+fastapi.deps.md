@@ -1,1 +1,1 @@
-⬆️ Updated `fastapi` from `0.136.3` to `0.138.0` ([#63](https://github.com/PhotonicGluon/Excalibur/pull/63), [#68](https://github.com/PhotonicGluon/Excalibur/pull/68), [#72](https://github.com/PhotonicGluon/Excalibur/pull/72))
+⬆️ Updated `fastapi` dependency from `0.141.1` to `0.162.0`

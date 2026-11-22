@@ -8,8 +8,10 @@ import { Directory } from "@lib/files/structures";
 import { useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 
-import DirectoryListRaw from "./DirectoryListRaw";
+import DirectoryListRaw, { ViewLayout } from "./DirectoryListRaw";
 import { useExplorerContext } from "./context";
+
+export type { ViewLayout };
 
 interface ContainerProps {
     /** The ID of the directory list */
@@ -20,6 +22,8 @@ interface ContainerProps {
      * If `null`, will interpret as pending content.
      */
     directory: Directory | null;
+    /** The view layout to use */
+    viewLayout: ViewLayout;
     /** Whether the directory listener is connected */
     listenerConnected: boolean;
 }
@@ -99,10 +103,11 @@ const DirectoryList: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             {/* Items List */}
             <DirectoryListRaw
-                className="h-[calc(80vh-4rem)]"
+                className="max-h-[calc(80vh-4rem)]"
                 path={explorerContext.path}
                 directory={props.directory}
                 sortValues={{ sortType: sortType, sortAsc: sortAsc }}
+                viewLayout={props.viewLayout}
             />
         </div>
     );

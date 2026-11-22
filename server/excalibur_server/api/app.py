@@ -8,15 +8,15 @@ from excalibur_server.meta import SUMMARY, TITLE, VERSION
 
 from .logging import logger
 from .meta import TAGS
-from .routes import auth_router, files_router, users_router, well_known_router
+from .routes import auth_router, files_router, merkle_router, users_router, well_known_router
 
 # Check for enabled flags
 if is_debug():
     DEBUG_WARNING = """\n
   ___      _                __  __         _       ___ _  _   _   ___ _    ___ ___  
- |   \ ___| |__ _  _ __ _  |  \/  |___  __| |___  | __| \| | /_\ | _ ) |  | __|   \ 
- | |) / -_) '_ \ || / _` | | |\/| / _ \/ _` / -_) | _|| .` |/ _ \| _ \ |__| _|| |) |
- |___/\___|_.__/\_,_\__, | |_|  |_\___/\__,_\___| |___|_|\_/_/ \_\___/____|___|___/ 
+ |   \\ ___| |__ _  _ __ _  |  \\/  |___  __| |___  | __| \\| | /_\\ | _ ) |  | __|   \\ 
+ | |) / -_) '_ \\ || / _` | | |\\/| / _ \\/ _` / -_) | _|| .` |/ _ \\| _ \\ |__| _|| |) |
+ |___/\\___|_.__/\\_,_\\__, | |_|  |_\\___/\\__,_\\___| |___|_|\\_/_/ \\_\\___/____|___|___/ 
                     |___/                                                           
 """
     logger.warning(DEBUG_WARNING)
@@ -52,6 +52,7 @@ master_router = APIRouter(prefix="/api")
 master_router.include_router(auth_router, prefix="/auth")
 master_router.include_router(users_router, prefix="/users")
 master_router.include_router(files_router, prefix="/files")
+master_router.include_router(merkle_router, prefix="/merkle")
 master_router.include_router(well_known_router, prefix="/well-known")
 
 # Finally, include the master router

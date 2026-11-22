@@ -44,6 +44,21 @@ class TokenBucket:
             SubBucket(tokens=self.capacity, last_refill=time.time()),
         )
 
+    def _refill(self, bucket: SubBucket) -> SubBucket:
+        """
+        Refills the bucket.
+
+        :param bucket: the bucket to refill
+        :return: the refilled bucket
+        """
+
+        now = time.time()
+        time_since_refill = now - bucket.last_refill
+        tokens_to_add = time_since_refill * self.refill_rate
+        bucket.tokens = min(self.capacity, bucket.tokens + tokens_to_add)
+        bucket.last_refill = now
+        return bucket
+
     def consume(self, client_id: str) -> bool:
         """
         Consumes a token from the bucket.
@@ -53,17 +68,27 @@ class TokenBucket:
         """
 
         bucket = self._get_sub_bucket(client_id)
-
-        # Refill tokens
-        now = time.time()
-        time_since_refill = now - bucket.last_refill
-        tokens_to_add = time_since_refill * self.refill_rate
-        bucket.tokens = min(self.capacity, bucket.tokens + tokens_to_add)
-        bucket.last_refill = now
+        bucket = self._refill(bucket)
 
         # Consume a token if available
-        self._sub_buckets[client_id] = bucket
+        available = False
         if bucket.tokens >= 1:
+            available = True
             bucket.tokens -= 1
-            return True
-        return False
+
+        self._sub_buckets[client_id] = bucket
+        return available
+
+    def refund(self, client_id: str, count: int = 1) -> None:
+        """
+        Refunds a token to the bucket.
+
+        :param client_id: the ID of the client
+        :param count: the number of tokens to refund
+        """
+
+        bucket = self._get_sub_bucket(client_id)
+        bucket = self._refill(bucket)
+
+        bucket.tokens = min(self.capacity, bucket.tokens + count)
+        self._sub_buckets[client_id] = bucket

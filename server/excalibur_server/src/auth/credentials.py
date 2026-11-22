@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from hmac import compare_digest
-from typing import Annotated, Callable
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import Header, HTTPException, Query, Request, Security, WebSocket, WebSocketException, status
+from fastapi import Header, HTTPException, Request, Security, WebSocket, WebSocketDisconnect, WebSocketException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -17,7 +19,7 @@ from .jwt import decode_token, generate_token
 API_TOKEN_HEADER = HTTPBearer(scheme_name="Auth-Identity", auto_error=False)
 
 
-def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -> str:
+def generate_auth_token(user_id: UUID, comm_uuid: str, expiry_timestamp: float) -> str:
     """
     Generates a JWT token for the given E2EE key and expiry timestamp.
 
@@ -28,10 +30,10 @@ def generate_auth_token(user_id: str, comm_uuid: str, expiry_timestamp: float) -
     """
 
     return generate_token(
-        sub=user_id,
+        sub=str(user_id),
         data={"uuid": comm_uuid},
         key=CONFIG.security.jwt_key,
-        expiry=int(round(expiry_timestamp - datetime.now(tz=timezone.utc).timestamp())),
+        expiry=round(expiry_timestamp - datetime.now(tz=UTC).timestamp()),
     )
 
 
@@ -48,10 +50,7 @@ def check_auth_token(token: str) -> bool:
         return False
 
     comm_uuid = decoded.pop("uuid")
-    if comm_uuid not in MASTER_KEYS_CACHE:
-        return False
-
-    return True
+    return comm_uuid in MASTER_KEYS_CACHE
 
 
 class Credentials(BaseModel):
@@ -59,7 +58,7 @@ class Credentials(BaseModel):
     The credentials of a user.
     """
 
-    user_id: str
+    user_id: UUID
     comm_uuid: str
     encrypted: bool = False
 
@@ -87,7 +86,8 @@ async def _verify_and_extract_credentials(
     decoded = decode_token(credentials.credentials, CONFIG.security.jwt_key)
     if decoded is None:
         raise raise_exception("Missing, invalid, or expired bearer token")
-    user_id = decoded["sub"]
+
+    user_id = UUID(decoded["sub"])
     comm_uuid = decoded["uuid"]
 
     if comm_uuid not in MASTER_KEYS_CACHE:
@@ -101,11 +101,14 @@ async def _verify_and_extract_credentials(
     if not hmac_validation:
         raise raise_exception("Missing PoP")
 
-    timestamp, nonce, hmac = parse_pop_header(hmac_validation)
+    try:
+        timestamp, nonce, hmac = parse_pop_header(hmac_validation)
+    except Exception as e:
+        raise raise_exception("Invalid PoP") from e
 
     # Check if timestamp is within acceptable range
     # (We use 50% of the timestamp validity to make the full window the `timestamp_validity` value)
-    if abs(datetime.now(tz=timezone.utc).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
+    if abs(datetime.now(tz=UTC).timestamp() - timestamp) >= 0.5 * CONFIG.security.pop.timestamp_validity:
         raise raise_exception("Invalid timestamp")
 
     # Check if nonce is fresh
@@ -175,26 +178,15 @@ async def get_credentials(
         hmac_validation=hmac_validation,
     )
     credentials.encrypted = encrypted
+    request.state.user_id = credentials.user_id  # To be used during rate limiting
     return credentials
 
 
-async def get_credentials_ws(
-    websocket: WebSocket,
-    auth_token: Annotated[str, Query(description="Authorization token")],
-    hmac_validation: Annotated[
-        str,
-        Query(
-            pattern=POP_HEADER_PATTERN,
-            description="HMAC for authentication",
-        ),
-    ] = "",
-) -> Credentials:
+async def get_credentials_ws(websocket: WebSocket) -> Credentials:
     """
     WebSocket-specific method that gets the authorization credentials.
 
     :param websocket: the WebSocket
-    :param auth_token: authorization credentials
-    :param hmac_validation: the SRP HMAC
     :raises CREDENTIALS_EXCEPTION: if the token is missing or invalid
     :return: the credentials
     """
@@ -208,8 +200,21 @@ async def get_credentials_ws(
             reason=reason,
         )
 
+    # Retrieve authentication information
+    await websocket.accept()
     try:
-        return await _verify_and_extract_credentials(
+        auth_info = await websocket.receive_text()
+    except WebSocketDisconnect:
+        raise_ws_exception("Disconnected before authentication")
+
+    try:
+        auth_token, hmac_validation = auth_info.split(":")
+    except ValueError:
+        raise_ws_exception("Invalid authentication format")
+
+    # Verify credentials
+    try:
+        credentials = await _verify_and_extract_credentials(
             get_path_and_method=get_path_and_method,
             raise_exception=raise_ws_exception,
             credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials=auth_token.removeprefix("Bearer ")),
@@ -220,3 +225,6 @@ async def get_credentials_ws(
         raise WebSocketException(
             code=status.WS_1008_POLICY_VIOLATION, reason="Missing, invalid, or expired bearer token"
         )
+
+    await websocket.send_text("Authenticated")
+    return credentials

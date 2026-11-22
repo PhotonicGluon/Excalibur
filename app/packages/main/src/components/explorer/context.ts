@@ -10,17 +10,17 @@ export interface ExplorerContext {
     /** Current path */
     path: string;
     /** Function to call when renaming is requested */
-    onRename: (path: string, isDir: boolean) => Promise<void>;
+    onRename: (itemID: string, path: string) => Promise<void>;
     /** Function to call when moving is requested */
-    onMove: (path: string) => Promise<void>;
+    onMove: (itemID: string) => Promise<void>;
     /** Function to call when deletion is requested */
-    onDelete: (path: string, isDir: boolean) => Promise<void>;
+    onDelete: (itemID: string, isDir: boolean) => Promise<void>;
     /** Present an alert */
-    presentAlert: (options: AlertOptions & HookOverlayOptions) => void;
+    presentAlert: (options: AlertOptions & HookOverlayOptions) => Promise<void>;
     /** Dismiss a presented alert */
-    dismissAlert: () => void;
+    dismissAlert: () => Promise<void>;
     /** Present a snackbar */
-    presentSnackbar: (message: string, colour?: Color) => void;
+    presentSnackbar: (message: string, colour?: Color) => Promise<void>;
 }
 
 export const explorerContext = createContext<ExplorerContext>(null!);

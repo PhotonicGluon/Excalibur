@@ -1,1 +1,0 @@
-🔒️ Addressed a security issue where the ExEF footer could have been left out when sending the request body and yet still accepted by the server, resulting in possibly tampered bodies being accepted by the server

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { getNewToken } from "@lib/auth/api";
 import { decodeJWT } from "@lib/auth/token";
+
+import { getNewToken } from "@api/auth";
 
 import { useAuth } from "@components/auth/context";
 
@@ -23,7 +24,7 @@ export function useTokenManager() {
 
         // Get current token's expiry
         const { exp: expTimestamp } = decodeJWT<{ exp: number }>(auth.getToken()!);
-        const tokenExpiry = new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.serverInfo!.deltaTime;
+        const tokenExpiry = new Date(expTimestamp * 1000).getTime() - new Date().getTime() - auth.authInfo!.timeOffset;
 
         // Compute refresh interval
         const refreshInterval = Math.min(

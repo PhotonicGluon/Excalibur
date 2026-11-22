@@ -72,4 +72,23 @@ describe("<JobsList />", () => {
         cy.get(".circular-progress-bar").should("have.attr", "aria-valuenow", "60");
         cy.get("div.flex-col").children().should("have.length", 1);
     });
+
+    it("renders jobs in the correct order", () => {
+        const jobs = new Map<string, Job>([
+            ["job_fail1", { name: "fail1", direction: "upload", description: "Failed", progress: false }],
+            ["job_succ1", { name: "succ1", direction: "upload", description: "Complete", progress: true }],
+            ["job_prog1", { name: "prog1", direction: "upload", description: "Thinking", progress: 0.25 }],
+            ["job_prog2", { name: "prog2", direction: "upload", description: "Processing", progress: 0.8 }],
+            ["job_fail2", { name: "fail2", direction: "upload", description: "Failed", progress: false }],
+            ["job_succ2", { name: "succ2", direction: "upload", description: "Complete", progress: true }],
+            ["job_pend", { name: "pend", direction: "upload", description: "Loading", progress: null }],
+        ]);
+        const correctOrder = ["prog1", "prog2", "pend", "fail1", "fail2", "succ1", "succ2"];
+        mountComponent({ jobs });
+
+        cy.get("div.flex-col").children().should("have.length", 7);
+        for (let i = 0; i < 7; i++) {
+            cy.get("div.flex-col").children().eq(i).contains(correctOrder[i]).should("be.visible");
+        }
+    });
 });

@@ -76,13 +76,15 @@ def revision(
             "Required when the given head is not itself a head.",
         ),
     ] = False,
-    branch_label: Annotated[str, typer.Option(help="Specify a branch label to apply to the new revision.")] = None,
+    branch_label: Annotated[
+        str | None, typer.Option(help="Specify a branch label to apply to the new revision.")
+    ] = None,
     version_path: Annotated[
-        str,
+        str | None,
         typer.Option(help="Specify a specific directory from which to locate Alembic version files."),
     ] = None,
-    revision_id: Annotated[str, typer.Option(help="Specify a revision ID to apply to the new revision.")] = None,
-    depends_on: Annotated[str, typer.Option(help="List of 'depends on' identifiers.")] = None,
+    revision_id: Annotated[str | None, typer.Option(help="Specify a revision ID to apply to the new revision.")] = None,
+    depends_on: Annotated[str | None, typer.Option(help="List of 'depends on' identifiers.")] = None,
 ):
     """
     Creates a new revision file.
@@ -134,6 +136,7 @@ def migrate_files_v7():
         return
 
     # Code proper
+    from os import getcwd
     from os.path import splitext
     from pathlib import Path
     from tempfile import TemporaryDirectory
@@ -143,14 +146,17 @@ def migrate_files_v7():
 
     vault_folder = CONFIG.storage.vault_folder
 
-    with TemporaryDirectory() as temp_dir:
+    with TemporaryDirectory(dir=getcwd()) as temp_dir:
         # Move existing users to a temporary, safe directory
-        typer.secho("Moving existing users to a temporary directory...", fg=typer.colors.YELLOW)
+        typer.secho("Moving existing users to a temporary directory...", nl=False, fg=typer.colors.YELLOW)
         temp_path = Path(temp_dir)
         for user_folder in vault_folder.iterdir():
             if not user_folder.is_dir():
                 continue
             user_folder.rename(temp_path / user_folder.name)
+
+        typer.secho("done.", nl=False, fg=typer.colors.GREEN)
+        typer.secho(f" (Directory is '{temp_path}')", fg=typer.colors.CYAN)
 
         # Move files
         typer.secho("Migrating files...", fg=typer.colors.YELLOW)

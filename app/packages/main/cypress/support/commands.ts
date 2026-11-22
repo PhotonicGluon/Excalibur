@@ -30,50 +30,65 @@ Cypress.Commands.add("onboard", (serverURL: string) => {
     );
 });
 
-Cypress.Commands.add("login", (serverURL: string, username: string, password: string, expectToFail?: boolean) => {
-    cy.session(
-        ["login", serverURL, username, password],
-        () => {
-            cy.onboard(serverURL);
-            cy.visit("/login");
+Cypress.Commands.add(
+    "login",
+    (serverURL: string, username: string, password: string, expectToFail?: boolean, showMigrationBanner?: boolean) => {
+        cy.onboard(serverURL);
+        cy.visit("/login");
 
-            // Login using form
-            cy.get("[label='Username']").type("{selectAll}" + username);
-            cy.get("[label='Password']").type("{selectAll}" + password);
-            cy.get("#login-button").click();
+        // Login using form
+        cy.get("[label='Username']").type("{selectAll}" + username);
+        cy.get("[label='Password']").type("{selectAll}" + password);
+        cy.get("#login-button").click();
 
-            if (expectToFail) {
-                cy.url().should("not.include", "/files");
+        if (expectToFail) {
+            cy.get(".alert-title", { timeout: 20000 }).should("contain.text", "Handshake Failed");
+            cy.get(".alert-button").click();
+            cy.url().should("not.include", "/files");
+            return;
+        }
+
+        cy.url().should("include", "/files");
+        cy.get("ion-skeleton-text").should("not.exist"); // Wait for things to load
+
+        cy.window().should((win) => {
+            expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
+
+            // Secrets must never be persisted
+            expect(win.localStorage.getItem("authInfo"), "authInfo").to.be.null;
+            expect(win.localStorage.getItem("vaultInfo"), "vaultInfo").to.be.null;
+        });
+
+        // Dismiss merkle migration banner
+        if (!showMigrationBanner) {
+            cy.get("body").then(($body) => {
+                if ($body.find("#vault-migration-banner").length) {
+                    cy.get("#vault-migration-banner ion-button").contains("Later").click({ force: true });
+                    cy.get("#vault-migration-banner").should("not.exist");
+                }
+            });
+        }
+    },
+);
+
+Cypress.Commands.add(
+    "signup",
+    (serverURL: string, username: string, password: string, failIfExists: boolean = true) => {
+        // Check if user already exists
+        cy.request({
+            url: `${serverURL}/api/users/check/${username}`,
+            method: "HEAD",
+            failOnStatusCode: false,
+        }).then((response) => {
+            expect(response).to.have.property("status");
+            if (failIfExists) {
+                expect(response.status).to.equal(404);
+            }
+            if (response.status === 200) {
                 return;
             }
 
-            cy.url().should("include", "/files");
-            cy.window().should((win) => {
-                expect(win.localStorage.getItem("serverInfo"), "serverInfo").to.not.be.null;
-                expect(win.localStorage.getItem("authInfo"), "authInfo").to.not.be.null;
-            });
-        },
-        {
-            validate: () => {
-                if (expectToFail) {
-                    return;
-                }
-                cy.window().then((win) => {
-                    const authInfo = win.localStorage.getItem("authInfo");
-                    if (!authInfo) {
-                        throw new Error("Session invalid: authInfo missing");
-                    }
-                });
-            },
-            cacheAcrossSpecs: true,
-        },
-    );
-});
-
-Cypress.Commands.add("signup", (serverURL: string, username: string, password: string) => {
-    cy.session(
-        ["signup", serverURL, username, password],
-        () => {
+            // Sign up
             let ack: string[];
 
             cy.onboard(serverURL);
@@ -112,18 +127,17 @@ Cypress.Commands.add("signup", (serverURL: string, username: string, password: s
 
             // We should have been redirected to the files page (i.e., logged in successfully)
             cy.url().should("include", "/files/");
-        },
-        {
-            validate: () => {
-                cy.request({
-                    url: `${serverURL}/api/users/check/${username}`,
-                    method: "HEAD",
-                }).then((response) => {
-                    expect(response.status).to.eq(200);
-                });
-            },
-        },
-    );
+
+            // Wait for the "User created" toast to clear so later toast assertions cannot match it
+            cy.get("ion-toast", { timeout: 10000 }).should("not.exist");
+        });
+    },
+);
+
+Cypress.Commands.add("gotoPreferences", () => {
+    cy.get("#ellipsis-button").click();
+    cy.get("ion-list ion-item").contains("Preferences").click();
+    cy.url().should("include", "/preferences");
 });
 
 Cypress.Commands.add("pullRefresh", () => {
@@ -134,7 +148,7 @@ Cypress.Commands.add("pullRefresh", () => {
             cancelable: true,
             detail: {
                 complete: () => {
-                    $refresher[0].complete();
+                    ($refresher[0] as HTMLElement & { complete: () => void }).complete();
                 },
             },
         });
@@ -146,8 +160,15 @@ declare global {
     namespace Cypress {
         interface Chainable {
             onboard(serverURL: string): Chainable<void>;
-            login(serverURL: string, username: string, password: string, expectToFail?: boolean): Chainable<void>;
-            signup(serverURL: string, username: string, password: string): Chainable<void>;
+            login(
+                serverURL: string,
+                username: string,
+                password: string,
+                expectToFail?: boolean,
+                showMigrationBanner?: boolean,
+            ): Chainable<void>;
+            signup(serverURL: string, username: string, password: string, failIfExists?: boolean): Chainable<void>;
+            gotoPreferences(): Chainable<void>;
             pullRefresh(): Chainable<void>;
         }
     }

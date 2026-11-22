@@ -1,5 +1,6 @@
 cd app
-pnpm dlx lint-staged
+pnpm exec lint-staged
+pnpm exec prettier --check packages/main packages/electron
 
 cd ../server
 uv run --dev ruff check --fix

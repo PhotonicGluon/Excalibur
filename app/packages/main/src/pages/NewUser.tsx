@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
     IonButton,
     IonButtons,
-    IonCheckbox,
     IonContent,
     IonHeader,
     IonIcon,
@@ -20,10 +19,14 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { e2ee } from "@lib/auth/e2ee";
+import { TOAST_DURATION } from "@lib/consts";
 import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
-import { editVaultInfo, registerUser } from "@lib/users/api";
+import { NameKeys } from "@lib/files/names/keys";
+import { MerkleKeys } from "@lib/merkle/keys";
 import { UserVaultInfo } from "@lib/users/structures";
+
+import { e2ee } from "@api/auth";
+import { editVaultInfo, registerUser } from "@api/users";
 
 import { AuthInfo, useAuth } from "@components/auth/context";
 import VaultKeyDialog from "@components/dialog/VaultKeyDialog";
@@ -36,7 +39,6 @@ const NewUser: React.FC = () => {
     // States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [obfuscatedNames, setObfuscatedNames] = useState(true);
     const [ackState, setACKState] = useState<boolean | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +81,7 @@ const NewUser: React.FC = () => {
             });
             return;
         }
-        console.debug(`Received values: ${JSON.stringify({ username, password, obfuscatedNames })}`);
+        console.debug(`Received values: ${JSON.stringify({ username, password })}`);
         setIsLoading(true);
 
         // Set up account unlock key (AUK) and vault key
@@ -138,12 +140,12 @@ const NewUser: React.FC = () => {
         }
 
         // Set authentication info
-        const authInfo: AuthInfo = { username, password, ...e2eeData };
+        const authInfo: AuthInfo = { username, ...e2eeData };
         auth.setAuthInfo(authInfo);
         console.log(`Token for authentication: ${authInfo.token}`);
 
         // Update user additional info
-        const additionalInfo: UserVaultInfo = { obfuscatedNames };
+        const additionalInfo: UserVaultInfo = { obfuscatedNames: false }; // Names are encrypted instead
 
         const setAdditionalInfoResponse = await editVaultInfo(
             auth.serverInfo!.apiURL!,
@@ -165,14 +167,22 @@ const NewUser: React.FC = () => {
         console.debug(`Set user additional info: ${JSON.stringify(additionalInfo)}`);
 
         // Set vault info for auth
-        auth.setVaultInfo({ keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM, auk: auk, key: vaultKey, info: additionalInfo });
+        auth.setVaultInfo({
+            keygenAlgorithm: DEFAULT_KEYGEN_ALGORITHM,
+            aukSalt,
+            encryptedKey: encryptedVaultKey,
+            key: vaultKey,
+            nameKeys: new NameKeys(vaultKey, e2eeData.userID),
+            merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
+            info: additionalInfo,
+        });
 
         // Show vault key
         setIsLoading(false);
         setShowVaultKeyDialog(true);
         presentToast({
             message: "User created. Please save the vault key in a secure location.",
-            duration: 5000,
+            duration: TOAST_DURATION,
             color: "success",
         });
     }
@@ -201,8 +211,7 @@ const NewUser: React.FC = () => {
                     inputDisabled={true}
                     onDidDismiss={async () => {
                         setShowVaultKeyDialog(false);
-                        router.push("/files/", "forward", "replace");
-                        window.location.reload(); // Needed to avoid sidebar from showing the "Change Server" option
+                        router.push("/files/", "forward", "push");
                     }}
                 />
 
@@ -225,22 +234,6 @@ const NewUser: React.FC = () => {
                                 <PasswordInput confirmation value={password} onPasswordChange={setPassword} />
                             </div>
                             <hr />
-
-                            {/* Server Preferences */}
-                            <IonCheckbox
-                                labelPlacement="end"
-                                checked={obfuscatedNames}
-                                onIonChange={(e) => setObfuscatedNames(e.detail.checked)}
-                            >
-                                <div className="w-full *:block *:leading-none">
-                                    <IonLabel className="text-base">Use Obfuscated Names</IonLabel>
-                                    <IonLabel color="medium" className="text-xs text-wrap">
-                                        Names will appear to be obfuscated from the perspective of the server, further
-                                        improving privacy.
-                                    </IonLabel>
-                                </div>
-                            </IonCheckbox>
-                            <hr className="mt-2" />
 
                             {/* Account creation key & signup button */}
                             <div id="ack-input">

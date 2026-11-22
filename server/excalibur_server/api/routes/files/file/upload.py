@@ -1,17 +1,16 @@
-import os
 import tempfile
-from pathlib import Path as PathlibPath
-from typing import Annotated, Generator
+from collections.abc import Generator
+from typing import Annotated
 
 import aiofiles
 from fastapi import BackgroundTasks, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
-from excalibur_server.api.path_handling import process_path_param
+from excalibur_server.api.path_handling import get_user_item, parse_item_details, process_path_param
 from excalibur_server.api.routes.files import add_folder_change, encrypted_router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import add_item, get_item_by_path
+from excalibur_server.src.db.operations import add_item, get_item, get_item_by_name_tag, mark_dirty
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.utils import rmitem
 from excalibur_server.src.users import get_user_from_id
@@ -25,7 +24,7 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
     :yield: the spooled temporary file
     """
 
-    spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)
+    spooled_file = tempfile.SpooledTemporaryFile(max_size=CONFIG.storage.max_spool_size)  # noqa: SIM115
     try:
         async for chunk in request.stream():
             spooled_file.write(chunk)
@@ -36,14 +35,19 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
 
 
 @encrypted_router.post(
-    "/upload/{path:path}",
+    "/upload/{parent_id}/{item_details}",
     name="Upload File",
     responses={
-        status.HTTP_201_CREATED: {"description": "File uploaded", "content": None},
-        status.HTTP_404_NOT_FOUND: {"description": "Path not found or is not a directory"},
-        status.HTTP_409_CONFLICT: {"description": "File already exists (and `force` parameter is not set)"},
+        status.HTTP_201_CREATED: {
+            "description": "File uploaded",
+            "content": {"text/plain": {"example": "01234567-89ab-dcef-0123-456789abcdef"}},
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Malformed item details"},
+        status.HTTP_404_NOT_FOUND: {"description": "Parent not found or is not a directory"},
+        status.HTTP_409_CONFLICT: {
+            "description": "File ID already exists, or file name already exists (and `force` parameter is not set)"
+        },
         status.HTTP_413_CONTENT_TOO_LARGE: {"description": "File too large"},  # Returned in LimitUploadSizeMiddleware
-        status.HTTP_417_EXPECTATION_FAILED: {"description": "Uploaded file needs to end with `.exef`"},
     },
     status_code=status.HTTP_201_CREATED,
     response_class=PlainTextResponse,
@@ -62,48 +66,66 @@ async def _get_spooled_file(request: Request) -> Generator[tempfile.SpooledTempo
 async def upload_file_endpoint(
     background_tasks: BackgroundTasks,
     credentials: Annotated[Credentials, Depends(get_credentials)],
-    path: Annotated[str, Path(description="The path where the file will be placed (must end with `.exef`)")],
+    parent_id: Annotated[
+        str, Path(description="The ID of the folder to place the file in (use `.` to specify root directory)")
+    ],
+    item_details: Annotated[
+        str,
+        Path(
+            description=(
+                "The ID and encrypted name of the new file, as `id:name_enc:name_tag`. The ID is the canonical "
+                "UUID string, and the other two parts are URL-safe Base64"
+            )
+        ),
+    ],
     force: Annotated[bool, Query(description="Force upload (overwrite existing files)")] = False,
     file: tempfile.SpooledTemporaryFile = Depends(_get_spooled_file),
-    processed_path: str = Depends(process_path_param("path")),
+    processed_parent_id: str = Depends(process_path_param("parent_id")),
+    processed_item_details: str = Depends(process_path_param("item_details")),
 ):
     """
-    Uploads a file to a directory.
+    Uploads a file to a directory, returning the ID of the new file if successful.
+
+    The ID is chosen by the client, since the encrypted name needs to contain it. It is rejected if
+    it already exists.
     """
 
-    path = PathlibPath(processed_path).relative_to(".")
+    parent_id = processed_parent_id
+    item_details = processed_item_details
+    new_item = parse_item_details(item_details)
+
     user_id = credentials.user_id
-
-    # Split path into directory and file name
-    dir_path, name = os.path.split(path)
-
-    # Check file extension
-    if not name.endswith(".exef"):
-        raise HTTPException(
-            status_code=status.HTTP_417_EXPECTATION_FAILED, detail="Uploaded file needs to end with `.exef`"
-        )
 
     # Get parent ID
     root_id = get_user_from_id(user_id).fsitem_id
-    parent = get_item_by_path(root_id, dir_path)
+    parent = get_user_item(parent_id, root_id)
     if not parent or not parent.is_folder:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Path not found or is not a directory")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent not found or is not a directory")
+
+    # Check that the ID is free
+    if get_item(new_item.id) is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="File ID already exists")
 
     # Check if file already exists
-    existing_file = get_item_by_path(root_id, str(path))
+    existing_file = get_item_by_name_tag(parent.id, new_item.name_tag)
     if existing_file:
         if not force:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="File already exists. Use `force` parameter to overwrite."
             )
 
+        # Mark the tree dirty before deleting the existing file (so that if the delete fails, the tree is still marked
+        # dirty)
+        mark_dirty(existing_file.id)
         rmitem(existing_file)
 
     # Prepare a new `FSItem` instance
     new_file = FSItem(
+        id=new_item.id,
         parent_id=parent.id,
         root_id=parent.root_id,
-        name=name,
+        name_enc=new_item.name_enc,
+        name_tag=new_item.name_tag,
         is_folder=False,
         size=0,  # Will be updated later
     )
@@ -119,6 +141,10 @@ async def upload_file_endpoint(
             size += await out_file.write(content)
 
     # Create the file in the database
+    new_file_id = new_file.id
     new_file.size = size
     add_item(new_file)
-    background_tasks.add_task(add_folder_change, credentials, dir_path)
+    mark_dirty(new_file_id)
+    background_tasks.add_task(add_folder_change, credentials, parent.id)
+
+    return str(new_file_id)

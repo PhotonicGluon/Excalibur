@@ -18,10 +18,11 @@ import {
     useIonRouter,
 } from "@ionic/react";
 
-import { e2ee } from "@lib/auth/e2ee";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
 import { retrieveVaultInfo } from "@lib/users/vault";
+
+import { e2ee } from "@api/auth";
 
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";
@@ -94,7 +95,6 @@ const Login: React.FC = () => {
         // Set authentication info
         const authInfo: AuthInfo = {
             username,
-            password,
             ...e2eeData,
         };
         auth.setAuthInfo(authInfo);
@@ -104,8 +104,7 @@ const Login: React.FC = () => {
         try {
             const vaultInfo = await retrieveVaultInfo(
                 auth.serverInfo!.apiURL!,
-                e2eeData.token,
-                e2eeData.key,
+                e2eeData,
                 password,
                 { username },
                 (error) => {
@@ -183,17 +182,19 @@ const Login: React.FC = () => {
     // Render
     return (
         <>
-            {/* Hamburger menu */}
-            <SidebarMenu
-                mainContentID="main-content"
-                menuController={menuController}
-                preventExit={auth.serverInfo?.isFixed}
-                exitButtonText="Change Server"
-                onExit={() => {
-                    auth.logout(true); // Also remove saved API URL
-                    router.push("/server-choice", "forward", "replace");
-                }}
-            />
+            {/* Hamburger menu (shown only when logged out so that it doesn't shadow the file explorer's menu) */}
+            {!auth.authInfo && (
+                <SidebarMenu
+                    mainContentID="main-content"
+                    menuController={menuController}
+                    preventExit={auth.serverInfo?.isFixed}
+                    exitButtonText="Change Server"
+                    onExit={() => {
+                        auth.logout(true); // Also remove saved API URL
+                        router.push("/server-choice", "forward", "replace");
+                    }}
+                />
+            )}
 
             <IonPage id="main-content">
                 {/* Header content */}

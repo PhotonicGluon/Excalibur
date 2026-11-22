@@ -3,6 +3,7 @@ from base64 import b64decode, b64encode
 from typing import Literal
 
 from fastapi import WebSocket, WebSocketDisconnect, status
+from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, model_serializer
 
 from excalibur_server.api.logging import logger
@@ -53,10 +54,11 @@ class WebSocketManager:
 
     async def accept(self):
         """
-        Accept the WebSocket connection.
+        Accept the WebSocket connection if it is not already connected.
         """
 
-        await self._ws.accept()
+        if self._ws.client_state != WebSocketState.CONNECTED:
+            await self._ws.accept()
 
     async def close(self):
         """

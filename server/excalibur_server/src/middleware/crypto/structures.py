@@ -40,9 +40,7 @@ class RoutingTree(BaseModel):
         """
 
         path = path.removeprefix("/").removesuffix("/")
-        if path == self.segment:
-            return self.encrypted_routes
-        elif self.has_path_param and path.startswith(self.segment):
+        if path == self.segment or self.has_path_param and path.startswith(self.segment):
             return self.encrypted_routes
 
         next_path = path.removeprefix(self.segment + "/")

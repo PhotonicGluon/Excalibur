@@ -1,14 +1,13 @@
-import json
 from base64 import b64decode, b64encode
 
 import pytest
-from Crypto.Cipher import AES
 from fastapi.testclient import TestClient
 
 from excalibur_server.api.app import app
 from excalibur_server.src.auth.enums import AuthProtocol
 from excalibur_server.src.auth.opaque import OPAQUEServer
 from excalibur_server.src.auth.opaque.test_operation import TestOPAQUERistretto255 as OPAQUETestVectors
+from excalibur_server.src.crypto.exef import ExEF
 from excalibur_server.src.db.tables import User
 
 client = TestClient(app)
@@ -89,13 +88,11 @@ def test_login(test_idx: int, monkeypatch: pytest.MonkeyPatch):
         # Send KE3 message
         ws.send_json({"data": b64encode(OPAQUETestVectors.KE3[test_idx]).decode("utf-8"), "binary": True})
 
-        # Check received auth token
+        # Check received auth response
         expected_master_key = mock_server.kdf.expand(OPAQUETestVectors.SESSION_KEYS[test_idx], b"Master Key", 32)
-        auth_token_data = json.loads(ws.receive_json()["data"])
-        cipher = AES.new(
-            expected_master_key,
-            AES.MODE_GCM,
-            nonce=b64decode(auth_token_data["nonce"]),
-        )
-        cipher.decrypt(b64decode(auth_token_data["token"]))
-        cipher.verify(b64decode(auth_token_data["tag"]))
+        response: dict = ws.receive_json()
+        assert response.get("binary"), "Auth response message should be binary"
+        assert response.get("data"), "Auth response message should have data"
+        encrypted_response_data = b64decode(response["data"])
+        auth_response = ExEF(expected_master_key).decrypt(encrypted_response_data).decode("utf-8")
+        assert len(auth_response.split(" ")) == 5

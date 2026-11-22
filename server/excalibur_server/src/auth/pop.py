@@ -17,7 +17,7 @@ def generate_pop(master_key: bytes, method: str, path: str, timestamp: int, nonc
     :return: the PoP
     """
 
-    hmac_msg = f"{method} {path} {timestamp} ".encode("UTF-8") + nonce
+    hmac_msg = f"{method} {path} {timestamp} ".encode() + nonce
     return HMAC(master_key, hmac_msg, "sha256").digest()
 
 

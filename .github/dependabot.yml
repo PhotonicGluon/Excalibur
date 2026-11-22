@@ -12,14 +12,32 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 5
-
-  - package-ecosystem: "npm"
-    directory: "/app"
-    target-branch: "stable"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 5
+    open-pull-requests-limit: 15
+    groups:
+      vite:
+        patterns:
+          - "@vitejs/plugin-react"
+          - "vite"
+          - "vitest"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+      capacitor:
+        patterns:
+          - "@capacitor/*"
+          - "@capawesome/*"
+      electron:
+        patterns:
+          - "electron"
+          - "electron-builder"
+          - "electron-builder-squirrel-windows"
+          - "dmg-builder"
+          - "electron-updater"
+      prettier:
+        patterns:
+          - "prettier"
+          - "@trivago/prettier-plugin-sort-imports"
 
   - package-ecosystem: "uv"
     directory: "/server"
@@ -28,3 +46,4 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 5
+    open-pull-requests-limit: 10

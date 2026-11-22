@@ -6,7 +6,7 @@ Revises: e7e550fa60ed
 Create Date: 2026-06-24 21:36:44.020342
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlmodel

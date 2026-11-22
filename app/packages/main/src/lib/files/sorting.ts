@@ -26,12 +26,12 @@ export type SortValues = {
 type ComparisonResult = 0 | -1 | 1;
 
 // Sort functions
-function sortByName(a: FileLike, b: FileLike): ComparisonResult {
+export function sortByName(a: FileLike, b: FileLike): ComparisonResult {
     // Use natural sort for names
     return naturalCompare(a.name.toLowerCase(), b.name.toLowerCase());
 }
 
-function sortBySize(a: FileLike, b: FileLike): ComparisonResult {
+export function sortBySize(a: FileLike, b: FileLike): ComparisonResult {
     // Here, either both are files or both are directories
     if (a.type === "directory" && b.type === "directory") {
         // For the case of directories, we use name sorting
@@ -42,7 +42,7 @@ function sortBySize(a: FileLike, b: FileLike): ComparisonResult {
     return sgn((a as File).size - (b as File).size);
 }
 
-function sortByType(a: FileLike, b: FileLike): ComparisonResult {
+export function sortByType(a: FileLike, b: FileLike): ComparisonResult {
     const aType = getMIMEType(a.name) || "";
     const bType = getMIMEType(b.name) || "";
 
@@ -50,7 +50,7 @@ function sortByType(a: FileLike, b: FileLike): ComparisonResult {
     return naturalCompare(aType, bType);
 }
 
-function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
+export function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
     return sgn(a.creation_time - b.creation_time);
 }
 
@@ -65,10 +65,10 @@ function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
  * @param sortType the type of sorting to perform
  * @param sortAsc whether to sort in ascending order
  * @throws {Error} if the sort type is unknown
- * @returns a sorted array of `FileLike` items. Will be an empty array if `items` is `null` or
+ * @returns a sorted array of {@link FileLike} items. Will be an empty array if `items` is `null` or
  *      empty.
  */
-export function sortItems(directory: Directory, sortType: SortType, sortAsc: boolean = true) {
+export function sortItems(directory: Directory, sortType: SortType, sortAsc: boolean = true): FileLike[] {
     if (!directory || !directory.items || directory.items.length === 0) {
         return [];
     }

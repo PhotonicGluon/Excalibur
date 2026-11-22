@@ -28,7 +28,7 @@ def add_user(user: User):
     """
 
     # Create new root folder for the user
-    root_item = FSItem(name=str(user.id), parent_id=None, is_folder=True)
+    root_item = FSItem(name=None, parent_id=None, is_folder=True)
     root_item.root_id = root_item.id
     user.fsitem_id = root_item.id
     add_item(root_item)
@@ -62,4 +62,4 @@ def remove_user(username: str):
 get_user = _get_user
 get_user_from_id = _get_user_from_id
 
-__all__ = ["is_user", "add_user", "get_user_from_id", "remove_user", "User", "get_user"]
+__all__ = ["User", "add_user", "get_user", "get_user_from_id", "is_user", "remove_user"]

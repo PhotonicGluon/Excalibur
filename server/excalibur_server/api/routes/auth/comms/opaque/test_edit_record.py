@@ -1,7 +1,6 @@
 import json
 import time
 from base64 import b64decode, b64encode
-from urllib.parse import quote_plus
 
 import pytest
 from Crypto.Random import get_random_bytes
@@ -77,7 +76,7 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
 
     # Create a new authenticated client
     MASTER_KEYS_CACHE[COMM_UUID] = COMM_MASTER_KEY
-    token = generate_auth_token(str(test_user.id), COMM_UUID, 9_999_999_999)
+    token = generate_auth_token(test_user.id, COMM_UUID, 9_999_999_999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
     pop_header = generate_pop_header(
         master_key=COMM_MASTER_KEY,
@@ -88,9 +87,11 @@ def test_edit_record(test_idx: int, db_session: Session, monkeypatch: pytest.Mon
     )
 
     # Connect and change the record
-    with auth_client.websocket_connect(
-        f"{EDIT_RECORD_PATH}?auth_token={token}&hmac_validation={quote_plus(pop_header)}"
-    ) as ws:
+    with auth_client.websocket_connect(EDIT_RECORD_PATH) as ws:
+        # Authenticate with server
+        ws.send_text(f"{token}:{pop_header}")
+        assert ws.receive_text() == "Authenticated"
+
         # Helper functions for sending and receiving JSON messages
         def send_json(data: dict):
             encrypted_data = ExEF(COMM_MASTER_KEY).encrypt(json.dumps(data).encode("utf-8"))

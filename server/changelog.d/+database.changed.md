@@ -1,5 +1,6 @@
-🗃️ Modified the `User` table:
+🗃️ Modified the Excalibur database:
 
-- Added new `id` and `keygen_algorithm` fields
-- Changed the primary key of the table from `username` to `id`
-- Renamed the `additional_info` field to `vault_info`
+- Modified the `FSItem` table:
+  - Added `ciphertext_hash`, `content_mac`, `node_hash`, and `version` fields for Merkle tree verification
+  - Added `name_enc` and `name_tag` fields for encrypted file names, and made the `name` field optional
+- Created `Attestation` and `VaultState` tables for Merkle tree verification of vault data

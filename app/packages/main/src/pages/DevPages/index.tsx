@@ -1,8 +1,9 @@
 import React from "react";
 import { Redirect, Route } from "react-router";
 
-import { IS_DEV } from "@lib/util";
+import { IS_DEV } from "@lib/consts";
 
+import CryptoBenchPage from "./CryptoBenchPage";
 import ExEFPage from "./ExEFPage";
 import JobsPage from "./JobsPage";
 import ModalPage from "./ModalPage";
@@ -19,6 +20,7 @@ const DevPages: React.FC = () => {
             <Route path="/dev/exef" component={ExEFPage} />
             <Route path="/dev/jobs" component={JobsPage} />
             <Route path="/dev/modal" component={ModalPage} />
+            <Route path="/dev/bench" component={CryptoBenchPage} />
         </>
     );
 };

@@ -1,10 +1,11 @@
 import { createFile, createFolder } from "../helpers";
 
 describe("Nested Operations", () => {
+    const SERVER_URL = Cypress.expose("serverURL");
+
     beforeEach(() => {
-        cy.login("http://127.0.0.1:8989", "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("include", "/files");
+        cy.signup(SERVER_URL, "test-user", "Password", false);
+        cy.login(SERVER_URL, "test-user", "Password");
 
         // Create super folder
         const superFolderName = createFolder();
@@ -19,7 +20,7 @@ describe("Nested Operations", () => {
 
     afterEach(function () {
         // Stop other tests if any test fails
-        if (this.currentTest.state === "failed") {
+        if (this.currentTest?.state === "failed") {
             Cypress.stop();
             return;
         }

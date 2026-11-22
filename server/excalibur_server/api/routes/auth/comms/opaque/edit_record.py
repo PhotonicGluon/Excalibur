@@ -5,8 +5,7 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from excalibur_server.api.cache import MASTER_KEYS_CACHE
 from excalibur_server.api.routes.auth import router
 from excalibur_server.src.auth.credentials import Credentials, get_credentials_ws
-from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE
-from excalibur_server.src.auth.opaque.operation.server import OPAQUEServer
+from excalibur_server.src.auth.opaque import OPAQUE_OPRF_TYPE, OPAQUEServer
 from excalibur_server.src.config import CONFIG
 from excalibur_server.src.crypto.elliptic import Ristretto255
 from excalibur_server.src.db.operations import get_session
@@ -64,14 +63,13 @@ async def edit_record_endpoint(
         key_enc = upload_data[OPAQUE.registration_record_size + 32 :]
 
         # Amend user's record
-        with get_session() as session:
-            with session.begin():
-                db_user = session.get(User, credentials.user_id)
-                db_user.username = new_username
-                db_user.registration_record = registration_record_raw
-                db_user.auk_salt = auk_salt
-                db_user.key_enc = key_enc
-                session.add(db_user)
+        with get_session() as session, session.begin():
+            db_user = session.get(User, credentials.user_id)
+            db_user.username = new_username
+            db_user.registration_record = registration_record_raw
+            db_user.auk_salt = auk_salt
+            db_user.key_enc = key_enc
+            session.add(db_user)
 
         # Send confirmation
         await ws_manager.send(WebSocketMsg(status="OK"))

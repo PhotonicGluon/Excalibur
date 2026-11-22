@@ -1,0 +1,75 @@
+import { IS_DEV } from "@lib/consts";
+import ExEF from "@lib/crypto/exef";
+import { b64encodeURLSafe } from "@lib/util";
+
+import { popFetch } from "@api/fetch";
+
+import { AuthProvider } from "@components/auth/context";
+
+/**
+ * Downloads a file from the server.
+ *
+ * @param auth the current authentication provider
+ * @param fileID the ID of the file to download
+ * @param signal an abort signal to cancel the request
+ * @returns a promise which resolves to an object with a success boolean and optionally an error
+ *      message, or the file size, a boolean indicating whether the file is encrypted using the
+ *      E2EE key, and a ReadableStream of data. Note that this stream may be encrypted using the
+ *      vault key only (`e2ee = false`) or double-encrypted using both the vault key and the E2EE
+ *      key (`e2ee = true`)
+ */
+export async function downloadFile(
+    auth: AuthProvider,
+    fileID: string,
+    signal?: AbortSignal,
+): Promise<{
+    success: boolean;
+    error?: string;
+    fileSize?: number;
+    e2ee?: boolean;
+    dataStream?: ReadableStream<Uint8Array>;
+}> {
+    let additionalHeaders = {};
+    if (!IS_DEV) {
+        const encryptedID = await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(Buffer.from(fileID, "utf-8"));
+        fileID = b64encodeURLSafe(encryptedID);
+        additionalHeaders = { "X-Encrypted": "true" };
+    }
+
+    const response = await popFetch(
+        `${auth.serverInfo!.apiURL}/files/download/${fileID}`,
+        auth.authInfo!.key!,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${auth.getToken()}`,
+                ...additionalHeaders,
+            },
+            cache: "no-store",
+            signal,
+        },
+        null, // No timeout; TODO: Determine a timeout for downloading file
+    );
+    // TODO: Handle abort?
+    switch (response.status) {
+        case 200:
+            // Continue with normal flow
+            break;
+        case 401:
+            return { success: false, error: "Unauthorized" };
+        case 404:
+            return { success: false, error: "Item not found or is not a file" };
+        case 422:
+            return { success: false, error: "Validation error" };
+        default:
+            return { success: false, error: "Unknown error" };
+    }
+
+    const fileSize = parseInt(response.headers.get("Content-Length")!);
+    return {
+        success: true,
+        fileSize: fileSize,
+        e2ee: response.headers.get("X-Encrypted") === "true",
+        dataStream: response.body!,
+    };
+}

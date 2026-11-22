@@ -22,17 +22,18 @@ import {
     useIonPopover,
     useIonRouter,
 } from "@ionic/react";
-import { ellipsisVertical, moveOutline, pencilOutline, trashOutline } from "ionicons/icons";
+import { ellipsisVertical, moveOutline, pencilOutline, shieldCheckmarkOutline, trashOutline } from "ionicons/icons";
 
 import { randID } from "@lib/auth/util";
-import ExEF from "@lib/crypto/exef";
-import { downloadFile } from "@lib/files/api";
 import { File, FileLike } from "@lib/files/structures";
 import { getIcon, mimetypeToIcon } from "@lib/icons";
+import { verifyItemIntegrity } from "@lib/merkle";
 import { bytesToHumanReadable } from "@lib/util";
 import { timestampToDateString } from "@lib/util/date";
 import { getMIMEType } from "@lib/util/mime";
 import { DecryptionProcessor } from "@lib/workers/decrypt-stream";
+
+import { downloadFile } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
@@ -48,14 +49,16 @@ const NAVIGATION_DELAY = 75;
 
 type FileLikePartial = Partial<FileLike> & Partial<Omit<File, "type">>;
 export interface ContainerProps extends FileLikePartial {
-    /** The ID of the directory item */
+    /** The DOM element ID of the directory item */
     id?: string;
+    /** The server-assigned UUID of the underlying file/folder, used to refer to it in requests */
+    itemUUID?: string;
     /** Whether the item should be disabled */
     disabled?: boolean;
-    /** Whether the item is on an even row */
+    /** Whether the item is displayed as a grid item */
+    isGridType: boolean;
+    /** Whether the item is on an odd row */
     oddRow: boolean;
-    /** Whether to keep the `.exef` extension when displaying the name */
-    keepExEF?: boolean;
     /** Whether to show the ellipsis menu */
     ellipsisMenuEnabled?: boolean;
     /** Optional override for the click handler */
@@ -65,7 +68,6 @@ export interface ContainerProps extends FileLikePartial {
 const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
     const isLoading = props.type === undefined;
     const isFile = props.type === "file";
-    const nameNoExEF = props.name?.replace(/\.exef$/, "");
     const ellipsisMenuEnabled = props.ellipsisMenuEnabled ?? props.type !== "parent";
     const mimetype = props.name ? getMIMEType(props.name) : null;
 
@@ -94,7 +96,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        const fileName = nameNoExEF!;
+        const fileName = props.name!;
 
         /**
          * Handles the file download process.
@@ -107,26 +109,26 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
 
             jobsManager.addJob(jobID, {
                 direction: "download",
-                name: fileName, // This is the deobfuscated name
+                name: fileName,
                 description: "Downloading...",
                 progress: null,
                 controller: controller,
             });
 
             if (Capacitor.getPlatform() === "web") {
-                explorerContext.presentSnackbar("Downloading...");
+                await explorerContext.presentSnackbar("Downloading...");
             }
             console.debug(`Created new job for '${fileName}' with id '${jobID}'`);
 
             try {
                 // Send request for file
-                const response = await downloadFile(auth, props.fullpath!, signal);
+                const response = await downloadFile(auth, props.itemUUID!, signal);
                 if (!response.success) {
-                    explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to get file: ${response.error}`, "danger");
                     throw new Error(response.error); // Propagate error to outer try-catch
                 }
 
-                const fileSize = response.fileSize! - ExEF.additionalSize;
+                const fileSize = response.fileSize!;
 
                 if (signal.aborted) throw new Error("Cancelled");
 
@@ -144,7 +146,6 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         auth.vaultInfo!.key,
                         response.e2ee ? auth.authInfo!.key! : null,
                         fileSize,
-                        settings.cryptoChunkSize,
                         // `proxy()` ensures the callback function works across threads
                         Comlink.proxy((progress) => {
                             if (!signal.aborted) {
@@ -153,13 +154,16 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         }),
                     );
                 } catch (e) {
-                    if (signal.aborted) throw new Error("Cancelled");
+                    if (signal.aborted) throw new Error("Cancelled"); // eslint-disable-line preserve-caught-error
 
                     const err = e as Error;
                     if (err.message.includes("header MAC")) {
-                        explorerContext.presentSnackbar(`Failed to decrypt file: vault key may be incorrect`, "danger");
+                        await explorerContext.presentSnackbar(
+                            `Failed to decrypt file: vault key may be incorrect`,
+                            "danger",
+                        );
                     } else {
-                        explorerContext.presentSnackbar(`Failed to decrypt file: ${err.message}`, "danger");
+                        await explorerContext.presentSnackbar(`Failed to decrypt file: ${err.message}`, "danger");
                     }
                     throw e; // Propagate error to outer try-catch
                 } finally {
@@ -185,7 +189,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         }, 0);
-                        explorerContext.presentSnackbar("File downloaded", "success");
+                        await explorerContext.presentSnackbar("File downloaded", "success");
                     } else {
                         // Write file to documents folder
                         await writeBlob({
@@ -197,10 +201,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                                 console.error(error);
                             },
                         });
-                        explorerContext.presentSnackbar("File saved to the documents folder", "success");
+                        await explorerContext.presentSnackbar("File saved to the documents folder", "success");
                     }
                 } catch (e) {
-                    explorerContext.presentSnackbar(`Failed to save file: ${(e as Error).message}`, "danger");
+                    await explorerContext.presentSnackbar(`Failed to save file: ${(e as Error).message}`, "danger");
                 }
             } catch (e) {
                 const err = e as Error;
@@ -225,7 +229,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                 });
 
                 // If no error was thrown, that means that the file already exists on device
-                explorerContext.presentAlert({
+                await explorerContext.presentAlert({
                     header: "File already exists",
                     message: "Do you want to override the existing file?",
                     buttons: [
@@ -233,15 +237,15 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             text: "No",
                             role: "cancel",
                             handler: () => {
-                                explorerContext.presentSnackbar("Download cancelled", "warning");
+                                /* async */ explorerContext.presentSnackbar("Download cancelled", "warning");
                             },
                         },
                         {
                             text: "Yes",
                             role: "confirm",
                             handler: () => {
-                                _handleDownload();
-                                explorerContext.dismissAlert();
+                                /* async */ _handleDownload();
+                                /* async */ explorerContext.dismissAlert();
                             },
                         },
                     ],
@@ -259,7 +263,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the rename button on an item.
      */
     async function onClickRename() {
-        await explorerContext.onRename(props.fullpath!, !isFile);
+        await explorerContext.onRename(props.itemUUID!, props.fullpath!);
         dismissPopover();
     }
 
@@ -267,7 +271,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the move button on an item.
      */
     async function onClickMove() {
-        await explorerContext.onMove(props.fullpath!);
+        await explorerContext.onMove(props.itemUUID!);
         dismissPopover();
     }
 
@@ -275,14 +279,43 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
      * Handles the user clicking the delete button on an item.
      */
     async function onClickDelete() {
-        await explorerContext.onDelete(props.fullpath!, !isFile);
+        await explorerContext.onDelete(props.itemUUID!, !isFile);
         dismissPopover();
     }
 
+    /**
+     * Handles the user clicking the verify integrity button on an item.
+     */
+    async function onClickVerify() {
+        dismissPopover();
+        if (!props.itemUUID) {
+            return;
+        }
+
+        await explorerContext.presentSnackbar("Verifying...");
+        const result = await verifyItemIntegrity(auth, props.itemUUID);
+        if (!result.success) {
+            await explorerContext.presentSnackbar(`Could not verify item: ${result.error}`, "danger");
+            return;
+        }
+        if (result.verified) {
+            await explorerContext.presentSnackbar("No tampering detected", "success");
+            return;
+        }
+
+        await explorerContext.presentSnackbar(
+            result.details ?? "This item does not match the vault's trusted record",
+            "danger",
+        );
+    }
+
     // Render
-    const lighter = "[--background:var(--ion-background-color)]";
-    const darker =
-        "light:[--background:var(--ion-background-color-step-100)] dark:[--background:var(--ion-background-color-step-50)] ";
+    const lighter = props.isGridType
+        ? "[--background:var(--ion-background-color-step-50)]"
+        : "[--background:var(--ion-background-color)]";
+    const darker = props.isGridType
+        ? "light:[--background:var(--ion-background-color-step-150)] dark:[--background:var(--ion-background-color-step-100)]"
+        : "light:[--background:var(--ion-background-color-step-100)] dark:[--background:var(--ion-background-color-step-50)]";
     let rowColourClass;
     switch (settings.rowAlternatingColours) {
         case "off":
@@ -330,14 +363,27 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                         <IonText className="pl-2">Delete</IonText>
                     </IonLabel>
                 </IonItem>
+                {props.itemUUID && (
+                    <IonItem button={true} onClick={() => onClickVerify()}>
+                        <IonLabel>
+                            <IonIcon icon={shieldCheckmarkOutline} size="large" />
+                            <IonText className="pl-2">Verify Integrity</IonText>
+                        </IonLabel>
+                    </IonItem>
+                )}
             </IonList>
         </IonContent>
     );
     const [showPopover, dismissPopover] = useIonPopover(Popover);
-    return (
-        <IonItem id={props.id} className={rowColourClass} button={!props.disabled && !isLoading}>
+
+    const ListElement = (
+        <IonItem
+            id={props.id}
+            className={rowColourClass + " " + (props.type === "parent" ? "col-span-full" : "")}
+            button={!props.disabled && !isLoading}
+        >
             {/* Main item content */}
-            <div className="flex h-16 w-full items-center" data-name={nameNoExEF}>
+            <div className="flex h-16 w-full items-center" data-name={props.name}>
                 <IonGrid
                     className="w-full"
                     onClick={!props.disabled && !isLoading ? onClickItem : undefined}
@@ -355,8 +401,7 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
                             </IonThumbnail>
                             <div className="w-[calc(100%-var(--spacing)*10)] pl-4 *:block">
                                 <IonLabel className="max-w-100 truncate" color={props.disabled ? "light" : undefined}>
-                                    {!isLoading &&
-                                        (props.type === "directory" || props.keepExEF ? props.name : nameNoExEF)}
+                                    {!isLoading && props.name}
                                     {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
                                 </IonLabel>
                                 {!isLoading && props.size !== undefined && (
@@ -386,6 +431,68 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             )}
         </IonItem>
     );
+    const GridElement = (
+        <IonItem id={props.id} className={"rounded-2xl " + rowColourClass} button={!props.disabled && !isLoading}>
+            <div className="flex h-20 w-full items-center" data-name={props.name}>
+                {/* Main item content */}
+                <IonGrid
+                    onClick={!props.disabled && !isLoading ? onClickItem : undefined}
+                    onContextMenu={(e) => {
+                        if (props.disabled || isLoading || !ellipsisMenuEnabled) return;
+                        e.preventDefault();
+                        showPopover({ event: e.nativeEvent, reference: "event", side: "bottom" });
+                    }}
+                >
+                    <IonRow className="ion-align-items-center">
+                        <IonCol className="flex w-72 flex-col space-y-1">
+                            <div className="flex flex-row items-center space-x-2">
+                                {!isLoading && (
+                                    <>
+                                        <IonThumbnail className="size-6 *:size-full">
+                                            <IonIcon icon={icon} color={props.disabled ? "light" : undefined} />
+                                        </IonThumbnail>
+                                        <IonLabel className="truncate" color={props.disabled ? "light" : undefined}>
+                                            {props.name}
+                                        </IonLabel>
+                                    </>
+                                )}
+                                {isLoading && <IonSkeletonText animated={true} />}
+                            </div>
+
+                            <div className="flex flex-col">
+                                {!isLoading && (
+                                    <>
+                                        {props.size !== undefined && (
+                                            <IonNote className="text-sm" color={props.disabled ? "medium" : undefined}>
+                                                {bytesToHumanReadable(props.size, settings.fileSizeUnits)}
+                                            </IonNote>
+                                        )}
+                                        {props.creation_time !== undefined && (
+                                            <IonNote className="text-xs" color={props.disabled ? "dark" : undefined}>
+                                                {timestampToDateString(props.creation_time!)}
+                                            </IonNote>
+                                        )}
+                                    </>
+                                )}
+                                {isLoading && <IonSkeletonText animated={true}></IonSkeletonText>}
+                            </div>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+
+                {!props.disabled && !isLoading && ellipsisMenuEnabled && (
+                    <IonButtons className="m-0 size-12 justify-end">
+                        {/* Ellipsis menu button */}
+                        <IonButton onClick={(e) => showPopover({ event: e.nativeEvent })}>
+                            <IonIcon size="small" slot="icon-only" icon={ellipsisVertical} />
+                        </IonButton>
+                    </IonButtons>
+                )}
+            </div>
+        </IonItem>
+    );
+
+    return props.isGridType ? GridElement : ListElement;
 };
 
 export default DirectoryItem;

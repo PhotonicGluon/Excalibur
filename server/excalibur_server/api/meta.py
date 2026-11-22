@@ -8,6 +8,7 @@ TAGS = [
         "description": "File management endpoints.\n\n"
         + "Users can use a WebSocket connection to `/api/files/listen` to listen for any changes to their folders.",
     },
+    {"name": "merkle", "description": "Merkle tree endpoints."},
     {"name": "well-known", "description": "Well-known endpoints."},
     {
         "name": "encrypted",

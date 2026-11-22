@@ -21,9 +21,9 @@ import "@ionic/react/css/text-transformation.css";
 import packageInfo from "@root/package.json";
 
 import { performUpdateCheck } from "@lib/check-update";
+import { IS_DEV } from "@lib/consts";
 import { useEffectOnce, useMount } from "@lib/hooks";
 import Preferences from "@lib/preferences";
-import { IS_DEV } from "@lib/util";
 import { isPrerelease } from "@lib/util/versioning";
 
 import NeedServerURLRoute from "@components/auth/NeedServerURLRoute";
@@ -38,8 +38,8 @@ import AccountPreferences from "@pages/Preferences/AccountPreferences";
 import DataPreferences from "@pages/Preferences/DataPreferences";
 import PreferencesMenu from "@pages/Preferences/PreferencesMenu";
 import ServerChoice from "@pages/ServerChoice";
-import CryptoSettings from "@pages/Settings/CryptoSettings";
 import InterfaceSettings from "@pages/Settings/InterfaceSettings";
+import OperationsSettings from "@pages/Settings/OperationsSettings";
 import SettingsMenu from "@pages/Settings/SettingsMenu";
 import UpdateSettings from "@pages/Settings/UpdateSettings";
 import Welcome from "@pages/Welcome";
@@ -101,7 +101,7 @@ const App: React.FC = () => {
             }
 
             await Preferences.set({ lastUpdateCheck: Date.now() });
-            await performUpdateCheck(presentAlert);
+            await performUpdateCheck(presentAlert).catch((e) => console.warn(`Update check failed: ${e}`));
         });
     });
 
@@ -150,7 +150,7 @@ const App: React.FC = () => {
                     {/* Configuration pages */}
                     <Route exact path="/settings" component={SettingsMenu} />
                     <Route exact path="/settings/interface" component={InterfaceSettings} />
-                    <Route exact path="/settings/crypto" component={CryptoSettings} />
+                    <Route exact path="/settings/operations" component={OperationsSettings} />
                     <Route exact path="/settings/update" component={UpdateSettings} />
 
                     <PrivateRoute exact path="/preferences" component={PreferencesMenu} />

@@ -19,10 +19,12 @@ describe("Check Login Page Contents", () => {
 });
 
 describe("Handle Auth Process", () => {
+    const SERVER_URL = Cypress.expose("serverURL");
+
     it("should handle login gracefully", () => {
-        cy.login(Cypress.expose("serverURL"), "test-user", "Password");
-        cy.visit("/files/");
-        cy.url().should("not.include", "/login");
+        cy.signup(SERVER_URL, "test-user", "Password", false);
+        cy.login(SERVER_URL, "test-user", "Password");
+        cy.url().should("include", "/files");
     });
 
     describe("Handle Incorrect Credentials", () => {

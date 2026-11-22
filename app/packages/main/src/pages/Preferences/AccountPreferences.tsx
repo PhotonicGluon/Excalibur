@@ -21,11 +21,14 @@ import {
 } from "@ionic/react";
 import { arrowBack } from "ionicons/icons";
 
-import { KeyGenAlgorithm, generateVaultKeys } from "@lib/crypto/keygen";
-import { editVaultInfo } from "@lib/users/api";
-import { editRecord } from "@lib/users/api/edit-record";
+import { TOAST_DURATION } from "@lib/consts";
+import ExEF from "@lib/crypto/exef";
+import { KeyGenAlgorithm, generateAUK, generateVaultKeys } from "@lib/crypto/keygen";
+
+import { editRecord, editVaultInfo } from "@api/users";
 
 import { useAuth } from "@components/auth/context";
+import PasswordDialog from "@components/dialog/PasswordDialog";
 import PasswordInput from "@components/inputs/PasswordInput";
 import SettingsItem from "@components/settings/SettingsItem";
 
@@ -42,18 +45,50 @@ const AccountPreferences: React.FC = () => {
     const [newPassword, setNewPassword] = useState<string>("");
     const [keygenAlgorithm, setKeygenAlgorithm] = useState<KeyGenAlgorithm>(auth.vaultInfo!.keygenAlgorithm);
 
+    const [isPasswordPromptOpen, setIsPasswordPromptOpen] = useState(false);
+
     const [isLoading, setIsLoading] = useState(false);
     const [loadingState, setLoadingState] = useState("Sending request...");
 
     // Functions
     /**
      * Handles any updates to the preferences' values.
+     *
+     * @param password the password to use for the update
      */
-    async function updatePreferences() {
+    async function updatePreferences(password: string) {
+        setIsLoading(true);
+
+        // Check if the provided password is indeed correct by checking if the vault key can be recovered
+        const { key: proposedAUK } = await generateAUK(
+            password,
+            { username: auth.authInfo!.username! },
+            auth.vaultInfo!.aukSalt,
+            auth.vaultInfo!.keygenAlgorithm,
+            (progress: number) => {
+                setLoadingState(`Checking password... ${Math.round(progress * 100)}%`);
+            },
+        );
+
+        try {
+            await new ExEF(proposedAUK).decrypt(auth.vaultInfo!.encryptedKey);
+        } catch (e) {
+            console.error("Password is likely incorrect, causing", e);
+            presentToast({
+                message: "Password incorrect",
+                duration: TOAST_DURATION,
+                color: "danger",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        console.debug("Entered password checked to be correct");
+
         // Process the new preferences
         const oldPref = {
-            username: auth.authInfo!.username!,
-            password: auth.authInfo!.password!,
+            username: auth.authInfo!.username,
+            password: password,
             keygenAlgorithm: auth.vaultInfo!.keygenAlgorithm,
         };
 
@@ -67,13 +102,12 @@ const AccountPreferences: React.FC = () => {
         if (JSON.stringify(newPref) === JSON.stringify(oldPref)) {
             presentToast({
                 message: "No changes",
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "warning",
             });
+            setIsLoading(false);
             return;
         }
-
-        setIsLoading(true);
 
         // Regenerate AUK and encrypted vault key
         const {
@@ -107,7 +141,7 @@ const AccountPreferences: React.FC = () => {
             console.error(errorMsg);
             presentToast({
                 message: errorMsg,
-                duration: 2000,
+                duration: TOAST_DURATION,
                 color: "danger",
             });
             setIsLoading(false);
@@ -127,7 +161,7 @@ const AccountPreferences: React.FC = () => {
                 console.error(errorMsg);
                 presentToast({
                     message: errorMsg,
-                    duration: 2000,
+                    duration: TOAST_DURATION,
                     color: "danger",
                 });
                 setIsLoading(false);
@@ -140,16 +174,17 @@ const AccountPreferences: React.FC = () => {
             ...auth.authInfo!,
             token: auth.getToken()!,
             username: newPref.username,
-            password: newPref.password,
         });
         auth.setVaultInfo({
             ...auth.vaultInfo!,
             keygenAlgorithm: newPref.keygenAlgorithm,
+            encryptedKey: newEncryptedVaultKey,
+            aukSalt: newAUKSalt,
         });
 
         presentToast({
             message: "Account updated successfully",
-            duration: 2000,
+            duration: TOAST_DURATION,
             color: "success",
         });
         setIsLoading(false);
@@ -162,7 +197,7 @@ const AccountPreferences: React.FC = () => {
             <IonHeader>
                 <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
-                        <IonButton onClick={() => router.goBack()}>
+                        <IonButton id="account-preferences-back" onClick={() => router.goBack()}>
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>
@@ -226,10 +261,20 @@ const AccountPreferences: React.FC = () => {
                 <IonButton
                     id="save-changes-button"
                     className="ion-padding-horizontal w-full"
-                    onClick={updatePreferences}
+                    onClick={() => setIsPasswordPromptOpen(true)}
                 >
                     Save Changes
                 </IonButton>
+
+                {/* Password prompt */}
+                <PasswordDialog
+                    isOpen={isPasswordPromptOpen}
+                    onDidDismiss={() => setIsPasswordPromptOpen(false)}
+                    onDidConfirm={(password) => {
+                        setIsPasswordPromptOpen(false);
+                        updatePreferences(password);
+                    }}
+                />
 
                 {/* Loading indicator */}
                 <IonLoading

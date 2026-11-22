@@ -1,1 +1,1 @@
-⬆️ Updated `globals` development dependency from `17.6.0` to `17.7.0` ([#71](https://github.com/PhotonicGluon/Excalibur/pull/71))
+⬆️ Updated `globals` development dependency from `17.12.0` to `17.14.0` ([#243](https://github.com/PhotonicGluon/Excalibur/pull/243), [#316](https://github.com/PhotonicGluon/Excalibur/pull/316))

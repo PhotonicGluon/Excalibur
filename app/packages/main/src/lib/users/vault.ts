@@ -1,9 +1,10 @@
-import * as Comlink from "comlink";
-
 import ExEF from "@lib/crypto/exef";
-import { KeygenAdditionalInfo } from "@lib/crypto/keygen";
-import { getVaultInfo } from "@lib/users/api";
-import { AUKGenerationProcessor } from "@lib/workers/generate-auk";
+import { KeygenAdditionalInfo, generateAUK } from "@lib/crypto/keygen";
+import { NameKeys } from "@lib/files/names/keys";
+import { MerkleKeys } from "@lib/merkle/keys";
+
+import { E2EEData } from "@api/auth";
+import { getVaultInfo } from "@api/users";
 
 import { VaultInfo } from "./structures";
 
@@ -11,8 +12,7 @@ import { VaultInfo } from "./structures";
  * Retrieves the vault info from the server.
  *
  * @param apiURL the URL of the API server to query
- * @param token authentication token for accessing the server
- * @param password the password to use for deriving the AUK
+ * @param e2eeData the E2EE data returned after login
  * @param additionalInfo additional information to use for deriving the AUK
  * @param e2eeKey the key used to decrypt the end-to-end encrypted communications
  * @param onError a function to call if an error occurs, which takes a string argument. The string
@@ -23,8 +23,7 @@ import { VaultInfo } from "./structures";
  */
 export async function retrieveVaultInfo(
     apiURL: string,
-    token: string,
-    e2eeKey: Buffer,
+    e2eeData: E2EEData,
     password: string,
     additionalInfo: KeygenAdditionalInfo,
     onError: (error: string) => void,
@@ -32,7 +31,7 @@ export async function retrieveVaultInfo(
 ): Promise<VaultInfo | null> {
     // Get the vault info
     console.debug("Retrieving vault info");
-    const vaultInfoResponse = await getVaultInfo(apiURL, token, e2eeKey);
+    const vaultInfoResponse = await getVaultInfo(apiURL, e2eeData.token, e2eeData.key);
     if (!vaultInfoResponse.success) {
         onError(`Could not retrieve vault info: ${vaultInfoResponse.error}`);
         return null;
@@ -44,35 +43,20 @@ export async function retrieveVaultInfo(
     const vaultInfo = vaultInfoResponse.vaultInfo!;
 
     // Derive the AUK
-    const worker = new Worker(new URL("@lib/workers/generate-auk", import.meta.url), { type: "module" });
-    const processor = Comlink.wrap<AUKGenerationProcessor>(worker);
-
-    let aukData;
-    try {
-        aukData = await processor.generateAUK(
-            password,
-            additionalInfo,
-            aukSalt,
-            keygenAlgorithm,
-            // `proxy()` ensures the callback function works across threads
-            onProgress ? Comlink.proxy(onProgress) : undefined,
-        );
-    } finally {
-        // Free up resources
-        worker.terminate();
-    }
-
-    const { key: auk } = aukData;
+    const { key: auk } = await generateAUK(password, additionalInfo, aukSalt, keygenAlgorithm, onProgress);
 
     // Recover vault key
     console.debug("Decrypting obtained vault key...");
     try {
-        const vaultKey = ExEF.decrypt(auk, encryptedVaultKey);
+        const vaultKey = await new ExEF(auk).decrypt(encryptedVaultKey);
         console.debug(`Vault key: ${vaultKey.toString("hex")}`);
         return {
-            auk,
             keygenAlgorithm,
+            aukSalt,
+            encryptedKey: encryptedVaultKey,
             key: vaultKey,
+            nameKeys: new NameKeys(vaultKey, e2eeData.userID),
+            merkleKeys: new MerkleKeys(vaultKey, e2eeData.userID),
             info: vaultInfo,
         };
     } catch (error: unknown) {

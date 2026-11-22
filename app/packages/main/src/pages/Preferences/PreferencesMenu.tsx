@@ -27,7 +27,7 @@ const PreferencesMenu: React.FC<RouteComponentProps> = () => {
             <IonHeader>
                 <IonToolbar className="[&::part(container)]:min-h-16">
                     <IonButtons slot="start">
-                        <IonButton onClick={() => router.goBack()}>
+                        <IonButton id="preferences-back" onClick={() => router.goBack()}>
                             <IonIcon className="size-6" slot="icon-only" icon={arrowBack} />
                         </IonButton>
                     </IonButtons>

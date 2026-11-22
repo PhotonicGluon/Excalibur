@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { directoryChangesListener, listdir } from "@lib/files/api";
-import { deobfuscateDirectoryItems } from "@lib/files/obfuscation";
 import { Directory } from "@lib/files/structures";
+
+import { directoryChangesListener } from "@api/files";
 
 import { useAuth } from "@components/auth/context";
 import { useExplorerContext } from "@components/explorer/context";
+import { useVaultIndex } from "@components/files/context";
 
 /**
  * React hook that provides access to directory listing functionality.
@@ -23,10 +24,13 @@ export function useDirectory(): {
     const [listenerConnected, setListenerConnected] = useState<boolean>(false);
 
     const refreshContentsRef = useRef<() => Promise<void>>(Promise.resolve);
+    const onFolderChangedRef = useRef<(folderID: string) => Promise<void>>(Promise.resolve);
+    const currentFolderIDRef = useRef<string | null>(null);
     const latestRequestRef = useRef<number>(0);
 
     // Contexts
     const auth = useAuth();
+    const vaultIndex = useVaultIndex();
 
     const explorerContext = useExplorerContext();
     const path = explorerContext.path;
@@ -57,13 +61,13 @@ export function useDirectory(): {
             latestRequestRef.current = requestNum;
 
             // Get the directory contents
-            const response = await listdir(auth, path);
+            const response = await vaultIndex.listdirByPath(path);
             if (!response.success) {
                 presentSnackbar("Failed to refresh contents", "danger");
                 return;
             }
 
-            let directory = response.directory!;
+            const directory = response.directory!;
 
             // If this request is not the latest, ignore it
             if (requestNum < latestRequestRef.current) {
@@ -71,15 +75,39 @@ export function useDirectory(): {
                 return;
             }
 
-            // Deobfuscate the names, if necessary
-            if (auth.vaultInfo!.info.obfuscatedNames && directory.items && auth.noc) {
-                directory = deobfuscateDirectoryItems(directory, auth.noc);
-            }
-
-            // Set the deobfuscated directory contents
+            // Set the directory contents
+            currentFolderIDRef.current = directory.id;
             setDirectoryContents(directory);
         },
-        [auth, path, presentSnackbar],
+        [vaultIndex, path, presentSnackbar],
+    );
+
+    /**
+     * Handles a change to the contents of a folder, which may be the one that is displayed.
+     *
+     * @param folderID the ID of the folder whose contents changed (`.` for the root directory)
+     */
+    const onFolderChanged = useCallback(
+        async (folderID: string) => {
+            // What we know about the vault's structure may now be out of date
+            vaultIndex.invalidate();
+
+            let changedFolderID = folderID;
+            if (folderID === ".") {
+                const root = await vaultIndex.resolveFolderID(".");
+                if (!root.success) {
+                    return;
+                }
+                changedFolderID = root.id!;
+            }
+
+            if (changedFolderID === currentFolderIDRef.current) {
+                await refreshContentsRef.current();
+            } else {
+                console.debug(`Not refreshing contents (changed '${folderID}' is not the current folder)`);
+            }
+        },
+        [vaultIndex],
     );
 
     // Effects
@@ -88,11 +116,15 @@ export function useDirectory(): {
     }, [refreshContents]);
 
     useEffect(() => {
+        onFolderChangedRef.current = onFolderChanged;
+    }, [onFolderChanged]);
+
+    useEffect(() => {
         const cleanup = directoryChangesListener(
             auth,
             () => setListenerConnected(true),
             () => setListenerConnected(false),
-            refreshContentsRef,
+            onFolderChangedRef,
         );
         return cleanup;
     }, [auth]);

@@ -144,7 +144,6 @@ class CredentialRequest(RegistrationRequest):
     """
 
     # From RFC9807, this structure is exactly the same as `RegistrationRequest`
-    pass
 
 
 class CredentialResponse(BaseModel):

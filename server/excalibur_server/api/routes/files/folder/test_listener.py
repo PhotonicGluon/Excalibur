@@ -1,8 +1,8 @@
 import time
-from datetime import datetime, timezone
+from base64 import b64decode, b64encode, urlsafe_b64encode
+from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import quote_plus
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from Crypto.Random import get_random_bytes
@@ -26,11 +26,12 @@ KEY_1 = b"1st demo 16B key"
 KEY_2 = b"2nd demo 16B key"
 
 
-def _auth_websocket(user_id: str, key: bytes, path: str):
+# Helper functions
+def _auth_websocket(user_id: UUID, key: bytes, path: str):
     # Create a new authenticated client
     uuid = uuid4().hex
     MASTER_KEYS_CACHE[uuid] = key
-    token = generate_auth_token(user_id, uuid, datetime.now(tz=timezone.utc).timestamp() + 9999)
+    token = generate_auth_token(user_id, uuid, datetime.now(tz=UTC).timestamp() + 9999)
     auth_client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
     # Generate PoP header
@@ -46,22 +47,77 @@ def _auth_websocket(user_id: str, key: bytes, path: str):
     return auth_client, auth_token, pop_header
 
 
-def _make_websocket(user_id: str, key: bytes, path: str):
+def _make_websocket(user_id: UUID, key: bytes, path: str):
     auth_client, auth_token, pop_header = _auth_websocket(user_id, key, path)
-    with auth_client.websocket_connect(
-        f"{path}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-    ) as ws:
+    with auth_client.websocket_connect(path) as ws:
+        ws.send_text(f"{auth_token}:{pop_header}")
+        assert ws.receive_text() == "Authenticated"
         yield ws
 
 
+def _random_name() -> dict[str, str]:
+    """
+    Makes a random (and so, almost surely unique) encrypted name for a request.
+    """
+
+    return {
+        "name_enc": b64encode(get_random_bytes(24)).decode(),
+        "name_tag": b64encode(get_random_bytes(32)).decode(),
+    }
+
+
+# Test class
 class TestDirectoryChangesListener:
+    @staticmethod
+    def _mkdir(auth_client: TestClient, parent_id) -> str:
+        """
+        Creates a folder with a random name in a folder, returning the ID of the new folder.
+        """
+
+        body = {"id": str(uuid4()), **_random_name()}
+        response = auth_client.post(f"/api/files/mkdir/{parent_id}", json=body)
+        assert response.status_code == 201
+        return body["id"]
+
+    @staticmethod
+    def _upload(auth_client: TestClient, parent_id) -> str:
+        """
+        Uploads a file with a random name to a folder, returning the ID of the new file.
+        """
+
+        file_id = uuid4()
+        name = _random_name()
+        name_enc = urlsafe_b64encode(b64decode(name["name_enc"])).decode()
+        name_tag = urlsafe_b64encode(b64decode(name["name_tag"])).decode()
+        details = f"{file_id}:{name_enc}:{name_tag}"
+        response = auth_client.post(f"/api/files/upload/{parent_id}/{details}", content=b"Some Sample Content")
+        assert response.status_code == 201
+        return str(file_id)
+
+    @staticmethod
+    def _receive(ws: WebSocketTestSession, key: bytes = KEY_1) -> str:
+        return ExEF(key).decrypt(ws.receive_bytes()).decode("utf-8")
+
+    @classmethod
+    def _receive_until(cls, ws: WebSocketTestSession, expected: set[str], max_events: int = 10) -> list[str]:
+        """
+        Receives events until all of the expected folders were reported. Needed since events for the same
+        folder are throttled, which makes the number of events (and their order) depend on timing.
+        """
+
+        events: list[str] = []
+        while not expected <= set(events):
+            assert len(events) < max_events, f"Did not get all of {expected}; got {events}"
+            events.append(cls._receive(ws))
+        return events
+
     @pytest.fixture
     def ws_client(self):
-        yield from _make_websocket(USER_ID, KEY_1, LISTENER_PATH)
+        yield from _make_websocket(UUID(USER_ID), KEY_1, LISTENER_PATH)
 
     @pytest.fixture
     def ws_client_2(self):
-        yield from _make_websocket(USER_ID, KEY_2, LISTENER_PATH)
+        yield from _make_websocket(UUID(USER_ID), KEY_2, LISTENER_PATH)
 
     @pytest.fixture(scope="class")
     @classmethod
@@ -96,123 +152,136 @@ class TestDirectoryChangesListener:
     def test_connect(self, ws_client: WebSocketTestSession):
         assert ws_client, "Failed to connect to the WebSocket"
 
-    def test_new_folder_in_root(self, auth_client: TestClient, ws_client: WebSocketTestSession):
+    def test_new_folder_in_root(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
         # Create a folder
-        uuid = uuid4().hex
-        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
-        assert response.status_code == 201
+        self._mkdir(auth_client, test_user["root_id"])
 
-        # Check if the update was transmitted
+        # Check if the update was transmitted; the root folder is reported as `.`
         enc_data = ws_client.receive_bytes()
         assert enc_data
-        path = ExEF(KEY_1).decrypt(enc_data)
-        assert path.decode("utf-8") == "."
+        assert ExEF(KEY_1).decrypt(enc_data).decode("utf-8") == "."
 
-    def test_new_file_in_root(self, auth_client: TestClient, ws_client: WebSocketTestSession):
+    def test_new_file_in_root(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
         # Upload a file
-        uuid = uuid4().hex
-        response = auth_client.post(f"/api/files/upload/test-{uuid}.txt.exef", content=b"Some Sample Content")
-        assert response.status_code == 201
+        self._upload(auth_client, test_user["root_id"])
 
         # Check if the update was transmitted
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."
+        assert self._receive(ws_client) == "."
 
-    def test_new_folder_in_folder(self, auth_client: TestClient, ws_client: WebSocketTestSession):
-        # Create a folder
-        uuid = uuid4().hex
-        subdir = f"test-dir-{uuid}"
-        response = auth_client.post("/api/files/mkdir/.", json=subdir)
-        assert response.status_code == 201
+    def test_new_folder_in_folder(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
+        # Create a folder, and a subfolder inside it
+        subdir_id = self._mkdir(auth_client, test_user["root_id"])
+        self._mkdir(auth_client, subdir_id)
 
-        # Create a subfolder
-        uuid = uuid4().hex
-        response = auth_client.post(f"/api/files/mkdir/{subdir}", json=f"test-dir-{uuid}")
-        assert response.status_code == 201
+        # Check if the updates were sent; the payload is the ID of the folder whose contents changed
+        assert self._receive(ws_client) == "."
+        assert self._receive(ws_client) == subdir_id
 
-        # Check if the updates were sent
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == subdir
-
-    def test_new_file_in_folder(self, auth_client: TestClient, ws_client: WebSocketTestSession):
-        # Create a folder
-        uuid = uuid4().hex
-        subdir = f"test-dir-{uuid}"
-        response = auth_client.post("/api/files/mkdir/.", json=subdir)
-        assert response.status_code == 201
-
-        # Upload a file
-        uuid = uuid4().hex
-        response = auth_client.post(f"/api/files/upload/{subdir}/test-{uuid}.txt.exef", content=b"Some More Content")
-        assert response.status_code == 201
+    def test_new_file_in_folder(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
+        # Create a folder, and upload a file into it
+        subdir_id = self._mkdir(auth_client, test_user["root_id"])
+        self._upload(auth_client, subdir_id)
 
         # Check if the updates were sent
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == subdir
+        assert self._receive(ws_client) == "."
+        assert self._receive(ws_client) == subdir_id
 
-    def test_delete(self, auth_client: TestClient, ws_client: WebSocketTestSession):
+    def test_delete(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
         # Upload a file
-        uuid = uuid4().hex
-        file_name = f"test-{uuid}.txt.exef"
-        response = auth_client.post(f"/api/files/upload/{file_name}", content=b"File content!")
-        assert response.status_code == 201
+        file_id = self._upload(auth_client, test_user["root_id"])
 
         # Delete that file
-        response = auth_client.delete(f"/api/files/delete/{file_name}")
+        response = auth_client.delete(f"/api/files/delete/{file_id}")
         assert response.status_code == 200
 
         # Check if the updates was transmitted
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."  # Once for creation...
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."  # ...once for deletion
+        assert self._receive(ws_client) == "."  # Once for creation...
+        assert self._receive(ws_client) == "."  # ...once for deletion
 
-    def test_rename(self, auth_client: TestClient, ws_client: WebSocketTestSession):
+    def test_delete_in_folder(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
+        subdir_id = self._mkdir(auth_client, test_user["root_id"])
+        file_id = self._upload(auth_client, subdir_id)
+        assert auth_client.delete(f"/api/files/delete/{file_id}").status_code == 200
+
+        assert self._receive(ws_client) == "."
+        assert self._receive(ws_client) == subdir_id  # Creation
+        assert self._receive(ws_client) == subdir_id  # Deletion
+
+    def test_rename(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
         # Upload a file
-        uuid = uuid4().hex
-        file_name = f"test-{uuid}.txt.exef"
-        response = auth_client.post(f"/api/files/upload/{file_name}", content=b"Foobar")
-        assert response.status_code == 201
+        file_id = self._upload(auth_client, test_user["root_id"])
 
         # Rename file should work
-        new_file_name = f"test-{uuid4().hex}.txt.exef"
-        response = auth_client.post(f"/api/files/rename/{file_name}", json=new_file_name)
+        response = auth_client.post(f"/api/files/rename/{file_id}", json=_random_name())
         assert response.status_code == 200
 
         # Check if the updates was transmitted
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."  # Once for creation...
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."  # ...once for update
+        assert self._receive(ws_client) == "."  # Once for creation...
+        assert self._receive(ws_client) == "."  # ...once for update
+
+    def test_move(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
+        # Make two folders, and a file in the first one
+        src_id = self._mkdir(auth_client, test_user["root_id"])
+        dest_id = self._mkdir(auth_client, test_user["root_id"])
+        file_id = self._upload(auth_client, src_id)
+
+        # Move the file from the first folder to the second one
+        response = auth_client.post(
+            f"/api/files/move/{file_id}", json={"dest_id": dest_id, "name_tag": _random_name()["name_tag"]}
+        )
+        assert response.status_code == 200
+
+        # Both the source and the destination of the move are notified. The folder IDs are only
+        # reported as the destination or as the source of the move or file creation
+        events = self._receive_until(ws_client, {src_id, dest_id})
+        assert events.count(src_id) >= 1
+        assert dest_id in events
+
+    def test_move_to_root(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
+        src_id = self._mkdir(auth_client, test_user["root_id"])
+        file_id = self._upload(auth_client, src_id)
+
+        response = auth_client.post(
+            f"/api/files/move/{file_id}", json={"dest_id": ".", "name_tag": _random_name()["name_tag"]}
+        )
+        assert response.status_code == 200
+
+        # The source folder and the root (the destination) are both notified after the file is created
+        events = self._receive_until(ws_client, {src_id, "."})
+        assert src_id in events
+        assert "." in events
 
     def test_multi_connection(
-        self, auth_client: TestClient, ws_client: WebSocketTestSession, ws_client_2: WebSocketTestSession
+        self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession, ws_client_2: WebSocketTestSession
     ):
         # Create a folder
-        uuid = uuid4().hex
-        response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid}")
-        assert response.status_code == 201
+        self._mkdir(auth_client, test_user["root_id"])
 
         # Check if the updates were transmitted
-        assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."
-        assert ExEF(KEY_2).decrypt(ws_client_2.receive_bytes()).decode("utf-8") == "."
+        assert self._receive(ws_client, KEY_1) == "."
+        assert self._receive(ws_client_2, KEY_2) == "."
 
-    def test_duplicate_connection(self, auth_client: TestClient):
+    def test_duplicate_connection(self, auth_client: TestClient, test_user):
         auth_client, auth_token, pop_header = _auth_websocket(
-            "01234567-89ab-dcef-0123-456789abcdef", KEY_1, LISTENER_PATH
+            UUID("01234567-89ab-dcef-0123-456789abcdef"), KEY_1, LISTENER_PATH
         )
-        with auth_client.websocket_connect(
-            f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-        ) as ws1:
-            with auth_client.websocket_connect(
-                f"{LISTENER_PATH}?auth_token={auth_token}&hmac_validation={quote_plus(pop_header)}"
-            ) as ws2:
-                response = auth_client.post("/api/files/mkdir/.", json=f"test-dir-{uuid4().hex}")
-                assert response.status_code == 201
+        with auth_client.websocket_connect(LISTENER_PATH) as ws1:
+            ws1.send_text(f"{auth_token}:{pop_header}")
+            assert ws1.receive_text() == "Authenticated"
+
+            with auth_client.websocket_connect(LISTENER_PATH) as ws2:
+                ws2.send_text(f"{auth_token}:{pop_header}")
+                assert ws2.receive_text() == "Authenticated"
+
+                self._mkdir(auth_client, test_user["root_id"])
 
                 assert ExEF(KEY_1).decrypt(ws1.receive_bytes()).decode("utf-8") == "."
                 assert ExEF(KEY_1).decrypt(ws2.receive_bytes()).decode("utf-8") == "."
 
-    def test_multi_requests(self, auth_client: TestClient, ws_client: WebSocketTestSession):
+    def test_multi_requests(self, auth_client: TestClient, test_user, ws_client: WebSocketTestSession):
         # Create folders
         for _ in range(10):
-            response = auth_client.post("/api/files/mkdir/.", json=f"test-multi-create-{uuid4().hex}")
-            assert response.status_code == 201
+            self._mkdir(auth_client, test_user["root_id"])
 
         # Check if the updates were transmitted
         assert ExEF(KEY_1).decrypt(ws_client.receive_bytes()).decode("utf-8") == "."  # Initial creation

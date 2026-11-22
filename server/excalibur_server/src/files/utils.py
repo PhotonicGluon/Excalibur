@@ -1,17 +1,16 @@
-import uuid
+from uuid import UUID
 
 from excalibur_server.src.config import CONFIG
-from excalibur_server.src.db.operations import get_item, get_item_fullpath, get_items_in_folder, remove_item
+from excalibur_server.src.db.operations import get_item, get_items_in_folder, remove_item
 from excalibur_server.src.db.tables import FSItem
 from excalibur_server.src.files.structures import Directory, File
 
 
-def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory | None:
+def listdir(folder_id: UUID) -> Directory | None:
     """
     Lists the contents of a directory.
 
     :param folder_id: the ID of the folder to list
-    :param include_exef_size: whether to include the size of the `.exef` file in the response
     :return: a `Directory` object with a list of `File` and `Directory` objects, or `None` if the
         folder does not exist or is not a directory
     """
@@ -20,17 +19,18 @@ def listdir(folder_id: uuid.UUID, include_exef_size: bool = False) -> Directory 
     if folder is None or not folder.is_folder:
         return None
 
-    parent_dir_path = get_item_fullpath(folder_id)
     fsitems = get_items_in_folder(folder_id)
 
     items = []
     for fsitem in fsitems:
         if fsitem.is_folder:
-            items.append(Directory.from_fsitem(fsitem, parent_dir_path=parent_dir_path))
+            items.append(Directory.from_fsitem(fsitem))
         else:
-            items.append(File.from_fsitem(fsitem, parent_dir_path=parent_dir_path, include_exef_size=include_exef_size))
+            items.append(File.from_fsitem(fsitem))
 
-    return Directory(name=folder.name, creation_time=folder.timestamp, fullpath=parent_dir_path.as_posix(), items=items)
+    directory = Directory.from_fsitem(folder)
+    directory.items = items
+    return directory
 
 
 def rmitem(item: FSItem):

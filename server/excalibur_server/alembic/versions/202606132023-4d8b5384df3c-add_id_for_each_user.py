@@ -6,7 +6,7 @@ Revises: 7e202d14d496
 Create Date: 2026-06-13 20:23:12.298771
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
