@@ -10,7 +10,7 @@ print("[yellow bold underline]This assumes:[/yellow bold underline]")
 print("[yellow]- the app is running on http://localhost:5173")
 print("[yellow]- the server is running on http://localhost:8989")
 print(
-    "[yellow]- a user [underline]screenshotter[/underline] exists with password [underline]Password[/underline]"
+    "[yellow]- a user [bold]screenshotter[/bold] exists with password [bold]Password[/bold]"
 )
 print("[yellow]- the user has demo files in their vault")
 print()
@@ -41,12 +41,25 @@ with sync_playwright() as p:
         page.screenshot(path=path, **kwargs)
         print(f"[cyan]    Taken screenshot: [bold]{path}[/bold][/cyan]")
 
+    def login(
+        username: str = "screenshotter", password: str = "Password", wait: int = 500
+    ):
+        page.goto("http://localhost:5173/login")
+        page.fill("[label='Username'] > .input-wrapper", username)
+        page.fill("[label='Password'] > .input-wrapper", password)
+        page.click("#login-button")
+
+        page.wait_for_url("http://localhost:5173/files/")
+        page.wait_for_timeout(wait)
+
     # "Quickstart" stuff + empty explorer
     page.goto("http://localhost:5173")
     screenshot(path="screenshots/welcome.png")
 
     page.goto("http://localhost:5173/server-choice")
-    screenshot(path="screenshots/server-choice.png")  # Disable this for trying to log in only
+    screenshot(
+        path="screenshots/server-choice.png"
+    )  # Disable this for trying to log in only
     page.fill("#server-input > .input-wrapper", "http://localhost:8989")
     page.click("#confirm-button")
 
@@ -82,13 +95,7 @@ with sync_playwright() as p:
     screenshot(path="screenshots/explorer-empty.png")
 
     # Login to existing account with demo files
-    page.goto("http://localhost:5173/login")
-    page.fill("[label='Username'] > .input-wrapper", "screenshotter")
-    page.fill("[label='Password'] > .input-wrapper", "Password")
-    page.click("#login-button")
-
-    page.wait_for_url("http://localhost:5173/files/")
-    page.wait_for_timeout(500)  # To allow page to fully load
+    login(wait=500)
     screenshot(path="screenshots/explorer.png")
 
     page.click("ion-fab-button")
@@ -106,18 +113,18 @@ with sync_playwright() as p:
         clip={"x": 27, "y": 110, "width": 275, "height": 400},
         path="screenshots/sort-options.png",
     )
-    page.reload()  # Reset page state
-    page.wait_for_timeout(500)  # To allow page to fully load
 
+    page.reload()  # Reset page state
+    login(wait=500)
     page.click("#ellipsis-button")
     page.wait_for_timeout(500)  # For ellipsis menu to fully load
     screenshot(
         clip={"x": (WIDTH - 275), "y": 50, "width": 275, "height": 184},
         path="screenshots/ellipsis-menu.png",
     )
-    page.reload()  # Reset page state
-    page.wait_for_timeout(500)  # To allow page to fully load
 
+    page.reload()  # Reset page state
+    login(wait=500)
     page.click("ion-fab-button")
     page.wait_for_timeout(500)  # To allow FAB to fully load
     with page.expect_file_chooser() as fc_info:
