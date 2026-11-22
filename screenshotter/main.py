@@ -87,11 +87,9 @@ with sync_playwright() as p:
         },
         path="screenshots/vault-key-initial.png",
     )
-
-    page.goto("http://localhost:5173/files/")
-    page.wait_for_timeout(
-        500
-    )  # To allow page to fully load (and show that there's nothing)
+    page.click("#vault-key-modal-close")
+    page.wait_for_url("http://localhost:5173/files/")
+    page.wait_for_timeout(2500)  # To allow the toast to clear
     screenshot(path="screenshots/explorer-empty.png")
 
     # Login to existing account with demo files
