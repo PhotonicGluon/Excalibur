@@ -336,13 +336,13 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1(@capacitor/core@8.6.2)
       '@ionic/core':
-        specifier: ^8.8.19
+        specifier: ^8.8.20
         version: 8.8.20
       '@ionic/react':
-        specifier: ^8.8.19
+        specifier: ^8.8.20
         version: 8.8.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@ionic/react-router':
-        specifier: ^8.8.19
+        specifier: ^8.8.20
         version: 8.8.20(react-dom@19.3.1(react@19.3.1))(react-router-dom@5.3.4(react@19.3.1))(react-router@5.3.4(react@19.3.1))(react@19.3.1)
       '@noble/ciphers':
         specifier: ^2.4.0
