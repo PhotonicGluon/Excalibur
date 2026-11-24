@@ -4,6 +4,8 @@ sidebar_label: Updating to 0.9
 description: Guide explaining the upgrade process from Excalibur 0.8 to 0.9.
 ---
 
+# Upgrading from Excalibur 0.8 to Excalibur 0.9
+
 {/* TODO: Remove this warning */}
 
 :::warning
@@ -11,8 +13,6 @@ description: Guide explaining the upgrade process from Excalibur 0.8 to 0.9.
 This document is a work in progress and is subject to change.
 
 :::
-
-# Upgrading from Excalibur 0.8 to Excalibur 0.9
 
 In this guide, you'll find steps to update your Excalibur app and server instances to version 0.9.
 
@@ -34,4 +34,69 @@ You can optionally specify the output file name by using the `--output` flag. By
 
 With the backup created, you can now proceed with the upgrade.
 
-TODO: ADD
+## Configuration File v7
+
+Excalibur 0.9 modifies the configuration file from version 6 to version 7, with the following changes:
+
+- A new field **`storage.database.max_encrypted_name_size`** has been added to the configuration file to specify the maximum size of an encrypted file name, in bytes (see [below](#encrypted-names-and-merkle-tree-verification))
+- The old `server.rate_limit.capacity` and `server.rate_limit.refill_rate` fields have been replaced with four new fields: **`server.rate_limit.unauthenticated_capacity`**, **`server.rate_limit.unauthenticated_refill_rate`**, **`server.rate_limit.authenticated_capacity`**, and **`server.rate_limit.authenticated_refill_rate`**
+    - Note that the old values of `capacity` and `refill_rate` **will be deleted**
+
+Existing configuration files can be upgraded by running
+
+```bash
+excalibur config update
+```
+on the server. Verify that the updated configuration is valid by running the command
+
+```bash
+excalibur config validate
+```
+
+You should see `Config is valid!` appear in the terminal.
+
+Afterwards, it is recommended to make the following changes to the configuration file:
+- **`storage.database.max_encrypted_name_size`**: set it to a value that is appropriate for your use case. The default value is `2048` bytes
+- **`server.rate_limit` Fields**: update the values of these fields to match your needs. The default values are:
+    - `unauthenticated_capacity`: `50` requests
+    - `unauthenticated_refill_rate`: `5` requests per second
+    - `authenticated_capacity`: `250` requests
+    - `authenticated_refill_rate`: `25` requests per second
+
+## Database Changes
+
+The database schema has been updated, with the following changes:
+
+- Make the user's root item ID non-nullable
+- Added fields for encrypted file name support
+- Added fields and tables for Merkle tree verification
+
+As such, existing databases need to be upgraded. This can be done by running
+
+```bash
+excalibur db upgrade
+```
+
+on the server.
+
+## App Upgrades
+
+Excalibur 0.9 requires some upgrades that need to be applied from the app.
+
+### Encrypted Names and Merkle Tree Verification {/* #encrypted-names-and-merkle-tree-verification */}
+
+Excalibur 0.9 replaces the [old obfuscated names system](/guide/upgrading/05x-to-06x#obfuscated-names) introduced in Excalibur 0.6 with encrypted names and adds Merkle tree verification for file integrity. This improves confidentiality and integrity of data stored on the server, and makes it more difficult for attackers to gain insights into the structure of the data.
+
+***Users who use obfuscated names will still have obfuscated names until migration is performed***.
+
+A prompt to upgrade to the new encrypted names system will appear upon logging into the app. A prompt like "Your vault can be upgraded to encrypt the names of your items and support data integrity verification" will be displayed; click "Start Now" to begin the upgrade process. *Do note that this may take some time, depending on the size of your vault.*
+
+Once the upgrade is complete, your vault will be using the new encrypted names system and Merkle tree verification. You can check if the entire vault is verified by going to the "Data Preferences" page.
+
+## Server API Changes
+
+If you are interacting with an Excalibur 0.9 server using a custom client, please read about the breaking changes in [the 0.9 server changelog](/changelog/v0.9.0#server).
+
+## Conclusion
+
+These are the steps to upgrade your Excalibur app and server instances to version 0.9. After following these steps, your Excalibur instance should be running on version 0.9.
