@@ -78,7 +78,7 @@
         "baseline-browser-mapping": "^2.11.38",
         "cypress": "^15.21.1",
         "globals": "^17.14.0",
-        "lint-staged": "^17.6.0",
+        "lint-staged": "^17.6.1",
         "prettier": "^3.9.10",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "vitest": "^5.1.1"
