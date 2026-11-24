@@ -23,6 +23,9 @@ updates:
         patterns:
           - "tailwindcss"
           - "@tailwindcss/*"
+      ionic:
+        patterns:
+          - "@ionic/*"
       capacitor:
         patterns:
           - "@capacitor/*"
