@@ -172,8 +172,8 @@ importers:
         specifier: ^8.8.19
         version: 8.8.19(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@ionic/react-router':
-        specifier: ^8.8.19
-        version: 8.8.19(react-dom@19.3.1(react@19.3.1))(react-router-dom@5.3.4(react@19.3.1))(react-router@5.3.4(react@19.3.1))(react@19.3.1)
+        specifier: ^8.8.20
+        version: 8.8.20(react-dom@19.3.1(react@19.3.1))(react-router-dom@5.3.4(react@19.3.1))(react-router@5.3.4(react@19.3.1))(react@19.3.1)
       '@noble/ciphers':
         specifier: ^2.4.0
         version: 2.4.0
@@ -956,8 +956,12 @@ packages:
     resolution: {integrity: sha512-eAAKZi/qR0U44OxH3MXAyoyLxTl1AeQCoOWvGdzywKbpl/JTVlGnfZJCiJGTmXszQlRsNXsl7fMDOvpsOtf6sQ==}
     engines: {node: '>= 16'}
 
-  '@ionic/react-router@8.8.19':
-    resolution: {integrity: sha512-JVhp519yZzbAvy+d02DFFwLoLaY+erPP/gdlnrDjsSJkvvwl21biOygXOBMpa9rDOqRrYolxoBIHn3PPOLe5yg==}
+  '@ionic/core@8.8.20':
+    resolution: {integrity: sha512-j367ggcc0SDWhI4geTeELNH7x0Px5WkI7RUPCrUdMTmt5EeEU8z5ovJHl1BFLMDirO2Mg3ibH4d9VMpywEYEaw==}
+    engines: {node: '>= 16'}
+
+  '@ionic/react-router@8.8.20':
+    resolution: {integrity: sha512-xYtUm5majR4AJO8V3W9SZGzZqTgva8AbWnJnU7ox0mtaz2PYom9FPhXXvMOAGOxnYoBIs/lf1/5kg6cM8svelQ==}
     peerDependencies:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
@@ -966,6 +970,12 @@ packages:
 
   '@ionic/react@8.8.19':
     resolution: {integrity: sha512-IAY0iywSxG73sYepTPzDvNJo3q9VeWQk/ubA4PQv8cMej4NWwS4VdnwRnLql4pV2fIBGdM06zZJgVFP/WKDNFg==}
+    peerDependencies:
+      react: '>=16.8.6'
+      react-dom: '>=16.8.6'
+
+  '@ionic/react@8.8.20':
+    resolution: {integrity: sha512-N8qstrHwjY2ufcvCMUaEhgIseCNFWkj6r/Z0j0HsyKz5l1YzcnliGUgyHAXn/7QOlwsd2RNnWuNcnahGPjgWtg==}
     peerDependencies:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
@@ -1262,6 +1272,11 @@ packages:
 
   '@stencil/core@4.45.2':
     resolution: {integrity: sha512-CNkPVZsqyNMjFMX9bEkMJsvBbQxjLw480OaoamoqiLPdQCFjJQReeOjnWX1A5ivSn3UYEIJ6MoN5VXDkaHGt8Q==}
+    engines: {node: '>=16.0.0', npm: '>=7.10.0'}
+    hasBin: true
+
+  '@stencil/core@4.45.4':
+    resolution: {integrity: sha512-MkGop5DULDFAorpI4/zeEqmU9KRuUaqrjprMrEdpqGXhWQ8Lkk4jqQF+lJtOa3BjPrv8j7Ux2hu6vpd4vJJUvw==}
     engines: {node: '>=16.0.0', npm: '>=7.10.0'}
     hasBin: true
 
@@ -5206,9 +5221,15 @@ snapshots:
       ionicons: 8.1.0
       tslib: 2.8.1
 
-  '@ionic/react-router@8.8.19(react-dom@19.3.1(react@19.3.1))(react-router-dom@5.3.4(react@19.3.1))(react-router@5.3.4(react@19.3.1))(react@19.3.1)':
+  '@ionic/core@8.8.20':
     dependencies:
-      '@ionic/react': 8.8.19(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@stencil/core': 4.45.4
+      ionicons: 8.1.0
+      tslib: 2.8.1
+
+  '@ionic/react-router@8.8.20(react-dom@19.3.1(react@19.3.1))(react-router-dom@5.3.4(react@19.3.1))(react-router@5.3.4(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@ionic/react': 8.8.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       react-router: 5.3.4(react@19.3.1)
@@ -5218,6 +5239,14 @@ snapshots:
   '@ionic/react@8.8.19(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@ionic/core': 8.8.19
+      ionicons: 8.1.0
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+      tslib: 2.8.1
+
+  '@ionic/react@8.8.20(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@ionic/core': 8.8.20
       ionicons: 8.1.0
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
@@ -5520,6 +5549,17 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.44.0
 
   '@stencil/core@4.45.2':
+    optionalDependencies:
+      '@rollup/rollup-darwin-arm64': 4.44.0
+      '@rollup/rollup-darwin-x64': 4.44.0
+      '@rollup/rollup-linux-arm64-gnu': 4.44.0
+      '@rollup/rollup-linux-arm64-musl': 4.44.0
+      '@rollup/rollup-linux-x64-gnu': 4.44.0
+      '@rollup/rollup-linux-x64-musl': 4.44.0
+      '@rollup/rollup-win32-arm64-msvc': 4.44.0
+      '@rollup/rollup-win32-x64-msvc': 4.44.0
+
+  '@stencil/core@4.45.4':
     optionalDependencies:
       '@rollup/rollup-darwin-arm64': 4.44.0
       '@rollup/rollup-darwin-x64': 4.44.0
