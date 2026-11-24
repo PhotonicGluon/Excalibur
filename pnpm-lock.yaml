@@ -314,8 +314,8 @@ importers:
         specifier: ^2.11.36
         version: 2.11.36
       cypress:
-        specifier: ^15.21.1
-        version: 15.21.1
+        specifier: ^15.21.2
+        version: 15.21.2
       globals:
         specifier: ^17.14.0
         version: 17.14.0
@@ -2063,8 +2063,8 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  cypress@15.21.1:
-    resolution: {integrity: sha512-ogHpHMj0XNlZA5MGzjg8SWHf0eMw9lTwVQRKjpcT1GzNTxNUjwnHA8YCG6nOJ8ThU+XZaUxJgpMYZnJ//8aDaw==}
+  cypress@15.21.2:
+    resolution: {integrity: sha512-LcO9+YBGT0zlLd9+mD6/O30S1GcvJqBFTOCQ+uTd3nwFi+fTvogSskE3W/BWgDd/iHFkJzuIun5fcDl1aVLKRQ==}
     engines: {node: ^20.1.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
 
@@ -6464,7 +6464,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  cypress@15.21.1:
+  cypress@15.21.2:
     dependencies:
       '@cypress/request': 4.0.1
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
