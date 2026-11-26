@@ -72,6 +72,8 @@ function useProvideMerkle(): MerkleProvider {
                 await refreshStatus();
             }
             return result;
+        } catch (error) {
+            return { success: false, error: (error as Error).message };
         } finally {
             setBusy(false);
         }

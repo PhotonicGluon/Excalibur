@@ -22,36 +22,47 @@ export async function getContentMACInputs(
     auth: AuthProvider,
     itemIDs: string[],
 ): Promise<{ success: boolean; error?: string; inputs?: Record<string, Buffer | null> }> {
-    const response = await popFetch(`${auth.serverInfo!.apiURL}/merkle/content-mac-inputs`, auth.authInfo!.key!, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${auth.getToken()}`,
-            "Content-Type": "application/octet-stream",
-            "X-Encrypted": "true",
-            "X-Content-Type": "application/json",
-        },
-        // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
-        body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
-            Buffer.from(JSON.stringify(itemIDs), "utf-8"),
-        ),
-    });
-    switch (response.status) {
-        case 200:
-            break; // Continue with normal flow
-        case 401:
-            return { success: false, error: "Unauthorized" };
-        default:
-            return { success: false, error: "Unknown error" };
-    }
-
-    const inputsWire = (await new ExEF(auth.authInfo!.key!).decryptResponse<Record<string, string | null>>(response))!;
-    const inputs = new Map<string, Buffer | null>();
-    for (const [id, inputWire] of Object.entries(inputsWire)) {
-        if (inputWire === null) {
-            inputs.set(id, null);
-        } else {
-            inputs.set(id, b64decode(inputWire));
+    try {
+        const response = await popFetch(
+            `${auth.serverInfo!.apiURL}/merkle/content-mac-inputs`,
+            auth.authInfo!.key!,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${auth.getToken()}`,
+                    "Content-Type": "application/octet-stream",
+                    "X-Encrypted": "true",
+                    "X-Content-Type": "application/json",
+                },
+                // @ts-expect-error This is actually a valid body; its just that TS complains about it >:(
+                body: await new ExEF(auth.authInfo!.key!, { version: 4 }).encrypt(
+                    Buffer.from(JSON.stringify(itemIDs), "utf-8"),
+                ),
+            },
+            30000, // This may take a while, so we give it 30 seconds instead of the default
+        );
+        switch (response.status) {
+            case 200:
+                break; // Continue with normal flow
+            case 401:
+                return { success: false, error: "Unauthorized" };
+            default:
+                return { success: false, error: "Unknown error" };
         }
+
+        const inputsWire = (await new ExEF(auth.authInfo!.key!).decryptResponse<Record<string, string | null>>(
+            response,
+        ))!;
+        const inputs = new Map<string, Buffer | null>();
+        for (const [id, inputWire] of Object.entries(inputsWire)) {
+            if (inputWire === null) {
+                inputs.set(id, null);
+            } else {
+                inputs.set(id, b64decode(inputWire));
+            }
+        }
+        return { success: true, inputs: Object.fromEntries(inputs) };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
     }
-    return { success: true, inputs: Object.fromEntries(inputs) };
 }
