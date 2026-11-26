@@ -1,1 +1,0 @@
-➕ Added `duckdb-sqlalchemy` dependency

@@ -1,1 +1,0 @@
-➖ Removed `ipython` development dependency

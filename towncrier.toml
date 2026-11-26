@@ -40,8 +40,8 @@ name = "⚡️ Performance Improvements"
 showcontent = true
 
 [[tool.towncrier.type]]
-directory = "deprecated"
-name = "🗑️ Deprecations"
+directory = "removed"
+name = "🗑️ Removals"
 showcontent = true
 
 [[tool.towncrier.type]]
