@@ -15,24 +15,28 @@ def create_backup(
 
     import zipfile
 
+    from rich.console import Console
     from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeRemainingColumn
 
     from excalibur_server.consts import ROOT_FOLDER
 
-    typer.secho("Finding files to back up...", nl=False, fg=typer.colors.YELLOW)
-    count = len([item for item in ROOT_FOLDER.rglob("*") if item.is_file()])
-    typer.secho("done.\n", fg=typer.colors.GREEN)
+    console = Console()
+
+    with console.status("Finding items to back up..."):
+        files = sorted([item for item in ROOT_FOLDER.rglob("*") if item.is_file()])
+        count = len(files)
+
+    console.print(f"Found [bold]{count}[/bold] files to back up.\n")
 
     with Progress(
         MofNCompleteColumn(), BarColumn(), TimeRemainingColumn(), TextColumn("{task.description}")
     ) as progress:
         task = progress.add_task("Creating backup...", total=count)
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
-            for file_path in ROOT_FOLDER.rglob("*"):
-                if file_path.is_file():
-                    arcpath = file_path.relative_to(ROOT_FOLDER)
-                    progress.update(task, description=str(arcpath), advance=1)
-                    zf.write(file_path, arcname=arcpath)
+            for file in files:
+                arcpath = file.relative_to(ROOT_FOLDER)
+                progress.update(task, description=str(arcpath), advance=1)
+                zf.write(file, arcname=arcpath)
         progress.update(task, description="Done!\n")
 
     typer.secho(f"Backup created successfully at '{output}'!", fg=typer.colors.GREEN)
