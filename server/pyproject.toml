@@ -21,6 +21,8 @@ dependencies = [
     "semver>=3.0.4",
     "sqlalchemy>=2.1.6",
     "sqlmodel>=0.0.42",
+    # Starlette 1.8.0 breaks some network functionality
+    "starlette~=1.7.0",
     "toml>=0.10.2",
     "tomlkit>=0.15.1",
     "typer>=0.27.1",
