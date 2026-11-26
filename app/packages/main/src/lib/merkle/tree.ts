@@ -48,6 +48,7 @@ export async function computeTree(
         files.map((file) => file.id),
         CONTENT_MAC_INPUTS_CHUNK_SIZE,
     )) {
+        console.debug("Fetching content MAC inputs for chunk:", idChunk);
         const result = await getContentMACInputs(auth, idChunk);
         if (!result.success) {
             throw new Error(`Failed to get content MAC inputs: ${result.error}`);

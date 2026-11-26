@@ -54,7 +54,7 @@ export async function migrateVaultToMerkle(
         }
         state = beginResult.state!;
     }
-    onProgress?.({ migratedCount: state.migratedCount, totalCount: state.totalCount ?? 0 });
+    onProgress?.({ migratedCount: 0, totalCount: 0 }); // Indefinite progress bar
 
     // Get node hashes and content MACs for the entire tree
     onPhaseChange?.("Getting all items...");
