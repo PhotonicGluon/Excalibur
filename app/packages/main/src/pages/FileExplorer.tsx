@@ -151,6 +151,7 @@ const FileExplorer: React.FC = () => {
      */
     const updateBlocking = useCallback(
         (isBlocking: boolean, message?: string) => {
+            console.debug("Updating blocking state:", isBlocking, message);
             setHasBlocking(isBlocking);
             setBlockingMessage(message || "");
         },
@@ -331,7 +332,10 @@ const FileExplorer: React.FC = () => {
             }
         }
 
+        updateBlocking(true, "Deleting...");
         const deleteResponse = await deleteItem(auth, itemID, isDir, force);
+        updateBlocking(false);
+
         if (!deleteResponse.success) {
             presentSnackbar(`Failed to delete item: ${deleteResponse.error}`, "danger");
             return;

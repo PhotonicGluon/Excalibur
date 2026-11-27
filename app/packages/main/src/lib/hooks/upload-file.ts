@@ -202,6 +202,7 @@ export function useUploadFile() {
         }
         files = validFiles;
         if (files.length === 0) {
+            explorerContext.updateBlocking(false);
             return;
         }
 
@@ -222,6 +223,7 @@ export function useUploadFile() {
                     continue; // The directory doesn't exist yet, so none of the files in it can exist
                 }
                 await explorerContext.presentSnackbar(`Failed to find folder: ${dirResult.error}`, "danger");
+                explorerContext.updateBlocking(false);
                 return;
             }
 
@@ -235,6 +237,7 @@ export function useUploadFile() {
                     `Failed to check file names: ${namesCheckResult.error}`,
                     "danger",
                 );
+                explorerContext.updateBlocking(false);
                 return;
             }
             for (const [j, i] of indices.entries()) {

@@ -2,3 +2,4 @@
 
 - Verifying files
 - Checking files before upload
+- Deleting files / folders

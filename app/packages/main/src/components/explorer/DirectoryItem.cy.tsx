@@ -73,6 +73,7 @@ describe("<DirectoryItem />", () => {
                                 presentAlert: () => Promise.resolve(),
                                 dismissAlert: () => Promise.resolve(),
                                 presentSnackbar: () => Promise.resolve(),
+                                updateBlocking: () => Promise.resolve(),
                             }}
                         >
                             <DirectoryItem id="directory-item" {...defaultProps} />
