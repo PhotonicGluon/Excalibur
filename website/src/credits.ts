@@ -69,6 +69,12 @@ const CREDITS: Record<string, Record<string, CreditsItem[]>> = {
                 cta: "jsonwebtoken GitHub",
                 href: "https://github.com/auth0/node-jsonwebtoken",
             },
+            {
+                name: "Fuse.js",
+                desc: "Apache-2.0 License - Fuzzy search library",
+                cta: "fusejs.io",
+                href: "https://fusejs.io/",
+            },
         ],
         electron: [
             {
