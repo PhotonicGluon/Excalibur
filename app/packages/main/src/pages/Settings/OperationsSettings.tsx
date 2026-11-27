@@ -8,6 +8,7 @@ import {
     IonGrid,
     IonHeader,
     IonIcon,
+    IonInput,
     IonLabel,
     IonPage,
     IonRow,
@@ -20,7 +21,12 @@ import {
 import { arrowBack } from "ionicons/icons";
 
 import { KeyStrength } from "@lib/crypto/exef";
-import { CryptoChunkSizeExponent, FileReadChunkSize, SettingsPreferenceValues } from "@lib/preferences/settings";
+import {
+    CryptoChunkSizeExponent,
+    DEFAULT_SETTINGS_VALUES,
+    FileReadChunkSize,
+    SettingsPreferenceValues,
+} from "@lib/preferences/settings";
 
 import SettingsItem from "@components/settings/SettingsItem";
 import { useSettings } from "@components/settings/context";
@@ -32,6 +38,7 @@ const OperationsSettings: React.FC = () => {
 
     // States
     const [fileReadChunkSize, setFileReadChunkSize] = useState<FileReadChunkSize>(settings.fileReadChunkSize);
+    const [concurrentUploadsLimit, setConcurrentUploadsLimit] = useState<number>(settings.concurrentUploadsLimit);
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(settings.cryptoKeyStrength);
     const [cryptoChunkSizeExponent, setCryptoChunkSizeExponent] = useState<CryptoChunkSizeExponent>(
         settings.cryptoChunkSizeExponent,
@@ -46,6 +53,7 @@ const OperationsSettings: React.FC = () => {
     function updateSettings(newSettings: SettingsPreferenceValues) {
         const settingsToSave: Partial<SettingsPreferenceValues> = {
             fileReadChunkSize: newSettings.fileReadChunkSize,
+            concurrentUploadsLimit: newSettings.concurrentUploadsLimit,
             cryptoKeyStrength: newSettings.cryptoKeyStrength,
             cryptoChunkSizeExponent: newSettings.cryptoChunkSizeExponent,
         };
@@ -105,6 +113,33 @@ const OperationsSettings: React.FC = () => {
                                 <IonSelectOption value="2097152">2 MiB</IonSelectOption>
                                 <IonSelectOption value="4194304">4 MiB</IonSelectOption>
                             </IonSelect>
+                        }
+                    />
+                    {/* Network */}
+                    <IonRow>
+                        <IonCol>
+                            <IonLabel>
+                                <h2 className="text-lg font-bold">Network</h2>
+                                <p>Affects the network operations of Excalibur.</p>
+                            </IonLabel>
+                        </IonCol>
+                    </IonRow>
+                    <SettingsItem
+                        label={<IonLabel>Concurrent Uploads Limit</IonLabel>}
+                        input={
+                            <IonInput
+                                fill="outline"
+                                type="number"
+                                helperText="Number of concurrent uploads"
+                                value={concurrentUploadsLimit}
+                                onIonChange={(e) => {
+                                    const newConcurrentUploadsLimit = parseInt(
+                                        e.detail.value ?? DEFAULT_SETTINGS_VALUES.concurrentUploadsLimit.toString(),
+                                    );
+                                    setConcurrentUploadsLimit(newConcurrentUploadsLimit);
+                                    updateSettings({ ...settings, concurrentUploadsLimit: newConcurrentUploadsLimit });
+                                }}
+                            ></IonInput>
                         }
                     />
                     {/* Crypto */}

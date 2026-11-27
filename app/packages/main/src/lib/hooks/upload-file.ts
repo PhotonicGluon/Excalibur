@@ -52,9 +52,6 @@ enum ConflictAction {
     ABORT_UPLOAD,
 }
 
-/** Maximum number of files that are encrypted and uploaded at the same time */
-export const UPLOAD_CONCURRENCY = 4;
-
 export function useUploadFile() {
     // Contexts
     const auth = useAuth();
@@ -464,7 +461,7 @@ export function useUploadFile() {
         });
 
         // Only process a limited number of files at a time to avoid exhausting browser resources
-        await runPool(uploadQueue, UPLOAD_CONCURRENCY, (item) =>
+        await runPool(uploadQueue, settings.concurrentUploadsLimit, (item) =>
             _handleUpload(item.file, item.parentID, item.jobID, item.controller),
         );
     }

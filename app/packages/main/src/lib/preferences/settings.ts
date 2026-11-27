@@ -29,6 +29,8 @@ export interface SettingsPreferenceValues {
     // Operations
     /** Chunk size, in bytes, to use when reading files */
     fileReadChunkSize: FileReadChunkSize;
+    /** Maximum number of concurrent uploads */
+    concurrentUploadsLimit: number;
     /** Key strength, in bits, to use when generating keys */
     cryptoKeyStrength: KeyStrength;
     /** Chunk exponent to use when encrypting/decrypting files */
@@ -50,6 +52,7 @@ export const DEFAULT_SETTINGS_VALUES: SettingsPreferenceValues = {
     fileSizeUnits: "si",
     // Operations
     fileReadChunkSize: 262144, // 256 KiB
+    concurrentUploadsLimit: 8,
     cryptoKeyStrength: 128,
     cryptoChunkSizeExponent: 16, // 64 KiB
     // Check for updates

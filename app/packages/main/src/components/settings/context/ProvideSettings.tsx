@@ -37,6 +37,9 @@ function useProvideSettings(): SettingsProvider {
     const [fileReadChunkSize, setFileReadChunkSize] = useState<FileReadChunkSize>(
         DEFAULT_SETTINGS_VALUES.fileReadChunkSize,
     );
+    const [concurrentUploadsLimit, setConcurrentUploadsLimit] = useState<number>(
+        DEFAULT_SETTINGS_VALUES.concurrentUploadsLimit,
+    );
     const [cryptoKeyStrength, setCryptoKeyStrength] = useState<KeyStrength>(DEFAULT_SETTINGS_VALUES.cryptoKeyStrength);
     const [cryptoChunkSizeExponent, setCryptoChunkSizeExponent] = useState<CryptoChunkSizeExponent>(
         DEFAULT_SETTINGS_VALUES.cryptoChunkSizeExponent,
@@ -53,6 +56,7 @@ function useProvideSettings(): SettingsProvider {
         if (settings.fileSizeUnits !== undefined) setFileSizeUnits(settings.fileSizeUnits);
 
         if (settings.fileReadChunkSize !== undefined) setFileReadChunkSize(settings.fileReadChunkSize);
+        if (settings.concurrentUploadsLimit !== undefined) setConcurrentUploadsLimit(settings.concurrentUploadsLimit);
         if (settings.cryptoKeyStrength !== undefined) setCryptoKeyStrength(settings.cryptoKeyStrength);
         if (settings.cryptoChunkSizeExponent !== undefined)
             setCryptoChunkSizeExponent(settings.cryptoChunkSizeExponent);
@@ -100,6 +104,12 @@ function useProvideSettings(): SettingsProvider {
                 setFileReadChunkSize(parseInt(value) as FileReadChunkSize);
             }
         });
+        Preferences.get("concurrentUploadsLimit").then((value) => {
+            if (value) {
+                console.debug(`Concurrent uploads limit: ${value}`);
+                setConcurrentUploadsLimit(parseInt(value));
+            }
+        });
         Preferences.get("cryptoKeyStrength").then((value) => {
             if (value) {
                 console.debug(`Crypto key strength: ${value}`);
@@ -135,6 +145,7 @@ function useProvideSettings(): SettingsProvider {
         fileSizeUnits,
         // Operations
         fileReadChunkSize,
+        concurrentUploadsLimit,
         cryptoKeyStrength,
         cryptoChunkSizeExponent,
         // Updates
