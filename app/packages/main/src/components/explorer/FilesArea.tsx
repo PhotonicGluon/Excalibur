@@ -1,5 +1,5 @@
 import { PickedFile } from "@capawesome/capacitor-file-picker";
-import { DragEvent, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { IonIcon, IonText } from "@ionic/react";
 import { cloudUploadOutline } from "ionicons/icons";
@@ -23,6 +23,9 @@ const FilesArea: React.FC<ContainerProps> = ({ refreshTrigger, viewLayout }) => 
     const [displayedPath, setDisplayedPath] = useState(""); // Empty string because first path will be '.'
     const [showFileUploadOverlay, setShowFileUploadOverlay] = useState(false);
 
+    // References
+    const dragDepth = useRef(0);
+
     // Contexts
     const explorerContext = useExplorerContext();
 
@@ -42,25 +45,50 @@ const FilesArea: React.FC<ContainerProps> = ({ refreshTrigger, viewLayout }) => 
         refreshContents(explorerContext.path);
     }, [refreshTrigger, explorerContext.path, refreshContents]);
 
+    useEffect(() => {
+        const isFileDrag = (e: globalThis.DragEvent) => e.dataTransfer?.types.includes("Files");
+
+        const onDragEnter = (e: globalThis.DragEvent) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            dragDepth.current++;
+            setShowFileUploadOverlay(true);
+        };
+        const onDragOver = (e: globalThis.DragEvent) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+        };
+        const onDragLeave = (e: globalThis.DragEvent) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            dragDepth.current = Math.max(0, dragDepth.current - 1);
+            if (dragDepth.current === 0) {
+                setShowFileUploadOverlay(false);
+            }
+        };
+        const onDrop = (e: globalThis.DragEvent) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            dragDepth.current = 0;
+            setShowFileUploadOverlay(false);
+            onDropFileItem(e);
+        };
+
+        window.addEventListener("dragenter", onDragEnter);
+        window.addEventListener("dragover", onDragOver);
+        window.addEventListener("dragleave", onDragLeave);
+        window.addEventListener("drop", onDrop);
+        return () => {
+            window.removeEventListener("dragenter", onDragEnter);
+            window.removeEventListener("dragover", onDragOver);
+            window.removeEventListener("dragleave", onDragLeave);
+            window.removeEventListener("drop", onDrop);
+        };
+    }, [onDropFileItem]);
+
     // Render
     return (
-        <div
-            onDragOver={(e) => {
-                e.preventDefault();
-                setShowFileUploadOverlay(true);
-            }}
-            onDragLeave={(e) => {
-                e.preventDefault();
-                setShowFileUploadOverlay(false);
-            }}
-            onDrop={async (e: DragEvent) => {
-                e.preventDefault();
-                setShowFileUploadOverlay(false);
-
-                onDropFileItem(e);
-            }}
-            id="files-area"
-        >
+        <div id="files-area">
             {/* File upload overlay */}
             {showFileUploadOverlay && (
                 <div className="pointer-events-none fixed top-0 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center backdrop-blur-xs">

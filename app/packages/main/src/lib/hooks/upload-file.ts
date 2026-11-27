@@ -1,7 +1,6 @@
 import { Filesystem } from "@capacitor/filesystem";
 import { FilePicker, PickedFile } from "@capawesome/capacitor-file-picker";
 import * as Comlink from "comlink";
-import { DragEvent } from "react";
 
 import { randID } from "@lib/auth/util";
 import { validateName } from "@lib/files/names";
@@ -406,7 +405,9 @@ export function useUploadFile() {
      *
      * @param e Drag and drop event
      */
-    async function onDropFileItem(e: DragEvent) {
+    async function onDropFileItem(e: { dataTransfer: DataTransfer | null }) {
+        if (!e.dataTransfer) return;
+
         // Gather items
         const items = [...e.dataTransfer.items]
             .filter((item) => item.kind === "file") // Drag data item is a file *or* a directory
