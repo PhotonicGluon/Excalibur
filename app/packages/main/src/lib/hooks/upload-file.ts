@@ -18,6 +18,31 @@ import { useSettings } from "@components/settings/context";
 
 type UploadFile = PickedFile & { directory?: string };
 
+/**
+ * Runs `task()` over every item, with at most `limit` tasks running at any one time.
+ *
+ * Tasks are expected to handle their own errors; a rejection from one does not stop the others.
+ *
+ * @param items the items to process, started in order
+ * @param limit maximum number of concurrent tasks
+ * @param task the task to run for each item
+ * @returns a promise which resolves when every task has settled
+ */
+async function runPool<T>(items: T[], limit: number, task: (item: T) => Promise<void>): Promise<void> {
+    let next = 0;
+    const runners = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+        while (next < items.length) {
+            const item = items[next++];
+            try {
+                await task(item);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    });
+    await Promise.all(runners);
+}
+
 enum ConflictAction {
     NONE,
     SKIP_THIS_FILE,
@@ -26,6 +51,9 @@ enum ConflictAction {
     OVERRIDE_ALL_EXISTING,
     ABORT_UPLOAD,
 }
+
+/** Maximum number of files that are encrypted and uploaded at the same time */
+export const UPLOAD_CONCURRENCY = 4;
 
 export function useUploadFile() {
     // Contexts
@@ -50,23 +78,22 @@ export function useUploadFile() {
          *
          * @param rawFile a {@link UploadFile} object
          * @param parentID the ID of the folder to upload the file to
+         * @param jobID the ID of the (already created) job tracking this upload
+         * @param controller the abort controller of the job
          */
-        async function _handleUpload(rawFile: UploadFile, parentID: string) {
-            // Create new job
-            const jobID = randID();
-            const controller = new AbortController();
+        async function _handleUpload(
+            rawFile: UploadFile,
+            parentID: string,
+            jobID: string,
+            controller: AbortController,
+        ) {
             const signal = controller.signal;
 
-            jobsManager.addJob(jobID, {
-                direction: "upload",
-                name: rawFile.name,
-                description: "Setting up data stream...",
-                progress: null,
-                controller: controller,
-            });
-            console.debug(`Created new job for '${rawFile.name}' with id '${jobID}'`);
-
             try {
+                // The job may have been cancelled while it was waiting in the queue
+                if (signal.aborted) throw new Error("Cancelled");
+                jobsManager.updateJob(jobID, "Setting up data stream...");
+
                 // Set up file data stream
                 const rawFileSize = rawFile.size;
                 let rawFileDataStream: ReadableStream<Buffer>;
@@ -110,6 +137,20 @@ export function useUploadFile() {
                 const worker = new Worker(new URL("@lib/workers/encrypt-stream", import.meta.url), { type: "module" });
                 const processor = Comlink.wrap<EncryptionProcessor>(worker);
 
+                // If the worker dies (e.g., it fails to start or runs out of memory), `processStream()` would never
+                // settle, so we turn worker errors into a rejection
+                let rejectOnWorkerError: (reason: Error) => void = () => {};
+                const workerFailure = new Promise<never>((_, reject) => {
+                    rejectOnWorkerError = reject;
+                });
+                workerFailure.catch(() => {}); // Avoid unhandled rejection if the worker never fails
+                worker.onerror = (ev) => {
+                    rejectOnWorkerError(new Error(`Encryption worker crashed: ${ev.message || "unknown error"}`));
+                };
+                worker.onmessageerror = () => {
+                    rejectOnWorkerError(new Error("Encryption worker sent an unreadable message"));
+                };
+
                 const abortHandler = () => {
                     // We catch errors here because if the worker is already terminating, calling `abort()` might fail,
                     // which we can ignore
@@ -119,21 +160,24 @@ export function useUploadFile() {
 
                 let blob: Blob;
                 try {
-                    blob = await processor.processStream(
-                        // `transfer()` moves datastream ownership to the worker instead of trying to clone it
-                        Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
-                        auth.vaultInfo!.key,
-                        auth.authInfo!.key!,
-                        rawFileSize,
-                        settings.cryptoKeyStrength,
-                        settings.cryptoChunkSizeExponent,
-                        // `proxy()` ensures the callback function works across threads
-                        Comlink.proxy((progress) => {
-                            if (!signal.aborted) {
-                                jobsManager.updateProgress(jobID, progress);
-                            }
-                        }),
-                    );
+                    blob = await Promise.race([
+                        workerFailure,
+                        processor.processStream(
+                            // `transfer()` moves datastream ownership to the worker instead of trying to clone it
+                            Comlink.transfer(rawFileDataStream, [rawFileDataStream]),
+                            auth.vaultInfo!.key,
+                            auth.authInfo!.key!,
+                            rawFileSize,
+                            settings.cryptoKeyStrength,
+                            settings.cryptoChunkSizeExponent,
+                            // `proxy()` ensures the callback function works across threads
+                            Comlink.proxy((progress) => {
+                                if (!signal.aborted) {
+                                    jobsManager.updateProgress(jobID, progress);
+                                }
+                            }),
+                        ),
+                    ]);
                 } catch (e) {
                     if (signal.aborted) throw new Error("Cancelled"); // eslint-disable-line preserve-caught-error
                     await explorerContext.presentSnackbar(`Failed to encrypt file: ${(e as Error).message}`, "danger");
@@ -342,6 +386,7 @@ export function useUploadFile() {
             `Uploading${filesToUpload.length === 1 ? "" : ` ${filesToUpload.length} files`}...`,
         );
 
+        const pendingUploads: { file: UploadFile; parentID: string }[] = [];
         for (const file of filesToUpload) {
             // Check if file size acceptable
             if (file.size > auth.authInfo!.maxUploadSize) {
@@ -399,8 +444,29 @@ export function useUploadFile() {
                 return;
             }
 
-            _handleUpload(file, targetResponse.id!);
+            pendingUploads.push({ file, parentID: targetResponse.id! });
         }
+
+        // Create all jobs
+        // (So that all queued files are visible and cancellable while they wait to be uploaded)
+        const uploadQueue = pendingUploads.map(({ file, parentID }) => {
+            const jobID = randID();
+            const controller = new AbortController();
+            jobsManager.addJob(jobID, {
+                direction: "upload",
+                name: file.name,
+                description: "Waiting...",
+                progress: null,
+                controller: controller,
+            });
+            console.debug(`Created new job for '${file.name}' with id '${jobID}'`);
+            return { file, parentID, jobID, controller };
+        });
+
+        // Only process a limited number of files at a time to avoid exhausting browser resources
+        await runPool(uploadQueue, UPLOAD_CONCURRENCY, (item) =>
+            _handleUpload(item.file, item.parentID, item.jobID, item.controller),
+        );
     }
 
     /**
