@@ -22,7 +22,7 @@ jobs:
         runs-on: ubuntu-latest
         if: ${{ !github.event.repository.private }}
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
               with:
                   sparse-checkout: app
 

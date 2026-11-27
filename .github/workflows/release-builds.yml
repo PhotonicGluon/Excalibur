@@ -20,7 +20,7 @@ jobs:
             attestations: write
 
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
 
             - uses: pnpm/setup@v3
               with:
@@ -49,13 +49,13 @@ jobs:
                   pnpm run build:linux
 
             - name: Attest
-              uses: actions/attest-build-provenance@v3
+              uses: actions/attest@v4
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
                   subject-path: "app/packages/electron/dist"
 
             - name: Upload Electron Artifacts
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: app-electron-${{ matrix.os }}
                   path: |
@@ -77,7 +77,7 @@ jobs:
             contents: read
             attestations: write
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
 
             - name: Sets MODIFIED_BRANCH_NAME
               env:
@@ -90,7 +90,7 @@ jobs:
                   install: false
 
             - name: Set up JDK
-              uses: actions/setup-java@v5
+              uses: actions/setup-java@v6
               with:
                   java-version: "21"
                   distribution: "temurin"
@@ -144,13 +144,13 @@ jobs:
                   done
 
             - name: Attest
-              uses: actions/attest-build-provenance@v3
+              uses: actions/attest@v4
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
                   subject-path: "app/packages/android/app/build/outputs/apk/release/app-${{ env.MODIFIED_BRANCH_NAME }}-release.apk"
 
             - name: Upload Release APK
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: app-android
                   path: app/packages/android/app/build/outputs/apk/release/app-${{ env.MODIFIED_BRANCH_NAME }}-release.apk
@@ -164,15 +164,15 @@ jobs:
             contents: read
             attestations: write
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
 
             - name: Set up Python
-              uses: actions/setup-python@v6
+              uses: actions/setup-python@v7
               with:
                   python-version-file: "./server/pyproject.toml"
 
             - name: Install uv
-              uses: astral-sh/setup-uv@v7
+              uses: astral-sh/setup-uv@v10.4.0
               with:
                   enable-cache: true
                   version: "0.12.13"
@@ -183,13 +183,13 @@ jobs:
               run: uv run --no-dev excalibur build
 
             - name: Attest
-              uses: actions/attest-build-provenance@v3
+              uses: actions/attest@v4
               if: ${{ !env.ACT && !github.event.repository.private }}
               with:
                   subject-path: "server/dist"
 
             - name: Upload Server Artifacts
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: server
                   path: server/dist
@@ -203,9 +203,9 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
 
-            - uses: actions/download-artifact@v7
+            - uses: actions/download-artifact@v8
               with:
                   path: artifacts
 

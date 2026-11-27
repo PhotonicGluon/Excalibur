@@ -13,7 +13,7 @@ jobs:
         if: github.actor == 'dependabot[bot]'
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
               with:
                   ref: ${{ github.head_ref }}
 
@@ -36,7 +36,7 @@ jobs:
                   git add
 
             - name: Sign and Commit
-              uses: planetscale/ghcommit-action@v0.2.20
+              uses: planetscale/ghcommit-action@v0.2.22
               with:
                   commit_message: "Auto-generate news fragment(s) for dependency update"
                   repo: ${{ github.repository }}
