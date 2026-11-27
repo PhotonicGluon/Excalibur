@@ -1,1 +1,1 @@
-🚸 Made it so that username is cleared upon server change
+🚸 Made it so that username and password are cleared when the server is changed

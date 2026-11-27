@@ -141,7 +141,7 @@ const ServerChoice: React.FC = () => {
         await Preferences.set({ server: serverURL });
         if (!auth.serverInfo || auth.serverInfo.apiURL !== outcome.url) {
             await auth.logout();
-            await Preferences.set({ username: "" });
+            await Preferences.set({ username: "", password: "" });
         }
 
         auth.setServerInfo({

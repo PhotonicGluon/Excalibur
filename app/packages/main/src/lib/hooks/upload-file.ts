@@ -191,8 +191,6 @@ export function useUploadFile() {
 
         explorerContext.updateBlocking(true, "Checking files...");
 
-        // TODO: This needs to be blocking until everything can be checked
-
         // Skip the files that cannot be given a valid name
         const validFiles: UploadFile[] = [];
         for (const file of files) {
