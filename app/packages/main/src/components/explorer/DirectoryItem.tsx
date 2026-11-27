@@ -292,8 +292,10 @@ const DirectoryItem: React.FC<ContainerProps> = (props: ContainerProps) => {
             return;
         }
 
-        await explorerContext.presentSnackbar("Verifying...");
+        explorerContext.updateBlocking(true, "Verifying...");
         const result = await verifyItemIntegrity(auth, props.itemUUID);
+        explorerContext.updateBlocking(false);
+
         if (!result.success) {
             await explorerContext.presentSnackbar(`Could not verify item: ${result.error}`, "danger");
             return;

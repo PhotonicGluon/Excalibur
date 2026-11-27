@@ -68,7 +68,7 @@ export function sortByCreationTime(a: FileLike, b: FileLike): ComparisonResult {
  * @returns a sorted array of {@link FileLike} items. Will be an empty array if `items` is `null` or
  *      empty.
  */
-export function sortItems(directory: Directory, sortType: SortType, sortAsc: boolean = true): FileLike[] {
+export function sortItems(directory: Directory, sortType: SortType, sortAsc: boolean = true): (File | Directory)[] {
     if (!directory || !directory.items || directory.items.length === 0) {
         return [];
     }

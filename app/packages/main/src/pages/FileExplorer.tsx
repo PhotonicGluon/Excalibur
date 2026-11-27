@@ -47,6 +47,7 @@ import { checkDir, checkNames, deleteItem, mkdir, renameItem } from "@api/files"
 
 import FolderOpener from "@native/FolderOpenerPlugin";
 
+import LoadingIndicator from "@components/LoadingIndicator";
 import SegmentedToggle from "@components/SegmentedToggle";
 import SidebarMenu from "@components/SidebarMenu";
 import { useAuth } from "@components/auth/context";
@@ -114,6 +115,9 @@ const FileExplorer: React.FC = () => {
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    const [hasBlocking, setHasBlocking] = useState(false);
+    const [blockingMessage, setBlockingMessage] = useState("");
+
     // References
     const topBarRef = useRef<HTMLDivElement>(null);
 
@@ -121,8 +125,8 @@ const FileExplorer: React.FC = () => {
     /**
      * Displays a toast with the given message and colour.
      *
-     * @param message The message to display
-     * @param colour The colour of the toast
+     * @param message the message to display
+     * @param colour the colour of the toast
      */
     const presentSnackbar = useCallback(
         async (message: string, colour: Color = "primary") => {
@@ -137,6 +141,20 @@ const FileExplorer: React.FC = () => {
             });
         },
         [presentToast, dismissToast],
+    );
+
+    /**
+     * Updates the blocking state.
+     *
+     * @param isBlocking whether the app should be blocked
+     * @param message the message to display while blocking
+     */
+    const updateBlocking = useCallback(
+        (isBlocking: boolean, message?: string) => {
+            setHasBlocking(isBlocking);
+            setBlockingMessage(message || "");
+        },
+        [setHasBlocking, setBlockingMessage],
     );
 
     // Hooks
@@ -412,6 +430,7 @@ const FileExplorer: React.FC = () => {
                                 presentAlert: presentAlert,
                                 dismissAlert: dismissAlert,
                                 presentSnackbar: presentSnackbar,
+                                updateBlocking: updateBlocking,
                             }}
                         >
                             {/* Refresh indicator */}
@@ -463,6 +482,9 @@ const FileExplorer: React.FC = () => {
                             {/* Jobs modal */}
                             <JobsModal isShown={showJobsModal} setIsShown={setShowJobsModal} />
                         </explorerContext.Provider>
+
+                        {/* Loading indicator */}
+                        <LoadingIndicator isShown={hasBlocking} message={blockingMessage} />
                     </IonContent>
                 </ProvideJobs>
             </IonPage>

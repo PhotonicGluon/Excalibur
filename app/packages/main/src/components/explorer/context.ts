@@ -21,6 +21,8 @@ export interface ExplorerContext {
     dismissAlert: () => Promise<void>;
     /** Present a snackbar */
     presentSnackbar: (message: string, colour?: Color) => Promise<void>;
+    /** Update the blocking state */
+    updateBlocking: (isBlocking: boolean, message?: string) => void;
 }
 
 export const explorerContext = createContext<ExplorerContext>(null!);
