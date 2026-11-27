@@ -18,26 +18,22 @@ if not folder:
     print(f"Could not determine folder from directory: {directory}")
     sys.exit(1)
 
-for dep_name in dep_names.split(","):
-    dep_name = dep_name.strip()
-    if not dep_name:
-        continue
+fragment_name = "_and_".join(
+    [re.sub(r"[^\w\s\/\-]", "", dep_name) for dep_name in dep_names.split(",")]
+)
 
-    processed_dep_name = re.sub(r"[^\w\s\/\-]", "", dep_name)
-    processed_dep_name = processed_dep_name.replace("/", "_")
+log_file_name = f"+{fragment_name}.deps.md"
+log_file_path = os.path.join(folder, "changelog.d", log_file_name)
 
-    log_file_name = f"+{processed_dep_name}.deps.md"
-    log_file_path = os.path.join(folder, "changelog.d", log_file_name)
+# Ensure the target directory exists
+os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
 
-    # Ensure the target directory exists
-    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+file_mode = "a" if os.path.exists(log_file_path) else "w"
+with open(log_file_path, file_mode, encoding="utf-8", newline="\n") as f:
+    if file_mode == "a":
+        f.write("\n==========\n")
 
-    file_mode = "a" if os.path.exists(log_file_path) else "w"
-
-    with open(log_file_path, file_mode, encoding="utf-8", newline="\n") as f:
-        if file_mode == "a":
-            f.write("\n==========\n")
-
+    for dep_name in dep_names.split(","):
         prev_version = prev_version.lstrip("v")
         new_version = new_version.lstrip("v")
 
