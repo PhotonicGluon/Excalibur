@@ -6,7 +6,6 @@ import {
     IonContent,
     IonHeader,
     IonIcon,
-    IonLoading,
     IonPage,
     IonToolbar,
     useIonAlert,
@@ -23,6 +22,7 @@ import { APICheckResult, checkAPIUrl } from "@api/api-checks";
 import { timedFetch } from "@api/fetch";
 import { getServerVersion } from "@api/well-known";
 
+import LoadingIndicator from "@components/LoadingIndicator";
 import { useAuth } from "@components/auth/context";
 import URLInput from "@components/inputs/URLInput";
 
@@ -234,11 +234,7 @@ const ServerChoice: React.FC = () => {
                 </div>
 
                 {/* Loading indicator */}
-                <IonLoading
-                    className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
-                    isOpen={isLoading}
-                    message={loadingState}
-                ></IonLoading>
+                <LoadingIndicator isShown={isLoading} message={loadingState} />
             </IonContent>
         </IonPage>
     );

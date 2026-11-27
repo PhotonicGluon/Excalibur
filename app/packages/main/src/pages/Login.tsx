@@ -9,7 +9,6 @@ import {
     IonHeader,
     IonInput,
     IonLabel,
-    IonLoading,
     IonMenuButton,
     IonPage,
     IonText,
@@ -24,6 +23,7 @@ import { retrieveVaultInfo } from "@lib/users/vault";
 
 import { e2ee } from "@api/auth";
 
+import LoadingIndicator from "@components/LoadingIndicator";
 import SidebarMenu from "@components/SidebarMenu";
 import { AuthInfo, useAuth } from "@components/auth/context";
 import PasswordInput from "@components/inputs/PasswordInput";
@@ -286,11 +286,7 @@ const Login: React.FC = () => {
                     </div>
 
                     {/* Loading indicator */}
-                    <IonLoading
-                        className="[&_.loading-wrapper]:w-full [&_.loading-wrapper_.loading-content]:w-full"
-                        isOpen={isLoading}
-                        message={loadingState}
-                    ></IonLoading>
+                    <LoadingIndicator isShown={isLoading} message={loadingState} />
                 </IonContent>
             </IonPage>
         </>
