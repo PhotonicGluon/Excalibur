@@ -137,12 +137,13 @@ const ServerChoice: React.FC = () => {
 
         const serverVersion = response.version!;
 
-        // Update preferences
-        Preferences.set({
-            server: serverURL,
-        });
+        // Set info
+        await Preferences.set({ server: serverURL });
+        if (!auth.serverInfo || auth.serverInfo.apiURL !== outcome.url) {
+            await auth.logout();
+            await Preferences.set({ username: "" });
+        }
 
-        // Set server info
         auth.setServerInfo({
             apiURL: outcome.url,
             isFixed,
